@@ -4,30 +4,20 @@
 
 set timeout 10
 
-set test "test for nil"
-send "nil\n"
-expect_NIL
-
-set test "(use-package 'clos)"
-send "(use-package 'clos)\n"
+xsend "(use-package 'clos)"
 expect_T
 
-set test "(use-package 'xp)"
-send "(use-package 'xp)\n"
+xsend "(use-package 'xp)"
 expect_T
 
 #
 # this loads the idxstyle package
 #
 
-new_timeout 20
-set test "(load 'locref)"
-send "(load 'locref)\n"
+xsend "(load 'locref)"
 expect_T
-backup_timeout
 
-set test "(use-package 'locref)"
-send "(use-package 'locref)\n"
+xsend "(use-package 'locref)"
 expect_T
 
 xsend {(load 'idxstyle)}

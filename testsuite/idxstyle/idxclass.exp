@@ -1,16 +1,93 @@
 #
-#
+# testing some indexclass-stuff
 #
 
-xsend {(< 1 2)}
-expect_T
-
-xsend {(setq idxcls (make-indexclass "default"))}
+xsend {(setq ic (create-indexclass "default"))}
 expect {
-    -re "\#<INDEXCLASS.*>.*$prompt$" { pass "$test" }
+    -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 }
 
-xsend {(pprint idxcls)}
+xsend {(setq alph-digit (make-alphabet "digit" '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9")))}
 expect {
-    -re "(Index.*)$prompt$" { pass "$test" }
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
 }
+
+xsend {(setq alph-a-h (make-alphabet "a-h" '("a" "b" "c" "d" "e" "f" "g" "h")))}
+expect {
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# create some location-class layers (empty markup)
+#
+
+xsend {(setq loccls-layer-digit (make-loccls-layer alph-digit nil))}
+expect {
+    -re "\#<LOCCLS-LAYER.*>.*$prompt$" { pass "$test" }
+}
+
+xsend {(setq loccls-layer-a-h (make-loccls-layer alph-a-h nil))}
+expect {
+    -re "\#<LOCCLS-LAYER.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# create some location-class separators (empty markup)
+#
+
+xsend {(setq separator-minus (make-loccls-separator "-" nil))}
+expect {
+    -re "\#<LOCCLS-SEPARATOR.*>.*$prompt$" { pass "$test" }
+}
+xsend {(setq separator-dot (make-loccls-separator "." nil))}
+expect {
+    -re "\#<LOCCLS-SEPARATOR.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# standard-classes
+#
+
+xsend {(setq loccls-num (checked-make-standard-location-class "num" (list loccls-layer-digit) '()))}
+expect -re "\#<STANDARD-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq loccls-Alph-num (checked-make-standard-location-class "Alph-num" (list loccls-layer-digit) '()))}
+expect -re "\#<STANDARD-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+
+#
+# Now test storing into indexclass
+#
+
+xsend {(add ic alph-digit)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add ic alph-a-h)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add ic loccls-num)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add ic loccls-Alph-num)}
+expect -re "\#<INDEX.*>.*$prompt$"
+
+xsend {(pprint *indexstyle*)}
+expect -re ".*I.*$prompt" { pass "$test" }
+
+#
+# test finders
+#
+
+xsend {(lookup-basetype ic "a-h")}
+expect -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+
+xsend {(lookup-basetype ic "digit")}
+expect -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+
+xsend {(lookup-basetype ic "das gibt es nicht")}
+expect_NIL
+
+xsend {(lookup-location-class ic "num")}
+expect -re "\#<.*LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+
+xsend {(lookup-location-class ic "Alph-num")}
+expect -re "\#<.*LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
