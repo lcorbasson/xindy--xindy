@@ -1,0 +1,34 @@
+$Id$
+----------------------------------------------------------------------
+
+This file contains some information about using xindy.
+
+Currently, no tutorial is available. So the main documentation can be
+found in the manual that is located in the ./Doc subdirectory.
+
+For a complete description of an indexstyle see the testsuite that is
+located in the ./tests subdirectory.
+
+The test `infII' contains a complete example of a real-world index
+that was typeset uning xindy as the index processors. Many features of
+the indexstyle are used in file `infII.xdy'.
+
+The test `mappings' demonstrates the usage of the module-mechanism
+that we introduced.
+
+The test `startup' simply tests, if xindy comes up at all.
+
+
+If you have more questions, please contact us by mailing to
+
+	xindy@iti.informatik.th-darmstadt.de
+
+We are interested in your opinion.
+
+
+Bye.
+
+=====================================================================
+Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
+Computer Science Department
+Technical University of Darmstadt, Germany
