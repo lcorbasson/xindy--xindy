@@ -171,7 +171,7 @@ rest of this paper.
 \noindent
 \textsf{Sorting Model.}\quad \xindy refines the sorting model of
 \imkidx to achieve even better support for complex sorting rules. With
-this model, the sorting rules for most of the currently spoken
+this model, the sorting rules for many of the currently spoken
 languages can be expressed.
 
 \noindent
@@ -249,16 +249,16 @@ practice. As a running example we sort the French words \emph{cote},
 \emph{côte}, \emph{côté}, and \emph{coté}. The French sorting
 rules~\cite{ISO14651}---as well as other language sorting rules---have
 the concept of \term{sorting phases} that are applied successively to
-obtain a total order on a given set of keywords. The rules say that in
-the first phase the diacritical marks should not be considered at all,
-and the non-diacritical counterparts should be used instead. This
-means that for the words above there is no distinction in the first
-sorting phase at all. In a subsequent phase letters with diacritical
-marks have to follow letters without diacritical marks. Additionally,
-the lexicographic order is from right to left. This exactly yields the
-words in the order shown above. Other languages such as German also
-have the concept of sorting phases though they usually stay with the
-left-to-right lexicographic order.
+obtain a total order on a given set of keywords. The French rules say
+that in the first phase the diacritical marks should not be considered
+at all, and the non-diacritical counterparts should be used instead.
+This means that for the words above there is no distinction in the
+first sorting phase at all. In a subsequent phase letters with
+diacritical marks have to follow letters without diacritical marks.
+Additionally, the lexicographic order is from right to left. This
+exactly yields the words in the order shown above. Other languages
+such as German also have the concept of sorting phases though they
+usually stay with the left-to-right lexicographic order.
 
 From an abstract point of view, the model needs to be enhanced by the
 concept of multiple sorting phases and possible variations in the
@@ -319,13 +319,12 @@ entities can be described in form of the three \term{alphabets}:
   \end{tabular}
 \end{center}
 \noindent
-For each of these alphabets there exists a total order---for the set
-of Arabic numbers there exists a successor-relationship as well.
-Hence, sorting index entries is a problem of lexicographically sorting
-the components of a location reference. A structural description in
-this sense is called a \term{location class} serving as a template for
-concrete instances of this class, in our case concrete Bible verse
-references.
+For each of these alphabets there exists a total order and a
+well-known successor-relationship. Hence, sorting index entries is a
+problem of lexicographically sorting the components of a location
+reference. A structural description in this sense is called a
+\term{location class} serving as a template for concrete instances of
+this class, in our case concrete Bible verse references.
 
 To enable \xindy to process location references, a definition of the
 location classes has to be specified---consisting of a sequence of
@@ -520,11 +519,11 @@ language.
 
 Another improvement is achieved by the concept of location references
 and attributes that allows structured references (such as Bible verses
-or chapter/page counting schemes) to be processed, sorted, and joined
-in various ways. This is accompanied by a powerful context-based
-mark-up scheme that offers very fine control over the process of
-tagging the final index, suitable for different mark-up languages such
-as \TeX, and instances of SGML or XML documents.
+or chapter/page enumeration schemes) to be processed, sorted, and
+joined in various ways. This is accompanied by a powerful
+context-based mark-up scheme that offers very fine control over the
+process of tagging the final index, suitable for different mark-up
+languages such as \TeX, and instances of SGML or XML documents.
 
 From the user interface perspective, the new module scheme allows for
 the development of index styles by authors that can be reused by
@@ -557,6 +556,9 @@ this paper.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 $Log$
+Revision 1.4  1998/01/28 08:37:36  kehr
+Final version submitted to EuroTeX'98.
+
 Revision 1.3  1998/01/28 08:15:09  kehr
 Further modifications.
 
