@@ -1,5 +1,5 @@
 %%
-%% This file is part of the `makeindex4'-project at the
+%% This file is part of the `xindy'-project at the
 %% Technical University Darmstadt, Computer Science Department
 %% WG System Programming, Germany.
 %%
@@ -317,7 +317,12 @@ The method for building ranges looks like that.
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/11/08 16:13:29  kehr
+%% Revision 1.2  1995/11/29 16:53:30  kehr
+%% Changed class hierarchy below class `location-class'. Defined a
+%% location-class< predicate and wrote several regression tests. Wrote a
+%% lot of documentation for submodule `locclass'.
+%%
+%% Revision 1.1  1995/11/08  16:13:29  kehr
 %% Initial checkin.
 %%
 %% Revision 1.5  1995/07/28  10:41:19  kehr

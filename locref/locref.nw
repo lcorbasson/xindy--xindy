@@ -1,5 +1,5 @@
 %%
-%% This file is part of the `makeindex4'-project at the
+%% This file is part of the `xindy'-project at the
 %% Technical University Darmstadt, Computer Science Department
 %% WG System Programming, Germany.
 %%
@@ -27,7 +27,7 @@
 
 A \term{location-reference} is a reference to an object in a document.
 These objects are named \term{location}. Examples of locations are
-pages, chapters, sections, paragraphs, glossaries, verses etc.
+pages, chapters, sections, paragraphs, glossaries, verses \etc{}
 
 An index is structured into indexentries which own usually a list of
 location-references. This part implements location-references and is
@@ -85,7 +85,7 @@ directly derived from its abstract description.
 (defclass location-reference ()
     ((layers    :reader get-layers   :initarg :layers)
      (ordnums   :reader get-ordnums  :initarg :ordnums)
-     (optattr   :reader get-optattr  :initarg :optattr)
+     (catattr   :reader get-catattr  :initarg :catattr)
      (locclass  :reader get-locclass :initarg :locclass)))
 @ %def location-reference
 
@@ -98,11 +98,11 @@ details).
 
 <<class \class{location-reference}>>=
 (defun make-location-reference (&key (layers '()) (ordnums '())
-                                     (optattr "") (locclass nil)
+                                     (catattr "") (locclass nil)
                                      &allow-other-keys)
   (make-instance 'location-reference
                  :layers  layers   :ordnums  ordnums
-                 :optattr optattr  :locclass locclass))
+                 :catattr catattr  :locclass locclass))
 @ %def make-location-reference
 
 
@@ -256,7 +256,7 @@ location-references. A \term{virtual} location-reference is created by
 applying a \textsf{merge-to}--rule. It additionally contains the slot
 [[secondary-attr]] which holds the name of the original attribute. E.g
 [[bold]] \textsf{merge-to} [[default]] creates a virtual
-location-reference with the [[optattr]] set to [[default]] and
+location-reference with the [[catattr]] set to [[default]] and
 [[secondary-attr]] set to [[bold]].
 
 It means that a virtual location-reference is based upon a existing
@@ -266,11 +266,11 @@ location-reference and a secondary attribute.
 (defclass virtual-locref (location-reference)
     ((secondary-attr :accessor get-secondary-attr :initarg :secondary-attr)))
 
-(defun make-virtual-locref (locref optattr secondary-attrib)
+(defun make-virtual-locref (locref catattr secondary-attrib)
   (make-instance 'virtual-locref
                  :layers         (get-layers  locref)
                  :ordnums        (get-ordnums locref)
-                 :optattr        optattr
+                 :catattr        catattr
                  :locclass       (get-locclass locref)
                  :secondary-attr secondary-attrib))
 @ %def virtual-locref make-virtual-locref
@@ -282,9 +282,8 @@ location-reference and a secondary attribute.
 (use-package 'clos)
 (use-package 'xp)
 
-(unless (find-package 'base)
-  (load 'base)
-  (use-package 'base))
+(require 'base)
+(use-package 'base)
 
 (require 'basetype)
 (require 'locclass)
@@ -364,7 +363,7 @@ printing of the layer-string.
    (write (get-locclass locref) :stream s)
    (write-string ";" s)
    (pprint-newline :linear s)
-   (write-string (get-optattr locref) s)
+   (write-string (get-catattr locref) s)
    (when (typep locref 'virtual-locref)
      (write-string " + " s)
      (write-string (get-secondary-attr locref) s))
@@ -388,7 +387,12 @@ printing of the layer-string.
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1995/11/22 16:45:16  kehr
+%% Revision 1.4  1995/11/29 16:53:30  kehr
+%% Changed class hierarchy below class `location-class'. Defined a
+%% location-class< predicate and wrote several regression tests. Wrote a
+%% lot of documentation for submodule `locclass'.
+%%
+%% Revision 1.3  1995/11/22  16:45:16  kehr
 %% Corrected the eval-when construct. But I don't understand, why it
 %% seemed to work yesterday :-)
 %%

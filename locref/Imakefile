@@ -8,7 +8,7 @@ XCOMM $Id$
  */
 
 #define NotangleStandardOptions -L';; line %L "%F"%N'
-#define NoweaveStandardOptions -n -index # -delay
+#define NoweaveStandardOptions -n # -index # -delay
 
 /* needed modules */
 #include <Project.imk>
@@ -33,6 +33,7 @@ NowebTarget(program,lsp,)
 */
 #ifndef NowebFullLispTarget
 #define NowebFullLispTarget(source) 	                                @@\
+src:: source.lsp							@@\
 source:: $(ALL_LISP_SRC)						@@\
 NowebLispTarget(source)							@@\
 LispModuleTarget(source)					       	@@\
@@ -74,7 +75,12 @@ DejaGnuTarget(locref,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.3  1995/11/22 16:45:14  kehr
+ * Revision 1.4  1995/11/29 16:53:28  kehr
+ * Changed class hierarchy below class `location-class'. Defined a
+ * location-class< predicate and wrote several regression tests. Wrote a
+ * lot of documentation for submodule `locclass'.
+ *
+ * Revision 1.3  1995/11/22  16:45:14  kehr
  * Corrected the eval-when construct. But I don't understand, why it
  * seemed to work yesterday :-)
  *

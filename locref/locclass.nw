@@ -25,10 +25,24 @@
 
 \subsection{Introduction}
 
-A \term{location-class} describes the structural composition of
-\term{basetypes} and \term{separators}. During creation of an instance
-of a location-class we check the base-alpabets and separators for
-compatibility an issue a warning if the may cause problems.
+A \term{location-class} describes the structure of
+\term{location-references} that may appear in the document. Every
+instance of a location-reference must belong to exactly one
+location-class. If a location-reference potentially matches several
+location-class descriptions exactly one of them must be the class the
+location-reference belongs to. Currently three location-class types
+are supported:
+%%
+\begin{center}
+  \term{Standard-class}, \term{Var-class}, \term{Crossreference-class}.
+\end{center}
+%%
+\term{Standard}- and \term{Var-classes} consist of \term{basetypes}
+and \term{separators}. A Standard-class has a fixed structure whereas
+a a Var-class actually describes a family of Standard-classes.
+
+A \term{Crossreference-class} describes how cross references such as
+\textit{see}, \textit{see also under} \etc are represented.
 
 
 \subsection{Abstract Specification}
@@ -44,46 +58,212 @@ based on the basetypes and consists of a string and a order number. A
 
 \subsection{Concrete Specification}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{External interface}
+
+The following symbols are exported:
+
+\begin{defvcls}{location-class}{}
+  Virtual base-class for all location-classes
+\end{defvcls}
+
+\begin{defvcls}{layered-location-class}{}
+  Virtual base-class for all layered location-classes. Subclass of
+  \class{location-class}.
+\end{defvcls}
+
+\begin{defcls}{standard-location-class}{}
+  Describes all location-classes of fixed structure.\\Subclass of
+  \cmd{layered-location-class}.
+\end{defcls}
+
+\begin{defcls}{var-location-class}{}
+  Describes all location-classes of variable structure.\\Subclass of
+  \cmd{layered-location-class}.
+\end{defcls}
+
+\begin{defunc}{checked-make-standard-location-class}%%
+  {\\\hfill\tstring \x \tstrlist \res \type{standard-location-class}}%%
+  Constructor of \class{standard-location-class}.
+\end{defunc}
+
+\begin{defunc}{checked-make-var-location-class}%%
+  {\\\hfill\tstring \x \tstrlist \res \type{var-location-class}}%%
+  Constructor of \class{var-location-class}.
+\end{defunc}
+
+\begin{defcls}{loccls-layer}{}
+  Describes the layer of a layered location-class.
+\end{defcls}
+
+\begin{defunc}{make-loccls-layer}%%
+  {\tstring \x \tmarkup \res \type{loccls-layer}}%%
+  Constructor of \class{loccls-layer}.
+\end{defunc}
+
+\begin{defcls}{loccls-separator}{}
+  Describes the separator of a layered location-class.
+\end{defcls}
+
+\begin{defunc}{make-loccls-separator}%%
+  {\tstring \x \tmarkup \res \type{loccls-separator}}%%
+  Constructor of \class{var-location-class}.
+\end{defunc}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{Class \sans{location-class}}
 
-Here is the definition of a location-class. The order-number
-[[ordnum]] is set by calling the function [[get-next-ordnum]]. It
-returns the current value of counter [[*loccls-ordnum-counter*]] and
-increments it. This is a simple way to give location-classes a
-order-number.
 
-<<class location-class>>=
+A location-class is the abstract base-class of all location-class
+types. The only common slot to all subclasses is [[name]].
+
+<<class \class{location-class}>>=
 (defclass location-class ()
-    ((name        :reader   get-name        :initarg :name)
-     (layers      :reader   get-layers      :initarg :layers)
-     (join-layers :reader   get-join-layers :initarg :join-layers)
-     (ordnum      :accessor get-ordnum      :initform (get-next-ordnum))))
+    ((name    :reader get-name  :initarg :name)
+     (ordnum  :accessor get-ordnum :initform (gen-next-loccls-ordnum))))
+@ %def location-class
 
-(defun make-location-class (name layers join-layers)
-  (make-instance 'location-class
+<<export-list of module \module{locref}>>=
+(export '(location-class))
+@
+
+\no Every derived class must define a constructor-function
+[[checked-make-name-location-class]] that makes some validation-checks
+and returns an instance of the specific class. Its signature may vary
+due to the different possibilities but its first argument must be a
+name that is stored in the [[name]]-slot.
+
+\smallskip
+
+\no We define a relation between location-classes that is used to sort
+instances of location-references due to the order of their
+corresponding location-classes. We introduce the relation [[location-class<]]
+that compares two location-classes [[loccls-1]] and [[loccls-2]] and
+returns [[t]] if the first one is \emph{smaller} than the second one.
+
+<<class \class{location-class}>>=
+(defgeneric location-class< (location-class-1 location-class-2))
+@ %def location-class<
+
+\no It is implemented as a generic function to achieve a simple
+implementation that is extendable.
+
+The currently implemented behaviour defines this relation according to
+the order in which location-classes are defined.  We use a variable
+[[*curr-loccls-ordnum*]] to keep track of the current number with
+initial value 0 and increase it everytime we declare a new
+location-class by calling [[gen-next-loccls-ordnum]]. It is called in
+the [[:initform]] of the class-descriptions.
+
+<<class \class{location-class}>>=
+(defparameter *curr-loccls-ordnum* 0)
+
+(defun gen-next-loccls-ordnum ()
+  (incf *curr-loccls-ordnum*))
+@ %def gen-next-loccls-ordnum
+
+\no The default implementation that needs to be modified later is as
+follows:
+
+<<class \class{location-class}>>=
+(defmethod location-class< ((loccls-1 location-class)
+                            (loccls-2 location-class))
+  (< (get-ordnum loccls-1) (get-ordnum loccls-2)))
+@ %def location-class<
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Class \sans{layered-location-class}}
+
+\no We combine Standard-classes and Var-classes to a Layered-class
+because they share multiple similiarities.
+
+<<class \class{layered-location-class}>>=
+(defclass layered-location-class (location-class)
+    ((layers      :reader   get-layers      :initarg :layers)
+     (join-layers :reader   get-join-layers :initarg :join-layers))
+  )
+@ %def layered-location-class
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Class \sans{standard-location-class}}
+
+<<class \class{standard-location-class}>>=
+(defclass standard-location-class (layered-location-class)
+    ())
+
+(defun make-standard-location-class (name layers join-layers)
+  (make-instance 'standard-location-class
                  :name name :layers layers :join-layers join-layers))
-
-(defmethod show ((loccls location-class))
+(defmethod show ((loccls layered-location-class))
   (format t "[LocCls `~A': (" (get-name loccls))
   (show (get-layers loccls))
   (show (get-join-layers loccls))
   (write-string ")")
   (values))
-@ %def location-class make-location-class
+@ %def standard-location-class make-standard-location-class
 
-We add a function for a checked creation of a location-class, that
-checks for compatibility. Currently we just forward it to the normal
-instantiation without any validation.
+\no We add a function for a checked creation of a location-class, that
+checks for correct arguments. Currently we just forward it to the
+normal instantiation without any validation.
 
-<<class location-class>>=
-(defun checked-make-location-class (name layers join-layers)
-  (make-location-class name layers join-layers))
+<<class \class{standard-location-class}>>=
+(defun checked-make-standard-location-class (name layers join-layers)
+  (make-standard-location-class name layers join-layers))
 @ %def checked-make-location-class
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Class \sans{var-location-class}}
+
+<<class \class{var-location-class}>>=
+(defclass var-location-class (layered-location-class)
+    ())
+
+(defun make-var-location-class (name layers join-layers)
+  (make-instance 'var-location-class
+                 :name name :layers layers :join-layers join-layers))
+
+(defmethod show ((loccls layered-location-class))
+  (format t "[LocCls `~A': (" (get-name loccls))
+  (show (get-layers loccls))
+  (show (get-join-layers loccls))
+  (write-string ")")
+  (values))
+@ %def var-location-class make-var-location-class
+
+<<class \class{var-location-class}>>=
+(defun checked-make-var-location-class (name layers join-layers)
+  (make-var-location-class name layers join-layers))
+@ %def checked-make-var-location-class
+
+\medskip
+
+\no Here follows the list of all exported location-classes and their
+constructors.
+
+<<export-list of module \module{locref}>>=
+(export '(layered-location-class
+          standard-location-class
+          var-location-class
+          checked-make-layered-location-class
+          checked-make-standard-location-class
+          checked-make-var-location-class))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Other stuff --- a lot of kluges}
 
 This function counts the number of basetypes in a layer-list. It is
 used to initialize the [[join-layers]]-value of a location-class.
 
-<<class location-class>>=
+<<class \class{layered-location-class}>>=
 (defun num-of-basetypes (layers)
   (list (count nil layers
                :test #'(lambda (dummy layer)
@@ -96,7 +276,7 @@ the list of valid layers of the location-class. Is its used to check
 if two location-references are successors that may be joined at at
 certain level.
 
-<<class location-class>>=
+<<class \class{standard-location-class}>>=
 (defun joinable-on-layer-x-p (loccls-name level-number)
   (find level-number
           (get-join-layers loccls-name)))
@@ -111,19 +291,21 @@ return the fixed constant [[3]] for now. The value this function
 returns must be at least greater that 1 because a range of length 1
 should never be valid.
 
-<<class location-class>>=
+<<class \class{standard-location-class}>>=
 (defun get-minimum-range-length (loccls-name)
   (declare (ignore loccls-name))
   3)
 @
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{Class \sans{loccls-layer}}
 
-A location-class-layer is based upon a basetype. We define this as an
-extra class to be free for future additions. Great idea, because we
-now store the markup-information into the class, too.
+A \term{location-class-layer} is based upon a basetype. We define this
+as an extra class to be free for future additions. (Later on... Great
+idea, because we now store the markup-information into the class, too.)
 
-<<class loccls-layer>>=
+<<class \class{loccls-layer}>>=
 (defclass loccls-layer ()
     ((basetype :reader get-basetype :initarg :basetype)
      (markup   :reader get-markup   :initarg :markup)))
@@ -135,15 +317,20 @@ now store the markup-information into the class, too.
   (show (get-basetype layer))
 ;  (show (get-markup   layer))
   (values))
+@ %def loccls-layer make-loccls-layer
+
+<<export-list of module \module{locref}>>=
+(export '(loccls-layer make-loccls-layer))
 @
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \sans{loccls-separator}}
 
 The separators is simply a string. We define this as an extra class
 for future extensions.
 
-<<class loccls-separator>>=
+<<class \class{loccls-separator}>>=
 (defclass loccls-separator ()
     ((separator  :reader get-separator  :initarg :separator)
      (markup     :reader get-markup     :initarg :markup)))
@@ -155,7 +342,13 @@ for future extensions.
   (write-string (get-separator separator))
 ;;  (show (get-markup separator))
   (values))
+@ %def loccls-separator make-loccls-separator
+
+<<export-list of module \module{locref}>>=
+(export '(loccls-separator make-loccls-separator))
 @
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 <<markup methods>>=
 (defmethod markup-object ((separator loccls-separator)
@@ -164,6 +357,10 @@ for future extensions.
                           (dummmy-env-stack    list))
   (mprint (get-separator separator)))
 @
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The root}
 
 <<*>>=
 (eval-when (compile load)
@@ -174,12 +371,23 @@ for future extensions.
     (use-package 'base))
   )
 
-<<class location-class>>
-<<class loccls-layer>>
-<<class loccls-separator>>
+<<class \class{location-class}>>
+<<class \class{layered-location-class}>>
+<<class \class{standard-location-class}>>
+<<class \class{var-location-class}>>
+<<class \class{loccls-layer}>>
+<<class \class{loccls-separator}>>
 <<markup methods>>
+
+<<export-list of module \module{locref}>>
 @
 
+\begin{TODO}
+\item change declaration of the relation between location-classes
+  \texttt{locref<}
+\item location-class \class{crossref} still unimplemented
+\item implement all \cmd{checked-make-xxx-location-class} functions
+\end{TODO}
 
 %% Local Variables:
 %% mode: latex
@@ -187,7 +395,12 @@ for future extensions.
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1995/11/19 18:39:04  kehr
+%% Revision 1.3  1995/11/29 16:53:29  kehr
+%% Changed class hierarchy below class `location-class'. Defined a
+%% location-class< predicate and wrote several regression tests. Wrote a
+%% lot of documentation for submodule `locclass'.
+%%
+%% Revision 1.2  1995/11/19  18:39:04  kehr
 %% Introduced packages base and locref.
 %%
 %% Revision 1.1  1995/11/08  16:13:22  kehr
