@@ -9,13 +9,13 @@
 RM = /bin/rm -f
 
 XINDY_PLATFORM   = test-arch
-ALLTESTS         = attr1 attr2 startup mappings infII xref-1 \
+ALLTESTS         = attr1 attr2 attr3 startup mappings infII xref-1 \
 		   ex1 ex2 deep err1 err2
-TESTS 	         = $(ALLTESTS)
+TESTS 	         = attr2 attr3# $(ALLTESTS)
 XINDY_DIR        = ../../binaries/$(XINDY_PLATFORM)
 XINDY_MODULES    = ../modules
 LOGFILE	         = -l $$tst.xlg
-TRACE	         = -L 1
+TRACE	         = -L 3
 MAKEINDEX4	 = ../src/makeindex4
 MAKEINDEX4_TESTS = inf2
 
