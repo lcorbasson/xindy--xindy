@@ -575,7 +575,7 @@ For more information see the description of the [[ordrules]]-package.
 	    ((not to-attr)
 	       (nraw "`~S' is not a known attribute in:~&~A" to whole))
 	    (t (if drop
-		   `(ADD-DROP-IF-MERGE-RULE *INDEXSTYLE*
+		   `(ADD-DROP-IF-MERGED-RULE *INDEXSTYLE*
 		     ,from-attr ,to-attr)
 		   `(ADD-MERGE-RULE *INDEXSTYLE*
 		     ,from-attr ,to-attr)))))))
@@ -728,7 +728,7 @@ find one we load it as usual.
 @ %def find-file
 
 <<Including files>>=
-(defvar *wl-fmt* "~&Error in section:~A")
+(defvar *wl-fmt* "~&~%Error in line ~S:~%~A~%")
 (defun watched-load (filename
 		     &key
 		     (print *load-print*)
@@ -737,7 +737,8 @@ find one we load it as usual.
   (let ((stream (open (setq filename (pathname filename))
 		      :direction :input-immutable
 		      :element-type 'string-char
-		      :if-does-not-exist nil)))
+		      :if-does-not-exist nil))
+	(lineno 1))
     (if stream
 	(let* ((load-stream (make-string-output-stream))
 	       (input-stream (if echo
@@ -757,12 +758,15 @@ find one we load it as usual.
 			    (handler-case (read input-stream nil end-of-file)
 			      (error (cond)
 				(when echo
-				  (info *wl-fmt* (get-output-stream-string
-						  load-stream)))
-				(oops* (simple-condition-format-string cond)
-				       (simple-condition-format-arguments cond))
-				(error-exit))))
-			   (str (get-output-stream-string load-stream)))
+				  (let* ((str (get-output-stream-string load-stream))
+					 (cnt (count #\Newline str)))
+				    (info *wl-fmt* (+ cnt lineno) str)
+				    (oops* (simple-condition-format-string cond)
+					   (simple-condition-format-arguments cond))
+				    (error-exit))))))
+			   (str (get-output-stream-string load-stream))
+			   (cnt (count #\Newline str)))
+		      (incf lineno cnt)
 		      (when (eql obj end-of-file)
 			(return-from nil))
 		      (setq obj
@@ -771,7 +775,7 @@ find one we load it as usual.
 				      ;;(compiling (funcall (compile-form obj nil nil nil nil nil)))
 				      (t (handler-case (eval obj)
 					   (error (cond)
-					     (info *wl-fmt* str)
+					     (info *wl-fmt* lineno str)
 					     (oops* (simple-condition-format-string cond)
 						    (simple-condition-format-arguments cond))
 					     (error-exit)))
@@ -1051,6 +1055,9 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.24  1997/03/10 15:50:50  kehr
+%% Corrected a bug in the macro (merge-to).
+%%
 %% Revision 1.23  1997/01/23 21:33:13  kehr
 %% Reincorporated (merge-to) rule into indexstyle.
 %%

@@ -215,9 +215,10 @@ and defined by the following slot descriptions.
                            :initform (make-merge-rule))
      (drop-if-merged-rules :reader get-drop-if-merged-rules
                            :initform (make-drop-if-merged-rule))
-;     (merge-rule-topsort   :reader get-merge-rule-topsort
-;                           :writer set-merge-rule-topsort
-;                           :initform '())
+;;     (merge-rule-topsort   :reader get-merge-rule-topsort
+;;                           :writer set-merge-rule-topsort
+;;                           :initform '())
+
      <<Hooks for merge-rules>>
 
      (implicit-subst-rules :reader get-implicit-subst-rules
@@ -756,14 +757,21 @@ delayed until the markup).
   (make-ready (get-letter-groups idxcls))
   <<check for reflexivity>>
 
-  ;(set-merge-rule-topsort (topsort (remove-reflexivity
-  ;(transform-relation (get-drop-if-merged-rules idxcls)
-  ;'get-ordnum)))
+;;  (set-merge-rule-topsort (topsort
+;;			   (remove-reflexivity
+;;			    (transform-relation
+;;			     (get-drop-if-merged-rules idxcls)
+;;			     #'(lambda (attr)
+;;				 (get-ordnum attr)))))
+;;			  *indexstyle*)
+
+  ;;(pprint (get-drop-if-merged-rules idxcls))
+  ;;(pprint (topsort (get-drop-if-merged-rules idxcls)))
 
   (let ((counter 0))
     (mapc #'(lambda (catattr)
-              (set-processing-ordnum (incf counter) catattr))
-          (topsort (get-drop-if-merged-rules idxcls))))
+	      (set-processing-ordnum (incf counter) catattr))
+	  (reverse (topsort (get-drop-if-merged-rules idxcls)))))
 
   idxcls)
 @ %def make-ready
@@ -904,6 +912,9 @@ delayed until the markup).
 @
 
 %% $Log$
+%% Revision 1.18  1997/03/10 15:50:46  kehr
+%% Corrected a bug in the macro (merge-to).
+%%
 %% Revision 1.17  1997/01/23 21:33:09  kehr
 %% Reincorporated (merge-to) rule into indexstyle.
 %%
