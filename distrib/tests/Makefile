@@ -9,8 +9,8 @@
 RM = /bin/rm -f
 
 XINDY_PLATFORM = test-arch
-ALLTESTS       = startup mappings
-TESTS 	       = mappings
+ALLTESTS       = startup mappings infII
+TESTS 	       = $(ALLTESTS)
 XINDY_DIR      = ../binaries/$(XINDY_PLATFORM)
 
 testsuite: banner tests compare

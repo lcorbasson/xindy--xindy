@@ -10,8 +10,6 @@ organized as follows:
 
   Doc/		contains a manual in html,dvi,ps,info,txt-formats
 
-  tests/        contains a complete testsuite
-
   bin/          several scripts and tools forming the enviroment of xindy
 
   modules/	the library of pre-defined indexstyle-modules
@@ -21,17 +19,19 @@ organized as follows:
 
   src/          the source of the xindy-system
 
+  tests/        contains a complete testsuite
+
   contrib/	contains additional programs that can be used to make
 		xindy work with various document-formatting systems
 
 
 This distribution is also available at
 
-	ftp://ftp.th-darmstadt.de/@@@
+	ftp://ftp.th-darmstadt.de/pub/tex/src/xindy/
 
 or at our homepage at
 
-	http://www.iti.informatik.th-darmstadt.de/@@@
+	http://www.iti.informatik.th-darmstadt.de/@@@ (not availabe yet!)
 
 which contains the most up-to-date information about xindy.
 
@@ -41,13 +41,18 @@ Currently we support binary-distributions for the following platforms:
     AIX-3.2          rs6000
     HP-UX 9.x        hppa
     SunOS 5.2-4      sun4m
-    MS-DOS/Windows   i386,i486  (partially supported)
 
 Everybody is encouraged to port xindy to new platforms. For any kind
 of suggestions, helpful comments, questions, bug reports and such,
-please mail to
+please mail to the xindy mailing-list
 
-	@@@@iti.informatik.th-darmstadt.de
+	xindy@iti.informatik.th-darmstadt.de
+
+You can subscribe to the list by sending a mail to
+
+	xindy-approval@iti.informatik.th-darmstadt.de
+
+with the subject `SUBSCRIBE xindy'.
 
 
 See file INSTALL for a description how to install this distribution.

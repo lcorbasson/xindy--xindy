@@ -2,7 +2,7 @@
 ;;
 ;; This file contains some rules to process TeX-letters with xindy.
 ;;
-;; It shuuld be used in conjunction with the `din5007' or the `duden'
+;; It should be used in conjunction with the `din5007' or the `duden'
 ;; modules.
 ;;
 

@@ -12,23 +12,34 @@
 #   gzipped    :  created a gzipped version of the mem-file
 #   clean      :  cleans unnecessary stuff
 #   testsuite  :  executes a testsuite
+#   tex2xindy  :  compiles the TeX-parser
 #
 
-TOPDIR    = ../..
+# Do not change the following section!
 
-SRC_DIR   = $(TOPDIR)/src
-FAS       = base.fas locref.fas idxstyle.fas index.fas markup.fas
-DEFAULTS  = defaults.xdy
-MEMFILE   = xindy.mem
-XINDY_IN  = $(TOPDIR)/bin/xindy.in
-XINDY_RUN = ./xindy.run -q -M ./base.mem
-TEST_DIR  = $(TOPDIR)/tests
+TOPDIR     = ../..
 
-LIBDIR    = /usr/local/lib/xindy/
+SRC_DIR    = $(TOPDIR)/src
+FAS        = base.fas locref.fas idxstyle.fas index.fas markup.fas
+DEFAULTS   = defaults.xdy
+MEMFILE    = xindy.mem
+XINDY_IN   = $(TOPDIR)/bin/xindy.in
+XINDY_RUN  = ./xindy.run -q -M ./base.mem
+TEST_DIR   = $(TOPDIR)/tests
+TEX2XINDYL = $(TOPDIR)/bin/tex2xindy.l
 
-RM 	  = /bin/rm -f
+# End of section
 
-all: xindy compile xindy.mem
+RM 	   = /bin/rm -f
+LIBDIR     = /usr/local/lib/xindy/
+CFLAGS 	   = -O2
+FLEX       = flex -t
+FLEXLIB    = -L/usr/local/lib -L/usr/local/lib/lib -L/usr/local/lib/flex -lfl
+
+
+# Target section
+
+all: xindy compile xindy.mem tex2xindy finish
 
 base.fas: $(SRC_DIR)/base.lsp
 	$(XINDY_RUN) -c $(SRC_DIR)/base.lsp -o base.fas
@@ -64,24 +75,38 @@ $(DEFAULTS): PLATFORM force
 	@echo " \"`cat PLATFORM`\" )"        >> $(DEFAULTS)
 	@echo "Finished $(DEFAULTS)."
 
-xindy: force
+xindy: $(XINDY_IN)
 	-sed -e "s|@XINDY_LIBDIR@|$(LIBDIR)|" \
 	     < $(XINDY_IN) > xindy
 	-chmod a+x xindy
 
 testsuite: PLATFORM
-	@ (XINDY_PLATFORM=`cat PLATFORM`; export XINDY_PLATFORM; \
-	   cd $(TEST_DIR); make testsuite)
+	@ (PLATFORM=`cat PLATFORM`; cd $(TEST_DIR); \
+	   make XINDY_PLATFORM=$$PLATFORM testsuite)
 
 PLATFORM:
 	@! if [ ! -f PLATFORM ] ; then \
 		echo "Missing PLATFORM file ! (aborting)" 1>&2 ;\
 	   fi
 
+tex2xindy.c: $(TEX2XINDYL)
+	$(FLEX) $(TEX2XINDYL) > tex2xindy.c
+
+tex2xindy: tex2xindy.c
+	$(CC) $(CFLAGS) tex2xindy.c -o tex2xindy $(FLEXLIB)
+
 clean: force
 	$(RM) *.fas *.lib
 	$(RM) $(DEFAULTS) $(MEMFILE)
 	$(RM) xindy
+	$(RM) tex2xindy tex2xindy.c
+
+finish: force
+	@echo ""
+	@echo "Compilation finished!"
+	@echo ""
+	@echo "You can run the testsuite by typing \`make testsuite'."
+	@echo ""
 
 force:
 

@@ -8,15 +8,16 @@ This file describes how to install xindy on your system:
 
 	gtar -xzvf xindy-<version>-<platform>.tar.gz
 
-   The binaries are stored in the directory ./binaries/<platform>.
+   The binaries will be stored into the directory ./binaries/<platform>.
 
 2. Change to the directory of the binary-distribution for which you
    want to install the system, e.g.
 
 	cd ./binaries/<platform>
 
-   Build the xindy system `xindy' with the appropriate directory settings.
-   The following directory can be specified.
+   You need `GNU flex' to make the TeX-parser compile if you need it.
+   Modify the Makefile to relect your system paths, etc. The directory
+   where xindy looks for ist runtime-system is
 
 	LIBDIR    where the main executable `xindy.run', the dumped
 		  file `xindy.mem' and the indexstyle-modules go.
@@ -30,9 +31,9 @@ This file describes how to install xindy on your system:
    Note: This only compiles xindy and modifies some scripts but does
 	 *not* install anything!
 
-   After a while (between 20 seconds and 5 minutes) you should receive
-   a message saying that the compilation succeeded. If not, see file
-   PROBLEMS for further hints.
+   After a while (between 60 seconds and 10 minutes--depending on your
+   system) you should receive a message saying that the compilation
+   has finished. If not, see file PROBLEMS for further hints.
 
    This step has produced a memory-image of the xindy-system in file
    xindy.mem. If you like, you can compress this file with gzip by
@@ -40,7 +41,8 @@ This file describes how to install xindy on your system:
 
 	make gzipped
 
-   which compresses xindy.mem and stores it under the same name.
+   which compresses xindy.mem and stores it under the same name. This
+   saves space but can result in a longer startup-phase.
 
 
 3. The next step would be to run the testsuite on the whole system.
@@ -56,14 +58,14 @@ This file describes how to install xindy on your system:
 
    The files should be installed as follows:
 
-	cp xindy		<perhaps /usr/local/bin>
+	cp xindy tex2xindy ../../bin/makeindex4  <perhaps /usr/local/bin>
 	cp xindy.run xindy.mem	XINDY_LIBDIR
 	cp -R ../../modules     XINDY_LIBDIR
 	cp ../../Doc		<where you store your docs>
 
-   Its up to you to install all files properly. xindy is the only file
-   that needs be reachable from the path. It searches for xindy.run
-   and xindy.mem in LIBDIR.
+   Its up to you to install all files properly. xindy and tex2xindy
+   are the only files that needs be reachable from the path. It
+   searches for xindy.run and xindy.mem in LIBDIR.
 
 5. Read the manual with your prefered viewer. Its located in the
    Doc-directory.
