@@ -121,25 +121,8 @@ information.
   (make-instance 'indexclass :name name))
 @ %def indexclass make-indexclass
 
-<<export-list of module \module{idxclass}>>=
+<<export-list of submodule \module{idxclass}>>=
 (export '(indexclass make-indexclass))
-@
-
-<<class \class{indexclass}>>=
-(defmethod show ((idxcls indexclass))
-  (format t "Indexclass `~A':" (get-name idxcls))
-  (format t "~%Basetypes:  ")
-  (show (get-basetypes idxcls))
-  (format t "~%LocClasses: ")
-  (show (get-locclasses idxcls))
-  (format t "~%Merge-to-Rules: ")
-  (show (get-merge-to-rules idxcls))
-  (format t "~%Sep-Mix-Rule: ")
-  (show (get-sep-mix-rule idxcls))
-  (format t "~%Markup:      ")
-  (show (get-keyword-markup idxcls))
-  (format t "~%")
-  (values))
 @ %def indexclass make-indexclass
 
 
@@ -204,24 +187,30 @@ with names and has no knowledge about real \Lisp-objects.
 ;      (setf (get-sep-mix-rule idxcls) sep-mix-rule))))
 @ %def add-indexclass set-indexclass
 
-\subsubsection{The root}
 
-<<*>>=
+\subsubsection{The submodule root}
+
+<<submodule \module{idxclass}>>=
 ;; $Id$
 ;;
 
-(eval-when (compile load)
-  (unless (find-package 'clos)
-    (use-package 'clos))
-  (unless (find-package 'locref)
-    (load 'locref)
-    (use-package 'locref))
-  )
-
 <<class \class{indexclass}>>
 <<Mutators for \class{indexclass}>>
+<<export-list of submodule \module{idxclass}>>
 @
 
+\subsubsection{Pretty-printing}
+
+<<pretty-printing>>=
+(set-pprint-dispatch 'indexclass
+                     #'(lambda (s idxcls)
+                         (pprint-logical-block
+                          (s nil :prefix "Indexclass {" :suffix "}")
+                          (pprint-indent :block 2 s)
+                          (pprint-newline :linear s)
+                          (write (get-name idxcls) :stream s)
+                          (pprint-newline :linear s))))
+@
 
 %% Local Variables:
 %% mode: latex
@@ -229,7 +218,10 @@ with names and has no knowledge about real \Lisp-objects.
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1995/12/07 18:14:22  kehr
+%% Revision 1.3  1995/12/15 17:08:24  kehr
+%% Rewrote module compilation with noweb and clisp.
+%%
+%% Revision 1.2  1995/12/07  18:14:22  kehr
 %% Renamed module `idxclass' to 'idxstyle'. Resturcturing module from scratch.
 %%
 %% Revision 1.1  1995/12/05  18:46:11  kehr

@@ -25,18 +25,27 @@
 
 \subsection{Introduction}
 
-The indexstyle
+The indexstyle is defined by a set of indexclasses. This allows the
+user to define several different indexclasses for different purposes.
+We're currently unsure about the needs the users will have so we
+decided to use a simple model. We declare a pre-defined indexclass
+[[default]] that contains some basic alphabets and basetypes. The
+users are able to extend the definitions made in this class as they
+like.
 
-The indexclass [[default]] is predefined in
-module [[idxstyle]]. The user may or may not define additional
-classes. If a user wants to generate an index for a specific class the
-working-scope is defined as the union of indexclass [[default]] and
-the selected class. Userdefined indexclasses have precedence over the
-default indexclass. The global variable [[*active-idxcls-name*]]
-keeps track of the currently active indexclass.
+\bigskip
+
+In the future we plan that users may extend this class by defining
+location-classes, rules, markups \etc The user then may or may not
+define additional classes. If a user adds a new indexclass its
+definitions \emph{shadow} the definitions made in class [[default]].
+So a new indexclass \emph{inherits} is components from class
+[[default]] and extends or shadows those inherited definitions. There
+exist no inheritance definitions among the user-defined indexclasses.
 
 
 \subsection{Concrete Specification}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -49,7 +58,7 @@ environment that is defined by a given indexclass. The list of
 indexclasses is stored in the variable [[*indexstyle*]]. It is the
 root of all indexstyle descriptions. We also keep track of the
 currently active indexclass-name which is stored in
-[[*active-idxcls-name*]].
+[[*active-idxcls-name*]].\footnote{This is currently unused.}
 
 <<The indexstyle>>=
 (defvar *indexstyle* '())
@@ -62,19 +71,23 @@ currently active indexclass-name which is stored in
     (setq *active-idxcls-name* idxcls-name)))
 @ %def *indexstyle* *active-idxcls-name* create-indexclass
 
+
 \no To have read-access to the currently active scope of
 indexclasses we define functions that give back already stored
 information. These functions are prefixed with [[find-]] analogous to
 the \Lisp-function [[find]].
 
-When managing several different indexclasses that may be accessed
-by name we need a mechanism to find a name and return the found
+When managing several different indexclasses that may be accessed by
+name we need a mechanism to find a name and return the found
 indexclass. The following function is looking for indexclass
 [[idxcls-name]] and returns it if was found or [[nil]] otherwise.
+This function currently returns indexclass [[default]].
 
 <<The indexstyle>>=
 (defun find-indexclass (idxcls-name)
-  (cdr (assoc idxcls-name *indexstyle* :test #'equal)))
+  (declare (ignore idxcls-name))
+  *indexstyle*)
+  ;; currently unused: (cdr (assoc idxcls-name *indexstyle* :test #'equal)))
 @ %def find-indexclass
 
 \no When searching for a basetype or a location-class-definition we
@@ -110,7 +123,7 @@ arguments: the current indexclass, the current location-class and the
              (get-locclasses idxcls))))
 @
 
-\no The following function iterates over all \textsf{merge-to}--rules
+\no The following function iterates over all \textsf{merge-to}-rules
 in the current indexclass-scope.
 
 <<The indexstyle>>=
@@ -135,20 +148,26 @@ in the current indexclass-scope.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsubsection{Predefined default style}
+
+<<Default style>>=
+<<default alphabets>>
+<<default enumerations>>
+@
 
 These are the predefined alphabets for upper- and lowercase letters.
-<<alphabets>>=
+
+<<default alphabets>>=
 (basetype-by-string "ALPHA" "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 (basetype-by-string "alpha" "abcdefghijklmnopqrstuvwxyz")
 (basetype-by-string "digits" "0123456789")
-
 @
 
 Here follows a general-purpose function
 [[prefix-match-for-radix-numbers]] which is capable to recognize
 radix-based numbers with a radix ranging from 2\ldots36.
 
-<<help-functions>>=
+<<default enumerations>>=
 (defun prefix-match-for-radix-numbers (str radix)
   (let* ((n nil)
          (strlen (length str))
@@ -175,7 +194,7 @@ known in the indexclass [[default]] by defining a new class of name
 [[enumeration-arabic-numbers]], a name and the string containing the
 basetype-characters. Quiet easy, isn't it ?
 
-<<enumerations>>=
+<<default enumerations>>=
 (defclass enumeration-arabic-numbers (enumeration) ())
 
 (defmethod prefix-match ((str string) (enum enumeration-arabic-numbers))
@@ -188,29 +207,33 @@ basetype-characters. Quiet easy, isn't it ?
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{The root}
+\subsubsection{The module root}
 
 <<*>>=
 ;; $Id$
 ;;
 
-(in-package 'idxclass)
+(in-package 'idxstyle)
 (provide 'idxstyle)
 
-(unless (find-package 'clos)
-  (use-package 'clos))
-(unless (find-package 'xp)
-  (use-package 'xp))
+(eval-when (compile load)
+  (use-package 'clos)
+  (use-package 'xp)
+  (unless (find-package 'locref)
+    (load 'locref))
+  (use-package 'locref))
 
-(require 'idxclass)
-(require 'intface)
+<<submodule \module{idxclass}>>
+<<submodule \module{indexstyle}>>
+<<submodule \module{intface}>>
 
+<<pretty-printing>>
+@
 
+\subsubsection{The submodule root}
+
+<<submodule \module{indexstyle}>>=
 <<The indexstyle>>
-
-<<help-functions>>
-<<alphabets>>
-<<enumerations>>
 @
 
 %% Local Variables:
@@ -219,7 +242,10 @@ basetype-characters. Quiet easy, isn't it ?
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/12/07 18:14:24  kehr
+%% Revision 1.2  1995/12/15 17:08:26  kehr
+%% Rewrote module compilation with noweb and clisp.
+%%
+%% Revision 1.1  1995/12/07  18:14:24  kehr
 %% Renamed module `idxclass' to 'idxstyle'. Resturcturing module from scratch.
 %%
 %% Revision 1.4  1995/12/07  13:21:31  kehr

@@ -156,10 +156,7 @@ active index use the following function.
 
 
 
-<<*>>=
-(provide 'intface)
-(use-package 'clos)
-(require 'idxclass)
+<<submodule \module{intface}>>=
 
 <<user-interface>>
 @
@@ -170,7 +167,10 @@ active index use the following function.
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/12/07 18:14:26  kehr
+%% Revision 1.2  1995/12/15 17:08:28  kehr
+%% Rewrote module compilation with noweb and clisp.
+%%
+%% Revision 1.1  1995/12/07  18:14:26  kehr
 %% Renamed module `idxclass' to 'idxstyle'. Resturcturing module from scratch.
 %%
 %% Revision 1.4  1995/12/07  13:21:34  kehr
