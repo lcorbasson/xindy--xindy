@@ -17,7 +17,7 @@ XCOMM continue in Imakefile
 
 DESTDIR = ../distrib/bin
 
-FILELIST-tex2xindy = tex2xindy.l
+FILELIST-tex2xindy = tex2xindy.l makeindex4
 FILELIST-xindy     = xindy.in
 
 Distrib: distrib
@@ -34,7 +34,10 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.1  1996/07/11 14:16:48  kehr
+ * Revision 1.2  1996/07/18 15:39:33  kehr
+ * Added the shell-script `makeindex4' to the distribution.
+ *
+ * Revision 1.1  1996/07/11  14:16:48  kehr
  * Complete Major checkin before changing the letter-groups.
  *
  *

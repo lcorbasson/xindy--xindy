@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# $Id$
+#
+# This is a shell-script that wraps xindy into a makeindex-like
+# interface.
+#
+
+welcome() {
+	echo "\
+This file is a wrapper that makes \`xindy' somehow behave as
+\`makeindex' does. Currenly it does not parse all command-line
+arguments and some of the flags are differently implemented in the
+xindy system. So don't expect it to be a plug-in replacement for the
+makeindex-system.
+
+Go with the future an move to the new features of xindy!
+"
+}
+
+usage() {
+	echo "
+`basename $0`  style-file tex-raw-index-file [logfile]
+"
+	welcome
+	exit 1
+}
+
+if [ $# -lt 2 -o $# -gt 3 ]
+then
+    usage
+fi
+
+STYLEFILE=$1
+RAWFILE=$2
+LOGFILE=$3
+
+# remove the suffix, if one exists
+BASENAME="`echo $RAWFILE | sed -e 's/\.[^\.]*$//'`"
+OUTPUT="$BASENAME.ind"
+
+# xindy-rawfile must be processed
+XDYRAWFILE="$BASENAME.raw"
+if [ ! -f $RAWFILE ]
+then
+    echo "file $RAWFILE not found!"
+    exit 2
+fi
+
+welcome
+
+echo "Running tex2xindy..."
+echo
+
+tex2xindy < $RAWFILE > $XDYRAWFILE
+
+if [ "" != "$LOGFILE" ]
+then
+    LOGFILE="-l $LOGFILE"
+fi
+
+echo "Running xindy..."
+echo
+
+exec xindy $LOGFILE -o $OUTPUT $STYLEFILE $XDYRAWFILE
+
