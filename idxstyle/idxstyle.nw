@@ -89,7 +89,9 @@ The indexstyle itself will be initialised later after all functions are known.
 (create-indexclass "default")
 @
 
-\no These are the predefined alphabets for upper- and lowercase letters.
+\subparagraph{Latin alphabets}
+
+These are the predefined alphabets for upper- and lowercase letters.
 
 <<Define default alphabets>>=
 (defmacro string-expand (str)
@@ -105,7 +107,10 @@ The indexstyle itself will be initialised later after all functions are known.
 (define-alphabet* "digits" (string-expand "0123456789"))
 @ %def string-expand
 
-\no Here follows a general-purpose function
+
+\subparagraph{Arabic numbers}
+
+Here follows a general-purpose function
 [[prefix-match-for-radix-numbers]] which is capable to recognize
 radix-based numbers with a radix ranging from 2\ldots36.
 
@@ -137,11 +142,127 @@ known in the indexclass [[default]] by defining a new class of name
 basetype-characters. Quiet easy, isn't it ?
 
 <<Define default enumerations>>=
-(define-enumeration arabic-numbers
+(define-enumeration "arabic-numbers"
                     #'(lambda (str)
                         (prefix-match-for-radix-numbers str 10))
-                    "01234567890")
+                    "0123456789")
 @ %def arabic-numbers
+
+
+\subparagraph{Roman numbers}
+
+Since we need roman numbers as, well the following functions implement
+enumeration types for them. There exist two systems for roman numbers.
+The older one defines \textsf{`iiii'} to be the arabic number `4',
+whereas the newer system declares \textsf{`iv'} to be equivalent to
+`4'. I think that we should use a parser that is able to recognize
+both types simultaneously. The implementation of the parser does not
+always recognize invalid input, but I think we should trust the
+text-processing system to generate valid numbers.
+
+We use a simple lookup-mechanism to parse the numbers. The following
+tables encode the most common numbers and encodes both, the old and
+the new numbering scheme.
+
+<<Define default enumerations>>=
+(defparameter *lowercase-roman-numbers-lookup-table*
+  '((#\i ("ix" . 9) ("iv" . 4) ("iiii" . 4) ("iii". 3) ("ii" . 2) ("i" . 1))
+    (#\v ("viiii" . 9)  ("viii" . 8)  ("vii" . 7)  ("vi" . 6)  ("v" . 5))
+    (#\x ("xc" . 90) ("xl" . 40) ("x" . 10))
+    (#\m ("m" . 1000))
+    (#\c ("cm" . 900) ("cd" . 400) ("c" . 100))
+    (#\l ("lxxxx" . 90) ("lxxx" . 80) ("lxx" . 70) ("lx" . 60) ("l" . 50))
+    (#\d ("dcccc" . 900) ("dccc" . 800) ("dcc" . 700) ("dc" . 600) ("d" . 500))
+    ))
+
+(defparameter *uppercase-roman-numbers-lookup-table*
+  '((#\I ("IX" . 9) ("IV" . 4) ("IIII" . 4) ("III". 3) ("II" . 2) ("I" . 1))
+    (#\V ("VIIII" . 9)  ("VIII" . 8)  ("VII" . 7)  ("VI" . 6)  ("V" . 5))
+    (#\X ("XC" . 90) ("XL" . 40) ("X" . 10))
+    (#\M ("M" . 1000))
+    (#\C ("CM" . 900) ("CD" . 400) ("C" . 100))
+    (#\L ("LXXXX" . 90) ("LXXX" . 80) ("LXX" . 70) ("LX" . 60) ("L" . 50))
+    (#\D ("DCCCC" . 900) ("DCCC" . 800) ("DCC" . 700) ("DC" . 600) ("D" . 500))
+    ))
+@ %def *lowercase-roman-numbers-lookup-table* *uppercase-roman-numbers-lookup-table*
+
+\no Ok, here it goes! The function [[roman-number-prefix-match]]
+returns the same values as any ordinary [[prefix-match]] function. We
+define a generic function that operates an arbitrary tables of the
+above form and define two instances to the enumerations for both
+(uppercase and lowercase) numbers.
+
+<<Define default enumerations>>=
+(defun roman-number-prefix-match (roman-number-string *table*)
+  (let ((result 0)
+        (str roman-number-string)
+        (last-val 100000) #| hope that's enough |#
+        (str-len (length roman-number-string))
+        ch table match-cons curr-val
+        )
+    (loop (when (= 0 (length str))
+            (return (values roman-number-string "" result)))
+          (setq ch (aref str 0))
+          (setq table (cdr (assoc ch *table*)))
+          (setq match-cons
+                (find-if #'(lambda (cons)
+                             (let* ((prefix (car cons))
+                                    (match-len (string/= prefix str)))
+                               (or (not match-len)
+                                   (= match-len (length prefix)))))
+                         table))
+          (unless match-cons
+            (return (if (= 0 result)
+                        (values nil nil nil)
+                        (values (subseq roman-number-string
+                                        0 (- str-len (length str)))
+                                str result))))
+          (setq curr-val (cdr match-cons))
+          (when (> curr-val last-val)
+            (return (values (subseq roman-number-string
+                                    0 (- str-len (length str)))
+                            str result)))
+          (incf result curr-val)
+          (setq last-val curr-val)
+          (setq str (subseq str (length (car match-cons)))))))
+@ %def roman-number-prefix-match
+
+<<Define default enumerations>>=
+(define-enumeration "roman-numbers-uppercase"
+                    #'(lambda (str)
+                        (roman-number-prefix-match
+                         str
+                         *uppercase-roman-numbers-lookup-table*))
+                    "IVXLCDM")
+
+(define-enumeration "roman-numbers-lowercase"
+                    #'(lambda (str)
+                        (roman-number-prefix-match
+                         str
+                         *lowercase-roman-numbers-lookup-table*))
+                    "ivxlcdm")
+@ %def roman-numbers-uppercase roman-numbers-lowercase
+
+
+\no The following function may be used to test the implementation
+<<Test function for roman numbers>>=
+(defun test-roman-numbers (*table* &optional (up-to 10))
+  (let (match rest ordnum error)
+    (loop for n from 1 to up-to
+          do
+          (let ((str (string-downcase (with-output-to-string (s)
+                                        (format s "~@R" n)))))
+            (multiple-value-setq (match rest ordnum)
+              (roman-number-prefix-match str *table*))
+            (format t "~A: ~S = (~S ~S ~S)~%" n str match rest ordnum)
+            (when (or (/= n ordnum)
+                      (string/= rest ""))
+              (setq error nil)
+              (print "ERROR"))))
+    (if error
+        'ERROR
+        'PASSED)))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -189,7 +310,10 @@ basetype-characters. Quiet easy, isn't it ?
 @
 
 %% $Log$
-%% Revision 1.10  1996/05/29 14:15:26  kehr
+%% Revision 1.11  1996/05/29 15:42:35  kehr
+%% Added the enumerations for roman numbers.
+%%
+%% Revision 1.10  1996/05/29  14:15:26  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%
