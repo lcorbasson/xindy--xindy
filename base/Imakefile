@@ -46,14 +46,11 @@ XCOMM continue in Imakefile
       NW_HEADER  = $(TOPDIR)/noweb/header.tex
       NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
 
-      ALL_LISP_SRC = locclass.lsp basetype.lsp locref.lsp ranges.lsp
+      ALL_LISP_SRC = base.lsp
 
-      ALL_NOWEB_SRC= module.nw basetype.nw locclass.nw locref.nw ranges.nw
+      ALL_NOWEB_SRC= module.nw base.nw
 
-NowebFullLispTarget(basetype)
-NowebFullLispTarget(locclass)
-NowebFullLispTarget(locref)
-NowebFullLispTarget(ranges)
+NowebFullLispTarget(base)
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_NOWEB_SRC))
 
@@ -68,7 +65,7 @@ clean::
 /* ============================================================
  *
  * $Log$
- * Revision 1.2  1995/11/19 18:39:00  kehr
+ * Revision 1.1  1995/11/19 18:38:53  kehr
  * Introduced packages base and locref.
  *
  * Revision 1.1  1995/11/08  16:13:18  kehr

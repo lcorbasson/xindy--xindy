@@ -51,18 +51,18 @@ NowebLaTeXDocTarget(intro)
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_NOWEB_SRC))
 
-CVSAdd(*.nw *.sty)
+CVSAdd(*.nw)
 CVSAdd(Imakefile)
-CVSCommentLeader("%% ", *.nw *.sty)
+CVSCommentLeader("%% ", *.nw)
 CVSCommit()
-
-clean::
-	$(RM) modules.tex
 
 /* ============================================================
  *
  * $Log$
- * Revision 1.2  1995/11/06 16:47:42  kehr
+ * Revision 1.3  1995/11/19 18:39:14  kehr
+ * Introduced packages base and locref.
+ *
+ * Revision 1.2  1995/11/06  16:47:42  kehr
  * Initial checkin.
  *
  * Revision 1.1  1995/11/06  16:46:06  kehr

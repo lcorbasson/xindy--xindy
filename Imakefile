@@ -19,15 +19,18 @@ ProjectTop()
  */
 
 /* ATTN: modules are made in list order! */
-BuildProjectModules(Report Presentation src locref xindy)
+BuildProjectModules(Report Presentation src locref xindy base)
 
 CVSAdd(ChangeLog Imakefile Report Presentation noweb src)
-CVSAdd(xindy locref)
+CVSAdd(base xindy locref)
 
 /*======================================================================
  *
  * $Log$
- * Revision 1.4  1995/11/08 16:16:07  kehr
+ * Revision 1.5  1995/11/19 18:38:37  kehr
+ * Introduced packages base and locref.
+ *
+ * Revision 1.4  1995/11/08  16:16:07  kehr
  * Changed subdir `locclass' to `locref'
  *
  * Revision 1.3  1995/11/06  16:48:19  kehr

@@ -35,9 +35,9 @@ compatibility an issue a warning if the may cause problems.
 
 \subsubsection{Definition}
 
-A location-class is a list of layers and separators. A \emph{layer} is
+A location-class is a list of layers and separators. A \term{layer} is
 based on the basetypes and consists of a string and a order number. A
-\emph{separator} is a string.
+\term{separator} is a string.
 
 \subsubsection{Operation}
 
@@ -99,7 +99,7 @@ certain level.
 <<class location-class>>=
 (defun joinable-on-layer-x-p (loccls-name level-number)
   (find level-number
-          (get-join-layers (find-location-class loccls-name))))
+          (get-join-layers loccls-name)))
 @
 
 This function returns the minimum range-length for a given
@@ -166,8 +166,13 @@ for future extensions.
 @
 
 <<*>>=
-(provide 'locclass)
-(use-package 'clos)
+(eval-when (compile load)
+  (use-package 'clos)
+  (use-package 'xp)
+  (unless (find-package 'base)
+    (load 'base)
+    (use-package 'base))
+  )
 
 <<class location-class>>
 <<class loccls-layer>>
@@ -182,7 +187,10 @@ for future extensions.
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/11/08 16:13:22  kehr
+%% Revision 1.2  1995/11/19 18:39:04  kehr
+%% Introduced packages base and locref.
+%%
+%% Revision 1.1  1995/11/08  16:13:22  kehr
 %% Initial checkin.
 %%
 %% Revision 1.10  1995/07/28  10:41:18  kehr

@@ -1,0 +1,149 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: base
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+
+\chapter{Module \module{Base}}
+
+This module is the basic part of the project. It defines generic
+functions, that are used in all other modules like pretty-printing and
+other stuff. It is like a library that may be used from other parts of
+the project.
+
+\section{Part \module{Base}}
+
+<<export-list of module \module{base}>>=
+(export '(get-next-ordnum show))
+(export '(*default-class-name* *indexclasses*
+          *active-idxcls-name* *curr-loccls-ordnum*))
+@
+
+\subsection{Introduction}
+
+
+\subsection{Concrete Specification}
+
+<<*>>=
+(in-package 'base)
+
+(use-package 'clos)
+(use-package 'xp)
+
+<<export-list of module \module{base}>>
+<<global definitions>>
+<<help functions>>
+<<show generic functions>>
+@
+
+To give an easy way to get the value of [[*curr-loccls-ordnum*]] and
+incrementing it we define the following function. It is the only
+allowed access to this counter.
+
+<<help functions>>=
+(defun get-next-ordnum ()
+  (incf *curr-loccls-ordnum*))
+@ %def get-next-ordnum
+
+This is a simple abbreviation to print the currently active
+indexclass.
+
+<<show generic functions>>=
+(defgeneric show (object))
+
+(defmethod show ((chr character))
+  (write-string "`")
+  (write-char chr)
+  (write-string "'")
+  (values))
+
+(defmethod show ((str string))
+  (write-string "\"")
+  (write-string str)
+  (write-string "\"")
+  (values))
+
+(defmethod show ((sym symbol))
+  (write-string "'")
+  (write-string (symbol-name sym))
+  (values))
+
+(defmethod show ((num number))
+  (format t "~D" num))
+
+(defmethod show ((lst list))
+  (write-string "( ")
+  (do ((x lst (cdr x)))
+      ((atom x) (unless (null x) (show x)))
+    (show (car x))
+    (write-string " "))
+  (write-string ")")
+  (values))
+
+(defmethod show ((hash hash-table))
+  (maphash #'(lambda (key val)
+               (declare (ignore key))
+               (show val)) hash))
+@
+
+<<global definitions>>=
+(defparameter *default-class-name* "default")
+(defvar *indexclasses* '())
+(defvar *active-idxcls-name*)
+(defparameter *curr-loccls-ordnum* 0)
+@
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/11/19 18:38:55  kehr
+%% Introduced packages base and locref.
+%%
+%% Revision 1.2  1995/11/08  16:17:56  kehr
+%% Minor modifications.
+%%
+%% Revision 1.1  1995/10/16  19:23:04  kehr
+%% Initial source checkin.
+%%
+%% Revision 1.6  1995/07/26  16:19:52  kehr
+%% Added support for the pretty-printer module. Output of data-structures
+%% now looks more readable.
+%%
+%% Revision 1.5  1995/07/23  20:48:31  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%% Revision 1.4  1995/07/23  14:14:07  kehr
+%% Added support for merge-to--rule. Now works and creates
+%% virtual-attributes as expected.
+%%
+%% Revision 1.3  1995/07/11  15:14:14  kehr
+%% Today I finished the definition of indexentries. They now will be
+%% inserted into the index when a appropriate location-class was finished.
+%%
+%% Revision 1.2  1995/07/10  00:58:15  kehr
+%% Completed noweb-support. Current version must be debugged to correct
+%% some minor errors.
+%%
+%% Revision 1.1  1995/07/09  18:14:26  kehr
+%% Initial checkin.
+%%

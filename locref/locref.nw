@@ -48,12 +48,13 @@ A location-reference is a set
   $\{$ \func{layers, ordnums, catattr, locclass} $\}$
 \end{center}
 with
-\begin{deflistit}{locclass}
-\item [layers] is \type{locref-layer-list}.
-\item [ordnums] is a \tintlist.
-\item [catattr] is a \tcatattr.
+\begin{deflistit}{locclassXX}
+\item [layers] is \type{locref-layer-list}
+\item [ordnums] is a \tintlist
+\item [catattr] is a \tcatattr
 \item [locclass] is a \tloccls.
 \end{deflistit}
+
 
 \subsubsection{Operation}
 
@@ -70,7 +71,6 @@ important.
 
 \subsubsection{External interface}
 
-The following symbols are exported:
 
 
 
@@ -225,11 +225,11 @@ as the sort-function.
 
 <<location-reference-sorting>>=
 (defun locref< (locref-1 locref-2)
-  (let ((ordnum-1 (get-ordnum (find-location-class (get-locclass locref-1))))
-        (ordnum-2 (get-ordnum (find-location-class (get-locclass locref-2)))))
-  (cond ((= ordnum-1 ordnum-2)
-           (numberlist< (get-ordnums locref-1) (get-ordnums locref-2)))
-        (t (< ordnum-1 ordnum-2)))))
+  (let ((ordnum-1 (get-ordnum (get-locclass locref-1)))
+        (ordnum-2 (get-ordnum (get-locclass locref-2))))
+    (cond ((= ordnum-1 ordnum-2)
+             (numberlist< (get-ordnums locref-1) (get-ordnums locref-2)))
+          (t (< ordnum-1 ordnum-2)))))
 
 (defun numberlist< (numlist-1 numlist-2)
   (do ((rest-1 numlist-1 (cdr rest-1))
@@ -274,10 +274,14 @@ location-reference and a secondary attribute.
 
 
 <<*>>=
-(provide 'locref)
+(in-package 'locref)
 
-(eval-when (compile)
+(eval-when (compile load)
   (use-package 'clos)
+  (use-package 'xp)
+  (unless (find-package 'base)
+    (load 'base)
+    (use-package 'base))
   (load 'basetype)
   (load 'locclass))
 
@@ -290,8 +294,9 @@ location-reference and a secondary attribute.
 <<markup methods>>
 @
 
-\subsubsection{Markup}
 
+
+\subsubsection{Markup}
 
 
 \no Markup of a location-reference ist currently implemented as a
@@ -305,9 +310,7 @@ simple printing of all layers and separators.
   (dolist (context-string context-list)
     (mprint context-string))
   (let ((layers (get-layers locref)))
-    (dolist (loccls-layer (get-layers
-                           (find-location-class
-                            (get-locclass locref))))
+    (dolist (loccls-layer (get-layers (get-locclass locref)))
       (typecase loccls-layer
         (loccls-layer
            (markup-object (pop layers) '() '() '()))
@@ -381,7 +384,10 @@ printing of the layer-string.
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/11/08 16:13:25  kehr
+%% Revision 1.2  1995/11/19 18:39:06  kehr
+%% Introduced packages base and locref.
+%%
+%% Revision 1.1  1995/11/08  16:13:25  kehr
 %% Initial checkin.
 %%
 %% Revision 1.12  1995/07/28  10:41:18  kehr

@@ -145,7 +145,8 @@ Here is the root chunk of this part.
 <<*>>=
 
 (eval-when (compile)
-  (use-package 'clos))
+  (use-package 'clos)
+  (use-package 'xp))
 
 <<class \class{basetype}>>
 <<class \class{alphabet}>>
@@ -318,7 +319,10 @@ constructor.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.1  1995/11/08 16:13:20  kehr
+%% Revision 1.2  1995/11/19 18:39:02  kehr
+%% Introduced packages base and locref.
+%%
+%% Revision 1.1  1995/11/08  16:13:20  kehr
 %% Initial checkin.
 %%
 %% Revision 1.9  1995/07/27  23:59:02  kehr

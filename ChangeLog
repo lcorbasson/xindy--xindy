@@ -1,3 +1,11 @@
+Sun Nov 19 19:30:22 1995  Roger Kehr  (kehr@spock)
+
+	* Today I started to define two packages (locref and base) and
+	  tried to figure out, how their interaction works. I compiled
+	  DejaGnu for rs6000-platform. I want to use it for intensive
+	  regression tests. The module structure seems to work well right
+	  now and I hope to make further progress in the next week.
+
 Tue Oct 17 16:50:45 1995  Roger Kehr  (kehr@spock)
 
 	* Today I continued to set up the Imake-environment. I had to

@@ -40,11 +40,10 @@ included.
 
 The module is separated into the following parts:
 \begin{deflist}{XXXXXXX}
-\item [locclass] is the part with most abstract level and is
-  introduced first. It describes the declaration of location-classes.
-\item [basetype] manages declaration of basetypes.
-\item [locref] manages all operation on location-references.
-\item [ranges] manages all operation on ranges.
+\item [basetype]
+\item [locclass]
+\item [locref]
+\item [ranges]
 \end{deflist}
 
 %% Local Variables:
@@ -53,7 +52,10 @@ The module is separated into the following parts:
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/11/08 16:13:27  kehr
+%% Revision 1.2  1995/11/19 18:39:08  kehr
+%% Introduced packages base and locref.
+%%
+%% Revision 1.1  1995/11/08  16:13:27  kehr
 %% Initial checkin.
 %%
 %%
