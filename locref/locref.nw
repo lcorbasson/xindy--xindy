@@ -117,8 +117,10 @@ after creation.
                                              (attribute nil) (virtual nil))
   (make-instance 'layered-location-reference
                  :string    string
-                 :layers    layers   :ordnums  ordnums
-                 :catattr   catattr  :locclass locclass
+                 :layers    layers
+		 :ordnums  ordnums
+                 :catattr   catattr
+		 :locclass locclass
                  :attribute attribute
                  :state  (if virtual 'locref-state-virtual 'locref-state-normal)))
 @ %def make-layered-location-reference
@@ -434,8 +436,9 @@ A block for pretty-printing a location-reference.
          (t (write-string "Del:" s)))
    (cond ((rangeattr-open-p  (get-rangeattr locref)) (write-string "OPEN:" s))
          ((rangeattr-close-p (get-rangeattr locref)) (write-string "CLOSE:" s)))
+   (write-string "\"" s)
    (write-string (get-locref-string locref) s)
-   (write-string "=" s)
+   (write-string "\"=" s)
    (write (get-layers locref) :stream s)
    (write-string "=" s)
    (write (get-ordnums locref) :stream s)
@@ -483,7 +486,10 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.23  1996/07/03 18:41:39  kehr
+%% Revision 1.24  1997/01/23 21:35:06  kehr
+%% Modified something in the pretty-print routines.
+%%
+%% Revision 1.23  1996/07/03  18:41:39  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%
