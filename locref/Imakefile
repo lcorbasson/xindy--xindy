@@ -22,8 +22,8 @@ XCOMM $Id$
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
-      NW_HEADER  = $(TOPDIR)/noweb/header.tex
-      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+      NW_HEADER  = noweb/header.tex
+      NW_TRAILER = noweb/trailer.tex
 
       ALL_NOWEB_SRC = basetype.nw locclass.nw locref.nw
       ALL_DOC_SRC   = module.nw $(ALL_NOWEB_SRC)
@@ -47,7 +47,10 @@ DejaGnuTarget(locref,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.8  1996/01/15 19:17:23  kehr
+ * Revision 1.9  1996/01/17 16:55:54  kehr
+ * Improved documentation and threw out some of the markup-stuff.
+ *
+ * Revision 1.8  1996/01/15  19:17:23  kehr
  * All files revisited and documentation improved.
  * External specification no in the module.nw. There it is better
  * accessible for a reader. The basic interface of the module is

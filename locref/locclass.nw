@@ -8,7 +8,8 @@
 %%
 %% History at end
 %%
-%% Submodule: location-class
+%% Module:    location-reference (locref)
+%% Submodule: location-class     (locclass)
 %%
 %%
 \RCS $Id$%
@@ -69,8 +70,9 @@ all location-classes.
 
 <<Class \class{location-class}>>=
 (defclass location-class ()
-    ((name        :reader   get-name   :initarg :name)
-     (ordnum      :accessor get-ordnum :initform (gen-next-loccls-ordnum))))
+    ((name   :reader get-name   :initarg :name)
+     (ordnum :reader get-ordnum :writer set-ordnum :type number
+	     :initform (gen-next-loccls-ordnum))))
 @ %def location-class
 
 \no Every derived class must define a constructor-function
@@ -220,11 +222,10 @@ idea, because we now store the markup-information into the class, too.)
 
 <<Class \class{loccls-layer}>>=
 (defclass loccls-layer ()
-    ((basetype :reader get-basetype :initarg :basetype)
-     (markup   :reader get-markup   :initarg :markup)))
+    ((basetype :reader get-basetype :initarg :basetype)))
 
-(defun make-loccls-layer (basetype markup)
-  (make-instance 'loccls-layer :basetype basetype :markup markup))
+(defun make-loccls-layer (basetype)
+  (make-instance 'loccls-layer :basetype basetype))
 @ %def loccls-layer make-loccls-layer
 
 <<Export-list of submodule \module{locclass}>>=
@@ -252,11 +253,10 @@ future extensions.
 
 <<Class \class{loccls-separator}>>=
 (defclass loccls-separator ()
-    ((separator  :reader get-separator  :initarg :separator)
-     (markup     :reader get-markup     :initarg :markup)))
+    ((separator  :reader get-separator  :initarg :separator)))
 
-(defun make-loccls-separator (separator markup)
-  (make-instance 'loccls-separator :separator separator :markup markup))
+(defun make-loccls-separator (separator)
+  (make-instance 'loccls-separator :separator separator))
 @ %def loccls-separator make-loccls-separator
 
 <<Export-list of submodule \module{locclass}>>=
@@ -294,7 +294,7 @@ indicate success or a multiple value [[(nil nil nil)]] otherwise.
 \subsubsection{Class \class{crossref-location-class}}
 
 Cross-references are a completely different type of location-classes.
-Their purpose is to define creoss-references like `\emph{see}
+Their purpose is to define cross-references like `\emph{see}
 somewhere else' or `\emph{see} also under'. Their main purpose is to
 (re)direct the readers interest to related topics or to the keyword,
 that serves as the collector of similiar keywords. The indexentry a
@@ -307,6 +307,7 @@ by the subclasses. For explanation see below.
 <<Class \class{crossref-location-class}>>=
 (defclass crossref-location-class (location-class)
     ((target :reader get-target :writer set-target :initarg :target)))
+@ %def crossref-location-class
 
 <<Export-list of submodule \module{locclass}>>=
 (export '(crossref-location-class))
@@ -328,18 +329,28 @@ key (what key?) of the indexentry it points to.
 (defclass verified-crossref-location-class (location-class)
     ())
 
+(defun make-verified-crossref-location-class (name)
+  (make-instance 'verified-crossref-location-class :name name))
+@ %def verified-crossref-location-class make-verified-crossref-location-class
+
 <<Export-list of submodule \module{locclass}>>=
 (export '(verified-crossref-location-class))
 @
 
 \subsubsection{Class \class{unverified-crossref-location-class}}
 
-Here follows the unverified counterpart. Slot [[target]] is simply a
-string.
+Here follows the unverified counterpart. Its use may be necessary
+under circumstances when a target is not part of the currently
+processed index, because it is contained in another index. The
+[[target]] is then simply a string without any structure.
 
 <<Class \class{unverified-crossref-location-class}>>=
 (defclass unverified-crossref-location-class (location-class)
     ())
+
+(defun make-unverified-crossref-location-class (name)
+  (make-instance 'unverified-crossref-location-class :name name))
+@ %def unverified-crossref-location-class make-unverified-crossref-location-class
 
 <<Export-list of submodule \module{locclass}>>=
 (export '(unverified-crossref-location-class))
@@ -527,12 +538,7 @@ is not an error, because we do a prefix-matching.
 ("locclass" . "$Id$")
 @
 
-\begin{TODO}
-\item change declaration of the relation between location-classes
-  \texttt{locref<}
-\item location-class \class{crossref} still unimplemented
-\item implement all \cmd{checked-make-xxx-location-class} functions
-\end{TODO}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Pretty-printing}
 
@@ -571,13 +577,11 @@ is not an error, because we do a prefix-matching.
 @
 
 
-%% Local Variables:
-%% mode: latex
-%% TeX-master: t
-%% End:
-%%
 %% $Log$
-%% Revision 1.11  1996/01/15 19:17:28  kehr
+%% Revision 1.12  1996/01/17 16:55:59  kehr
+%% Improved documentation and threw out some of the markup-stuff.
+%%
+%% Revision 1.11  1996/01/15  19:17:28  kehr
 %% All files revisited and documentation improved.
 %% External specification no in the module.nw. There it is better
 %% accessible for a reader. The basic interface of the module is
@@ -660,4 +664,10 @@ is not an error, because we do a prefix-matching.
 %% Revision 1.1  1995/07/09  18:14:28  kehr
 %% Initial checkin.
 %%
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
 %%

@@ -8,7 +8,8 @@
 %%
 %% History at end
 %%
-%% Module: location-reference
+%% Module:    location-reference (locref)
+%% Submodule: location-reference (locref)
 %%
 %%
 \RCS $Id$%
@@ -193,12 +194,10 @@ Here we define the category-attribute-slots.
      (processing-ordnum  :reader get-processing-ordnum
                          :writer set-processing-ordnum
                          :initform 0)
-     (type   :reader get-type   :writer set-type   :initarg :type)
-     (markup :reader get-markup :writer set-markup :initarg :markup)))
+     (type   :reader get-type   :writer set-type   :initarg :type)))
 
-(defun make-category-attribute (attr-name &optional (markup nil))
-  (make-instance 'category-attribute
-                 :name attr-name :markup markup))
+(defun make-category-attribute (attr-name)
+  (make-instance 'category-attribute :name attr-name))
 @ %def category-attribute make-category-attribute
 
 \no When specifying the category-attribute-groups each catattr is
@@ -214,25 +213,6 @@ by using [[set-ordnum]] and [[set-type]].
           get-type   set-type
           get-markup set-markup))
 @
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%\subsubsection{Class \class{locref-layer}}
-%%
-%%A \term{structured-locref-layer} layer is a \tstring. It is the
-%%smallest entity in the structured-locref data hierarchy. It consists
-%%only of the string that matched with the corresponding layer during
-%%the input-parsing of raw location-references.
-%%
-%%<class \class{locref-layer}>>=
-%%(defclass locref-layer ()
-%%    ((layer  :reader get-layer  :initarg :layer)))
-%%
-%%(defun make-locref-layer (layer)
-%%  (make-instance 'locref-layer :layer layer))
-%%@ %def locref-layer make-locref-layer
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -318,8 +298,7 @@ i really need it.
 (eval-when (eval compile load)
   (use-package 'clos)
   (use-package 'xp)
-  (unless (find-package 'base)
-    (load 'base))
+  (require 'base)
   (use-package 'base))
 
 <<Submodule \module{basetype}>>
@@ -382,14 +361,11 @@ A block for pretty-printing a location-reference.
 @
 
 
-%% Local Variables:
-%% mode: latex
-%% eval: (latex-mode)
-%% TeX-master: t
-%% End:
-%%
 %% $Log$
-%% Revision 1.12  1996/01/15 19:17:32  kehr
+%% Revision 1.13  1996/01/17 16:56:02  kehr
+%% Improved documentation and threw out some of the markup-stuff.
+%%
+%% Revision 1.12  1996/01/15  19:17:32  kehr
 %% All files revisited and documentation improved.
 %% External specification no in the module.nw. There it is better
 %% accessible for a reader. The basic interface of the module is
@@ -485,3 +461,8 @@ A block for pretty-printing a location-reference.
 %% Completed noweb-support. Current version must be debugged to correct
 %% some minor errors.
 %%
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:

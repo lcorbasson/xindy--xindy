@@ -8,7 +8,7 @@
 %%
 %% History at end
 %%
-%% Module: location-reference
+%% Module: location-reference (locref)
 %%
 %%
 \RCS $Id$%
@@ -25,36 +25,55 @@
 
 \section{Introduction}
 
-This module implements the abstract data types \type{location-class}
-and \type{location-reference}. The first one describes the structure
-of a location-class, how it is composed of basetypes, what are the
-separators between the hierarchies (if there are any). The second
-creates instances of location-references by matching a string against
-a location-class description. It further presents an interface to sort
-location-references by order. Additionally a general scheme for the
-markup of location-references and ranges is included.
+This module implements the \emph{location-reference}-handling. It
+manages the hangling of the data type \emph{location-reference}.  In
+this module contained is the implementation of the classes
+\type{basetype}, \type{location-class}, \type{category-attribute} and
+\type{location-reference}.
 
-The module is separated into the following parts:
-\begin{deflist}{XXXXXXX}
-\item [basetype]
-\item [locclass]
-\item [locref]
-\end{deflist}
+A location-class describes the structure how location-references may
+be composed from basetypes. Basetypes are the smallest entity in the
+location-reference universe. A location-class describes a
+\emph{pattern} that strings must match to belong to form a
+location-reference of a specific structure.
 
-\noindent The representation of the dependencies of all submodules is
-as follows:
+The module is separated into the following submodules:
+\begin{deflistsf}{XXXXXXX}
+\item [basetype] manages the declaration and management of so-called
+  \emph{basetypes}. They are the smallest entity of a location-reference.
+\item [locclass] manages the composition of basetypes to
+  \emph{location-classes}. It is based on submodule \module{basetype}.
+\item [locref] handles location-references and declares
+  category-attributes. It uses the previous submodules for its
+  operation
+\end{deflistsf}
+%%
 
-\begin{verbatim}
-locref: <base> basetype locclass
-locclass: <base> basetype
-basetype: -
-\end{verbatim}
+\begin{TODO}
+\item (locref:)\\
+  \begin{itemize}
+  \item Change declaration of the relation between location-classes
+    \texttt{locref<}
+  \item Sorting of the category-attributes via [[sort-ordnum]] with
+    respect of the [[sort-ordnum]] of catattr-group is still not
+    exactly solved.
+  \item [[make-structured-locref]] misses some details.
+  \end{itemize}
+\item (locclass:)\\
+  \begin{itemize}
+  \item location-class \class{crossref} still unimplemented
+  \item Implement all \cmd{checked-make-xxx-location-class} functions.
+  \item Maybe we don't need any [[loccls-layer]]s and
+    [[loccls-separator]]s?
+  \end{itemize}
+\end{TODO}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newpage
 \section{External interface of module \module{locref}}
-
 
 \subsection{Submodule \module{basetype}}
 
@@ -94,8 +113,8 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{make-alphabet}%%
-  {\tstring \x \tstrlist \res \type{alphabet}} Constructor of the
-  \cmd{alphabet}-class. It taked a name and a list of strings and
+  {\tstring \x \tstrlist \res \type{alphabet}\uip} Constructor of the
+  \cmd{alphabet}-class. It takes a name and a list of strings and
   gives back an instance of type [[alphabet]].
 \end{defunc}
 
@@ -105,7 +124,7 @@ The following symbols are exported:
 \end{defvcls}
 
 \begin{defunc}{make-enumeration}%%
-  {\tclass \x \tstring \x \tcharlist \res \type{enumeration}}
+  {\tclass \x \tstring \x \tcharlist \res \type{enumeration}\uip}
   Constructor of \cmd{enumeration}-subclasses.
 \end{defunc}
 
@@ -119,6 +138,11 @@ The following symbols are exported:
 \begin{defvcls}{location-class}{}%
   Abstract base-class of all location-classes.
 \end{defvcls}
+
+\begin{defmethod}{set-ordnum}{\tint \x \type{location-class}\uip}%
+  Sets the \emph{ordnum} of a location-class. This number is used as a
+  sorting criteria for the final markup.
+\end{defmethod}
 
 \begin{defvcls}{layered-location-class}{}
   Abstract base-class of all layered location-classes. Subclass of
@@ -136,12 +160,12 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{checked-make-standard-location-class}
-  {\tstring \x \tstrlist \res \type{standard-location-class}}%%
+  {\tstring \x \tstrlist \res \type{standard-location-class}\uip}%%
   Constructor of \class{standard-location-class}.
 \end{defunc}
 
 \begin{defunc}{checked-make-var-location-class}
-  {\tstring \x \tstrlist \res \type{var-location-class}}%%
+  {\tstring \x \tstrlist \res \type{var-location-class}\uip}%%
   Constructor of \class{var-location-class}.
 \end{defunc}
 
@@ -150,7 +174,7 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{make-loccls-layer}
-  {\tstring \x \tmarkup \res \type{loccls-layer}}%%
+  {\tstring \x \tmarkup \res \type{loccls-layer}\uip}%%
   Constructor of \class{loccls-layer}.
 \end{defunc}
 
@@ -159,7 +183,7 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{make-loccls-separator}%%
-  {\tstring \x \tmarkup \res \type{loccls-separator}}%%
+  {\tstring \x \tmarkup \res \type{loccls-separator}\uip}%%
   Constructor of \class{var-location-class}.
 \end{defunc}
 
@@ -171,10 +195,19 @@ The following symbols are exported:
   Abstract base-class of all cross-references which are to be verified.
 \end{defvcls}
 
+\begin{defunc}{make-verified-crossref-location-class}
+  {\tstring\uip}
+  Constructor of \class{verified-crossref-location-class}.
+\end{defunc}
+
 \begin{defvcls}{unverified-crossref-location-class}{}
   Abstract base-class of all cross-references which are not to be verified.
 \end{defvcls}
 
+\begin{defunc}{make-unverified-crossref-location-class}
+  {\tstring\uip}
+  Constructor of \class{unverified-crossref-location-class}.
+\end{defunc}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -189,7 +222,7 @@ The following symbols are exported:
   \emph{structure} we mean that we can sort and join them.
 \end{defcls}
 
-\begin{defunc}{make-structured-locref}{}
+\begin{defunc}{make-structured-locref}{\uip}
 
 \end{defunc}
 
@@ -197,9 +230,23 @@ The following symbols are exported:
   The class of category-attributes.
 \end{defcls}
 
-\begin{defunc}{make-category-attribute}{}
+\begin{defunc}{make-category-attribute}{\uip}
   Creates instances of class \class{category-attribute}.
 \end{defunc}
+
+\begin{defmethod}{set-catattr-grp-ordnum}{\tint \x
+    \type{category-attribute}\uip}%%
+  Defines the number of the category-attribute-group this
+  category-attribute belongs to. If some category-attributes form a
+  group all group members must have the same number and it must be
+  distinct from all others.
+\end{defmethod}
+
+\begin{defmethod}{set-sort-ordnum}{\tint \x
+    \type{category-attribute}\uip}%%
+  This number indicates the position of this category-attribute in the
+  output sequence. (This has to re rethought!)
+\end{defmethod}
 
 \begin{defunc}{locref-class<}{\type{locref} \x \type{locref}}
   Compares the sort-ordnum of the location-classes of both
@@ -214,13 +261,12 @@ The following symbols are exported:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%% Local Variables:
-%% mode: latex
-%% TeX-master: t
-%% End:
-%%
+
 %% $Log$
-%% Revision 1.6  1996/01/15 19:17:34  kehr
+%% Revision 1.7  1996/01/17 16:56:04  kehr
+%% Improved documentation and threw out some of the markup-stuff.
+%%
+%% Revision 1.6  1996/01/15  19:17:34  kehr
 %% All files revisited and documentation improved.
 %% External specification no in the module.nw. There it is better
 %% accessible for a reader. The basic interface of the module is
@@ -243,4 +289,9 @@ The following symbols are exported:
 %% Revision 1.1  1995/11/08  16:13:27  kehr
 %% Initial checkin.
 %%
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
 %%

@@ -8,7 +8,8 @@
 %%
 %% History at end
 %%
-%% Submodule: basetype
+%% Module:    location-reference (locref)
+%% Submodule: basetype		 (basetype)
 %%
 %%
 \RCS $Id$%
@@ -256,15 +257,13 @@ Here is the root chunk of this submodule.
 @
 
 
-%% Local Variables:
-%% mode: latex
-%% TeX-master: t
-%% End:
-
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.10  1996/01/15 19:17:25  kehr
+%% Revision 1.11  1996/01/17 16:55:57  kehr
+%% Improved documentation and threw out some of the markup-stuff.
+%%
+%% Revision 1.10  1996/01/15  19:17:25  kehr
 %% All files revisited and documentation improved.
 %% External specification no in the module.nw. There it is better
 %% accessible for a reader. The basic interface of the module is
@@ -340,3 +339,9 @@ Here is the root chunk of this submodule.
 %% Revision 1.1  1995/07/09  18:14:27  kehr
 %% Initial checkin.
 %%
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+
