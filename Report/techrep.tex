@@ -21,6 +21,7 @@
 \usepackage{xspace}
 \usepackage{itititle}
 \usepackage{environments}
+\usepackage{ssqquote}
 \usepackage{ifthen}
 \usepackage{theorem}
 \usepackage{bslash}
@@ -28,6 +29,8 @@
 \usepackage{enumerate}
 \usepackage{verbatim}
 \usepackage{afterpage}
+\usepackage{rotating}
+\usepackage{epsfig}
 \usepackage[hang,sf]{caption}
 %\usepackage[textures,bottomafter]{draftcopy}
 %\usepackage{version}
@@ -35,6 +38,7 @@
 \def\TechReport{1}
 \def\ReportMode{0}
 \usepackage{stdwrk}
+
 \usepackage{xindy}
 
 \makeatletter
@@ -184,46 +188,59 @@
 
 %%\mbox{}\medskip
 
-\begin{zitat}
-  Sometimes it is desirable to index words that don't actually appear
-  on the page.\\%%
-  \ldots For example, Appendix I lists page 1 under
-  `beauty', even though page 1\\%%
-  only contains the word `beautiful'.  (The author felt that it was
-  important to index `beauty' because he had already indexed `truth'.)
+\begin{raggedleft}
+  \footnotesize\ssqfamily Sometimes it is desirable to index words
+  that don't actually appear on the page.\\\ldots For example,
+  Appendix I lists page 1 under `beauty', even though page 1 only
+  contains the word `beautiful'. (The author felt that it was
+  important to index `beauty'\\ because he had already indexed
+  `truth'.)
 
   \smallskip
 
-  \textsc{Donald E. Knuth}, \textrm{The \TeX{}book}
-  {\normalfont\textrm{(1984)}}%% p. 423
+  \textsc{Donald E. Knuth}, The \TeX{}book (1984)%% p. 423
 
-\end{zitat}
+\end{raggedleft}
+
+%\begin{zitat}
+%  Sometimes it is desirable to index words that don't actually appear
+%  on the page.\\%%
+%  \ldots For example, Appendix I lists page 1 under
+%  `beauty', even though page 1\\%%
+%  only contains the word `beautiful'.  (The author felt that it was
+%  important to index `beauty' because he had already indexed `truth'.)
+
+%  \smallskip
+
+%  \textsc{Donald E. Knuth}, The \textrm{\TeX{}book}
+%  {\normalfont\textrm{(1984)}}%% p. 423
+
+%\end{zitat}
 
 \bigskip
 
 \noindent%%
 Today, the need to index information becomes more and more important,
-to guide readers in finding the desired information in documents
-efficiently and effective. For large documents indexes are
-traditionally one form of service that helps finding the desired
-information.
+to guide readers in finding the desired information efficiently and
+effective. For large documents indexes are traditionally one form of
+service that helps finding the desired information.
 
-Compiling an index is still a tedious work. First of all the indexer
-has to decide what items should appear in the index. Furthermore it
-has to be decided to which locations in the document the reader should
-be guided first, separating important from less important occurrences
-of items in a document.
+Compiling an index is still tedious work. First of all the indexer has
+to decide what items should appear in the index. Furthermore it has to
+be decided to which locations in the document the reader should be
+guided first, separating important from less important occurrences of
+items in a document.
 
-For textbooks it is necessary that the indexer has sufficient
-knowledge of the problem area to make appropriate indexing decisions.
-Unfortunately, the index is very often the most neglected part of a
+Books are often not indexed by the authors themselves. For textbooks
+it is necessary that the indexer has sufficient knowledge of the
+problem area to make appropriate indexing decisions.  Unfortunately,
+the index is very often the most neglected part of a
 book.\footnote{Especially as they can be the source of inspiration (as
   the quotation of \textsc{D. E. Knuth} shows), as well as humour (see
   under \emph{kludges} in~\cite{Steele:common-lisp-2}).}
 
-
 Most of nowadays word processors are still weak in supporting the
-production of high-quality indexes. This might be one reason for the
+production of high-quality indexes, this might be one reason for the
 deficiencies in many textbooks. Our work is an approach to give a
 model of what an index is and how a good indexing system should
 operate. Based on this model we present \xindy, our implementation of
@@ -248,7 +265,7 @@ reported.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{General Data Flow}
+\section{The Process of Indexing}
 \label{sec:data-flow}
 
 Current \dps{}s can be roughly divided into two categories: (a)
@@ -259,37 +276,26 @@ typically operating under some windowing system. One of the most
 widespread used index processor in the first group is
 \mkidx~\cite{Chen:UCB-TR-87-347,Chen:SPE-19-9-897}. The indexing
 capabilities of the latter group are application dependent and
-currently less flexible than \mkidx. Therefore we have concentrated
-mainly on this system. Figure~\ref{fig:data-flow} describes the
-typical data flow in the first group of systems. The document is
-processed by the \dps{} that extracts the indexing information, the
-so-called \term{raw index}. The raw index comes in a system dependent
-format containing information about the \term{index entries}. An index
-entry typically consists of a \term{keyword} and a \term{location
-  reference}. We describe these terms in detail in
-section~\ref{sec:index-model}.
-%%
+currently less flexible than \mkidx. Since they are not controllable
+from outside we have concentrated mainly on \mkidx.
+Figure~\ref{fig:data-flow} describes the typical data flow in the
+first group of systems.
+
 {\vertspace=-3ex
 \begin{mfigure}
-  {Data flow in \dps{}s}
+  {Typical data flow in \dps{}s}
   {fig:data-flow}
-    \hspace*{1cm}\input{dataflow.latex}
+  \hspace*{1cm}\input{dataflow.latex}
 \end{mfigure}}
-%%
+
+\noindent The document is processed by the \dps{} that extracts the
+indexing information, the so-called \term{raw index}. The raw index
+comes in a system dependent format containing information about the
+raw index entries.
 
 The \term{parser} reads the raw index and transforms it into a
 representation suitable for the index processor. Thus, it must be
-adopted to the format of the \dps and the index processor. In \mkidx
-the parser is part of the indexing system. It can be configured to
-accept a certain range of raw index formats, but essentially the
-formats are rather restricted because it was designed primarily as an
-index processor for the \TeX-system and its raw index format.
-
-We have removed the parser from the core indexing system and defined a
-general raw index specification format. For using our system in
-conjunction with some text processing environment, first a parser has
-to be implemented that translates the application-specific format into
-this format.
+adopted to the format of the \dps and the index processor.
 
 The \term{index processor} reads two different data streams: (1) the
 \term{index style}, describing how the index is to be processed and
@@ -300,12 +306,60 @@ index entry, (c) decomposing and classifying location references, and
 (d) merging and sorting the location references optionally followed by
 a range-building phase.
 
-After the index has completely been processed, its internal
-representation must be fed back into the document preparation cycle.
-This is done through the \term{markup backend} that outputs the
-internal format tagged with appropriate markups defined in the index
-style in a representation that can be used by the \dps to typeset the
-index.
+After the index has been processed, its internal representation must
+be fed back into the document preparation cycle. This is done through
+the \term{markup backend} that outputs the internal format tagged with
+appropriate markups defined in the index style in a representation
+that can be used by the \dps to typeset the index.
+
+From an abstract point of view the indexing process can be described
+as an homomorphism mapping the raw index to the tagged index.
+Figure~\ref{fig:homomorphism} illustrates this view.
+
+{\vertspace=-1ex
+\begin{mfigure}
+  {Index processing as an homomorphism}
+  {fig:homomorphism}
+  \begin{center}
+    \hspace*{-2.5cm}\input{homomorphism.latex}
+    \vspace*{-1em}
+  \end{center}
+\end{mfigure}}
+
+\noindent{}The raw index is mapped into an internal representation
+through an \term{abstraction process}. This task is effectively done
+with a parser. It transforms the raw index in a representation
+suitable for processing the index. The indexing process is a
+\term{transformation} yielding an abstract representation of the
+index. In our system the result of the transformation is a tree
+structure. This structure must now be output using a
+\term{representation mapping} done with the markup backend.
+
+The \mkidx system does not cleanly separate the three mappings of this
+homomorphism. In \mkidx the parser is part of the indexing system. It
+can be configured to accept a certain range of raw index formats, but
+essentially the formats are rather restricted because it was designed
+primarily as an index processor for the \TeX-system and its raw index
+format. Additionally, the markup is partially directly derived from
+the raw index. Thus, \mkidx operates on a level that more or less
+directly maps the raw index to the tagged index. We have removed the
+parser from the core indexing system and defined a general raw index
+specification format.
+
+In our specification format a \term{raw index entry} consists of a
+keyword and a raw location reference. A \term{keyword} consists of a
+list of strings. A \term{string} is a word over the underlying
+\term{document alphabet}. The \term{raw location reference} is a
+string.
+
+Additionally, we have made the representation mapping highly
+controllable by the user. This is a major improvement in the design of
+index processors.
+
+In this report we mainly concentrate on a description of the
+transformation mapping and a brief description of the representation
+mapping. A detailed description of the representation mapping can be
+found in~\cite{CBM}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -315,7 +369,7 @@ index.
 
 \subsection{Definition of an Index}
 
-Typically indexes are a collection of ordered keyword each one
+Typically, indexes are collections of ordered keywords each one
 followed by a list of \term{location references}. Usually the index is
 part of the indexed document and the location references represent
 locations in that document. At some stage in the document preparation
@@ -323,11 +377,12 @@ process the index is generated from the document information and fed
 back to the \dps. This may actually change the locations at which some
 of the keywords appear in the document. This could lead to an infinite
 regression if the preparation cycle missed some form of fix-point
-behaviour. Figure~\ref{fig:adv-index} shows an example index. Despite
-the fact that such confusing indexes probably do not exist in
-practice, we recognize the two-dimensional structure of an index.
+behaviour which is usually not a problem in practice.
 
-%%
+Figure~\ref{fig:adv-index} shows an example index. Despite the fact
+that such confusing indexes probably do not exist in practice, we
+recognize the two-dimensional structure of an index.
+
 {\vertspace=-1ex%%
   \begin{mfigure}%
   {Sample index with  section numbers and page numbers}%
@@ -351,43 +406,41 @@ practice, we recognize the two-dimensional structure of an index.
     \end{mkindex}%
   \end{minipage}%
 \end{mfigure}}
-%%
 
-In the \term{vertical dimension} the index is structured by the
-keywords, since they actually serve as the key for the readers search.
-The keywords form a hierarchy which is often visualized by the level
-of indentation. This is not always the practice. For example, the
-Chicago Manual of Style~\cite{chicago} recommends the so-called
-\term{flush-and-hang style} or the \term{run-in indented style} that
-are visualizations of the appearance of index hierarchies. As opposed
-to hierarchical indexes there is often need for so-called \term{flat}
-indexes.
+\noindent In the \term{vertical dimension} the index is structured by
+the keywords, since they actually serve as the key for the reader's
+search.  The keywords form a hierarchy which is often visualized by
+the level of indentation. This is not always the practice. For
+example, the Chicago Manual of Style~\cite{chicago} recommends the
+so-called \term{flush-and-hang style} or the \term{run-in indented
+  style} that are visualizations of the appearance of index
+hierarchies. As opposed to hierarchical indexes there is often need
+for so-called \term{flat} indexes.
 
-Along the \term{horizontal dimension} we identify at first glance a
-list of \term{location references}. A location reference is an object
-that serves as a reference to some location inside the document. We
-can observe different types of locations in documents: page numbers,
-section numbers, parts of the appendix, cross references, etc.\ Most
-indexes contain only references to pages but there is a wide
-application area in which pages are of less concern.
+Along the \term{horizontal dimension} we identify the list of
+\term{location references}. A location reference is an object that
+serves as a reference to some location within the document. We can
+observe different types of locations in documents such as page
+numbers, section numbers, parts of the appendix, cross references,
+etc.\ Most indexes contain only references to pages but there is a
+wide application area in which pages are of less concern.
 
 
 \subsection{Index Entries}
-\label{sec:index-entries}
 
-\enlargethispage{\baselineskip}
-
-Most indexes have a recursive structure since an index entry can
-possibly be composed of other index entries. In a tree representation
-the index can be seen as a node having index entries as children.
+An index entry consists of a keyword which is a list of strings and a
+list of location references.  Most indexes have a recursive structure
+since an index entry can possibly be composed of other index entries.
+Thus index entries may form a recursive structure.
 
 A keyword consists of a list of \term{strings}. Strings are
 \term{character sequences} over the underlying \term{alphabet} that is
 used in the document preparation system such as ASCII or the ISO~Latin
 family. Strings are denoted using the quote characters ``\ldots''. An
 example keyword consisting of two strings might be (``search''
-``sequential''). A keyword can be interpreted as the \term{path} in
-the tree structure to the corresponding location references. This view
+``sequential'').\footnote{We use parenthesis to denote list-based
+  structures.} A keyword can be interpreted as the \term{path} in the
+tree structure to the corresponding location references. This view
 raises two basic questions: (a) how do we recognize that two keywords
 and therefore strings are equal, and (b) how do we order them?
 
@@ -447,14 +500,14 @@ these logical structures:
 %%
 \begin{description}
 \item[Section-based Pages.]  References of the form
-  ([section]--[page]): \emph{2--8}, \emph{2--12}, \emph{4--7},
+  ([arabic]--[arabic]): \emph{2--8}, \emph{2--12}, \emph{4--7},
   \emph{4--9}.
 
   This kind of structure appears often in large manuals or books
   divided into several parts.
 
 \item[Hierarchical Sections.] References of the form
-  ([sect].[sect].[\ldots]): \emph{1.1}, \emph{1.2.1}, \emph{2.1}.
+  ([arabic].[arabic].[\ldots]): \emph{1.1}, \emph{1.2.1}, \emph{2.1}.
 
 \item[Regular Structures.] We give some examples:
   \begin{list}{$\circ$}{%
@@ -469,7 +522,7 @@ these logical structures:
   \end{list}
 
 \item[Irregular Structures.] References of the form
-  ([page]\{[letter]\}): \emph{11}, \emph{11a}, \emph{17}, \emph{17c}.
+  ([arabic]\{[alpha]\}): \emph{11}, \emph{11a}, \emph{17}, \emph{17c}.
 
   This kind of irregular structures consisting of mandatory and
   optional parts\footnote{Denoted with curly braces \{\ldots\}.}
@@ -512,7 +565,7 @@ The sorting order inside an alphabet is simply derived from the
 definition order ($l_i<l_j \Leftrightarrow i<j$). An alphabet
 consisting of only one letter defines a \emph{separator}, i.e.\ a
 string that is used to separate several components of a location
-reference. Typical examples are dashes, dots and blanks (`--', `.',
+reference. Typical examples are dashes, dots, and blanks (`--', `.',
 `\verb*| |').
 
 Infinite alphabets cannot be enumerated and thus must be represented
@@ -532,21 +585,19 @@ sorting order on a complete location class based on the
 verses can be described in the index style using the following
 definition:
 %%
-\begin{alltt}
+{\small\begin{alltt}
  (define-alphabet "bible-chapters" ("Genesis" "Exodus" "Leviticus"))
-
  (define-location-class "bible-verses"
-     ("bible-chapters" :sep "\verb*| |" \footnote{The argument \texttt{:sep} declares the following argument to be a separator.}
-      "arabic-numbers" :sep ","
-      "arabic-numbers"))
-\end{alltt}
+   ("bible-chapters" :sep\footnote{The argument \texttt{:sep} declares the following argument to be a separator.} "\verb*| |" "arabic-numbers" :sep "," "arabic-numbers"))
+\end{alltt}}
 %%
-This effectively matches all of the examples given above.  The sort
-key of the location reference `\emph{Exodus 2, 12}' would then be
+\noindent This effectively matches all of the examples \emph{Genesis
+  1, 31}; \emph{Exodus 3, 12}; and \emph{Leviticus 2, 3}. The sort key
+of the location reference `\emph{Exodus 3, 12}' would then be
 represented by the list of ordinal numbers
 (2\ts3\ts12).\footnote{Assuming the first element of an alphabet has
   ordinal number `1' we obtain \emph{Exodus}$\rightarrow$2,
-  \emph{2}$\rightarrow$2, and \emph{12}$\rightarrow$12.} Sorting bible
+  \emph{3}$\rightarrow$3, and \emph{12}$\rightarrow$12.} Sorting bible
 verses lexicographically based on these sort keys is now a trivial
 task. Since some of the identified location structures exhibit
 optional parts, such as the irregular structures presented above, our
@@ -555,16 +606,16 @@ location classes are named \term{variable location classes}. The
 example of the manual with inserted pages is one instance of this type
 of location classes.
 
-Another problem is the potential ambiguity in the here only sketched
-matching process. Given the location classes ([arabic][alpha]) and
-([arabic][roman]), the following location references match both
-classes: \emph{1c}, \emph{2i}, \emph{7m}, since the set of the
-lowercase roman numerals $\{c,i,l,m,v,x\}$ and the set of the
-lowercase latin letters $\{a,\ldots,z\}$ are not disjoint.  We argue
-that this situation is unlikely to occur in practice since the reader
-would be confused by such location references, making this a rather
-pathological case.\footnote{I hope so, since I actually found no
-  meaningful counter-example.}
+Another problem is the potential ambiguity in the matching process.
+Given the location classes ([arabic][alpha]) and ([arabic][roman]),
+the following location references match both classes: \emph{1c},
+\emph{2i}, \emph{7m}, since the set of the lowercase roman numerals
+$\{c,i,l,m,v,x\}$ and the set of the lowercase latin letters
+$\{a,\ldots,z\}$ are not disjoint.  We argue that this situation is
+unlikely to occur in practice since the reader would be confused by
+such location references, making this a rather pathological
+case.\footnote{I hope so, since I actually found no meaningful
+  counter-example.}
 
 Location classes like index entries can have a recursive structure,
 too. Often location references of the structure ([Alpha].[page]) are
@@ -622,15 +673,15 @@ the sort key. We describe these properties with the so-called
 \term{attribute groups} that are an abstraction of the observed
 phenomenon. An attribute group is defined by a set of attributes
 belonging to it, such that the defined attribute groups constitute a
-partition the set of all attributes.\footnote{We have not modeled the
-  case that an attribute appears in more than one attribute group,
+partition on the set of all attributes.\footnote{We have not modeled
+  the case that an attribute appears in more than one attribute group,
   though under certain circumstances it might be an useful extension.}
 The appropriate definitions in the index style for both examples are
 shown here:
 %%
 \begin{enumerate}[\quad a)]
-\item \verb| (define-attributes ( ("definition"   "default") ))|
-\item \verb| (define-attributes ( ("definition") ("default") ))|
+\item {\small\verb| (define-attributes ( ("definition"   "default") ))|}
+\item {\small\verb| (define-attributes ( ("definition") ("default") ))|}
 \end{enumerate}
 %%
 The argument of the declaration \texttt{define-attributes} must be a
@@ -642,33 +693,33 @@ this notation it is possible to define attributes groups as needed.
 
 \subsection{Relations on Location References}
 
-Beyond simply sorting the location references inside an attribute
+Beyond simply sorting the location references within an attribute
 group there are other tasks that must be performed. The most important
 one is that successive location references should under certain
-circumstances be joined to form a \term{range}. For example the
+circumstances be joined to form a \term{range}. For example, the
 location references \emph{11}, \emph{12}, \emph{13}, \emph{14} should
 be joined into the range \emph{11--14}.
 
 \paragraph{Successor Relationship.} To be able to join successive
 location references we need an exact definition of the successor
 relationship among location references. We have already introduced a
-total ordering of the location references using the sort key of the
+total ordering on the location references using the sort key of a
 location reference, but this is in general not enough to derive the
 successor relationship. It may work for page numbers consisting of
 arabic numbers or roman numerals, but in case of hierarchically
 structured location classes it is not sufficient and may depend on the
 actual document as we show now.
 
-For example, we have page numbers of the form ([arabic]\{[roman]\})
-matching the following location references: \emph{11, 11a, 12}. The
-corresponding sort keys are (11), (11\ts1) and (12). We can perhaps
-infer that (11) could be written as (11\ts0) and then conclude that
-\emph{11a} is a successor of \emph{11}, but we actually know nothing
-about \emph{11a} and \emph{12}, since we do not know if there exists a
-page \emph{11b} in the document. As long as we do not know if there is
-another location between \emph{11a} and \emph{12} we cannot build the
-range \emph{11--12}, though it might be desirable in the concrete
-case.
+For example, we have page numbers of the form ([arabic]\{[alpha]\})
+matching the location references \emph{11, 11a, 12}. The corresponding
+sort keys are (11), (11\ts1) and (12). We can perhaps infer that (11)
+could be written as (11\ts0) and then conclude that \emph{11a} is a
+successor of \emph{11}, but we actually don't know if \emph{11a} and
+\emph{12} are successors. As long as we do not know if there is
+another location\footnote{Here we actually mean \emph{location} and
+  not \emph{location reference}.} between \emph{11a} and \emph{12} we
+cannot build the range \emph{11--12}, though it might be desirable in
+the concrete case.
 
 What actually causes the problem is a missing bijective mapping from
 the sort key to the set of natural numbers, for which a well-defined
@@ -676,13 +727,13 @@ successor relationship exists. If this mapping would exist, we could
 verify if \emph{11a} and \emph{12} are mapped onto two successive
 natural numbers to decide if \emph{12} directly follows \emph{11a}.
 There are two solutions to this problem: (a) the author of a document
-explicitly declares \emph{12} to be a successor of
-\emph{11a}---tedious but under certain circumstances acceptable, or
-(b) the \dps generates this information automatically and adds it to
-the raw index as well. We call this kind of missing information
-\term{document knowledge} since it is contained in the document itself
-and must be made available to the index processor for entirely solving
-the successor problem.
+explicitly declares \emph{12} to be a successor of \emph{11a}, tedious
+but under certain circumstances acceptable, or (b) the \dps generates
+this information automatically and adds it to the raw index as well.
+We call this kind of missing information \term{document knowledge}
+since it is contained in the document itself and must be made
+available to the index processor for entirely solving the successor
+problem.
 
 
 \paragraph{The Principle of Superseding.} Till now we have concentrated
@@ -723,20 +774,21 @@ references \term{virtual} location references, because they do not
 exist as real objects but are rather a way to simplify the process of
 range building. A virtual object can be seen as the child of a real
 object from which it is derived. Thus, virtual location references
-appear if there is a relation among the attributes not fixed to the
-ones appearing in an attribute group. In our case there exists the
-virtual location reference [\emph{13}] behaving as a normal
-\emph{default} location reference that helps to form the range
-\emph{11--15}. If no range can be built, the virtual location
+appear if there is a relation among the attributes appearing in an
+attribute group.\footnote{Actually it may be a relation among
+  attributes appearing in different attribute groups as well.} In our
+case there exists the virtual location reference [\emph{13}] behaving
+as a normal \emph{default} location reference that helps to form the
+range \emph{11--15}. If no range can be built, the virtual location
 references disappear. Another option can be to eliminate the original
 location reference (the one the virtual location reference is a child
 of), if the virtual one helps building a range. There are two ways to
 describe the relations among the attributes: (a) the so-called
 \term{merge-to} relation $M$ between a source attribute and a target
 attribute, and additionally (b) a \term{drop-if-merged} relation $D$,
-for which must hold: $D\subseteq M$.
+for which must hold: $D\subseteq M$. Table~\ref{tab:virtuals} gives
+examples of possible combinations for some specific relations.
 
-\afterpage{%
 {\vertspace=-2ex%%
   \begin{mtable}%
   {Range building in presence of virtual location references}
@@ -766,17 +818,18 @@ for which must hold: $D\subseteq M$.
     8 & &$\circ$ &$\circ$ &$\circ$& 11--15 17 \textbf{25} \\
     \hline%
   \end{tabular}%
-\end{mtable}}}
+\end{mtable}}
 
-Table~\ref{tab:virtuals} gives examples of possible combinations for
-some specific relations. Examples~1--4 characterize the situation in
-which the attributes \term{definition} and \emph{default} appear in
-two separate attribute groups, whereas in the examples~5--8 both are
-in the same attribute group and attribute \emph{definition} also
-supersedes attribute \emph{default}. Without this restriction there
-would exist even more alternatives. As we can see the additional
-relations may help to compress the list of location references under
-certain circumstances.
+\enlargethispage{\baselineskip}
+
+\noindent Examples~1--4 characterize the situation in which the attributes
+\term{definition} and \emph{default} appear in two separate attribute
+groups, whereas in the examples~5--8 both are in the same attribute
+group and attribute \emph{definition} also supersedes attribute
+\emph{default}. Without this restriction there would exist even more
+alternatives. As we can see the additional relations may help to
+compress the list of location references under certain circumstances.
+
 
 \paragraph*{Dropping Across Hierarchies.}
 
@@ -817,7 +870,6 @@ formalization can be found in~\cite{xindy}.
 
 
 \subsection{Cross References}
-\label{sec:xrefs}
 
 Cross references are references to redirect the readers interest to
 other index entries. Often they are typeset as `\emph{see}\ldots' if
@@ -828,21 +880,20 @@ entry.
 Cross references were accomplished in \mkidx using the encapsulators
 presented previously. We have made cross references separate objects
 in our indexing model. The user may define cross reference classes in
-the index style. A cross reference can be assigned an attribute in the
+the index style. A cross reference can be attached an attribute in the
 raw index specification format identifying the class of a cross
-reference. This class reference can be used to assign specific markup.
-This allows for a much more flexible markup and grouping mechanism
-than other index processors.
+reference. This class attribute can be used to assign specific markup
+to cross references. This allows for a much more flexible markup and
+grouping mechanism than other index processors.
 
 As an additional feature we distinguish between \term{checked} and
 \term{unchecked} cross reference classes. Members of the former group
 are checked, if they point to an existing entry in the index, thus
-avoiding the annoying presence of index entries pointing somewhere
-``behind the moon''.
+avoiding the annoying presence of cross references pointing to
+non-existent index entries.
 
 
 \subsection{Summary}
-\label{sec:review}
 
 An index consists of a two-dimensional structure represented as a
 tree. Figure~\ref{fig:index-tree} illustrates the structure of the
@@ -855,13 +906,7 @@ classes, attributes, attribute groups, the superseding relation, the
 merge-to relation and the drop-if-merged relation. We have identified
 the involved objects and have presented appropriate processing
 schemes.
-\afterpage{%%
-  {\vertspace=-2ex%%
-    \begin{mfigure}{Tree structure of an index}{fig:index-tree}
-      \begin{center}
-        \input{index.latex}
-      \end{center}
-    \end{mfigure}}}
+
 From an abstract point of view there are several topics the vertical
 and horizontal dimensions share. Along both dimensions we have to
 solve a \term{classification problem}. In terms of location references
@@ -870,17 +915,18 @@ keywords we must decide the equality of two keywords following a
 \term{normalization} step. In terms of keywords the keyword mappings
 are a solution to this problem, whereas in the horizontal dimension
 the different relations (superseding, merge-to and drop-if-merged) are
-solutions to this problem. A next correspondence occurs with the
-sorting problem, which in both cases is solved using appropriate
-mappings. In the vertical dimension we use a mapping from keywords,
-consisting of a list of words over the document alphabet, to another
-list in which each element is generated using a injective mapping,
-namely the merge and sort mappings. This list is then sorted
-lexicographically. The same process appears at the horizontal
-dimension, except that we use a list of ordinal numbers to represent
-the sort key of a location reference. It is possible for the user to
-define arbitrary alphabets along both dimensions using two completely
-different mechanisms.
+solutions to this problem.
+
+Another correspondence occurs with the sorting problem, which in both
+cases is solved using appropriate mappings. In the vertical dimension
+we use a mapping from keywords, consisting of a list of words over the
+document alphabet, to another list in which each element is generated
+using a injective mapping, namely the merge and sort mappings. This
+list is then sorted lexicographically. The same process appears at the
+horizontal dimension, except that we use a list of ordinal numbers to
+represent the sort key of a location reference. It is possible for the
+user to define arbitrary alphabets along both dimensions using two
+completely different mechanisms.
 
 Despite of these similarities we have shown that more complex
 formalizations are necessary to describe the horizontal dimension than
@@ -900,11 +946,9 @@ processor for each application. They emphasize the functional
 decomposition of each member of the pipeline and compare it with
 \mkidx. In fact, the indexes they processed with their tools are
 simple compared to the model we present here. We believe that
-developing an index processor capable of only a subset of our indexing
-model will be faced with many problems. The actual implementation is
-fairly complex and from our personal opinion not be solvable better
-using pipelines. Additionally, we wanted to implement a system that is
-usable by many people, not only by experienced
+developing an index processor capable of our indexing model will not
+be possible using pipelines. Additionally, we wanted to implement a
+system that is usable by many people, not only by experienced
 \textsc{Unix}-programmers.
 
 
@@ -915,11 +959,10 @@ aimed at a prototype implementation to verify the new aspects of our
 indexing model in practice. We have found \cpp{} to be an inadequate
 language for productively building such prototypes and switched to
 \CL~\cite{Steele:common-lisp-2}. All necessary data structures are
-part of the core language ready for using. The powerful
-macro-mechanism enabled us to implement a system without writing a
-dedicated parser. The \Lisp-interpreter is well suited for this
-purpose. This has encouraged us to write the production system in
-\Lisp as well.
+part of the core language ready for use. The powerful macro-mechanism
+enabled us to implement a system without writing a dedicated parser.
+The \Lisp-interpreter is well suited for this purpose. This has
+encouraged us to write the production system in \Lisp as well.
 
 We have chosen the freely available
 \texttt{clisp}-implementation\footnote{Available at
@@ -937,37 +980,7 @@ The printed \texttt{noweb} code covers around 150 pages of text. As a
 comparison, \mkidx is written in 4\,300 lines of \textsf{C}.
 
 
-\subsection{The Index Style}
-
-As shown in figure~\ref{fig:data-flow} the index processor is
-configured with the index style. It understands about 35 different
-commands, most of them are used to specify the markup of the final
-index. For a detailed description of all commands
-see~\cite{xindy:man}.
-
-Since a complete description of an index style can be rather complex
-we have adopted a module concept, that enables one to decompose a
-complete index style into submodules. This allows the reuse of
-components which in practice makes writing a style file an easy task.
-We have implemented a set of predefined styles that can be used in an
-ad-hoc manner. Though compatibility with \mkidx was not a design goal
-the distribution contains tools and modules, that make \xindy mostly
-behave as a plug-in for \mkidx.
-
-The superseding-relation is implicitly implemented using the attribute
-groups. We have implemented the superseding relation as the transitive
-hull over the successor relation of the list defining the attribute
-group. For example, the attribute group $(a_1, a_2, a_3)$ implicitly
-defines the relation $\{ (a_1, a_2), (a_1, a_3), (a_2, a_3)\}$. This
-is in our opinion a useful simplification of the model covering almost
-all practical needs. Building ranges is only allowed on the last
-hierarchy layer of a location reference. For variable location classes
-it is not supported due to the lack of experience with useful
-application domains. The merge-to and drop-if-merged relations are
-implemented.
-
-
-\subsection{The Raw Index}
+\paragraph{The Raw Index}
 
 The raw index specification format \xindy understands currently
 consists of one polymorphic command that can be used to describe an
@@ -978,14 +991,61 @@ raw index interface. Due to the length of the specification we do not
 describe it here. The details can be found in~\cite{xindy:man}.
 
 
-\subsection{Tagging the Index}
+\paragraph{The Index Style}
+
+As shown in figure~\ref{fig:data-flow} the index processor is
+configured with the index style. The index style language consists of
+about 35 different commands, most of them are used to specify the
+markup of the final index. For a detailed description of all commands
+refer to~\cite{xindy:man}. Since a complete description of an index
+style can be rather complex we have adopted a module concept, that
+enables one to decompose a complete index style into submodules. This
+allows the reuse of components which in practice makes writing a style
+file an easy task.  We have implemented a set of predefined styles
+that can be used in an ad-hoc manner. Though compatibility with \mkidx
+was not a design goal the distribution contains tools and modules,
+that make \xindy mostly behave as a plug-in for \mkidx.
+
+The superseding relation is implicitly implemented using the attribute
+groups. We have implemented the superseding relation as the transitive
+hull over the successor relation of the list defining an attribute
+group. For example, the attribute group $(a_1, a_2, a_3)$ implicitly
+defines the relation $\{ (a_1, a_2), (a_1, a_3), (a_2, a_3)\}$. This
+is in our opinion a useful simplification of the model covering almost
+all practical needs. Building ranges is only allowed on the last
+hierarchy layer of a location reference. For variable location classes
+it is not supported due to the lack of experience with useful
+application domains. The merge-to and drop-if-merged relations are
+implemented.
+
+
+\subsection{Tagging the Index using Context Based Markup}
 \label{sec:tagging}
+
+%\afterpage{%%
+%  {\vertspace=-2ex%%
+%    \begin{mfigure}
+%      {Tree structure of an index}
+%      {fig:index-tree}
+%      \begin{center}
+%        \input{index.latex}
+%      \end{center}
+%    \end{mfigure}}
+%  }
 
 The tagging process directly operates on the tree representation as
 illustrated in figure~\ref{fig:index-tree}. Framed items are
 components that are directly derived from the raw index. The other
 nodes are created in the processing phase and serve to structure the
 index.
+
+\begin{sidewaysfigure}
+  \begin{center}
+    \input{index-tree.latex}
+  \end{center}
+  \caption{Tree structure of an index}
+  \label{fig:index-tree}
+\end{sidewaysfigure}
 
 We have chosen to support an environment-based style of defining
 markup.  This kind of markup is used in \dps{}s such as \TeX{}, SGML
@@ -999,54 +1059,66 @@ Event bindings can be specialized relative to the context in which the
 event was generated. This scheme is mostly inspired by the
 \textsc{Stil}-project~\cite{stil}. At the time of the event the
 traversing algorithm is in a context that consists of the path in the
-index tree it came across from the root to the current node. Starting
-from the root-node in figure~\ref{fig:index-tree}, such a path could
-look like
+index tree it came across from the root to the current node.
+
+\begin{comment}
+
+  Starting from the root-node in figure~\ref{fig:index-tree}, such a
+  path could look like
 %%
 \def\emrm#1{\mbox{\normalfont\emph{#1}}}%%
-\begin{alltt}
+{\small\begin{alltt}
        \emrm{index}
          \emrm{letter group =} "G"
            \emrm{index entry =} "foo"
              \emrm{location class =} "page-numbers"
                \emrm{attribute group =} 1
                  \emrm{location reference attribute =} "definition"
-\end{alltt}
+\end{alltt}}
 %%
-All markup commands that can be specified in the index style have the
-following form:
+\enlargethispage{\baselineskip}%%
+\noindent All markup commands in index
+style have the following form:
 %%
 \def\itarg#1{\mbox{\normalfont\emph{#1}}}
 \def\rmarg#1{\mbox{\normalfont #1}}
-\begin{alltt}
- (markup-\itarg{index-tree-node-name}
-     \rmarg{[}:open \itarg{markup}\rmarg{]} \rmarg{[}:close \itarg{markup}\rmarg{]} \rmarg{[}:sep \itarg{markup}\rmarg{]}\footnote{Option \texttt{:sep} is applicable for list nodes only.}
-     \rmarg{[context-dependent options such as \texttt{:attr}, \texttt{:group}, \texttt{:class}, \texttt{:depth}, \ldots]})
-\end{alltt}
-%%
-Since, by default, all fields are optional one can assign the markup
-to only a subset of the context arguments. The accessible context
-arguments depend on the type of the object that is to be output. For
-example, the markup of ranges can be specialized on their length
-allowing different markup for ranges of different length. Thus, one
-can specify markup of the form \emph{22\,f.} for ranges of length~1,
-\emph{31\,ff.} for ranges of length~2, and \emph{11--15} for all other
-ranges. We have not made the whole context available to the user, but
-instead have selected a meaningful subset for each markup command.
+{\small\begin{alltt}
+   (markup-\itarg{index-tree-node-name}
+       \rmarg{[}:open \itarg{markup}\rmarg{]} \rmarg{[}:close \itarg{markup}\rmarg{]} \rmarg{[}:sep \itarg{markup}\rmarg{]}\footnote{Option \texttt{:sep} is applicable for list nodes only.}
+       \rmarg{[\emph{context-dependent options such as} \texttt{:attr}, \texttt{:group}, \texttt{:class}, \texttt{:depth}, \ldots]})
+
+\end{alltt}}
+
+\noindent Since, by default, all fields are optional one can assign
+the markup to only a subset of the context arguments. The accessible
+context arguments depend on the type of the object that is to be
+output. For example, the markup of ranges can be specialized on their
+length allowing different markup for ranges of different length. Thus,
+one can specify markup of the form \emph{22\,f.} for ranges of
+length~1, \emph{31\,ff.} for ranges of length~2, and \emph{11--15} for
+all other ranges. We have not made the whole context available to the
+user, but instead have selected a meaningful subset for each markup
+command.
 
 This \term{context-based markup specification} allows to assign a
 generic markup, for instance, for all location reference classes with
 the command
+{\small%%
 \begin{verbatim}
  (markup-locref :open "\generic{" :close "}")
-\end{verbatim}
-but redefining the markup for the instances of a certain location
-class as follows:
+\end{verbatim}%%
+}%%
+\noindent but redefining the markup for the instances of a certain
+location class as follows:
+{\small%%
 \begin{verbatim}
  (markup-locref :open "\special{" :close "}" :class "special-class")
-\end{verbatim}
-%%
-The event dispatcher must decide which of the defined markup schemes
+\end{verbatim}%%
+}%%
+
+\end{comment}
+
+\noindent The event dispatcher must decide which of the markup schemes
 is the most specialized one that matches the current context. In the
 above situation the second markup is selected for a location reference
 of class \texttt{special-class}, but for all others the generic markup
@@ -1055,39 +1127,43 @@ dispatching is based directly on the multi-method dispatching scheme
 of \CLOS~\cite{Keene:88}. Internally, the system generates
 \CLOS-methods at run-time when reading the index style that specialize
 on the given arguments. At markup time the method dispatcher of \CLOS
-finds the appropriate method.
+to find the appropriate method.
 
 The user interface represented by the index style is therefore itself
-of object-oriented nature. The user declares objects such as
-alphabets, constructs location classes, of which location references
-are instances. Markup can be attached orthogonally to these objects
-using multi-argument dispatching. For users not familiar with this
-kind of operation we have added a feature that traces the whole markup
-phase so that generated events are shown and the markup is reported
-that is emitted in response to these events.
+of object-oriented nature. The user declares objects such as alphabets
+and location classes, of which location references are instances.
+Markup can be attached orthogonally to these objects using
+multi-argument dispatching. For users not familiar with this kind of
+operation we have added a feature that traces the whole markup phase
+so that generated events are shown and the markup is reported that is
+emitted in response to these events. For a detailed description of the
+markup model see~\cite{CBM}.
 
-A markup specific problem we encountered is that many flat indexes are
-typeset in the following way: \emph{index, 1--10; $\widetilde{\ \
-    }$processor, 5--9, 13; $\widetilde{\ \ }$style, 6, 8, 13}.  Thus
-repetitions of keywords are indicated with an \term{abbreviation sign}
-(the tilde character in our case). Allowing markup schemes of this
-kind can be implemented by making the information that a keyword is
-repeated available in the markup context. But for indexes appearing in
-textbooks this is only one part of the solution. Usually the
-abbreviation signs are always suppressed at the beginning of a new
-page in the document. This simplifies the readers search for a keyword
-in the index. We argue that suppressing abbreviation signs is mainly a
-problem that has to be solved by the \dps but further investigation of
-the interaction of \dps{}s and index processors is necessary to solve
-this problem.
+
+\paragraph{Open Problems} A markup specific problem we encountered is
+that many flat indexes are typeset in the following way: \emph{index,
+  1--10; $\widetilde{\ \ }$processor, 5--9, 13; $\widetilde{\ \
+    }$style, 6, 8, 13}.  Thus repetitions of keywords are indicated
+with an \term{abbreviation sign} (the tilde character in our case).
+Allowing markup schemes of this kind can be implemented by making the
+information that a keyword is repeated available in the markup
+context. But for indexes appearing in textbooks this is only one part
+of the solution. Usually the abbreviation signs are always suppressed
+at the beginning of a new page in the document. This simplifies the
+readers search for a keyword in the index. We argue that suppressing
+abbreviation signs is mainly a problem that has to be solved by the
+\dps but further investigation of the interaction of \dps{}s and index
+processors is necessary to solve this problem.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\enlargethispage{\baselineskip}
+
 \section{Conclusion}
 
 An index consists of a two-dimensional structure. The vertical
-dimension, the index entries and their corresponding keywords are
+dimension, the index entries and their corresponding keywords is
 rather good understood due to the results of the \imkidx
 project~\cite{Schrod:CG-10-81}. The horizontal dimension describing
 the structure of location references and the processes in which they
@@ -1114,7 +1190,6 @@ under the URL
 is reachable via electronic mail under
 \texttt{kehr@iti.informatik.th-darmstadt.de}.
 
-\enlargethispage{\baselineskip}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1149,6 +1224,9 @@ project in his working group with financial support.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % $Log$
+% Revision 1.2  1997/02/14 17:30:40  kehr
+% New version.
+%
 % Revision 1.1  1997/02/14 09:10:34  kehr
 % New checkin for xindy.
 %
