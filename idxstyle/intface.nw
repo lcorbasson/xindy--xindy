@@ -305,26 +305,19 @@ experienced user.
          (error "missing argument <name> in~%~S" whole))
       ((null layer-list)
          (error "missing argument <layer-list> in~%~S" whole))
-      ((not (list-of-strings-p layer-list))
-         (error "~S is not a list of strings in~%~S" layer-list whole))
+      ;;((not (list-of-strings-p layer-list))
+      ;;  (error "~S is not a list of strings in~%~S" layer-list whole))
       ((not (numberp hierdepth))
          (error "~S is not a number! in~%~S" hierdepth whole))
       ((not (or (numberp   min-range-length)
-		(eql 'none min-range-length)))
+                (eql 'none min-range-length)))
          (error "~S must be a number or the keyword `none' in~%~S"
-		min-range-length whole))
+                min-range-length whole))
       (t (when (eql 'none min-range-length)
-	   (setq min-range-length 0))
-	 `(LET ((NAME (STRINGIFY ',name))
-                (LAYERS (MAPCAR #'(LAMBDA (X)
-                                    (LET* ((LAYER (STRINGIFY X))
-                                           (BASETYPE
-                                            (LOOKUP-BASETYPE *indexstyle*
-                                                             LAYER)))
-                                      (IF BASETYPE
-                                          (MAKE-LOCCLS-LAYER BASETYPE)
-                                          (MAKE-LOCCLS-SEPARATOR LAYER))))
-                                ',layer-list)))
+           (setq min-range-length 0))
+         `(LET ((NAME (STRINGIFY ',name))
+                (LAYERS (BUILD-LOCCLASS-LAYERS ',layer-list ',whole)))
+           (GOL T "~&define-location-class: ~S" LAYERS)
            (COND ((LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
                     (OOPS "replacing cross-reference-class `~S' is not allowed !"
                           NAME))
@@ -338,6 +331,26 @@ experienced user.
                                 ,min-range-length ,hierdepth))))
                  ))))))
 @ %def define-location-class
+
+<<Defining location-classes>>=
+(defun build-locclass-layers (layers whole)
+  (let ((res-list '()))
+    (loop
+      (gol t "~&build-locclass-layers: ~S" layers)
+      (when (endp layers) (return (nreverse res-list)))
+      (cond ((eql :sep (car layers))
+               (setq layers (cdr layers))
+               (if (endp layers)
+                   (error "Reached end of list in~%~S" whole)
+                   (push (make-loccls-separator (stringify (car layers)))
+                         res-list)))
+            (t (let* ((layer (stringify (car layers)))
+                      (basetype (lookup-basetype *indexstyle* layer)))
+                 (if basetype
+                     (push (make-loccls-layer basetype) res-list)
+                     (error "Unknown basetype ~S in~%~S" layer whole)))))
+      (setq layers (cdr layers)))))
+@ %def build-locclass-layers
 
 
 \paragraph{Cross-reference location-classes}
@@ -399,12 +412,12 @@ experienced user.
                   )
              `(PROGN
                (MAPCAR
-		#'(LAMBDA (CATATTR)
-		    (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
-			(NRAW "ignoring redefinition of attribute ~S in~&~S"
-			      CATATTR ,whole)
-			(ADD *indexstyle*
-			     (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
+                #'(LAMBDA (CATATTR)
+                    (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
+                        (NRAW "ignoring redefinition of attribute ~S in~&~S"
+                              CATATTR ',whole)
+                        (ADD *indexstyle*
+                             (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
                 ',plain-list)
                (INITIALIZE-CATEGORY-ATTRIBUTES ',wf-attr-list *indexstyle*))
              ))))
@@ -852,7 +865,11 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.19  1996/07/22 15:54:23  kehr
+%% Revision 1.20  1996/07/24 13:47:17  kehr
+%% Fixed a bug in the definition of define-alphabet that caused a Lisp
+%% stack overflow. A simple quote was forgotten in the macro-definition :-)
+%%
+%% Revision 1.19  1996/07/22  15:54:23  kehr
 %% Replaced some of the oops-macros by nraw-macros.
 %%
 %% Revision 1.18  1996/07/22  11:43:31  kehr
