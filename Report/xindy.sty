@@ -214,7 +214,7 @@
 %\renewcommand{\topfraction}{0.9}
 
 % Ich mag's lieber wenn's "Literaturverzeichnis" heiﬂt
-\renewcommand{\refname}{\bibname}
+\ifx\TechReport\relax{\renewcommand{\refname}{\bibname}}\fi
 
 \makeatletter
 %  \renewcommand{\theenumi}  {\arabic{enumi}}

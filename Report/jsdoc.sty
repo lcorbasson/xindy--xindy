@@ -1,0 +1,138 @@
+% $Id$
+%----------------------------------------------------------------------
+
+%
+% LaTeX style option jsdoc
+% common definitions for documents of Joachim Schrod
+%
+% [LaTeX]
+% (history at end)
+
+
+%
+% OTHER STYLE FILES
+%
+
+\input rcs.sty                  % Use RCS information in markup
+\input logos.sty                % Want to typeset logos
+
+
+%
+% NEW GENERAL MARKUP TAGS
+%
+
+% \todo: show stuff which is still to do
+\def\todo#1{%
+    \begin{center}%
+    \framebox[0.75\textwidth][t]{#1}%
+    \end{center}%
+    }
+
+% fixme environment: show problematic stuff
+\font\manfnt=manfnt     % with the dangerous bend sign
+\chardef\bend="7F       % I like the non-S curve ;-)
+\def\fixme{%
+    \trivlist
+        \hangindent 2em
+        \hangafter -2
+        \item[\hbox to 0pt{\hss \manfnt \bend}]%
+        \ignorespaces
+    }
+\let\endfixme=\endtrivlist
+
+
+
+%
+% REPAIR LaTeX DEFICIENCIES
+%
+
+% figures
+
+\def\fps@figure{htbp}   % figures are placed here, top, bottom, pagexconcepts
+\def\textfraction{0.1}  % must be at least 10% text on page
+\def\topfraction{0.9}   % rest may be top insertion
+\def\floatpagefraction{0.8} % float pages only if the float is larger than 80%
+
+\long\def\@makecaption#1#2{%
+    \vskip 10\p@
+    \setbox\@tempboxa\hbox{#1: #2}%
+    \ifdim \wd\@tempboxa >\hsize        % IF longer than one line:
+        \@hangfrom{#1: }#2\par          % THEN set as hanging paragraph
+    \else                               % ELSE center.
+        \hbox to\hsize{\hfil\box\@tempboxa\hfil}%
+    \fi
+    }
+
+
+% labels
+
+\def\labelitemi{$\circ$} % label on first item level is a circ
+
+\def\titlefont{\sffamily%%\bfseries
+        }
+
+% section names in sans serif
+% have to take care of old LaTeX first...
+\ifx \reset@font\undefined  \let\reset@font\relax  \fi
+\def\section{%
+    \@startsection{section}{1}%         % name and level
+        {\z@}%                          % indentation
+        {-3.5ex plus-1ex minus-.2ex}%   % skip above and don't indent next par
+        {2.3ex plus.2ex}%               % skip below
+        {\reset@font \Large\titlefont}% % type
+    }
+\def\subsection{%
+    \@startsection{subsection}{2}%      % name and level
+        {\z@}%                          % indentation
+        {-3.25ex plus-1ex minus-.2ex}%  % skip above and don't indent next par
+        {1.5ex plus.2ex}%               % skip below
+        {\reset@font \large\titlefont}% % type
+    }
+\def\subsubsection{%
+    \@startsection{subsubsection}{3}%   % name and level
+        {\z@}%                          % indentation
+        {-3.25ex plus-1ex minus-.2ex}%  % skip above and don't indent next par
+        {1.5ex plus.2ex}%               % skip below
+        {\reset@font \large\titlefont}% % type
+    }
+\def\paragraph{%
+    \@startsection{paragraph}{4}%       % name and level
+        {\z@}%                          % indentation
+        {3.25ex plus-1ex minus-.2ex}%   % skip above and indent next par
+        {-1em}%                         % skip after, run in text
+        {\reset@font \normalsize\titlefont}%    % type
+    }
+
+
+% bibliography with introductionary text, and listed in table of contents
+
+\newtoks\bibliographyIntroduction
+        \bibliographyIntroduction={}
+\def\thebibliography#1{%
+    \section{\refname}%
+    \the\bibliographyIntroduction \unskip\par
+    \list
+        {\@biblabel{\arabic{enumiv}}}%  % Default label
+        {%                              % initializing tokens
+            %\itemsep=0mm%
+            \parsep=0mm%
+            \settowidth\labelwidth{\@biblabel{#1}}%
+            \leftmargin\labelwidth
+            \advance\leftmargin\labelsep
+            \usecounter{enumiv}%
+            \let\p@enumiv\@empty
+            \def\theenumiv{\arabic{enumiv}}%
+        }%
+    \def\newblock{\hskip .11em plus.33em minus.07em}%
+    \sloppy  \clubpenalty 4000  \widowpenalty 4000
+    \sfcode`\.=1000
+    }
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% $Log$
+% Revision 1.1  1997/02/14 09:10:29  kehr
+% New checkin for xindy.
+%

@@ -8,7 +8,7 @@ XCOMM $Id$
 /* history at end */
 
 #include <Project.imk>
-
+#include <TeX.imk>
 
 /* ============================================================
  *
@@ -30,29 +30,30 @@ XCOMM $Id$
 	modulgraph.eps
 
 #define STY \
-	figsect.sty          stdwrk.sty\
-	bslash.sty           footnotelist.sty     tableofcontents.sty\
-	environments.sty     sectioning.sty       xindy.sty
+	a4-9.sty             footnotelist.sty     stdwrk.sty\
+	a4.sty               itititle.sty         tableofcontents.sty\
+	bslash.sty           jsdoc.sty            xindy.sty\
+	environments.sty     logos.sty\
+	figsect.sty          sectioning.sty
 
 #define BIB bibliographie.bib
 
-tmp-xindy.dvi: xindy.dvi
-	       cp xindy.dvi tmp-xindy.dvi
-
-all:: tmp-xindy.dvi
-
 TeXSpreadTarget(latex,xindy, SRC EPS STY BIB)
+TeXSpreadTarget(latex,techrep, techrep.tex STY BIB)
 
-CVSAdd(SRC EPS STY BIB Imakefile)
+CVSAdd(SRC EPS STY BIB Imakefile techrep.tex)
 CVSCommentLeader("%% ", SRC STY)
 
 clean::
-	$(RM) xindy.ps
+	$(RM) xindy.ps techrep.ps
 
 /* ============================================================
 
 $Log$
-Revision 1.5  1995/11/15 14:58:09  kehr
+Revision 1.6  1997/02/14 09:10:18  kehr
+New checkin for xindy.
+
+Revision 1.5  1995/11/15  14:58:09  kehr
 Final correction (I hope so).
 
 Revision 1.4  1995/11/14  16:05:52  kehr
@@ -66,7 +67,6 @@ Korrektur nach Klaus' Durchsicht.
 
 Revision 1.1  1995/10/16  17:31:43  kehr
 Initial checkin of Report and Presentation.
-
 */
 
 #endif  /* already imported */

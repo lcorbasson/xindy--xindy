@@ -1,0 +1,112 @@
+% titlepage.sty  27 Jan 85   modified for international usage
+%
+% Modified by J.Schrod/C. Detig.
+% according to the suggestion of H.Partl (TU Wien) in german.sty
+% to make caption names adaptable to other languages.
+%
+% 92-06-16 cd: enlarged \iti by more text; interface unmodified
+% 92-05-20 cd: positioning on page modified to fit into `yellow pages'
+% 92-04-25 js: redefined \tableofcontents
+% 92-03-18 cd: adapted to ITI requirements
+%              improved readability of this file
+%              modified positioning of elements on page
+%              new: \athene and \iti#1
+
+% USAGE
+%
+% \title#1
+% \author#1	mehrere Autoren trennen durch \and
+%		Info zu Autoren mit \\ abtrennen
+% \date#1	aktuelles Datum mit \heute oder \today
+% \iti{Bericht ??? der Arbeitsgruppe Systemprogrammierung} oder aehnliches
+%
+% \maketitle
+
+
+% kludge to get athene-logo printed (displays wrong)
+\font\athenefont=athenes scaled 800
+\def\athene{%
+   {\athenefont\char0}
+   }
+
+\def\TitleInstitute{Institut f\"ur Theoretische Informatik}
+\def\TitleDepartment{\hbox{Fachbereich Informatik}}
+\def\iti#1{%
+   \gdef\@iti{%
+      \vbox{%
+         \hbox{#1}%
+         \hbox{\TitleInstitute}%
+         \TitleDepartment
+         \hbox{Technische Hochschule Darmstadt}%
+         }%
+      }%
+   }
+\let\@iti\empty
+
+\def\maketitle{%
+   \begin{titlepage}%
+      \let\footnotesize\small
+      \let\footnoterule\relax
+      \setcounter{page}{0}%
+%
+      \null
+      \vskip 90pt
+      \begin{center}%
+         \parbox[t]{10.5cm}{%
+	    \centering
+	    \LARGE
+	    \ignorespaces \@title \unskip
+	    \par
+	    }%
+	 \ifx \@author\empty
+	 \else
+	    \vskip 3em
+	    {\large\sc \lineskip .75em
+	     \begin{tabular}[t]{c}%
+		\ignorespaces \@author \unskip
+	     \end{tabular}%
+	     \par}%
+	 \fi
+         \vskip 1.5em
+         {\large \@date \par}%
+      \end{center}%
+      \par
+      \vfill
+      \centerline{\athene}%
+      \vfill
+      \leftline{\@iti}%
+      \@thanks
+      \null
+      \vskip -3cm
+   \end{titlepage}%
+%
+   \setcounter{footnote}{0}%
+   \let\thanks\relax
+   \gdef\@thanks{}\gdef\@author{}\gdef\@title{}\gdef\@iti{}%
+   \let\maketitle\relax
+}
+
+\ifx \undefined\abstractname  \def\abstractname{Abstract}  \fi % <----------
+
+\def\abstract{
+   \titlepage
+   \null\vfil
+   \begin{center}
+      {\bf \abstractname}
+   \end{center}
+}
+
+\def\endabstract{\par\vfil\null\endtitlepage}
+
+
+\let\TitleTocEject=\cleardoublepage
+
+\let\@@tableofcontents\tableofcontents
+\def\tableofcontents{%
+    \pagenumbering{roman}%
+    \@@tableofcontents
+    %\TitleTocEject
+    \pagenumbering{arabic}%
+    }
+
+\endinput
