@@ -1,3 +1,11 @@
+Thu Dec  7 19:16:05 1995  Roger Kehr  (kehr@spock)
+
+	* I renamed the module `idxclass' to `idxstyle'. Restructured the
+	  whole module from scratch. Had a discussion with Joachim and
+	  Gabor about my problems to implement the location-reference
+	  handling. I nearly finished all work with submodule `idxclass'.
+	  (3 hrs. Damn headaches, the last beer yesterday was one too much!)
+
 Tue Dec  5 19:37:04 1995  Roger Kehr  (kehr@spock)
 
 	* Set up the new modules `index' and `idxclass'. Got a first sight
