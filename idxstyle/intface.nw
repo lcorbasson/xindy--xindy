@@ -60,34 +60,40 @@ It can be imported by other packages by calling
 
 <<User-interface-definitions>>=
 (defparameter *idxstyle-user-interface-definitions*
-  '(*indexstyle*
-    *indexstyle-readtable*
+  '(
     *default-minimum-range-length*
     *included-files*
+    *indexstyle-readtable*
     define-alphabet
     define-alphabet*
-    define-enumeration
-    define-location-class
-    define-crossref-class
-    define-location-class-order
     define-attributes
+    define-crossref-class
+    define-enumeration
     define-letter-group
     define-letter-groups
-    merge-to
-    merge-rule
-    sort-rule
-    searchpath
-    require
+    define-location-class
+    define-location-class-order
+    define-sort-rule-run-list
+    forward backward
     info
+    merge-rule
+    merge-to
+    require
+    searchpath
+    sort-rule
+    *indexstyle*
     ))
 @ %def *idxstyle-user-interface-definitions*
 
 <<Export-list of submodule \module{intface}>>=
-(export '(*idxstyle-user-interface-definitions*
-          *indexstyle*
+(export '(*indexstyle*
           *indexstyle-readtable*
+          do-require
           set-searchpath-by-string
-          do-require))
+	  *sort-rule-run-list*
+	  forward backward
+	  *idxstyle-user-interface-definitions*
+	  ))
 @
 
 \subsubsection{Helpers}
@@ -515,9 +521,30 @@ For more information see the description of the [[ordrules]]-package.
 
 <<Defining keyword rules>>=
 #+:ORDRULES
+(defparameter *sort-rule-run-list*
+  '(forward forward forward forward
+    forward forward forward forward))
+
+#+:ORDRULES
+(defmacro define-sort-rule-run-list (&whole whole &rest args)
+  (destructuring-switch-bind (&key
+                              (run-list *sort-rule-run-list*))
+      args
+    (unless (every #'(lambda (run)
+		       (member run '(forward backward)))
+		   run-list)
+      (error "~&Elements of :run-list must be one of {forward,backward}!"))
+    `(PROGN
+      (SETQ *SORT-RULE-RUN-LIST* ',run-list)
+      (ORDRULES:INITIALIZE (LENGTH *SORT-RULE-RUN-LIST*))
+      (FLUSH-ORDRULES-MESSAGE-BUFFER))))
+
+#+:ORDRULES
 (defmacro sort-rule (&whole whole &rest args)
   (destructuring-switch-bind (pattern
                               replacement
+                              &key
+                              (run 0)
                               &switch
                               (again           :again)
                               (string          :string)
@@ -526,6 +553,9 @@ For more information see the description of the [[ordrules]]-package.
       args
     (cond ((null pattern)
              (error "missing argument <pattern> !"))
+          ((or (< run 0) (>= run (length *sort-rule-run-list*)))
+             (error "~&Argument of :run must be in the interval [0..~A]!"
+		    (length *sort-rule-run-list*)))
           ((or (and string extended-regexp) (and string basic-regexp)
                (and extended-regexp basic-regexp))
              (error "~&Only one of (:string :bregexp :eregexp) allowed in:~&~S !"
@@ -535,7 +565,7 @@ For more information see the description of the [[ordrules]]-package.
           (t `(PROGN
                (UNLESS
                    (ZEROP
-                    (ORDRULES:ADD-KEYWORD-SORT-RULE ,pattern ,replacement
+                    (ORDRULES:ADD-KEYWORD-SORT-RULE ,run ,pattern ,replacement
                                                     ,(if again 1 0)
                                                     ,(cond (string 1)
                                                            (basic-regexp 2)
@@ -543,6 +573,11 @@ For more information see the description of the [[ordrules]]-package.
                                                            (t 0))))
                  (OOPS "~&Wrong regular expression ~S in:~%~S." ',pattern ',whole))
                (FLUSH-ORDRULES-MESSAGE-BUFFER))))))
+
+#-:ORDRULES
+(defmacro define-sort-rule-run-list (&rest args)
+  (declare (ignore args))
+  (oops "define-sort-rule-run-list not supported! ignoring definition"))
 
 #-:ORDRULES
 (defmacro sort-rule (&rest args)
@@ -1094,6 +1129,9 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.30  1997/10/20 11:25:09  kehr
+%% *** empty log message ***
+%%
 %% Revision 1.29  1997/04/18 14:08:41  kehr
 %% Added OS/2-specific changes into the source. Modifications have been
 %% written by Joerg Diederich.
