@@ -9,8 +9,6 @@ XCOMM $Id$
 
 #include <Project.imk>
 
-ProjectTop()
-
 /*
  * The project now consists of the following modules:
  *
@@ -19,26 +17,26 @@ ProjectTop()
  *     Doc              The whole documentation
  */
 
-#define submodules base locref idxstyle index markup xindy rx
+#define sources     base locref idxstyle index markup
+#define submodules  sources xindy rx
 
 /* ATTN: modules are made in list order! */
-BuildProjectModules(Report Presentation Doc\
-		    submodules testsuite tools packages)
+BuildProjectModules(submodules testsuite tools)
 
 CVSAdd(ChangeLog Imakefile)
-CVSAdd(Report Presentation)
-CVSAdd(Doc)
 CVSAdd(noweb src testsuite)
-CVSAdd(distrib)
 CVSAdd(rx)
 CVSAdd(tools)
 CVSAdd(submodules)
 
 commit-src: force
-	    cvs commit submodules
+	cvs commit submodules
+
+all-lisp: force
+	for i in sources; do (cd $$i; make $$i.lsp); done
 
 tag: force
-     @ echo "cvs rtag release-02-August-1996 xindy"
+	@ echo "cvs rtag release-02-August-1996 xindy"
 
 force:
 
@@ -46,7 +44,10 @@ force:
 /*======================================================================
  *
  * $Log$
- * Revision 1.15  1996/08/02 17:52:16  kehr
+ * Revision 1.16  1997/01/17 16:41:20  kehr
+ * Restructured directory structure.
+ *
+ * Revision 1.15  1996/08/02  17:52:16  kehr
  * .
  *
  * Revision 1.14  1996/07/11  14:15:16  kehr
