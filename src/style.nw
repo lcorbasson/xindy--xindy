@@ -2,16 +2,25 @@
 ;;;----------------------------------------------------------------------
 
 ;;;
-;;; `style.mxs'
+;;; `style'
 ;;;
 ;;; (history at end)
 
 
 <<*>>=
-(load "mkindex4")
+(load "xindy")
+@
 
+Hier wird ein neuer Komponententyp definiert:
+
+<<*>>=
 (basetype "Part" '("Chapter" "Appendix" "Glossar"))
+@
 
+Hier folgt die Definition einiger Lokationsklassen fester Struktur.
+Varklassen sind noch nicht implementiert.
+
+<<*>>=
 (compose-location-class
  "Part"
  (list
@@ -27,7 +36,6 @@
   (compose-basetype  "Arabic Numbers")
   (compose-separator ".")
   (compose-basetype  "Arabic Numbers")))
-
 
 ;(match-locclass-by-string "Chapter"     (find-location-class "Part"))
 ;(match-locclass-by-string "Appendix-"   (find-location-class "Part"))
@@ -70,7 +78,11 @@
 
 ;(separated-mixed '(("bold" "default") "italic"))
 ;(merge-to "bold" "default")
+@
 
+Hier folgt die Definition einiger Indexeintr"age:
+
+<<*>>=
 (idxent "1.1.0"       '("Trees" "AVL"))
 
 (idxent "1.1.2"       '("Trees"))
@@ -80,12 +92,18 @@
 
 (idxent "2.1.1"       '("Trees" "binary"))
 (idxent "2.1.2"       '("Trees" "binary"))
-(idxent "2.1.2"       '("Trees" "binary" "bla"))
+(idxent "2.1.2"       '("Trees" "binary" "balanced"))
 
 (separated-mixed '("default"))
 
 (setf (get-keyword-markup (find-indexclass *active-idxcls-name*)) '())
+@
 
+Das Markup f"ur die drei Layer der Stichw"orter der aktiven
+Indexklasse ist hier definiert. Das Markup der Lokationsreferenzen ist
+noch nicht implementiert.
+
+<<*>>=
 (keyword-markup :pre-node "~%"
                 ;;:post-node "1)"
                 ;; :repetition-symbol "--"
@@ -98,23 +116,26 @@
 (keyword-markup :pre-node ", "
                 ;;:post-node "3)"
                 :pre-layer "\\textsf{" :post-layer "}")
-
-(defun reset ()
-  (load 'style.mxs)
-  (process-index))
-
-;(si)
-
 @
+
+Hier der Beispielaufruf mit Markup:
+
+<<*>>=
+(process-index)
+@
+
 
 %%
 %% $Log$
-%% Revision 1.3  1995/11/21 14:55:20  kehr
+%% Revision 1.4  1995/12/07 13:21:47  kehr
+%% Dies ist das Projekt zum Zeitpunkt der Abgabe.
+%%
+%% Revision 1.3  1995/11/21  14:55:20  kehr
 %% Added support for DejaGnu-Framework.
 %%
-Revision 1.2  1995/11/08  16:18:21  kehr
-Minor modifications.
-
+%% Revision 1.2  1995/11/08  16:18:21  kehr
+%% Minor modifications.
+%%
 %% Revision 1.1  1995/10/16  19:23:10  kehr
 %% Initial source checkin.
 %%

@@ -175,7 +175,7 @@ we do the output-tagging.
   (let ((idxcls (find-indexclass idxcls-name)))
     (sort-indexentries idxcls)
     (process-indexentries idxcls)
-;    (output-tagging idxcls))
+    (output-tagging idxcls)
     ))
 
 (defun output-tagging (idxcls)
@@ -219,12 +219,15 @@ version of that indexentry.
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1995/11/21 14:55:17  kehr
+%% Revision 1.4  1995/12/07 13:21:32  kehr
+%% Dies ist das Projekt zum Zeitpunkt der Abgabe.
+%%
+%% Revision 1.3  1995/11/21  14:55:17  kehr
 %% Added support for DejaGnu-Framework.
 %%
-Revision 1.2  1995/11/08  16:18:07  kehr
-Minor modifications.
-
+%% Revision 1.2  1995/11/08  16:18:07  kehr
+%% Minor modifications.
+%%
 %% Revision 1.1  1995/10/16  19:23:07  kehr
 %% Initial source checkin.
 %%

@@ -58,8 +58,8 @@ NowebLaTeXDocTargetWrap(source,$(NW_HEADER),$(NW_TRAILER))
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
-      NW_HEADER  = $(TOPDIR)/noweb/header.tex
-      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+      NW_HEADER  = ./header.tex
+      NW_TRAILER = ./trailer.tex
 
       ALL_LISP_SRC = base.lsp basetype.lsp idxclass.lsp idxentry.lsp\
 		     idxrule.lsp idxstyle.lsp index.lsp intface.lsp\
@@ -98,7 +98,10 @@ clean::
 /* ============================================================
  *
  * $Log$
- * Revision 1.2  1995/10/17 15:56:57  kehr
+ * Revision 1.3  1995/12/07 13:21:18  kehr
+ * Dies ist das Projekt zum Zeitpunkt der Abgabe.
+ *
+ * Revision 1.2  1995/10/17  15:56:57  kehr
  * Had to modifiy some rules of Lisp.imk. The original rule implicitly
  * expected that all sources are available which of course isn't always
  * true in a noweb-environment. The solution was to generate all sources
