@@ -8,7 +8,7 @@ XCOMM $Id$
  */
 
 #define NotangleStandardOptions -L';; line %L "%F"%N'
-#define NoweaveStandardOptions -n # -index # -delay
+#define NoweaveStandardOptions # -n # -index # -delay
 
 /* needed modules */
 #include <Project.imk>
@@ -25,8 +25,8 @@ XCOMM continue in Imakefile
       NW_HEADER  = $(TOPDIR)/noweb/header.tex
       NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
 
-      ALL_NOWEB_SRC= locref.nw basetype.nw locclass.nw
-      ALL_DOC_SRC  = module.nw $(ALL_NOWEB_SOURCE)
+      ALL_NOWEB_SRC = locref.nw basetype.nw locclass.nw
+      ALL_DOC_SRC   = module.nw $(ALL_NOWEB_SRC)
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_DOC_SRC))
 NowebLispModuleTarget(locref,$(ALL_NOWEB_SRC))
@@ -47,7 +47,10 @@ DejaGnuTarget(locref,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.6  1996/01/09 14:28:31  kehr
+ * Revision 1.7  1996/01/10 16:47:55  kehr
+ * Some modifications due to the markup-stuff. Renaming of the chunk-names.
+ *
+ * Revision 1.6  1996/01/09  14:28:31  kehr
  * Moved submodule `ranges' from this module to module `index'.
  * Minor modifications in conjunction with the rewrite of module `index'.
  *

@@ -335,10 +335,7 @@ i really need it.
 <<Submodule \module{locclass}>>
 <<Submodule \module{locref}>>
 
-;(eval-when (compile load)
-;  (require 'ranges))
-
-<<pretty-print>>
+<<Pretty-printing>>
 
 (defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
 @
@@ -348,7 +345,6 @@ i really need it.
 <<Class \class{structured-locref}>>
 <<Class \class{category-attribute}>>
 <<Sorting location-references>>
-<<markup methods>>
 <<Export-list of submodule \module{locref}>>
 @
 
@@ -357,46 +353,11 @@ i really need it.
 @
 
 
-\subsubsection{Markup}
-
-
-\no Markup of a location-reference ist currently implemented as a
-simple printing of all layers and separators.
-
-<<markup methods>>=
-(defmethod markup-object ((locref structured-locref)
-                          (dummmy-markup-list  list)
-                          (context-list list)
-                          (dummmy-env-stack    list))
-  (dolist (context-string context-list)
-    (mprint context-string))
-  (let ((layers (get-layers locref)))
-    (dolist (loccls-layer (get-layers (get-locclass locref)))
-      (typecase loccls-layer
-        (loccls-layer
-           (markup-object (pop layers) '() '() '()))
-        (loccls-separator
-           (markup-object loccls-layer '() '() '()))))))
-@
-
-
-\no Markup of a location-layer ist currently implemented as a simple
-printing of the layer-string.
-
-<<markup methods>>=
-;(defmethod markup-object ((layer locref-layer)
-;                          (dummmy-markup-list  list)
-;                          (dummmy-context-list list)
-;                          (dummmy-env-stack    list))
-;  (mprint (get-layer layer)))
-@
-
-
 \subsubsection{Pretty-printing}
 
-\no A block for pretty-printing a location-reference.
+A block for pretty-printing a location-reference.
 
-<<pretty-print>>=
+<<Pretty-printing>>=
 (defun pprint-structured-locref (s locref)
   (pprint-logical-block
    (s nil :prefix "[" :suffix "]")
@@ -421,7 +382,7 @@ printing of the layer-string.
 (set-pprint-dispatch 'structured-locref #'pprint-structured-locref)
 @
 
-<<pretty-print>>=
+<<Pretty-printing>>=
 (set-pprint-dispatch 'category-attribute
                      #'(lambda (s catattr)
                          (write-string "`" s)
@@ -434,7 +395,10 @@ printing of the layer-string.
 %% End:
 %%
 %% $Log$
-%% Revision 1.10  1996/01/09 14:28:38  kehr
+%% Revision 1.11  1996/01/10 16:48:02  kehr
+%% Some modifications due to the markup-stuff. Renaming of the chunk-names.
+%%
+%% Revision 1.10  1996/01/09  14:28:38  kehr
 %% Moved submodule `ranges' from this module to module `index'.
 %% Minor modifications in conjunction with the rewrite of module `index'.
 %%

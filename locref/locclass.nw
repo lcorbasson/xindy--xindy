@@ -284,7 +284,8 @@ idea, because we now store the markup-information into the class, too.)
 @ %def loccls-layer make-loccls-layer
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(loccls-layer make-loccls-layer))
+(export '(loccls-layer make-loccls-layer
+	  get-basetype get-markup))
 @
 
 \no To perform matching of a string [[locstring]] against a layer
@@ -315,7 +316,8 @@ for future extensions.
 @ %def loccls-separator make-loccls-separator
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(loccls-separator make-loccls-separator))
+(export '(loccls-separator make-loccls-separator
+	  get-separator get-markup))
 @
 
 \no To perform matching of a string [[locstring]] against a separator
@@ -488,19 +490,6 @@ is not an error, because we do a prefix-matching.
         (values nil nil))))
 @ %def perform-match
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsubsection{Markup}
-
-<<markup methods>>=
-(defmethod markup-object ((separator loccls-separator)
-                          (dummmy-markup-list  list)
-                          (dummmy-context-list list)
-                          (dummmy-env-stack    list))
-  (mprint (get-separator separator)))
-@
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{The submodule root}
@@ -533,7 +522,7 @@ is not an error, because we do a prefix-matching.
 
 \subsubsection{Pretty-printing}
 
-<<pretty-print>>=
+<<Pretty-printing>>=
 (set-pprint-dispatch 'location-class
                      #'(lambda (s loccls)
                          (pprint-logical-block
@@ -574,7 +563,10 @@ is not an error, because we do a prefix-matching.
 %% End:
 %%
 %% $Log$
-%% Revision 1.9  1996/01/09 14:28:35  kehr
+%% Revision 1.10  1996/01/10 16:48:00  kehr
+%% Some modifications due to the markup-stuff. Renaming of the chunk-names.
+%%
+%% Revision 1.9  1996/01/09  14:28:35  kehr
 %% Moved submodule `ranges' from this module to module `index'.
 %% Minor modifications in conjunction with the rewrite of module `index'.
 %%

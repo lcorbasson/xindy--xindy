@@ -140,24 +140,6 @@ The following symbols are exported:
 \end{defunc}
 
 
-\subsubsection{The submodule root}
-
-Here is the root chunk of this submodule.
-
-<<Submodule \module{basetype}>>=
-;; $Id$
-;;
-
-<<class \class{basetype}>>
-<<class \class{alphabet}>>
-<<class \class{enumeration}>>
-
-<<export-list of submodule \module{basetype}>>
-@
-
-<<RCS-Identifier>>=
-("basetype" . "$Id$")
-@
 
 \subsubsection{Class \class{basetype}}
 
@@ -176,17 +158,17 @@ from this, its signature is equivalent to the above description.
 We also use this generic function in other parts of our system, where
 we need the same behaviour (\look{sec:match.strings}).
 
-<<class \class{basetype}>>=
+<<Class \class{basetype}>>=
 (defgeneric prefix-match (str object))
 @ %def prefix-match
 
-<<class \class{basetype}>>=
+<<Class \class{basetype}>>=
 (defclass basetype ()
     ((name          :reader get-name          :initarg :name)
      (base-alphabet :reader get-base-alphabet :initarg :base-alphabet)))
 @ %def basetype
 
-<<export-list of submodule \module{basetype}>>=
+<<Export-list of submodule \module{basetype}>>=
 (export '(basetype prefix-match get-name get-base-alphabet))
 @
 
@@ -208,7 +190,7 @@ initialize [[base-alphabet]] with the result of function
 [[calculate-base-alphabet]] because we can calculate its directly from
 [[symbols]] which is certainly less error-prone.
 
-<<class \class{alphabet}>>=
+<<Class \class{alphabet}>>=
 (defclass alphabet (basetype)
     ((symbols  :reader get-symbols  :initarg :symbols)))
 
@@ -217,13 +199,13 @@ initialize [[base-alphabet]] with the result of function
                  :base-alphabet (calculate-base-alphabet symbols)))
 @ %def alphabet make-alphabet
 
-<<export-list of submodule \module{basetype}>>=
+<<Export-list of submodule \module{basetype}>>=
 (export '(alphabet make-alphabet get-symbols))
 @
 
 \no Here follows the implementation of the [[calculate-base-alphabet]].
 
-<<class \class{alphabet}>>=
+<<Class \class{alphabet}>>=
 (defun calculate-base-alphabet (list-of-strings)
   (let ((base-alphabet '()))
     (dolist (str list-of-strings)
@@ -246,7 +228,7 @@ alphabets. It uses the global function [[prefix-match-stringlist]]
 which is a general-purpose function to implement prefix-matching on a
 list of strings. See \secref{def:prefix-match} for more details.
 
-<<class \class{alphabet}>>=
+<<Class \class{alphabet}>>=
 (defmethod prefix-match ((str string) (alph alphabet))
   (multiple-value-bind (matched-string rest-string order-num)
       (prefix-match-stringlist str (get-symbols alph))
@@ -293,7 +275,7 @@ alphabets we need to give the base-alphabet as argument to the
 constructor.
 
 
-<<class \class{enumeration}>>=
+<<Class \class{enumeration}>>=
 (defclass enumeration (basetype)
     ())
 
@@ -303,8 +285,26 @@ constructor.
                  :base-alphabet base-alphabet))
 @ %def enumeration make-enumeration
 
-<<export-list of submodule \module{basetype}>>=
+<<Export-list of submodule \module{basetype}>>=
 (export '(enumeration make-enumeration))
+@
+
+\subsubsection{The submodule root}
+
+Here is the root chunk of this submodule.
+
+<<Submodule \module{basetype}>>=
+;; $Id$
+
+<<Class \class{basetype}>>
+<<Class \class{alphabet}>>
+<<Class \class{enumeration}>>
+
+<<Export-list of submodule \module{basetype}>>
+@
+
+<<RCS-Identifier>>=
+("basetype" . "$Id$")
 @
 
 
@@ -316,7 +316,10 @@ constructor.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.8  1996/01/09 14:28:33  kehr
+%% Revision 1.9  1996/01/10 16:47:57  kehr
+%% Some modifications due to the markup-stuff. Renaming of the chunk-names.
+%%
+%% Revision 1.8  1996/01/09  14:28:33  kehr
 %% Moved submodule `ranges' from this module to module `index'.
 %% Minor modifications in conjunction with the rewrite of module `index'.
 %%
