@@ -105,7 +105,7 @@ details).
                  :catattr catattr  :locclass locclass))
 @ %def make-location-reference
 
-<<export-list of module \module{locref}>>=
+<<export-list of submodule \module{locref}>>=
 (export '(location-reference make-location-refrence))
 @
 
@@ -188,7 +188,7 @@ i really need it.
         (t nil)))
 @ %def locref< locref=
 
-<<export-list of module \module{locref}>>=
+<<export-list of submodule \module{locref}>>=
 (export '(locref-class<  locref-class=
           locref-ordnum< locref-ordnum=
           locref<        locref=))
@@ -228,28 +228,41 @@ location-reference and a secondary attribute.
 @ %def virtual-locref make-virtual-locref
 
 
+\subsubsection{The module root}
+
 <<*>>=
 ;; $Id$
 ;;
 
 (in-package 'locref)
+(provide 'locref)
 
-(use-package 'clos)
-(use-package 'xp)
-
-(unless (find-package 'base)
-  (require 'base)
+(eval-when (compile load)
+  (use-package 'clos)
+  (use-package 'xp)
+  (unless (find-package 'base)
+    (load 'base))
   (use-package 'base))
 
-(require 'basetype)
-(require 'locclass)
+<<submodule \module{basetype}>>
+<<submodule \module{locclass}>>
+<<submodule \module{locref}>>
 
+;(eval-when (compile load)
+;  (require 'ranges))
+
+<<pretty-print>>
+@
+
+<<submodule \module{locref}>>=
 <<class \class{location-reference}>>
 <<class \class{vitual-locref}>>
 <<Sorting location-references>>
-<<pretty-print>>
+
 <<markup methods>>
+<<export-list of submodule \module{locref}>>
 @
+
 
 
 
@@ -326,22 +339,16 @@ printing of the layer-string.
 (set-pprint-dispatch 'location-reference #'pprint-location-reference)
 @
 
-
-
-<<pretty-print>>=
-(defun pprint-locref-layer (s layer)
-  (write (get-layer layer) :stream s))
-
-(set-pprint-dispatch 'locref-layer #'pprint-locref-layer)
-@
-
 %% Local Variables:
 %% mode: latex
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.7  1995/12/07 18:15:16  kehr
+%% Revision 1.8  1995/12/15 17:09:52  kehr
+%% Modified sources for the new module structure.
+%%
+%% Revision 1.7  1995/12/07  18:15:16  kehr
 %% Minor modifications.
 %%
 %% Revision 1.6  1995/12/05  18:47:09  kehr

@@ -140,20 +140,19 @@ The following symbols are exported:
 \end{defunc}
 
 
-\subsubsection{The root}
+\subsubsection{The submodule root}
 
-Here is the root chunk of this part.
+Here is the root chunk of this submodule.
 
-<<*>>=
-(eval-when (compile)
-  (use-package 'clos)
-  (use-package 'xp))
+<<submodule \module{basetype}>>=
+;; $Id$
+;;
 
 <<class \class{basetype}>>
 <<class \class{alphabet}>>
 <<class \class{enumeration}>>
 
-<<export-list of module \module{basetype}>>
+<<export-list of submodule \module{basetype}>>
 @
 
 
@@ -184,13 +183,12 @@ we need the same behaviour (\look{sec:match.strings}).
      (base-alphabet :reader get-base-alphabet :initarg :base-alphabet)))
 @ %def basetype
 
-<<export-list of module \module{basetype}>>=
+<<export-list of submodule \module{basetype}>>=
 (export '(basetype prefix-match))
 @
 
 \no We didn't define a constructor for this class --- remember, it is only
 intended to serve as a virtual base-class.
-
 
 
 \subsubsection{Class \class{alphabet}}
@@ -214,16 +212,9 @@ initialize [[base-alphabet]] with the result of function
 (defun make-alphabet (name symbols)
   (make-instance 'alphabet :name name :symbols symbols
                  :base-alphabet (calculate-base-alphabet symbols)))
-
-(defmethod show ((alph alphabet))
-  (format t "[Alph `~A' "
-          (get-name alph))
-  (show (get-symbols alph))
-  (write-string "]")
-  (values))
 @ %def alphabet make-alphabet
 
-<<export-list of module \module{basetype}>>=
+<<export-list of submodule \module{basetype}>>=
 (export '(alphabet make-alphabet))
 @
 
@@ -307,15 +298,9 @@ constructor.
   (make-instance enum-class
                  :name          name
                  :base-alphabet base-alphabet))
-
-(defmethod show ((enum enumeration))
-  (format t "[Enum `~A' "
-          (get-name enum))
-  (write-string "]")
-  (values))
 @ %def enumeration make-enumeration
 
-<<export-list of module \module{basetype}>>=
+<<export-list of submodule \module{basetype}>>=
 (export '(enumeration make-enumeration))
 @
 
@@ -328,7 +313,10 @@ constructor.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.5  1995/12/07 18:15:11  kehr
+%% Revision 1.6  1995/12/15 17:09:47  kehr
+%% Modified sources for the new module structure.
+%%
+%% Revision 1.5  1995/12/07  18:15:11  kehr
 %% Minor modifications.
 %%
 %% Revision 1.4  1995/12/05  13:53:36  kehr

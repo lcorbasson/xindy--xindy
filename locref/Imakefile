@@ -19,45 +19,17 @@ XCOMM $Id$
 /* This must be included after the redefinition of the above rule(s) */
 #include <Lisp.imk>
 
-/* Some convenience Macros */
-
-#ifndef NowebLispTarget
-#define NowebLispTarget(program)     	                                @@\
-NowebTarget(program,lsp,)
-#endif
-
-/* In conjunction with the modified LispModuleTarget()-macro, we
-   append the target `source' to all sources in the project (this is
-   somewhat stupid, but works for now). Now the sources will be
-   generated before clisp starts to compile anything.
-*/
-#ifndef NowebFullLispTarget
-#define NowebFullLispTarget(source) 	                                @@\
-src:: source.lsp							@@\
-source:: $(ALL_LISP_SRC)						@@\
-NowebLispTarget(source)							@@\
-LispModuleTarget(source)					       	@@\
-ReleaseLispObjects(LispModuleObjects(source))				@@\
-/*NowebLaTeXDocTargetWrap(source,$(NW_HEADER),$(NW_TRAILER))*/
-#endif
-
-
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
       NW_HEADER  = $(TOPDIR)/noweb/header.tex
       NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
 
-      ALL_LISP_SRC = locclass.lsp basetype.lsp locref.lsp ranges.lsp
+      ALL_NOWEB_SRC= locref.nw basetype.nw locclass.nw# ranges.nw
+      ALL_DOC_SRC  = module.nw $(ALL_NOWEB_SOURCE)
 
-      ALL_NOWEB_SRC= module.nw basetype.nw locclass.nw locref.nw ranges.nw
-
-NowebFullLispTarget(basetype)
-NowebFullLispTarget(locclass)
-NowebFullLispTarget(locref)
-NowebFullLispTarget(ranges)
-
-NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_NOWEB_SRC))
+NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_DOC_SRC))
+NowebLispModuleTarget(locref,$(ALL_NOWEB_SRC))
 
 CVSAdd(*.nw)
 CVSAdd(Imakefile)
@@ -75,7 +47,10 @@ DejaGnuTarget(locref,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.4  1995/11/29 16:53:28  kehr
+ * Revision 1.5  1995/12/15 17:09:45  kehr
+ * Modified sources for the new module structure.
+ *
+ * Revision 1.4  1995/11/29  16:53:28  kehr
  * Changed class hierarchy below class `location-class'. Defined a
  * location-class< predicate and wrote several regression tests. Wrote a
  * lot of documentation for submodule `locclass'.

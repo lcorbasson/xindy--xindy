@@ -302,7 +302,7 @@ The method for building ranges looks like that.
 
 <<*>>=
 (provide 'ranges)
-(use-package 'clos)
+;(use-package 'clos)
 
 <<class location-range>>
 <<successor-handling>>
@@ -317,7 +317,10 @@ The method for building ranges looks like that.
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1995/12/05 18:47:13  kehr
+%% Revision 1.4  1995/12/15 17:09:54  kehr
+%% Modified sources for the new module structure.
+%%
+%% Revision 1.3  1995/12/05  18:47:13  kehr
 %% Minor changes (nreverse etc.)
 %%
 %% Revision 1.2  1995/11/29  16:53:30  kehr

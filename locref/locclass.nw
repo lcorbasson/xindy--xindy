@@ -133,7 +133,7 @@ name that is stored in the [[name]]-slot. Additionally every derived
 location-class must implement a method [[perform-match]]
 (\look{sec:match.strings}).
 
-<<export-list of module \module{locref}>>=
+<<export-list of submodule \module{locclass}>>=
 (export '(location-class perform-match))
 @
 
@@ -191,8 +191,7 @@ because they share multiple similiarities.
 <<class \class{layered-location-class}>>=
 (defclass layered-location-class (location-class)
     ((layers      :reader   get-layers      :initarg :layers)
-     (join-layers :reader   get-join-layers :initarg :join-layers))
-  )
+     (join-layers :reader   get-join-layers :initarg :join-layers)))
 @ %def layered-location-class
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -207,12 +206,6 @@ because they share multiple similiarities.
   (make-instance 'standard-location-class
                  :name name :layers layers :join-layers join-layers))
 
-(defmethod show ((loccls standard-location-class))
-  (format t "[LocCls `~A': (" (get-name loccls))
-  (show (get-layers loccls))
-  (show (get-join-layers loccls))
-  (write-string ")")
-  (values))
 @ %def standard-location-class make-standard-location-class
 
 \no We add a function for a checked creation of a location-class, that
@@ -255,7 +248,7 @@ normal instantiation without any validation.
 \no Here follows the list of all exported location-classes and their
 constructors.
 
-<<export-list of module \module{locref}>>=
+<<export-list of submodule \module{locclass}>>=
 (export '(layered-location-class
           standard-location-class
           var-location-class
@@ -266,17 +259,50 @@ constructors.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsubsection{Class \sans{loccls-layer}}
+\label{sec:loccls-layer}
+
+A \term{location-class-layer} is based upon a basetype. We define this
+as an extra class to be free for future additions. (Later on... Great
+idea, because we now store the markup-information into the class, too.)
+
+<<class \class{loccls-layer}>>=
+(defclass loccls-layer ()
+    ((basetype :reader get-basetype :initarg :basetype)
+     (markup   :reader get-markup   :initarg :markup)))
+
+(defun make-loccls-layer (basetype markup)
+  (make-instance 'loccls-layer :basetype basetype :markup markup))
+@ %def loccls-layer make-loccls-layer
+
+<<export-list of submodule \module{locclass}>>=
+(export '(loccls-layer make-loccls-layer))
+@
+
+\no To perform matching of a string [[locstring]] against a layer
+[[layer]] we just forward the result to the basetype of thar
+location-class layer.
+
+<<class \class{loccls-layer}>>=
+(defmethod prefix-match ((locstring string)
+                         (layer     loccls-layer))
+  (prefix-match locstring (get-basetype layer)))
+@ %def prefix-match
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{Other stuff --- still a lot of kluges}
 
 This function counts the number of basetypes in a layer-list. It is
 used to initialize the [[join-layers]]-value of a location-class.
 
 <<class \class{layered-location-class}>>=
-(defun num-of-basetypes (layers)
-  (list (count nil layers
-               :test #'(lambda (dummy layer)
-                         (declare (ignore dummy))
-                         (typep layer 'loccls-layer)))))
+;(defun num-of-basetypes (layers)
+;  (list (count nil layers
+;               :test #'(lambda (dummy layer)
+;                         (declare (ignore dummy))
+;                         (typep layer 'loccls-layer)))))
 @
 
 This function checks whether given level [[level-number]] appears in
@@ -307,44 +333,6 @@ should never be valid.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Class \sans{loccls-layer}}
-\label{sec:loccls-layer}
-
-A \term{location-class-layer} is based upon a basetype. We define this
-as an extra class to be free for future additions. (Later on... Great
-idea, because we now store the markup-information into the class, too.)
-
-<<class \class{loccls-layer}>>=
-(defclass loccls-layer ()
-    ((basetype :reader get-basetype :initarg :basetype)
-     (markup   :reader get-markup   :initarg :markup)))
-
-(defun make-loccls-layer (basetype markup)
-  (make-instance 'loccls-layer :basetype basetype :markup markup))
-
-(defmethod show ((layer loccls-layer))
-  (show (get-basetype layer))
-;  (show (get-markup   layer))
-  (values))
-@ %def loccls-layer make-loccls-layer
-
-<<export-list of module \module{locref}>>=
-(export '(loccls-layer make-loccls-layer))
-@
-
-\no To perform matching of a string [[locstring]] against a layer
-[[layer]] we just forward the result to the basetype of thar
-location-class layer.
-
-<<class \class{loccls-layer}>>=
-(defmethod prefix-match ((locstring string)
-                         (layer     loccls-layer))
-  (prefix-match locstring (get-basetype layer)))
-@ %def prefix-match
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \subsubsection{Class \sans{loccls-separator}}
 \label{sec:loccls-separator}
 
@@ -358,14 +346,9 @@ for future extensions.
 
 (defun make-loccls-separator (separator markup)
   (make-instance 'loccls-separator :separator separator :markup markup))
-
-(defmethod show ((separator loccls-separator))
-  (write-string (get-separator separator))
-  ;;  (show (get-markup separator))
-  (values))
 @ %def loccls-separator make-loccls-separator
 
-<<export-list of module \module{locref}>>=
+<<export-list of submodule \module{locclass}>>=
 (export '(loccls-separator make-loccls-separator))
 @
 
@@ -554,19 +537,11 @@ is not an error, because we do a prefix-matching.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{The root}
+\subsubsection{The submodule root}
 
-<<*>>=
+<<submodule \module{locclass}>>=
 ;; $Id$
 ;;
-
-(eval-when (compile load)
-  (use-package 'clos)
-  (use-package 'xp)
-  (unless (find-package 'base)
-    (load 'base)
-    (use-package 'base))
-  )
 
 <<class \class{location-class}>>
 <<class \class{layered-location-class}>>
@@ -575,9 +550,9 @@ is not an error, because we do a prefix-matching.
 <<class \class{loccls-layer}>>
 <<class \class{loccls-separator}>>
 <<Matching strings with location-classes>>
-<<markup methods>>
 
-<<export-list of module \module{locref}>>
+
+<<export-list of submodule \module{locclass}>>
 @
 
 \begin{TODO}
@@ -587,13 +562,53 @@ is not an error, because we do a prefix-matching.
 \item implement all \cmd{checked-make-xxx-location-class} functions
 \end{TODO}
 
+\subsubsection{Pretty-printing}
+
+<<pretty-print>>=
+(set-pprint-dispatch 'location-class
+                     #'(lambda (s loccls)
+                         (pprint-logical-block
+                          (s nil :prefix "{" :suffix "}")
+                          (write (get-name loccls) :stream s)
+                          (write-string ":" s)
+                          (write (get-ordnum loccls) :stream s))))
+
+(set-pprint-dispatch 'layered-location-class
+                     #'(lambda (s loccls)
+                         (pprint-logical-block
+                          (s nil :prefix "{" :suffix "}")
+                          (write (get-name loccls) :stream s)
+                          (write-string ":" s)
+                          (write (get-ordnum loccls) :stream s)
+                          (mapc #'(lambda (x)
+                                    (write-string " " s)
+                                    (pprint x s))
+                                (get-layers loccls)))))
+
+(set-pprint-dispatch 'loccls-layer
+                     #'(lambda (s layer)
+                         (pprint-logical-block
+                          (s nil :prefix "<" :suffix ">")
+                          (pprint (get-basetype layer) s))))
+
+(set-pprint-dispatch 'loccls-separator
+                     #'(lambda (s sep)
+                         (pprint-logical-block
+                          (s nil :prefix "<" :suffix ">")
+                          (write (get-separator sep) :stream s))))
+@
+
+
 %% Local Variables:
 %% mode: latex
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.6  1995/12/07 18:15:13  kehr
+%% Revision 1.7  1995/12/15 17:09:49  kehr
+%% Modified sources for the new module structure.
+%%
+%% Revision 1.6  1995/12/07  18:15:13  kehr
 %% Minor modifications.
 %%
 %% Revision 1.5  1995/12/05  18:47:07  kehr
