@@ -101,6 +101,7 @@ An indexentry consists of the following elements:
 (export '(indexentry make-indexentry))
 @ %def indexentry make-indexentry
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \no The following function takes an indexentry and scans all possible
@@ -408,7 +409,7 @@ This is separated into two stages:
 
 \subsubsection{Building of ranges}
 
-\subsubsection{Transitive hull}
+\subsubsection{Relations and their transitive hull}
 
 We already mentioned in \secref{sec:subs-if-dbl} that we need a
 transitive hull calculation base on the category-attibutes.  Because
@@ -448,8 +449,7 @@ relation which represents the transitive hull of the given relation.
                                             (list (car k)))))
                               relation)))
                   relation))
-        relation)
-  )
+        relation))
 @ %def transitive-hull
 
 \no The relation is calculated once and used heavily afterwards. The
@@ -457,11 +457,69 @@ only operation we need later is to check if $x$ is in relation to $y$
 or not. Therefore we transform the represenation now into a faster
 hash-table representation.
 
+The representation of the hashed elements is a pair ($x~y$) with $x,y$
+category-attributes. We simply traverse the relation and for each pair
+($x~y$) we [[cons]] both elements and use the result of the key for
+the hash-table. To accomplish an exact test we use keyword %%
+[[:test #'equal]] for the comparison function. (Another idea would be
+to use [[sxhash]] and use [[#'eql]] for hashing if we should need a
+speed-up)
+
 <<Transform relation into hash-table>>=
-(defun init (relation)
-  (let ((ht (make-hash-table)))
-    (
-)))
+(defun relation-to-hash (relation)
+  (let ((ht (make-hash-table :test #'equal)))
+    (mapc #'(lambda (node)
+              (mapc #'(lambda (succ-node)
+                        (let ((elt (cons (car node) succ-node)))
+                          (setf (gethash elt ht) t)))
+                    (cdr node)))
+          relation)
+    ht))
+@ %def relation-to-hash
+
+\no Finally we define a predicate [[relation-p]] that tests if $x$ is
+in relation with $y$ in relation [[rel]].
+
+<<Test for relation>>=
+(defun relation-p (x y rel)
+  (gethash (cons x y) rel))
+@ %def relation-p
+
+\no The whole source is
+
+<<Relations and transitive hull>>=
+<<Transitive hull algorithm>>
+<<Transform relation into hash-table>>
+<<Test for relation>>
+@
+
+<<test>>=
+(defun init ()
+  (setq a 'a)
+  (setq b 'b)
+  (setq c 'c)
+  (setq d 'd)
+  (setq e 'e)
+  (setq f 'f)
+
+  (setq z 'z)
+  (setq y 'y)
+  (setq x 'x)
+
+  (setq rel '())
+  (setq rel (acons z '() rel))
+  (setq rel (acons y (list z) rel))
+  (setq rel (acons x (list y) rel))
+
+  (setq rel (acons f '() rel))
+  (setq rel (acons e (list f) rel))
+  (setq rel (acons d (list e) rel))
+  (setq rel (acons c (list d) rel))
+  (setq rel (acons b (list c) rel))
+  (setq rel (acons a (list b) rel))
+
+  (transitive-hull rel)
+)
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -927,7 +985,10 @@ The next class defines all location-references that have the same
 %% End:
 %%
 %% $Log$
-%% Revision 1.4  1995/12/13 16:44:16  kehr
+%% Revision 1.5  1995/12/15 17:09:07  kehr
+%% Wrote down more specification for the locref-handling.
+%%
+%% Revision 1.4  1995/12/13  16:44:16  kehr
 %% Extended the specification of the location-reference-handling. Implemented
 %% the transitive-hull algorithm.
 %%
