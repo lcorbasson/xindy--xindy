@@ -8,26 +8,37 @@
    It tries to parse an TeX-auxiliary-file `.aux' or index-file
    `.idx' into a raw-index-form readable by xindy.
 
-   This can also be used as a template for writing other frontends
-   for  xindy. Please send us your preprocessors. We are likely
-   to include them into the distribution.
+   This program was written since it was not easily possible to
+   extract the parser from the old makeindex system. Therefore it does
+   not find all errors in the input as the makeindex version.
+   Additionally it uses only the default input specifiers of
+   makeindex. If other input specifiers (cf. manual page of makeindex)
+   are needed, the input specifiers below (starting from the pattern
+   KEYWORD, see below) must be changed and the program must be
+   recompiled. See the Migration Manual that comes with this
+   distribution for further details.
 
-   This program was written since it was not possible to extract
-   the parser from the old makeindex system. It is also a hack
-   but its easy maintainable.
+   It can also be used as a template for writing other frontends for
+   xindy. Please send us your preprocessors. We are likely to include
+   them into the distribution. */
 
-   */
+#include <stdio.h>
 
-int lineno = 1;
-int braces = 0;
+FILE* stat = NULL;
 
-#define err( msg ) fprintf(stderr, "%d: %s\n", lineno, msg)
+int lineno    = 1;
+int braces    = 0;
+int xref_mode = 0;
+
+#define err( msg ) fprintf(stderr, "line %d: %s\n", lineno, msg)
 
 #define NO_RANGE     0
 #define OPEN_RANGE   1
 #define CLOSE_RANGE  2
 
 int range = NO_RANGE;
+
+/* This function quotes a character, if necessary. */
 
 void qc( char ch ) {
   switch (ch) {
@@ -37,6 +48,8 @@ void qc( char ch ) {
   putchar(ch);
 }
 
+/* Quote an entire string. */
+
 void qs( char* str ) {
   while ( *str ) {
     qc( *str++ );
@@ -45,71 +58,129 @@ void qs( char* str ) {
 
 %}
 
-INDEXENTRY   \\indexentry
+KEYWORD  \\indexentry
+ENCAP    \|
+ACTUAL   @
+ESCAPE   \\
+LEVEL    !
+QUOTE    \"
+ROPEN    \(
+RCLOSE   \)
+ARGOPEN  \{
+ARGCLOSE \}
 
-%s key print skip2location location encap
-
-%%
-
-^{INDEXENTRY}[ \t]*\{  { printf("(indexentry :tkey ((\""); BEGIN(key); }
-
-<key,print>[^\"\|@\}\{!\\]* { ECHO; }/* until the meta-chars */
-<key,print>\\     {  qc('\\'); qc(input()); }
-<key,print>\"     {  qc(input()); }
-<key,print>\|     { printf("\")) :attr \"");
-                    range = NO_RANGE; BEGIN(encap); }
-<key,print>!        printf("\") (\"");
-<key,print>\{     { ECHO; braces++; }
-<key,print>\}     { if ( braces > 0 )
-                         {ECHO; braces--;}
-                      else
-			 {printf("\"))");
-		          BEGIN(skip2location);}
-                  }
-
-<key>@            { printf("\" \""); BEGIN(print); }
-<print>@          { err( "multiple @'s" ); }
-
-<encap>\|         { err( "multiple |'s" ); }
-<encap>\\         { qc('\\'); qc(input()); }
-<encap>\(         { range = OPEN_RANGE; }
-<encap>\)         { range = CLOSE_RANGE; }
-<encap>\{         { ECHO; braces++; }
-<encap>\}         { if ( braces > 0 )
-                       {ECHO; braces--;}
-                    else {
-		       putchar('"');
-		       switch (range) {
-                         case OPEN_RANGE : printf(" :open-range");
-			                   break;
-                         case CLOSE_RANGE: printf(" :close-range");
-			                   break;
-		       }
-		       BEGIN(skip2location);
-		    }
-                  }
-<encap>.          { ECHO; }
-
-<skip2location>[ \t]*\{  { printf(" :locref \""); BEGIN(location); }
-
-<location>\}      { printf("\")\n"); BEGIN(0); }
-<location>.         ECHO;
-
-\n                { lineno++; }
-.                 { ; }
+%s key print skip2location location encap xref skiplocation
 
 %%
 
-main()
+^{KEYWORD}[ \t]*{ARGOPEN} { printf("(indexentry :tkey ((\"");
+                            xref_mode = 0;
+                            BEGIN(key); }
+
+<key,print>{ESCAPE}    { qc('\\'); qc(input()); }
+<key,print>{QUOTE}     { qc(input()); }
+<key,print>{ENCAP}     { printf("\")) :attr \"");
+                         range = NO_RANGE; BEGIN(encap); }
+<key,print>{LEVEL}     { printf("\") (\""); }
+<key,print>{ARGOPEN}   { ECHO; braces++; }
+<key,print>{ARGCLOSE}  { if ( braces > 0 )
+                           {ECHO; braces--;}
+                         else
+			   {printf("\"))");
+		         BEGIN(skip2location);}
+                       }
+
+<key>{ACTUAL}          { printf("\" \""); BEGIN(print); }
+<print>{ACTUAL}        { err( "multiple @'s" ); }
+
+<key,print>.           { ECHO;}
+
+<encap>{ENCAP}         { err( "multiple |'s" ); }
+<encap>{ESCAPE}        { qc('\\'); ECHO; }
+<encap>{ROPEN}         { range = OPEN_RANGE; }
+<encap>{RCLOSE}        { range = CLOSE_RANGE; }
+<encap>{ARGOPEN}       { /* close :attr "... */
+                         printf("\" :xref (\"");
+			 fprintf(stat, "\txref\n");
+		         braces++;
+		         BEGIN(xref);
+                       }
+<encap>{ARGCLOSE}      { if ( braces > 0 )
+                           {ECHO; braces--;}
+                         else {
+			   putchar('"');
+			   fprintf(stat, "\tlocref\n");
+			   switch (range) {
+			     case OPEN_RANGE : printf(" :open-range");
+			       break;
+			     case CLOSE_RANGE: printf(" :close-range");
+			       break;
+			   }
+			   BEGIN(skip2location);
+			 }
+                       }
+<encap>.              { ECHO;
+                        if (stat) {
+			  fwrite(yytext, sizeof(char), 1, stat);
+			}
+	              }
+
+
+
+<xref>{ESCAPE}         { qc('\\'); qc(input()); }
+<xref>{ARGOPEN}        { ECHO; braces++; }
+<xref>{ARGCLOSE}       { if     ( braces >   1 )
+                           {ECHO; braces--;}
+                         else if ( braces == 1 )
+		           { braces--; }
+                         else {
+		           printf("\")");
+			   xref_mode = 1;
+		           BEGIN(skip2location);
+		         }
+                       }
+<xref>.               { ECHO; }
+
+<skip2location>[ \t]*{ARGOPEN} {
+                        if (xref_mode)
+			  { BEGIN(skiplocation); }
+			else
+			  { printf(" :locref \"");
+			    BEGIN(location);
+			  }
+                       }
+
+<location>{ARGCLOSE}  { printf("\")\n"); BEGIN(0); }
+<location>.           {ECHO;}
+
+<skiplocation>{ARGCLOSE} { printf(")\n"); BEGIN(0); }
+<skiplocation>.       { ; }
+
+\n                    { lineno++; }
+.                     { ; }
+
+%%
+
+
+main(int argc, char* argv[])
 {
-  fprintf(stderr, "This is `tex2xindy' version 0.9 July 1996.\n");
-  fprintf(stderr, "Copyright (c) 1996  Roger Kehr\n\n");
+  fprintf(stderr, "This is `tex2xindy' $Revision$.\n");
+  fprintf(stderr, "Copyright (c) 1996,1997  Roger Kehr\n\n");
+  if ( argc > 1 ) {
+    fprintf(stderr, "Running in makeindex compatibility mode.\n");
+    fprintf(stderr, "Writing attribute names to file \"%s\".\n\n", argv[1]);
+    stat = fopen(argv[1], "w");
+  }
   yylex();
+  fclose(stat);
 }
 
 /*
   $Log$
-  Revision 1.3  1996/07/19 17:15:18  kehr
+  Revision 1.4  1997/01/17 16:30:37  kehr
+  Rewrote makeindex4 and heavily modified tex2xindy.
+
+  Revision 1.3  1996/07/19  17:15:18  kehr
   Made this program comaptible with lex by correctly enclosing all
   actions--stupid bug, 'cause lex didn't complain and flex did some
   wonderful matching of all the actions such that no error was
@@ -120,6 +191,4 @@ main()
 
   Revision 1.1  1996/06/24  08:53:57  kehr
   Initial checkin of the Makefile, README and tex2xindy.
-
-
 */

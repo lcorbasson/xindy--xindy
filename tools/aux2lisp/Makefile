@@ -6,11 +6,6 @@
 
 # Adjust the following lines if necessary
 
-#
-# tex2xindy cannot be compiled using standard lex. Use flex instead.
-# Modify the libraries according to your site.
-#
-
 LEX    = lex -t
 LEXLIB = -ll
 
