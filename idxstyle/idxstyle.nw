@@ -156,7 +156,7 @@ basetype-characters. Quiet easy, isn't it ?
   (use-package "XP")
   (require "locref")
   (use-package "LOCREF")
-  <<Use regexp-package if available>> ;; see submodule idxrule
+  <<Use [[ordrules]]-package if available>> ;; see submodule idxrule
   )
 
 <<Global indexstyle definitions>>
@@ -186,7 +186,10 @@ basetype-characters. Quiet easy, isn't it ?
 @
 
 %% $Log$
-%% Revision 1.6  1996/03/13 16:50:47  kehr
+%% Revision 1.7  1996/03/28 16:46:33  kehr
+%% Changed indexstule modules to work with the new foreign package `ordrules'.
+%%
+%% Revision 1.6  1996/03/13  16:50:47  kehr
 %% Ok, here I am. Included support for regular expressions. Minor changes
 %% in all other parts of this module. Made some tests but had some
 %% problems with LISP stack overflow errors. Don't know where they came

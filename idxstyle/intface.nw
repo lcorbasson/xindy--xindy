@@ -336,6 +336,96 @@ type or structure.
 @ %def make-well-formed-list map-to-strings
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Keyword sort- and merge-rules}
+\label{sec:keyword-rules}
+
+We have three different forms of keyword rules which can be described by
+a pair (\term{pattern}, \term{replacement}). The first one is the
+so-called \term{string-substitution} and is expressed by a pair of
+strings. If the pattern string matches the substring is substituted by
+its replacement.
+
+The second form is described as a character substitution. If the given
+pattern and replacement string are both of length 1, we assume that a
+general character substitution is wanted.
+
+The last form is defined by a regular expression and a replacement
+template. The regexp describes the pattern that should be replaced by
+the replacement if a valid match was found.
+
+For the implementation of the latter We use the GNU
+regular-expression-library [[rx]] for our implementation. This library
+is used by the library [[ordrules]], which is a foreign library
+implemented in C. The \Lisp-system must be extended by both libraries.
+The feature form [[#+:ORDRULES]] is used to include the regular
+expression support. Since the user-interface defined in the standard
+distribution allows no low-level access we need to explicitly import
+the neccessary functions ourselves. The following chunk is included in
+the root-chunk of module \module{idxstyle}.
+
+<<Use [[ordrules]]-package if available>>=
+(when (member "ORDRULES"
+              (mapcar #'package-name
+                      (list-all-packages))
+              :test #'equal)
+  (pushnew ':ORDRULES *features*)
+  (use-package "ORDRULES"))
+@
+\begin{attributes}
+  \item[pattern] describes the pattern of the substitution rule. It
+    must be specified as a string.
+  \item[replacment] describes the replacement. It is also a string.
+  \item[isreject] is a boolean value that describes if the matching is
+    also possible on substituted patterns.
+\end{attributes}
+%%
+For more information see the description of the [[ordrules]]-package.
+
+<<Defining keyword rules>>=
+#+:ORDRULES
+(defmacro merge-rule (&rest args)
+  (destructuring-switch-bind (pattern
+                              replacement
+                              &switch (again :again))
+      args
+    (cond ((null pattern)
+             (error "missing argument <pattern> !"))
+          ((null replacement)
+             (error "missing argument <replacement> !"))
+          (t `(ADD-MERGE-RULE ,pattern ,replacement
+               ,(if again 1 0))))))
+
+#-:ORDULES
+(defmacro merge-rule (&rest args)
+  (declare (ignore args))
+  (warn "merge-rule not supported! ignoring definition"))
+@ %def merge-rule
+
+<<Defining keyword rules>>=
+#+:ORDRULES
+(defmacro sort-rule (&rest args)
+  (destructuring-switch-bind (pattern
+                              replacement
+                              &switch (again :again))
+      args
+    (cond ((null pattern)
+             (error "missing argument <pattern> !"))
+          ((null replacement)
+             (error "missing argument <replacement> !"))
+          (t `(ADD-SORT-RULE ,pattern ,replacement
+               ,(if again 1 0))))))
+
+#-:ORDULES
+(defmacro sort-rule (&rest args)
+  (declare (ignore args))
+  (warn "sort-rule not supported! ignoring definition"))
+@ %def sort-rule
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{The submodule root}
 
 <<Submodule \module{intface}>>=
@@ -345,6 +435,7 @@ type or structure.
 <<Defining alphabets>>
 <<Defining location-classes>>
 <<Defining attributes>>
+<<Defining keyword rules>>
 <<Helpers>>
 <<Check functions>>
 
@@ -359,7 +450,10 @@ type or structure.
 
 
 %% $Log$
-%% Revision 1.6  1996/03/13 16:50:49  kehr
+%% Revision 1.7  1996/03/28 16:46:35  kehr
+%% Changed indexstule modules to work with the new foreign package `ordrules'.
+%%
+%% Revision 1.6  1996/03/13  16:50:49  kehr
 %% Ok, here I am. Included support for regular expressions. Minor changes
 %% in all other parts of this module. Made some tests but had some
 %% problems with LISP stack overflow errors. Don't know where they came

@@ -182,14 +182,14 @@ holds:
 The following rules are necessary to specify the keyword-rules:
 
 
-\begin{istui}{merge-rule}{\emph{pattern-regexp} \emph{subst-regexp} \opt{\sw{:again}} }
+\begin{istui}{merge-rule}{\emph{pattern} \emph{replacement} \opt{\sw{:again}} }
   Defines a substitution based on the \emph{main-key} of an
   indexentry. If the switch \sw{:again} is specified, repeated
   substitution may occur.
 \end{istui}
 
-\begin{istui}{sort-rule}{\emph{pattern-regexp} \emph{subst-regexp} \opt{\sw{:again}} }
-  Defines a simple substitution based on the \emph{merge-key} of an
+\begin{istui}{sort-rule}{\emph{pattern} \emph{replacement} \opt{\sw{:again}} }
+  Defines a substitution based on the \emph{merge-key} of an
   indexentry. If the switch \sw{:again} is specified, repeated
   substitution may occur.
 \end{istui}
