@@ -42,7 +42,7 @@ passed, the raw index will be read from standard input.
 B<xindy> is completely described in its manual that you will find on
 its Web Site, http://www.xindy.org/. A good introductionary
 description appears in the indexing chapter of the LaTeX Companion
-(2nd ed.)
+\(2nd ed.)
 
 If you want to produce an index for LaTeX documents, the command
 texindy(1) is probably more of interest for you. It is a wrapper for
@@ -311,6 +311,7 @@ use File::Spec;
 sub usage ()
 {
     print STDERR <<_EOT_
+
 usage: $cmd [-V?h] [-qv] [-d magic] [-o outfile.ind] [-t log] \\
             [-L lang] [-C codepage] [-M module] [-I input] \\
             [--interactive] [--mem-file xindy.mem] \\
@@ -323,6 +324,7 @@ GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
  -q / --quiet
  -v / --verbose
  -d / --debug          (multiple times)
+                       (supported: script, keep_tmpfiles, markup, level=n)
  -o / --out-file
  -t / --log-file
  -L / --language
@@ -335,14 +337,14 @@ _EOT_
     exit 1;
 }
 
-our ($output_version, $quiet, $verbose, %debug,
+our ($quiet, $verbose, %debug,
      $outfile, $logfile, $language, @codepages, @modules, $input_markup,
      $interactive, $mem_file);
 $input_markup = 'latex';
+$mem_file = "$lib_dir/xindy.mem";
 
 my @orig_argv = @ARGV;
 parse_options();
-output_version()  if $output_version;	# will not return
 
 if ( @ARGV == 2 ) {
     if ( $ARGV[0] =~ /\.xdy$/ ) {
@@ -396,7 +398,8 @@ sub parse_options() {
 
     my (@debug);
     GetOptions(
-		'version|V'          => \$output_version,
+		'version|V'          => sub { output_version(0); },
+		'internal-version'   => sub { output_version(1); },
 		'help|h|?'           => \&usage,
 		'quiet|q'            => \$quiet,
 		'verbose|v'          => \$verbose,
@@ -409,7 +412,8 @@ sub parse_options() {
 		'input-markup|I=s'   => \$input_markup,
 		'interactive'        => \$interactive,
 		'mem-file=s'         => \$mem_file,
-	      );
+	      )
+      or  usage();
 
     # Debug option values are easier to test in a hash. Clean up trace
     # level options, too.
@@ -424,11 +428,21 @@ sub parse_options() {
     $trace_level[0] =~ s/^level=// ;
     $debug{trace_level} = $trace_level[0];
 
+    # Check for unsupported debug option values.
+    my %debug_check = %debug;
+    foreach my $magic ( qw(script keep_tmpfiles markup trace_level) ) {
+	delete $debug_check{$magic};
+    }
+    if ( %debug_check ) {
+	my @magic = keys(%debug_check);
+	print STDERR "Unsupported argument for --debug: @magic\n";
+	usage();
+    }
 
     # Default for the output file: first argument, with extension replaced
     # by ".ind".
 
-    unless ( $outfile  ||  $output_version || $interactive ) {
+    unless ( $outfile  ||  $interactive ) {
 	if ( @ARGV == 0 ) {
 	    print STDERR
 "You need to specify --out-file if the raw index is read from standard input.\n\n";
@@ -457,11 +471,6 @@ sub parse_options() {
 	print STDERR "Unsupported input markup $input_markup.\n\n";
 	usage();
     }
-
-
-    # Default memory file is xindy.mem, of course.
-
-    $mem_file = "$lib_dir/xindy.mem"  unless $mem_file;
 }
 
 
@@ -652,11 +661,34 @@ sub call_xindy ( $$ ) {
     }
 }
 
-sub output_version () {
-    print "Script version: $VERSION\n";
-    my $exit_code = call_xindy($mem_file,
-			   "(progn (xindy:startup :show-version t) (exit))");
+sub output_version ( ;$ ) {		# optional arg: internal-version flag
+    my $internal = shift;
+    output_xindy_release()  unless $internal;
+    print "$cmd script version: $VERSION\n";
+    my $exit_code = call_xindy($mem_file, <<'_EOT_');
+      (progn
+	(format t "xindy kernel version: ~A~%~A version: ~A~%architecture: ~A~%"
+		xindy:*xindy-version*
+		(lisp-implementation-type) (lisp-implementation-version)
+		(machine-version))
+	(exit))
+_EOT_
     exit ($exit_code);
+}
+
+
+sub output_xindy_release () {
+    my $version = 'unknown';
+    if ( open(VERSION, "< $cmd_dir/../VERSION") ) {
+	while ( $version = <VERSION> ) {
+	    chomp ($version);
+	    $version =~ s/\#.*// ;
+	    $version =~ s/^\s+// ;
+	    $version =~ s/\s+$// ;
+	    last  if $version;
+	}
+    }
+    print "xindy release: $version\n";
 }
 
 
@@ -673,6 +705,11 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.5  2004/11/01 22:48:51  jschrod
+#     Locate xindy script.
+#     Terminate on option error.
+#     Fix up version output.
+#
 # Revision 1.4  2004/08/05 14:10:54  jschrod
 #     Language variant names may have hyphens now. Language names must
 # not have hyphens -- the first hyphen of the -L option argument

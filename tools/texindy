@@ -302,6 +302,7 @@ use Getopt::Long qw(:config bundling);
 sub usage ()
 {
     print STDERR <<_EOT_
+
 usage: $cmd [-V?h] [-qv] [-iglr] [-d magic] [-o outfile.ind] [-t log] \\
             [-L lang] [-C codepage] [-M module] [idx0 idx1 ...]
 
@@ -316,6 +317,7 @@ GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
  -l / --letter-ordering
  -r / --no-ranges
  -d / --debug          (multiple times)
+                       (supported: script, keep_tmpfiles, markup, level=n)
  -o / --out-file
  -t / --log-file
  -L / --language
@@ -331,6 +333,15 @@ our ($output_version, $quiet, $verbose, $stdin, @debug,
      $outfile, $logfile, $language, $codepage, @modules);
 $language = 'general';
 $codepage = 'latin';
+
+our $xindy;
+if ( -f "$cmd_dir/xindy" && -x _ ) {
+    $xindy = "$cmd_dir/xindy";
+} elsif ( -f "$cmd_dir/xindy.pl" && -x _ ) {
+    $xindy = "$cmd_dir/xindy.pl";
+} else {
+    die "Cannot locate xindy\n";
+}
 
 parse_options();
 output_version()  if $output_version;	# will not return
@@ -353,7 +364,7 @@ unshift (@ARGV, '-I', 'latex');
 
 print "Calling xindy as: $cmd_dir/xindy @ARGV\n"  if (grep /^script$/, @debug);
 
-exec "$cmd_dir/xindy", @ARGV;
+exec $xindy, @ARGV;
 
 
 # ------------------------------------------------------------
@@ -377,7 +388,8 @@ sub parse_options() {
 	       'language|L=s'       => \$language,
 	       'codepage|C=s'       => \$codepage,
 	       'module|M=s'         => \@modules,
-	      );
+	      )
+      or  usage();
 
     if ( $german ) {
 	unshift (@modules, 'german-sty');
@@ -394,10 +406,39 @@ sub parse_options() {
 }
 
 
+sub output_version () {
+    output_xindy_release();
+    print "$cmd script version: $VERSION\n";
+    my @xindy_cmd = ($xindy, '--internal-version');
+    push (@xindy_cmd, qw(-d script --foobar))  if grep(/^script$/, @debug);
+    exec @xindy_cmd;
+}
+
+
+sub output_xindy_release () {
+    my $version = 'unknown';
+    if ( open(VERSION, "< $cmd_dir/../VERSION") ) {
+	while ( $version = <VERSION> ) {
+	    chomp ($version);
+	    $version =~ s/\#.*// ;
+	    $version =~ s/^\s+// ;
+	    $version =~ s/\s+$// ;
+	    last  if $version;
+	}
+    }
+    print "xindy release: $version\n";
+}
+
+
 
 #======================================================================
 #
 # $Log$
+# Revision 1.3  2004/11/01 22:48:51  jschrod
+#     Locate xindy script.
+#     Terminate on option error.
+#     Fix up version output.
+#
 # Revision 1.2  2004/05/26 21:30:11  jschrod
 #     Added POD documentation.
 #
