@@ -17,7 +17,7 @@
 \RCS $Date$%
 %
 
-\chapter{The xindy-project}
+\chapter{The \textsf{xindy}-project}
 
 \ModuleTitle{}
 
@@ -27,17 +27,11 @@
 How to introduce a piece of software that is intended to process
 indexes?
 
-\subsection{History of index processing systems}
-
-\subsubsection{The original {\normalfont\makeidx}-system}
-
-\subsubsection{How to index non-english documents}
-
-\subsubsection{Who wants to index the Bible?}
-
-
-\subsection{The xindy-approach}
-
+%\subsection{History of index processing systems}
+%\subsubsection{The original {\normalfont\makeidx}-system}
+%\subsubsection{How to index non-english documents?}
+%\subsubsection{Who wants to index the Bible?}
+%\subsection{The xindy-approach}
 
 
 \section{Project realization}
@@ -67,23 +61,25 @@ is an entity of the source that contains all data descriptions and
 functions that operate on those data and is intended to serve as a
 separate unit with a fixed and well-documented interface and its
 description. Currently the project is divided into the following
-modules:
-
+modules (higher-level modules first).
+%%
 \begin{deflist}{locclass}
 \item[\module{xindy}] This module is the top module of the project.
-\item[\module{index}]
-\item[\module{idxclass}]
-\item[\module{locref}]
-\item[\module{base}] This module defines basic services an is the
-  lowest in the hierarchy of modules.
+\item[\module{index}] Performs building the processing of an index.
+\item[\module{idxstyle}] Manages the indexstyle.
+\item[\module{locref}] Deals with the low-level primitives of the
+  system such as basetypes, location-references, category-attributes
+  and location-classes.
+\item[\module{base}] This module defines basic services.
 \end{deflist}
-
-The dependency graph between the modules is shown in ???.
+%%
+Each module depends only on modules that have a lower level in the
+hierarchy.
 
 \CL provides a mechanism to define units with a separate name space
-called \term{package}. For each of the above defined modules we create
-a package with its own name space and explicitly \term{export} objects
-from the package to make them accessible from other modules.
+called \term{packages}. For each of the above defined modules we
+create a package with its own name space and explicitly \term{export}
+objects from the package to make them accessible in other modules.
 
 Each module is stored in a separate subdirectory of the top-level
 directory. Every module may consist of several submodules which are
@@ -150,6 +146,7 @@ following extensions may accour:
 \item[\cmd{.lsp}] the tangled \CL files.
 \item[\cmd{.fas}] the compiled \CL sources.
 \item[\cmd{.lib}] the compiled \CL libraries.
+\item[\cmd{.exp}] \texttt{expect}-scripts.
 \end{deflist}
 
 We did not exceed filename length beyond 8 + 3~characters to be able
@@ -163,6 +160,11 @@ to create an easy port to MS-DOS filesystems.
 \subsubsection*{Functions}
 
 \subsubsection*{Slot methods}
+
+All methods that allow access to a slot are named in a simple scheme.
+[[:reader]]- and [[:accessor]]-methods are always named
+[[get-]]\emph{slotname}. [[:writer]]-methods are always named
+[[set-]]\emph{slotname}.
 
 \subsubsection*{Type specifiers in the documentation}
 
@@ -188,7 +190,6 @@ talk about a type of a list that only contains elements of type
 
 \subsubsection{\noweb}
 
-
 \subsubsection*{\noweb chunk naming}
 
 As mentioned earlier \noweb uses \term{chunks} to name a piece of
@@ -198,22 +199,22 @@ by expanding the so-called \term{root chunk}. This expansion to the
 real source makes it easy so define a portion of code everywhere in
 the document. We use the following naming scheme for chunks of code:
 
-\begin{deflist}{export interface}
-\item[export interface] This chunk is used to define the package
-  interface.
-\item[module \emph{name}] Root chunk for a given module.
-\item[part \emph{name}] Root chunk for a given part.
-\item[class \emph{name}] Definition of a class.
-\item[pretty-print] Everything that belongs to pretty-printing. It
+\begin{deflistit}{export interface}
+\item[$*$] Root chunk of a module.
+\item[Export-list of (sub-)module \emph{name}]\mbox{}\\This chunk is used to
+  define the (sub-)modules interface.  interface.
+\item[Submodule xxx] A submodules root-chunk.
+\item[Class \emph{name}] Definition of a class.
+\item[Pretty-printing] Everything that belongs to pretty-printing. It
   allows us to disable PP in a distributable environment.
-\item[root] Root of the whole source
-\end{deflist}
-
+\item[RCS-Identifier] Each submodule defines this identifier which is
+  accessible later in the system code.
+\end{deflistit}
 
 
 \subsection{Regression tests with DejaGNU}
 
-One of out major goals is to describe regression tests as part of the
+One of the major goals is to describe regression tests as part of the
 source development. One can easily set up tests during development and
 verify changes made to the program later by running the testsuite.
 After looking around I decided to use DejaGNU because it is nearly
@@ -241,14 +242,16 @@ regression tests the files \file{modulname.sum} and
 test.
 
 
-
 %% Local Variables:
 %% mode: latex
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1995/12/05 18:53:16  kehr
+%% Revision 1.4  1996/01/09 14:30:32  kehr
+%% Minor modifications.
+%%
+%% Revision 1.3  1995/12/05  18:53:16  kehr
 %% Forgot to check-in some files...
 %%
 %% Revision 1.2  1995/11/08  16:18:46  kehr
