@@ -6,8 +6,8 @@
 
 # Adjust the following lines if necessary
 
-LEX    = lex -t
-LEXLIB = -ll
+LEX    = flex -t
+LEXLIB = -lfl
 
 #
 # Usual stuff
