@@ -11,7 +11,7 @@
 
 /* switch on debugging by excluding the undef directive. */
 #define debug
-#undef  debug /* */
+/* #undef  debug /* */
 #include "debug.h"
 
 #ifdef debug
@@ -29,12 +29,13 @@ GROUP_LIST HeadingList;	/* list of group headings */
 #define RT_STRING            1
 #define RT_REGEXP_BASIC      2
 #define RT_REGEXP_EXTENDED   3
+#define RT_CHAR              4
 
 static RULE_TYPE get_ruletype PROTO(( char *lside, char *rside ));
 static int       is_regexp PROTO(( char *s ));
 static int       is_CHR_RULE PROTO(( char *s, char *r ));
 
-#define BUFLEN ((size_t)1024)
+#define BUFLEN ((size_t)102400)
 
 char  ordrules_string_buffer [BUFLEN];
 int   ordrules_string_buffer_used_bytes = 0;
@@ -138,7 +139,7 @@ int ruletype;
     initialize( ordrules_sort_rule_tables ); /* ...then initialize */
   }
   if (0 <= run && run < ordrules_sort_rule_tables) {
-    return( add_rule( SortRules[run], left, right, isreject, ruletype ));
+    return( add_rule( SortRules[run], left, right, isreject, ruletype, run ));
   } else {
     logs("ORDRULES: add_sort_rule(): run is out of range.\n");
     return -1;
@@ -152,17 +153,18 @@ char *right;
 int isreject;
 int ruletype;
 {
-  return( add_rule( MergeRules, left, right, isreject, ruletype ));
+  return( add_rule( MergeRules, left, right, isreject, ruletype, -1));
 }
 
 /* insert rule 'left --> right' into ruletable 'table' */
 int
-add_rule( table, left, right, isreject, ruletype)
+add_rule( table, left, right, isreject, ruletype, run)
 RULE_TABLE table;
 char *left;
 char *right;
 int isreject;
 int ruletype;
+int run;
 {
   RULE *r;
   RULE_LIST *list;
@@ -187,7 +189,9 @@ int ruletype;
     case RT_AUTOMATIC:
       r->type = get_ruletype( left, right ); break;
     case RT_STRING:
-      r->type = is_CHR_RULE( left, right ); break;
+      r->type = STR_RULE; break;
+    case RT_CHAR:
+      r->type = CHR_RULE; break;
     case RT_REGEXP_BASIC:
     case RT_REGEXP_EXTENDED:
       r->type = REG_RULE; break;
@@ -286,25 +290,30 @@ int ruletype;
   dispend(inserting into table);
 
   DBG(
-    logs("Mappings: (add (");
+    logs("Mappings: add (");
     if (table == MergeRules) logs("merge"); else logs("sort");
     logs("-rule ");
     switch ( r->type & ~REJECT ) {
       case CHR_RULE:
-	logs(":char `");logc(*left);logs("' `");
-	logc(r->r.chr);logs("'");break;
+	logs("`");logc(*left);logs("' `");logc(r->r.chr);logs("' :char");
+	break;
       case STR_RULE:
-	logs(":string `");logs(r->r.str.lside);
-	logs("' `");logs(r->r.str.rside);logs("'");
+	logs("`");;logs(r->r.str.lside); logs("' `");
+	logs(r->r.str.rside);logs("' :string");
 	break;
       case REG_RULE:
-	logs(":");logc( (r->r.reg.type == REG_EXTENDED) ? 'e' : 'b' );
-	logs("regexp `"); logs(buffer); logs("' `");
-	logs(r->r.reg.rside);logs("'");
+	logs("`");logs(buffer);logs("' `");
+	logs(r->r.reg.rside);logs("' :");
+	logc( (r->r.reg.type == REG_EXTENDED) ? 'e' : 'b' );
+	logs("regexp");
 	break;
     }
+    if (run != -1) {
+	logs(" :run ");
+	logi(run);
+    }
     if (r->type&REJECT) logs(" :again");
-    logs(")).\n");
+    logs(").\n");
   )
   dispend( add_rule );
   return( 0 );
@@ -524,7 +533,6 @@ register size_t buflen;
       dispend( apply_rules );
       return;
     }
-
   }
 
   dispstart( last part );
@@ -564,6 +572,7 @@ int run;
   if (0 <= run && run < ordrules_sort_rule_tables) {
     apply_rules( SortRules[run], key, ordrules_string_buffer, BUFLEN );
   }
+
   sortkey = (char*) malloc (strlen( ordrules_string_buffer ) +1);
   strcpy( sortkey, ordrules_string_buffer );
   DBG(
@@ -646,6 +655,9 @@ int group;
 
 /*
  * $Log$
+ * Revision 1.7  1999/07/30 08:34:32  kehr
+ * Checked in some debug stuff that was integrated for better testing.
+ *
  * Revision 1.6  1997/10/20 11:23:13  kehr
  * New version of sorting rules. Sorting of more complex indexes (i.e.
  * French) is now possible.
