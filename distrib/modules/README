@@ -1,0 +1,32 @@
+$Id$
+----------------------------------------------------------------------
+
+This directory contains a set of predefined modules that can be used
+to describe your own indexstyle. The directory is organized as
+follows:
+
+   lang/        contains several modules specifying alphabets for several
+                languages.
+
+   enum/        contains more enumeration-types. See the header of
+                each file for a description.
+
+   class/       some example classes
+
+   markup/      some markups for
+      tex/
+      html/
+
+   misc/	everything that doesn't fit into the above categories.
+
+
+These modules are intended to be used as a collection of examples that
+can be used as a starting point for your own indexstyles. If you want
+to profit others of your work, send us your indexstyles and we'll
+incorporate your work into future releases.
+
+=====================================================================
+Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
+Computer Science Department
+Technical University of Darmstadt, Germany
+

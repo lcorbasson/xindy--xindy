@@ -1,0 +1,7 @@
+;; $Id$
+;;
+;; This module defines the location-class "page-numbers"
+
+(define-location-class "page-numbers" ("arabic-numbers"))
+
+;; End

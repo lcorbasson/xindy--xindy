@@ -1,0 +1,33 @@
+;; $Id$
+;;
+;; This file contains the standard letter groups used in german
+;; indexes.
+
+(define-letter-group "a" 1000)
+(define-letter-group "b" 1100)
+(define-letter-group "c" 1200)
+(define-letter-group "d" 1300)
+(define-letter-group "e" 1400)
+(define-letter-group "f" 1500)
+(define-letter-group "g" 1600)
+(define-letter-group "h" 1700)
+(define-letter-group "i" 1800)
+(define-letter-group "j" 1900)
+(define-letter-group "k" 2000)
+(define-letter-group "l" 2100)
+(define-letter-group "m" 2200)
+(define-letter-group "n" 2300)
+(define-letter-group "o" 2400)
+(define-letter-group "p" 2500)
+(define-letter-group "q" 2600)
+(define-letter-group "r" 2700)
+(define-letter-group "s" 2800)
+(define-letter-group "t" 2900)
+(define-letter-group "u" 3000)
+(define-letter-group "v" 3100)
+(define-letter-group "w" 3200)
+(define-letter-group "x" 3300)
+(define-letter-group "y" 3400)
+(define-letter-group "z" 3500)
+
+;; End
