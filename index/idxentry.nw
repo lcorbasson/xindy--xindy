@@ -393,8 +393,6 @@ dispatching during the markup process.
 \paragraph*{Further processing}
 
 Process the following steps for each subset $L_i$ separately.
-The cross-references are not considered, so their method simply
-returns their argument.
 
 <<Processing location-reference-groups>>=
 (defmethod process-group ((locref-cls-grp locref-class-group)
@@ -405,12 +403,29 @@ returns their argument.
   (separate-into-catattr-groups locref-cls-grp)
   locref-cls-grp)
 
-(defmethod process-group ((crossref-cls-grp crossref-class-group)
-                          (idxcls indexclass))
-  crossref-cls-grp)
-
 <<Apply substitution- and merge-rules>>
 <<Building of ranges>>
+@ %def process-group
+
+\no What has to be done with the cross-reference-groups? First of all
+we have to check the verified cross-references.
+
+<<Processing location-reference-groups>>=
+(defmethod process-group ((crossref-cls-grp crossref-class-group)
+                          (idxcls indexclass))
+  (let ((cross-references (get-members crossref-cls-grp)))
+    (typecase (get-locclass (car cross-references))
+      (verified-crossref-location-class
+         (mapc #'(lambda (xref)
+                   (let* ((target (get-target xref))
+                          (merge-key-target (gen-keyword-mergekey-list target)))
+                     (unless (lookup-indexentry merge-key-target)
+                       (oops "Cross-reference-target ~S does not exist!"
+                             target))))
+               cross-references))
+      (unverified-crossref-location-class)
+      (t (error "INTERNAL ERROR in process-group"))))
+  crossref-cls-grp)
 @ %def process-group
 
 
@@ -557,8 +572,8 @@ the same ordnums.
                   (get-ordnums locref))
               locrefs
               :sortfunc #'(lambda (locref-ordnum-1 locref-ordnum-2)
-			    (locref-ordnum< locref-ordnum-1 locref-ordnum-2))
-	      ))
+                            (locref-ordnum< locref-ordnum-1 locref-ordnum-2))
+              ))
 @ %def split-same-locrefs
 
 \no The next function takes a list of location-references with the
@@ -721,8 +736,8 @@ additional structure introduced by the mapping process.
          (split-list #'(lambda (locref) (get-catattr locref))
                      (get-members locref-cls-grp)
                      :sortfunc #'(lambda (x y)
-				   (< (get-processing-ordnum x)
-				      (get-processing-ordnum y))))))
+                                   (< (get-processing-ordnum x)
+                                      (get-processing-ordnum y))))))
     (set-members (mapcan #'(lambda (catattr-sublist)
                              (build-ranges catattr-sublist
                                            idxcls
@@ -967,33 +982,33 @@ delivers. The result is a list containing the sorted sublists.
 <<Splitting lists into sublists --- [[split-list]]>>=
 (defun split-list (split-function list &key sortfunc headfunc)
   #+:ASSERT! (assert (not (and sortfunc headfunc))
-		     "split-list")
+                     "split-list")
   (let ((list-len (length list)))
     (if (= 1 list-len)
         (list list)
         (let ((split-table (make-hash-table :test #'equal
                                             :size (round (* 1.2 list-len))))
               (key-list '()))
-	  (mapc #'(lambda (elt)
-		    (let ((key (funcall split-function elt)))
-		      (setf (gethash key split-table)
-			    (cons elt (gethash key split-table)))))
-		list)
+          (mapc #'(lambda (elt)
+                    (let ((key (funcall split-function elt)))
+                      (setf (gethash key split-table)
+                            (cons elt (gethash key split-table)))))
+                list)
           (maphash #'(lambda (key element)
                        (declare (ignore element))
                        (push key key-list))
                    split-table)
           (maplist #'(lambda (rest-list)
-		       (let ((entries (gethash (car rest-list) split-table)))
-			 (if headfunc
-			     (let ((head (find-if headfunc entries)))
-			       (rplaca rest-list
-				       (if head
-					   (cons head (delete head entries))
-					   entries)))
-			     (rplaca rest-list entries))))
-		   (if sortfunc (sort key-list sortfunc) key-list))
-	  key-list))))
+                       (let ((entries (gethash (car rest-list) split-table)))
+                         (if headfunc
+                             (let ((head (find-if headfunc entries)))
+                               (rplaca rest-list
+                                       (if head
+                                           (cons head (delete head entries))
+                                           entries)))
+                             (rplaca rest-list entries))))
+                   (if sortfunc (sort key-list sortfunc) key-list))
+          key-list))))
 
 #|
 This version seems to be a little bit slower than the above one,
@@ -1154,7 +1169,11 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.21  1996/07/11 14:16:26  kehr
+%% Revision 1.22  1996/07/22 15:54:53  kehr
+%% Replaced some of the oops-macros by nraw-macros. Implemented the
+%% checking of the cross-references.
+%%
+%% Revision 1.21  1996/07/11  14:16:26  kehr
 %% Complete Major checkin before changing the letter-groups.
 %%
 %% Revision 1.20  1996/07/09  14:41:46  kehr

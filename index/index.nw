@@ -397,6 +397,16 @@ for further details).
 (export '(add-locref-indexentry add-crossref-indexentry))
 @
 
+\no The following function can be used to search an indexentry given a key.
+Matching succeeds when the merge-key of an indexentry matches the
+given key. The corresponding indexentry is returned in this case,
+otherwise [[nil]] is returned.
+
+<<Indexentry lookup>>=
+(defun lookup-indexentry (key &optional (index-entry-table *index-entry-table*))
+  (gethash key index-entry-table))
+@ %def lookup-indexentry
+
 \no The following function takes an string representing a
 location-reference and tries to create location-references from it.
 Since we cache already created instances of location-references in the
@@ -760,6 +770,7 @@ modified their sort-key according to the sort-mapping.
 <<Sorting an index>>
 <<Processing an index>>
 <<Global index initialisation>>
+<<Indexentry lookup>>
 
 <<Raw-index interface-definitions>>
 <<Raw-index interface>>
@@ -773,7 +784,11 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
-%% Revision 1.22  1996/07/16 14:06:16  kehr
+%% Revision 1.23  1996/07/22 15:54:57  kehr
+%% Replaced some of the oops-macros by nraw-macros. Implemented the
+%% checking of the cross-references.
+%%
+%% Revision 1.22  1996/07/16  14:06:16  kehr
 %% Checkin after all the changes to the `define-letter-group(s)' commands
 %% have been made.
 %%
