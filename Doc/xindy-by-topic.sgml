@@ -1,4 +1,11 @@
-<!doctype linuxdoc system>
+<!doctype linuxdoc system [
+
+<!ENTITY xindy "xindy">
+<!ENTITY XINDY "XINDY">
+<!ENTITY LaTeX "LaTeX">
+<!ENTITY TeX "TeX">
+
+]>
 
 <!-- This is the xindy-by-topic manual of the xindy-system
 
@@ -115,7 +122,7 @@ Gabor Herr &lsqb;3, 6&rsqb; have shown that adding extensions to
 new indexing tool from scratch. The new tool is based on a new
 requirements analysis and offers very interesting features for
 processing very complex indexing schemes. The resulting index model is
-described in&spc;&lsqb;5, 7, 8&rsqb;.
+described in&nbsp;&lsqb;5, 7, 8&rsqb;.
 
 
 <!-- ================================================================= -->
@@ -237,7 +244,7 @@ preparation process and should be tailored to each document anew.
 <p>
 
 <tt/tex2xindy/ is a filter that parses `<tt/.idx/' or similar files
-and converts the <vb>\indexentry</vb> macros into a form readable by
+and converts the <tt>\indexentry</tt> macros into a form readable by
 &xindy;.
 
 The parser of <tt/makeindex/ can be configured to recognize different
@@ -368,7 +375,7 @@ following definition:
 
 This rule tells &xindy; to remove the boldface macro for merging
 and sorting purposes but defines the replacement to include the
-special character <vb>~e</vb>, which is the last character in the
+special character <tt>~e</tt>, which is the last character in the
 alphabet (ISO-Latin in our case). This makes &xindy; treat them as
 different keywords and positions the boldface keyword right behind the
 one without any markup. Thus we receive the following mapping:
@@ -422,9 +429,10 @@ mapping/ specified with the <tt/sort-rule/ command. The following
 scheme shows this mapping process:
 
 <figure>
-<img HTML="mappings.gif" TEX="mappings.latex"
-     PLAIN="key -> merge key -> sort key">
+<eps file="mappings.eps" height="25bp">
+<img src="mappings.gif">
 </figure>
+<#if output=txt><tscreen>key -> merge key -> sort key</tscreen></#if>
 
 The index style commands accomplishing this task are
 <tt/sort-rule/ and <tt/merge-rule/. One example of such a rule would
@@ -457,7 +465,7 @@ counterparts, yielding the desired sort ordering.
 Sometimes it is necessary to specify keyword mappings that tell the
 system to put something <em/behind/ something else. For instance, we'd
 like to map the character <em/ö/ behind the letter <em/o/. No problem
-if you use the special characters <vb>~b</vb> and <vb>~e</vb> which
+if you use the special characters <tt>~b</tt> and <tt>~e</tt> which
 are called the <em/beginning/ and <em/ending/ characters. The first
 letter lexicographically precedes all other letters whereas the latter
 one comes after all others. Our mapping problem can now be specified
@@ -586,10 +594,10 @@ keywords as equal. To avoid this you should specify instead
 (merge-rule "{\\tt *(.*)}" "\1~e" :eregexp :again)
 </verb></tscreen>
 
-With the additional meta character <vb>~e</vb> the substitution of the
+With the additional meta character <tt>~e</tt> the substitution of the
 second key word is placed <em/after/ the first one making them
 different index entries. If the second keyword should appear first,
-use <vb>~b</vb> instead.
+use <tt>~b</tt> instead.
 
 
 
@@ -734,7 +742,7 @@ the form
 The argument <tt/:min-range-length none/ avoids forming of ranges.
 Arbitrary numbers instead of <tt/none/ define the minimum length of a
 sequence of location references that are needed to form a range.
-&xindy;s default value is&spc;2.
+&xindy;s default value is&nbsp;2.
 
 
 <!-- ================================================================= -->
@@ -870,7 +878,7 @@ file:
 ;; End:
 </verb></tscreen>
 
-The <vb>^L</vb> (Control-L) can be entered with <tt/C-q C-l/.
+The <tt>^L</tt> (Control-L) can be entered with <tt/C-q C-l/.
 
 
 <sect1>I have written a module for processing language <em/foolandic/. What must I do?
@@ -918,7 +926,7 @@ Mappings: (merge-mapping `\"A\"a') -> `Aa'.
 
 This trace shows that initially two regular expression mappings have
 been added to the rule set. The second section shows how the keyword
-`<vb>\"A\"a</vb>' is compared to these rules and substitutions are
+`<tt>\"A\"a</tt>' is compared to these rules and substitutions are
 applied as matches are found. In the last line the result of the
 keyword mapping is reported.
 
@@ -951,8 +959,8 @@ markup phase. An example output might look like the following:
 
 The symbolic tags directly lead one to the command that is responsible
 for the definition of that markup tag. For example, the tag
-<vb>LETTER-GROUP-LIST:OPEN</vb> indicates that the command
-<vb>markup-letter-group-list</vb> is responsible for replacing this
+<tt>LETTER-GROUP-LIST:OPEN</tt> indicates that the command
+<tt>markup-letter-group-list</tt> is responsible for replacing this
 symbolic tag by a real one.
 Give it a try if you find yourself confused by your own markup
 specification.
