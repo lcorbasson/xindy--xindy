@@ -1,3 +1,14 @@
+Wed Jan 10 00:09:15 1996    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Re-implemented the submodule `markup'.
+	  (3 hrs)
+
+  	* Checked the sources into the repository. Corrected minor bugs
+	  that caused some trouble with the test-suites. Extended some
+	  Imakefile features and found an error in DejaGnu.imk.
+	  Tested the re-implementation of the `index'-submodule.
+	  (3 hrs)
+
 Tue Jan  9 01:26:22 1996    (kehr@eliade.hrz.th-darmstadt.de)
 
 	* Re-implemented the submodule `index'.
@@ -129,14 +140,16 @@ Thu Dec  7 19:16:05 1995  Roger Kehr  (kehr@spock)
 	  whole module from scratch. Had a discussion with Joachim and
 	  Gabor about my problems to implement the location-reference
 	  handling. I nearly finished all work with submodule `idxclass'.
-	  (3 hrs. Damn headaches, the last beer yesterday was one too much!)
+	  (Damn headaches, the last beer yesterday was one too much!)
+ 	  (3 hrs)
 
 Tue Dec  5 19:37:04 1995  Roger Kehr  (kehr@spock)
 
 	* Set up the new modules `index' and `idxclass'. Got a first sight
 	  and restructured great parts of them. Added some description to
 	  the intro.nw by describing the regression tests. It is now time
-	  to restructure the whole system. We'll see. (5 hrs)
+	  to restructure the whole system. We'll see.
+	  (5 hrs)
 
 Sat Dec  2 20:24:53 1995    (kehr@eliade.hrz.th-darmstadt.de)
 
@@ -147,7 +160,8 @@ Sat Dec  2 20:24:53 1995    (kehr@eliade.hrz.th-darmstadt.de)
 	  easier to understand than the previous version. I tried to be
 	  very careful with the code documentation an set up more than 50
 	  regression tests for this topic. Now its time to go to a
-	  friends' diploma party (yeah!) (5 hrs)
+	  friends' diploma party (yeah!)
+	  (5 hrs)
 
 Wed Nov 29 17:46:17 1995  Roger Kehr  (kehr@spelunke)
 
@@ -156,7 +170,8 @@ Wed Nov 29 17:46:17 1995  Roger Kehr  (kehr@spelunke)
 	  I cleared the location-class< predicate and it is now internally
 	  hidden in the module `locref'. Wrote regression tests, too.
 	  These regression tests work quite well and I'll continue with
-	  the submodule `locref'. (3 hrs)
+	  the submodule `locref'.
+	  (3 hrs)
 
 Wed Nov 22 17:37:23 1995  Roger Kehr  (kehr@spock)
 
@@ -164,7 +179,8 @@ Wed Nov 22 17:37:23 1995  Roger Kehr  (kehr@spock)
 	  some timeout problems with `expect' because clisp took more than
 	  10 seconds to load some files which caused expect to timeout. I
 	  changed the timeout-value and with a simple switch-model. Now
-	  everything works as `expect'ed :-) (2 hrs)
+	  everything works as `expect'ed :-)
+	  (2 hrs)
 
 Sun Nov 19 19:30:22 1995  Roger Kehr  (kehr@spock)
 
