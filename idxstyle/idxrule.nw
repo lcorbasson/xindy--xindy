@@ -1,0 +1,633 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: idxrule
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Submodule \module{indexing rules}}
+
+\subsection{Introduction}
+
+Rules are neccessary to parametrize some stages of the indexing
+process when arranging and processing location-references. For
+example, we want to set the interval that ist neccessary to build up
+ranges of location-references to three successors, we need an
+appropriate description for this. We call these kind of information
+\term{index-rule}. This submodule introduces rules that may be used in
+the index-style with specific parameters. Different types of rules
+need different parameters an are invoked during different steps of the
+index processing. We describe definitions that handle the whole
+process. All rules are bound to an indexclass.
+
+
+
+\subsection{Abstract Specification}
+
+
+\subsubsection{Definition}
+
+
+\subsubsection{Operation}
+
+
+\subsection{Concrete Specification}
+
+\subsubsection{Class \class{index-rule}}
+
+This class is intended as a virtual base-class that contains all
+neccessary information on rules. Other types of rules are subclasses
+of class [[index-rule]]. We define a subclass \class{relation-rule}
+that contains the two slots [[source]] and [[target]] because some
+rules are source$\rightarrow$target-based.
+
+<<Class \class{index-rule}>>=
+(defclass index-rule ()
+    ())
+
+(defclass relation-rule (index-rule relation)
+    ())
+@ %def index-rule relation-rule
+
+<<Export-list of submodule \module{idxrule}>>=
+(export '(index-rule relation-rule))
+@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Rules for merging and dropping}
+
+\newcommand{\rulemt}{\irule{merge-to}}
+
+\subsubsection*{\rulemt-rule}
+
+The \rulemt-rule is neccessary to define that location-references
+owning a certain category-attribute may be used to build up ranges in
+another optical attribute. Therefore we need two slots [[source-attr]]
+and [[target-attr]] to describe the relationship between them. Each
+slot contains a object of type \type{cat-attrib}.
+
+<<Class \class{merge-rule}>>=
+(defclass merge-rule (relation-rule)
+    ())
+
+(defun make-merge-rule ()
+  (make-instance 'merge-rule))
+@ %def merge-rule make-merge-rule
+
+<<Export-list of submodule \module{idxrule}>>=
+(export '(merge-rule make-merge-rule))
+@
+
+\no To apply a \textsf{merge-to}--rule on a location-reference we look
+if the [[source-attr]] of the rule is equivalent to the [[optattr]] of
+the location-class. In this case we build up a new virtual
+location-reference based upon the original location-reference, with
+its optical attribute turned into the secondary attribute of the
+virtual attribute and its optical attribute taken from [[target-attr]]
+of the rule.
+
+\newcommand{\ruledim}{\irule{drop-if-merged}}
+
+\subsubsection*{\ruledim-rule}
+
+This rule works only in conjunction with the \rulemt-rule. If
+`\rulemt~$x~y$' was specified, `\ruledim~$x~y$' additionally specifies
+that a location-reference should be \term{dropped} if its is
+counterpart was successfully joined into a range.
+
+<<Class \class{drop-if-merged-rule}>>=
+(defclass drop-if-merged-rule (relation-rule)
+    ())
+
+(defun make-drop-if-merged-rule ()
+  (make-instance 'drop-if-merged-rule))
+@ %def drop-if-merged-rule make-drop-if-merged-rule
+
+<<Export-list of submodule \module{idxrule}>>=
+(export '(drop-if-merged-rule make-drop-if-merged-rule))
+@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Category-attribute-groups}
+
+This rule is intended to subgroup a list of location-references into
+groups of separated or mixed attributes. Mathematically we can express
+this as a function $\phi:C\rightarrow G$ defined on the sec $C$ of
+category-attributes into the set %%
+\newcommand{\mathN}{\mbox{\normalfont\sffamily I\kern-0.1em\mbox{N}}}%%
+$G\subset \mathN$. The rule is specified by a list possibly containing
+sublists whose elements are strings of category-attribute-names. For
+example one could specify
+\begin{center}
+  [[(("bold" "default") "italic")]]
+\end{center}
+to group [[bold]] and [[default]] as a \term{attribute group}
+separated from the attribute group [[italic]].
+\begin{note}
+  The nesting-level mustn't be more than one, sublists in sublists
+  aren't allowed. Additionaly no attribute should occour more than
+  once in the whole list.
+
+  This rule must always be specified. It is absolutely necessary to
+  define a order on the category-attribute and all used cat-attrs must
+  appear in this rule. So we use this rule as the implicit declaration
+  of all category-attributes known by an indexclass.
+\end{note}
+
+\no When we instantiate the rule we calculate set $G$ according to the
+specified attribute-list. This is done in [[make-catattr-group-rule]].
+For a efficient implementation we use a hash-table with the elements
+of set $C$ as the hash-key.
+
+<<Class \class{catattr-groups}>>=
+(defclass catattr-groups (index-rule)
+    ((attribute-list  :reader get-attribute-list
+                      :writer set-attribute-list
+                      :initform nil)
+     (attribute-table :reader get-attribute-table
+                      :initform (make-hash-table :test #'equal))))
+
+(defun make-catattr-groups ()
+  (make-instance 'catattr-groups))
+
+(defmethod add ((catattr-grp catattr-groups)
+                (catattr     category-attribute))
+  (setf (gethash (get-name catattr) (get-attribute-table catattr-grp))
+        catattr))
+
+(defmethod lookup ((catattr-grp catattr-groups)
+                   (catattr-name string))
+  (let ((catattr (gethash catattr-name
+                          (get-attribute-table catattr-grp))))
+    (unless catattr
+      (error "undeclared category-attribute `~A' in method `lookup'" catattr-name))
+    catattr))
+@ %def catattr-groups make-catattr-groups add lookup
+
+<<Export-list of submodule \module{idxrule}>>=
+(export '(catattr-groups make-catattr-groups lookup))
+@
+
+\begin{note}
+  Before initialising the category-attribute-rule the user must have
+  specified the used category-attributes. Our task is to calculate
+  their \term{type} and \term{ordnum} defined by a rule.
+\end{note}
+
+\no When initializing a \type{catattr-group-rule} the process is as
+follows. First we store the given attribute-list into slot
+[[attribute-list]]. The hash-table [[attribute-table]] holds as its
+key the category-attribute and as its element a cons-cell (\emph{group
+  number}, \emph{type}) with \emph{type} $\in
+\{$\textsf{single},\textsf{mixed}$\}$. Then we scan the attribute-list
+and increment [[catattr-grp-counter]] every time we encounter a new
+element.  If we encounter a simple string, we take it as the name of a
+category-attribute and store it with the current [[ord-counter]] into
+the hash-table. If we encounter a list we need to iterate over all its
+elements and add them into the hash-table with the current value of
+[[catattr-grp-counter]].
+
+\newcommand{\substitutes}{\textsf{subst}}
+
+Additionally the definition of the category-attributes defines the
+implicit substition-rules among the category-attributes. For all
+$c_1,\ldots,c_n\in C_i$ with $C_i$ category-group $i$ holds: $\forall
+j\in 1\ldots n-1: c_j$ \substitutes $c_{j+1}$. So when parsind an
+attribute-group we add each relation (defined by a pair
+([[prev-]][[catattr]] , [[cattattr]]) into the implict
+substitution-rule [[impl-subst-rule]] given as parameter.
+
+<<Class \class{catattr-groups}>>=
+(defmethod initialize-category-attributes ((attribute-list  list)
+                                           (catattr-grps    catattr-groups)
+                                           (impl-subst-rule substitution-rule))
+  (set-attribute-list attribute-list catattr-grps)
+  (let ((catattr-grp-counter 0)
+        (sort-ordnum-counter 0))
+    (mapcar
+     #'(lambda (x)
+         (incf catattr-grp-counter)
+         (cond ((listp x)
+                  (let ((prev-catattr nil))
+                    (mapcar
+                     #'(lambda (catattr)
+                         (cond ((stringp catattr)
+                                  (let ((ca (lookup catattr-grps catattr)))
+                                    (incf sort-ordnum-counter)
+                                    (set-sort-ordnum sort-ordnum-counter ca)
+                                    (set-catattr-grp-ordnum catattr-grp-counter ca)
+                                    (set-type 'catattr-mixed ca))
+                                  (when prev-catattr
+                                    (rel-insert impl-subst-rule
+                                                (lookup catattr-grps prev-catattr)
+                                                (lookup catattr-grps catattr)))
+                                  (setq prev-catattr catattr))
+                               (t (error "expected a string"))))
+                     x)))
+               ((stringp x) (let ((ca (lookup catattr-grps x)))
+                              (incf sort-ordnum-counter)
+                              (set-sort-ordnum sort-ordnum-counter ca)
+                              (set-catattr-grp-ordnum catattr-grp-counter ca)
+                              (set-type 'catattr-simple ca)))
+               (t (error "expected a string"))))
+     attribute-list))
+  catattr-grps)
+@ %def initialize-category-attributes
+
+<<Export-list of submodule \module{idxrule}>>=
+(export '(initialize-category-attributes catattr-single catattr-mixed))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Substitution rules}
+
+Substition-rules are needed for two purposes.
+\begin{itemize}
+\item When defining a virtual category-attribute like \texttt{(bold
+    italic default)} we must define a substitution order among the
+  elements. E.g.~we could define that if two location-references are
+  the same (meaning same \term{location-class} and same \term{ordnum})
+  but one with its category-attribute \texttt{bold} and the other
+  \texttt{default} that the default one is removed, because it is
+  \term{shadowed} by the bold one.
+\item The user wishes explicitly to define a substitution simply to
+  avoid multiple occurences of the same location-references differing
+  only by their category-attributes.
+\end{itemize}
+%%
+Summed up, substitution-rules define a relation among the set of
+category-attributes. So we declare class \class{substitution-rule} as a
+subclass of \class{relation-rule}.
+
+<<Class \class{substitution-rule}>>=
+(defclass substitution-rule (relation-rule)
+    ())
+
+(defun make-substitution-rule ()
+  (make-instance 'substitution-rule))
+@ %def substitution-rule make-substitution-rule
+
+<<Export-list of submodule \module{idxrule}>>=
+(export '(substitution-rule make-substitution-rule))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Relations}
+\label{sec:relations}
+
+For several purposes we need relations defined on any type of objects.
+We also need a transitive-hull-calculation based on these relations.
+So we introduce a new class \class{relation}.
+
+The relation itself is defined by a set
+$V_i=\{v_{i,1},\ldots,v_{i,n}\}$ of neighbours of node $v_i$ for which
+holds $\forall v'\in V_i: v_i\rightarrow v'$. So we need a
+representation that is based on sets.  We use lists with nodes as the
+first element and the list of neighbours as the rest of our list, \eg
+\begin{center}
+  ( (\emph{node$_1$},\emph{neighbours-of-node$_1$}) \ldots
+  (\emph{node$_n$},$n_i,n_j,\ldots,n_l$) ).
+\end{center}
+%%
+\begin{note}
+  It is absolutely necessary that nodes with no neighbours are
+  represented in the relation, too. So a node $v$ with no successors
+  is represented in the relation as a ($v$) respectively \texttt{(cons
+    $v$ $\{\}$)}. Otherwise the algorithms will produce wrong
+  results.
+\end{note}
+%%
+Class [[relation]] has two slots. The structure of the first one
+[[rel-sets]] is defined by the set-representation just described. For
+faster access we also support a hash-table in slot [[rel-hash]].
+Method [[make-ready]] transforms fills the hash-table with the
+relations defined in [[rel-sets]].
+
+<<Class \class{relation}>>=
+(defclass relation ()
+    ((rel-sets :accessor get-rel-sets
+               :initform '() )
+     (rel-hash :accessor get-rel-hash
+               :initform (make-hash-table :test #'equal))))
+
+(defun make-relation ()
+  (make-instance 'relation))
+@ %def relation make-relation
+
+\no We need operations to add new relations to a given relation. It
+returns the modified relation. We first consider the case when
+directly inserting a pair ($x~y$) of objects into the given relation.
+First of all we look for $x$ and $y$ in the assoc-list. If $x$ wasn't
+found we simply insert a new node for $x$ being in relation with $y$.
+If $x$ is already known and already in relation with $y$, we ingore
+the insertion. Otherwise we add $y$ to the set of nodes $y$ is in
+relation with. Finally we check if $y$ is already known (\emph{see}
+condition above) and insert it if it isn't known yet.
+
+<<Class \class{relation}>>=
+(defmethod rel-insert ((rel relation) x y)
+  (let* ((rel-sets (get-rel-sets rel))
+         (x-node (assoc x rel-sets))
+         (y-node (assoc y rel-sets)))
+    (cond ((null x-node) (setf (get-rel-sets rel) (cons (list x y) rel-sets)))
+          ((member y (cdr x-node)))
+          (t (rplacd x-node (cons y (cdr x-node)))))
+    (when (and (null y-node) (not (eql x y)))
+      (setf (get-rel-sets rel) (cons (list y) (get-rel-sets rel)))))
+  rel)
+@ %def rel-insert
+
+\no Now we define a function [[rel-merge]] that merges two relations
+into one. This is a destructive operation that modifies [[rel-1]].
+
+<<Class \class{relation}>>=
+(defmethod rel-merge ((rel-1 relation) x)
+  (declare (ignore x))
+  rel-1)
+
+(defmethod rel-merge ((rel-1 relation) (rel-2 relation))
+  (mapc #'(lambda (r-2)
+            (let ((r-1 (assoc (car r-2) (get-rel-sets rel-1))))
+              (cond ((null r-1)
+                       (setf (get-rel-sets rel-1)
+                             (cons r-2 (get-rel-sets rel-1))))
+                    (t (rplacd r-1 (union (cdr r-1) (cdr r-2)))))))
+        (get-rel-sets rel-2))
+  rel-1)
+@ %def rel-merge
+
+\no After defining a relation it is usually used heavily afterwards.
+Two possible operations are implemented. Function [[relation-set]]
+invoked on object $x$ delivers a list $Y=\{y_1\ldots y_n\}$ of all
+objects such that holds $\forall y\in Y: x$ \textsf{rel} $y$.
+
+<<Class \class{relation}>>=
+(defmethod relation-set ((rel relation) x)
+  (cdr (assoc x (get-rel-sets rel))))
+@ %def relation-set
+
+Another operation we need later is to check if $x$ is in relation to
+$y$ or not. Therefore we transform the represenation now into a faster
+hash-table representation. Function [[relation-p]] uses the faster
+hash-table representation.
+
+The representation of the hashed elements is a pair ($x~y$) with $x,y$
+category-attributes. We simply traverse the relation and for each pair
+($x~y$) we [[cons]] both elements and use the result of the key for
+the hash-table. We simply store the value [[t]] as the hash-tables
+value. To accomplish an exact test we use keyword %%
+[[:test #'equal]] for the comparison function (\emph{See} slot
+[[rel-hash]] of the class description. Another idea would be to use
+[[sxhash]] and use [[#'eql]] for hashing if we should need a
+speed-up). We call the method [[make-ready]] to signify that
+afterwards the object is ready for work.
+
+<<Class \class{relation}>>=
+(defmethod make-ready ((rel relation))
+  (let ((ht (get-rel-hash rel)))
+    (mapc #'(lambda (node)
+              (mapc #'(lambda (succ-node)
+                        (setf (gethash (cons (car node) succ-node) ht)
+                              t))
+                    (cdr node)))
+          (get-rel-sets rel)))
+  rel)
+@ %def make-ready
+
+\no Finally we define a predicate [[relation-p]] that tests if $x$ is
+in relation with $y$ in relation [[rel]].
+
+<<Class \class{relation}>>=
+(defmethod relation-p ((rel relation) (x t) (y t))
+  (gethash (cons x y) (get-rel-hash rel)))
+@ %def relation-p
+
+<<Export-list of submodule \module{idxrule}>>=
+(export '(relation make-relation get-rel-sets
+          rel-insert rel-merge make-ready
+          relation-set relation-p))
+@
+
+
+\subsubsection*{Topological sorting}
+
+Topological sorting on a relation is implemented as follows: At first
+we copy the [[rel-sets]]-tree to be able to destructively take out
+nodes and vertices from our graph. The first node $n$ with
+\emph{indeg}($n$)$=0$ is taken out and added to the [[topsort-list]].
+Then all occurences of this node are removed from the relation. This
+process is continued until no node with the desired condition is left
+over. We then check if the list is really empty in which case we found
+a topological order. In this case we return the reversed list or
+otherwise [[nil]].
+
+<<Class \class{relation}>>=
+(defmethod topsort ((rel relation))
+  (let ((rel-set (copy-tree (get-rel-sets rel)))
+        (topsort-list '()))
+    (loop
+      (let ((zero-indeg (find-if #'(lambda (x) (null (cdr x))) rel-set)))
+        (when (null zero-indeg) (return))
+        (let ((zero-indeg-elt (car zero-indeg)))
+          (setq topsort-list (cons zero-indeg-elt topsort-list))
+          (setq rel-set (delete zero-indeg rel-set :test #'equal))
+          (mapc #'(lambda (x)
+                    (rplacd x (delete zero-indeg-elt (cdr x) :test #'equal)))
+                rel-set)))
+      ;(format t "~A~%" rel-set)
+      )
+    (when (null rel-set)
+      (nreverse topsort-list))))
+@ %def topsort
+
+\subsubsection*{Transformation}
+
+We need a function that takes a relation and replaces each node by the
+result of a given function. It is possible that several nodes are
+projected to the same canonical element. Additionally it is possible
+that the new relation is \term{reflexive} whereas the source-relation
+was not.
+
+<<Class \class{relation}>>=
+(defmethod transform-relation ((rel relation) transform-func)
+  (let ((new-rel (make-relation)))
+    (mapc #'(lambda (x)
+              (let ((transformed-x (funcall transform-func (car x))))
+                (mapc #'(lambda (y)
+                          (rel-insert new-rel
+                                      transformed-x
+                                      (funcall transform-func y)))
+                      (cdr x))))
+          (get-rel-sets rel))
+    new-rel))
+@ %def transform-relation
+
+\no The following function removes all reflexive vertices from our
+relation.
+
+<<Class \class{relation}>>=
+(defmethod remove-reflexivity ((rel relation))
+  (mapc #'(lambda (x)
+            (rplacd x (delete (car x) (cdr x) :test #'equal)))
+        (get-rel-sets rel))
+  rel)
+@ %def remove-reflexivity
+
+
+\subsubsection*{Transitive hull}
+
+The following destructive function [[transitive-hull]] needs a
+well-formed relation of the specified structure and returns the same
+modified relation which represents the transitive hull of the given
+relation. The implementation assures that this operation is
+idempotent, such there will be no change in the data when calling the
+method twice.
+
+<<Class \class{relation}>>=
+(defmethod transitive-hull ((rel relation))
+  (setf (get-rel-sets rel)
+        (let ((rel-sets (get-rel-sets rel)))
+          (mapc #'(lambda (j)
+                    (mapc #'(lambda (i)
+                              (when (member (car j) (cdr i))
+                                (mapc #'(lambda (k)
+                                          (when (and
+                                                 (member (car k) (cdr j))
+                                                 (not (member (car k)
+                                                              (cdr i))))
+                                            (rplacd (last i)
+                                                    (list (car k)))))
+                                      rel-sets)))
+                          rel-sets))
+                rel-sets)))
+  rel)
+@ %def transitive-hull
+
+<<Export-list of submodule \module{idxrule}>>=
+(export '(topsort transform-relation remove-reflexivity transitive-hull))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The submodule root}
+
+<<Submodule \module{idxrule}>>=
+;; $Id$
+
+<<Class \class{relation}>>
+<<Class \class{index-rule}>>
+<<Class \class{merge-rule}>>
+<<Class \class{drop-if-merged-rule}>>
+<<Class \class{substitution-rule}>>
+<<Class \class{catattr-groups}>>
+
+<<Export-list of submodule \module{idxrule}>>
+@
+
+<<RCS-Identifier>>=
+("idxrule" . "$Id$")
+@ %def RCS-Identifier
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Pretty-printing}
+
+<<Pretty-printing>>=
+(defun pprint-relation (s rel)
+  (pprint-logical-block
+   (s nil :suffix "}")
+   (pprint-indent :block 2 s)
+   (write-string "Relation { " s)
+   (pprint-logical-block (s nil)
+                         (pprint-indent :block 2)
+                         (mapc #'(lambda (x)
+                                   (when x
+                                     (write (car x) :stream s)
+                                     (write-string " ->" s)
+                                     (mapc #'(lambda (y)
+                                               (write-string " " s)
+                                               (write y :stream s))
+                                           (cdr x))
+                                     (pprint-newline :mandatory s)))
+                               (get-rel-sets rel)))))
+
+(set-pprint-dispatch 'relation-rule #'pprint-relation)
+(set-pprint-dispatch 'relation      #'pprint-relation)
+@
+
+<<Pretty-printing>>=
+(set-pprint-dispatch
+ 'catattr-groups
+ #'(lambda (s catgrp)
+     (pprint-logical-block
+      (s nil :suffix "}")
+      (pprint-indent :block 2 s)
+      (write-string "Category-attribute-group { " s)
+      (pprint-newline :mandatory s)
+      (write (get-attribute-list catgrp) :stream s)
+      (pprint-newline :mandatory s)
+      (write (get-attribute-table catgrp) :stream s))))
+@
+
+
+
+%% Local Variables:
+%% mode: latex
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1996/01/09 14:26:12  kehr
+%% Major modifications.
+%%
+%% Revision 1.4  1995/12/07  13:21:29  kehr
+%% Dies ist das Projekt zum Zeitpunkt der Abgabe.
+%%
+%% Revision 1.3  1995/11/21  14:55:16  kehr
+%% Added support for DejaGnu-Framework.
+%%
+%% Revision 1.2  1995/11/08  16:18:04  kehr
+%% Minor modifications.
+%%
+%% Revision 1.1  1995/10/16  19:23:06  kehr
+%% Initial source checkin.
+%%
+%% Revision 1.4  1995/07/27  23:59:03  kehr
+%% Added support for keword-markup.
+%%
+%% Revision 1.3  1995/07/25  11:03:19  kehr
+%% Added separation of location-references into seprated/mixed-groups.
+%% Modified debug-output of locref-groups to reflect the real class-type
+%% of the groups. Verified the process of generating these groups.
+%%
+%% Revision 1.2  1995/07/24  16:33:44  kehr
+%% Added subgrouping of location-references with the same ordnum. Now
+%% I'll start to join ranges.
+%%
+%% Revision 1.1  1995/07/23  20:48:34  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%%

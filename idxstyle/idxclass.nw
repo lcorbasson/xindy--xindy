@@ -45,7 +45,6 @@ with
 \item [name] is a \tstring containing the name of the indexclass.
 \item [basetypes] is a list of \type{basetype}.
 \item [locclasses] is a list of \type{locclass}.
-\item [rules] is a list of \type{rule}.
 \item [succ-table]
 \item [not-succ-table]
 \item [markup] Markup for the keywords.
@@ -108,19 +107,19 @@ incrementally filled with more information.
 
 <<Class \class{indexclass}>>=
 (defclass indexclass ()
-    ((name              :reader   get-name              :initarg :name)
-     (basetypes         :accessor get-basetypes
-                        :initform (make-hash-table :test #'equal))
-     (cat-attrs         :accessor get-cat-attrs
-                        :initform (make-catattr-groups))
-     (locclasses        :accessor get-locclasses        :initform '())
-     (succ-table        :accessor get-succ-table
-                        :initform (make-hash-table))
-     (keyword-markup    :accessor get-keyword-markup    :initform '())
-     (merge-rules       :accessor get-merge-rules
-                        :initform (make-merge-rule))
-     (subst-rules       :accessor get-subst-rules
-                        :initform (make-substitution-rule))
+    ((name                 :reader   get-name
+                           :initarg :name)
+     (basetypes            :accessor get-basetypes
+                           :initform (make-hash-table :test #'equal))
+     (cat-attrs            :accessor get-cat-attrs
+                           :initform (make-catattr-groups))
+     (locclasses           :accessor get-locclasses
+                           :initform '())
+     (succ-table           :accessor get-succ-table
+                           :initform (make-hash-table))
+     (keyword-markup       :accessor get-keyword-markup
+                           :initform '())
+     <<Rules for indexing>>
      ))
 
 (defun make-indexclass (name)
@@ -128,15 +127,50 @@ incrementally filled with more information.
 @ %def indexclass make-indexclass
 
 <<Export-list of submodule \module{idxclass}>>=
-(export '(indexclass make-indexclass
+(export '(indexclass      make-indexclass
           get-name        get-basetypes
           get-cat-attrs   get-locclasses
           get-succ-table  get-keyword-markup
-          get-merge-rules get-cat-attrs
-          get-subst-rules
+          <<Export-list for indexing rules>>
           ))
-@ %def indexclass make-indexclass
+@
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Indexing rules}
+
+The indexing process is highly driven by several rules the user can
+specify accoring to his wishes. These rules are part of the indexstyle
+and defined by the following slot descriptions.
+
+<<Rules for indexing>>=
+     (merge-rules          :reader get-merge-rules
+                           :initform (make-merge-rule))
+     (drop-if-merged-rules :reader get-drop-if-merged-rules
+                           :initform (make-drop-if-merged-rule))
+;     (merge-rule-topsort   :reader get-merge-rule-topsort
+;                           :writer set-merge-rule-topsort
+;                           :initform '())
+     <<Hooks for merge-rules>>
+
+     (implicit-subst-rules :reader get-implicit-subst-rules
+                           :initform (make-substitution-rule))
+     (explicit-subst-rules :reader get-explicit-subst-rules
+                           :writer set-explicit-subst-rules
+                           :initform (make-substitution-rule))
+     <<Hooks for substitution-rules>>
+@ %def merge-rules drop-if-merged-rules merge-rule-topsort implicit-subst-rules explicit-subst-rules
+
+\no The \term{hooks} for these rules are defined in detail in
+section~\ref{sec:rule-hooks}.
+
+<<Export-list for indexing rules>>=
+          get-merge-rules
+          get-drop-if-merged-rules
+;          get-merge-rule-topsort   set-merge-rule-topsort
+          get-implicit-subst-rules set-implicit-subst-rules
+          get-explicit-subst-rules set-explicit-subst-rules
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -161,49 +195,61 @@ indexclass.
         basetype)
   idxcls)
 
+(defmethod add ((idxcls indexclass) (catattr category-attribute))
+  (add (get-cat-attrs idxcls) catattr)
+  idxcls)
+
 (defmethod add ((idxcls indexclass) (loccls location-class))
   (setf (get-locclasses idxcls)
         (acons (get-name loccls) loccls (get-locclasses idxcls)))
   idxcls)
+@ %def add
 
-(defmethod add-merge-rule ((idxcls indexclass)
-                           (catattr-1 category-attribute)
-                           (catattr-2 category-attribute))
+\no Here follow the mutators for the merge-rules. Remember that
+\irule{drop-if-merged} implies \irule{merge-to}.
+
+<<Mutators for \class{indexclass}>>=
+(defmethod add-merge-rule ((idxcls indexclass) (catattr-1 category-attribute)
+                                               (catattr-2 category-attribute))
   (rel-insert (get-merge-rules idxcls) catattr-1 catattr-2)
   idxcls)
 
-(defmethod add-substitution-rule ((idxcls indexclass)
-                                  (catattr-1 category-attribute)
-                                  (catattr-2 category-attribute))
-  (rel-insert (get-subst-rules idxcls) catattr-1 catattr-2)
+(defmethod add-drop-if-merged-rule ((idxcls indexclass) (catattr-1 category-attribute)
+                                                        (catattr-2 category-attribute))
+  (rel-insert (get-merge-rules idxcls) catattr-1 catattr-2)
+  (rel-insert (get-drop-if-merged-rules idxcls) catattr-1 catattr-2)
+  idxcls)
+@ %def add-merge-rule add-drop-if-merged-rule
+
+\no Here follow the mutators for the substitution-rules.
+
+<<Mutators for \class{indexclass}>>=
+(defmethod add-implicit-substitution-rule ((idxcls indexclass) (catattr-1 category-attribute)
+                                                               (catattr-2 category-attribute))
+  (rel-insert (get-implicit-subst-rules idxcls) catattr-1 catattr-2)
   idxcls)
 
-;(defmethod add ((idxcls-name string)
-;                           (keyword-markup markup))
+
+(defmethod add-explicit-substitution-rule ((idxcls indexclass) (catattr-1 category-attribute)
+                                                               (catattr-2 category-attribute))
+  (rel-insert (get-explicit-subst-rules idxcls) catattr-1 catattr-2)
+  idxcls)
+
+;(defmethod add ((idxcls-name string) (keyword-markup markup))
 ;  (let ((idxcls (lookup-indexclass idxcls-name)))
 ;    (unless (null idxcls)
 ;      (setf (get-keyword-markup idxcls)
 ;            (append (get-keyword-markup idxcls) (list keyword-markup))))))
 
-;(defmethod add ((idxcls-name string)
-;                           (merge-to-rule rule-merge-to))
-;  (let ((idxcls (lookup-indexclass idxcls-name)))
-;    (unless (null idxcls)
-;      (setf (get-merge-to-rules idxcls)
-;            (append (get-merge-to-rules idxcls) (list merge-to-rule))))))
-
-;(defmethod set ((idxcls-name string)
-;                           (sep-mix-rule rule-separated-mixed))
-;  (let ((idxcls (lookup-indexclass idxcls-name)))
-;    (unless (null idxcls)
-;      (setf (get-sep-mix-rule idxcls) sep-mix-rule))))
-@ %def add set
+@ %def add set add-merge-rule add-drop-if-merged-rule add-implicit-substitution-rule add-explicit-substitution-rule
 
 <<Export-list of submodule \module{idxclass}>>=
 (export '(add set
           add-merge-rule
-          add-substitution-rule))
-@ %def add set add-merge-rule add-substitution-rule
+          add-drop-if-merged-rule
+          add-implict-substitution-rule
+          add-explicit-substitution-rule))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -221,7 +267,7 @@ functions are prefixed with [[lookup-]].
   (gethash basetype-name (get-basetypes idxcls)))
 
 (defmethod lookup-catattr ((idxcls indexclass) (catattr-name string))
-  (lookup-catattr (get-cat-attrs idxcls) catattr-name))
+  (lookup (get-cat-attrs idxcls) catattr-name))
 
 (defmethod lookup-location-class ((idxcls indexclass) (loccls-name string))
   (assoc loccls-name (get-locclasses idxcls) :test #'equal))
@@ -256,6 +302,162 @@ arguments: the current indexclass, the current location-class and the
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsubsection{Hooks for indexing rules}
+\label{sec:rule-hooks}
+
+\paragraph{Merge-hooks}
+
+When we need to \term{drop} a location-reference because of the
+successful application of a \irule{drop-if-merged}-rule and a join
+into a range we must specify what happens with the original
+location-reference. Strictly spoken, we must define what
+\term{dropping} means (\emph{see} submodule \module{idxentry} for
+further details). The possible ways are:
+\begin{enumerate}
+\item \term{remove} the origial location-reference.
+\item \term{reset} the original attributes state to \textsf{virtual}.
+\item Do nothing. Leave it untouched.
+\end{enumerate}
+%%
+So we define the following hook
+
+<<Hooks for merge-rules>>=
+     (merge-drop-hook  :reader get-merge-drop-hook
+                       :writer set-merge-drop-hook
+                       :initform #'set-state-deleted)
+@ %def merge-drop-hook
+
+<<Export-list of submodule \module{idxclass}>>=
+(export '(get-merge-drop-hook set-merge-drop-hook))
+@
+
+\paragraph{Substitution-hooks}
+
+The indexclass contains the implicit- (defined by the
+category-attribute-groups) and explicit-substitution-rules. To
+generate a complete subtitution-relation we need some hooks to combine
+them to a complete relation. Each hook is a variable that contains a
+function that takes a [[relation]] as its only argument and modifies
+the relation. The currently possible hook-functions are:
+\begin{itemize}
+\item [[transitive-hull]] which calculates the transitive hull of the relation.
+\item [[identity]] which leaves the relation unchanged.
+\end{itemize}
+%%
+The hooks are as follows:
+%%
+\begin{itemize}
+\item The \textsf{implicit-substitution-hook}. It defaults to
+  [[transitive-hull]].
+\item The \textsf{explicit-substitution-hook}. It defaults to [[identity]].
+\item The \textsf{global-substitution-hook}. It defaults to
+  [[identity]].
+\end{itemize}
+%%
+These defaults can be changed The \textsf{implicit-substitution-hook}
+is applied to slot \texttt{implicit-subst-rules} of an indexclass. The
+\textsf{explicit-substitution-hook} is applied to slot
+[[explicit]]-[[subst]]-[[rules]] of an indexclass. The
+\textsf{global-substitution-hook} is applied to the result of merging
+both the [[implicit]]- and [[explicit]]-[[subst]]-[[rules]] together
+and stored into slot [[implicit]]-[[subst]]-[[rules]] which then acts
+as the only substitution-rule. Slot [[explicit]]-[[subst]]-[[rules]]
+remains unused.
+
+Hook [[substitution-subst-hook]] is applied to a location-reference if
+it should be \term{substituted} when applying the substitution-rules
+during processing an indexentry. It must be a method that takes a
+location-reference as its argument and returns the modified
+location-reference or [[nil]] if it should be removed entirely. The
+functions to be used are [[set-state-virtual]] which resets its state
+to virtual or [[null]] which returns [[nil]] applied to a
+location-reference.
+
+<<Hooks for substitution-rules>>=
+     (implicit-subst-hook  :reader get-implicit-subst-hook
+                           :writer set-implicit-subst-hook
+                           :initform #'transitive-hull)
+     (explicit-subst-hook  :reader get-explicit-subst-hook
+                           :writer set-explicit-subst-hook
+                           :initform #'identity)
+     (global-subst-hook    :reader get-global-subst-hook
+                           :writer set-global-subst-hook
+                           :initform #'identity)
+     (substitution-subst-hook :reader get-substitution-subst-hook
+                              :writer set-substitution-subst-hook
+                              :initform #'null)
+@ %def implicit-subst-hook explicit-subst-hook global-subst-hook substitution-subst-hook
+
+<<Export-list of submodule \module{idxclass}>>=
+(export '(get-implicit-subst-hook     set-implicit-subst-hook
+          get-explicit-subst-hook     set-explicit-subst-hook
+          get-global-subst-hook       set-global-subst-hook
+          get-substitution-subst-hook set-substitution-subst-hook))
+@
+
+\no The application of all hooks can be described as follows:
+
+<<Apply substitution-hooks>>=
+(defmethod apply-substitution-hooks ((idxcls indexclass))
+  (let ((impl (get-implicit-subst-rules idxcls))
+        (expl (get-explicit-subst-rules idxcls)))
+    (funcall (get-implicit-subst-hook idxcls) impl)
+    (funcall (get-explicit-subst-hook idxcls) expl)
+    (rel-merge impl expl)
+    (set-explicit-subst-rules nil idxcls)
+    (funcall (get-global-subst-hook idxcls) impl)
+    (make-ready impl)
+    <<check for reflexivity>>))
+@ %def apply-substitution-hooks
+
+\no The check for reflexivity is currently unimplemented.
+
+<<check for reflexivity>>=
+@
+
+\begin{TODO}
+\item implement the check for reflexivity. See also
+  \irule{drop-if-merged}-rules
+\end{TODO}
+
+<<Export-list of submodule \module{idxclass}>>=
+(export '(apply-substitution-hooks))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Final cleanup}
+
+Before processing the index we must do several cleanups. We must apply
+the substitution-hooks to receive a global substitution-relation.
+Additionally we must transform all other relation-rules into their
+hash-table representation via calling [[make-ready]].
+
+<<Indexclass cleanups>>=
+(defmethod make-ready ((idxcls indexclass))
+  (apply-substitution-hooks idxcls)
+  (make-ready (get-merge-rules idxcls))
+  (make-ready (get-drop-if-merged-rules idxcls))
+  <<check for reflexivity>>
+;  (set-merge-rule-topsort (topsort
+;                           (remove-reflexivity
+;                            (transform-relation
+;                             (get-drop-if-merged-rules idxcls)
+;                             #'get-ordnum)))
+;                          idxcls)
+  (let ((counter 0))
+    (mapc #'(lambda (catattr)
+              (set-processing-ordnum (incf counter) catattr))
+          (topsort (get-drop-if-merged-rules idxcls))))
+  idxcls)
+@ %def make-ready
+
+<<Export-list of submodule \module{idxclass}>>=
+(export '(make-ready))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{The submodule root}
 
 <<Submodule \module{idxclass}>>=
@@ -266,6 +468,10 @@ arguments: the current indexclass, the current location-class and the
 <<Mutators for \class{indexclass}>>
 <<Finders for \class{indexclass}>>
 <<Iterators for \class{indexclass}>>
+
+<<Apply substitution-hooks>>
+<<Indexclass cleanups>>
+
 <<Export-list of submodule \module{idxclass}>>
 @
 
@@ -278,35 +484,87 @@ arguments: the current indexclass, the current location-class and the
 \subsubsection{Pretty-printing}
 
 <<Pretty-printing>>=
+(defmacro pprint-slot-block (slot-name body)
+  `(progn
+    (pprint-logical-block (s nil :suffix " }")
+                          (pprint-indent :block 2 s)
+                          (write-string ,slot-name s)
+                          (pprint-newline :mandatory s)
+                          ,body)
+    (pprint-newline :mandatory s)))
+
+(defmacro pprint-slot-block-line (slot-name body)
+  `(progn
+    (pprint-logical-block (s nil :suffix " }")
+                          (pprint-indent :block 2 s)
+                          (write-string ,slot-name s)
+                          (pprint-newline :linear s)
+                          ,body)
+    (pprint-newline :mandatory s)))
+@
+
+<<Pretty-printing>>=
 (set-pprint-dispatch 'indexclass
                      #'(lambda (s idxcls)
                          (pprint-logical-block
                           (s nil :suffix "}")
                           (pprint-indent :block 2 s)
-                          (write-string "Indexclass " s)
+                          (write-string "indexclass " s)
                           (write (get-name idxcls) :stream s)
                           (write-string " {" s)
                           (pprint-newline :mandatory s)
-                          (pprint-logical-block
-                           (s nil :prefix "Basetypes   { " :suffix "}")
-                           (pprint-indent :block 2)
+                          (pprint-slot-block
+                           "basetypes {"
                            (maphash #'(lambda (key bt)
                                         (declare (ignore key))
-                                        (pprint-newline :linear s)
                                         (write (get-name bt) :stream s)
-                                        (write-string " " s))
+                                        (write-string " " s)
+                                        (pprint-newline :linear s))
                                     (get-basetypes idxcls)))
-                          (pprint-newline :mandatory s)
-                          (pprint-logical-block
-                           (s nil :prefix "Loc-Classes { " :suffix "}")
-                           (pprint-indent :block 2)
+                          (pprint-slot-block
+                           "cat-attrs {"
+                           (write (get-cat-attrs idxcls) :stream s))
+                          (pprint-slot-block
+                           "locclasses {"
                            (mapc #'(lambda (lc)
-                                     (pprint-newline :linear s)
                                      (write (get-name (cdr lc)) :stream s)
-                                            (write-string " " s))
+                                     (write-string " " s)
+                                     (pprint-newline :linear s))
                                  (get-locclasses idxcls)))
-                          (pprint-newline :mandatory s)
-                         )))
+
+                          (pprint-slot-block
+                           "merge-rules {"
+                           (write (get-merge-rules idxcls) :stream s))
+                          (pprint-slot-block
+                           "drop-if-merged-rules {"
+                           (write (get-drop-if-merged-rules idxcls) :stream s))
+;                          (pprint-slot-block-line
+;                           "merge-rule-topsort { "
+;                           (write (get-merge-rule-topsort idxcls) :stream s))
+
+                          (pprint-slot-block
+                           "implicit-subst-rules {"
+                           (write (get-implicit-subst-rules idxcls) :stream s))
+                          (pprint-slot-block
+                           "explicit-subst-rules {"
+                           (write (get-explicit-subst-rules idxcls) :stream s))
+
+                          (pprint-slot-block-line
+                           "implicit-subst-hook {"
+                           (write (get-implicit-subst-hook idxcls) :stream s))
+                          (pprint-slot-block-line
+                           "explicit-subst-hook {"
+                           (write (get-explicit-subst-hook idxcls) :stream s))
+                          (pprint-slot-block-line
+                           "global-subst-hook {"
+                           (write (get-global-subst-hook idxcls) :stream s))
+                          (pprint-slot-block-line
+                           "substitution-subst-hook {"
+                           (write (get-substitution-subst-hook idxcls) :stream s))
+                          (pprint-slot-block-line
+                           "merge-drop-hook {"
+                           (write (get-merge-drop-hook idxcls) :stream s))
+                          )))
 @
 
 %% Local Variables:
@@ -314,7 +572,10 @@ arguments: the current indexclass, the current location-class and the
 %% End:
 %%
 %% $Log$
-%% Revision 1.4  1995/12/19 10:58:46  kehr
+%% Revision 1.5  1996/01/09 14:26:09  kehr
+%% Major modifications.
+%%
+%% Revision 1.4  1995/12/19  10:58:46  kehr
 %% Complete restructuring.
 %%
 %% Revision 1.3  1995/12/15  17:08:24  kehr
