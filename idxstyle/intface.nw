@@ -373,7 +373,7 @@ the root-chunk of module \module{idxstyle}.
                 :test #'equal)
     (pushnew ':ORDRULES *features*)
     (eval-when (eval)
-      (usepackage "ORDRULES"))))
+      (use-package "ORDRULES"))))
 @
 %%
 \begin{arguments}{replacement}
@@ -397,7 +397,7 @@ For more information see the description of the [[ordrules]]-package.
              (error "missing argument <pattern> !"))
           ((null replacement)
              (error "missing argument <replacement> !"))
-          (t `(ADD-MERGE-RULE ,pattern ,replacement
+          (t `(ADD-KEYWORD-MERGE-RULE ,pattern ,replacement
                ,(if again 1 0))))))
 
 #-:ORDULES
@@ -417,7 +417,7 @@ For more information see the description of the [[ordrules]]-package.
              (error "missing argument <pattern> !"))
           ((null replacement)
              (error "missing argument <replacement> !"))
-          (t `(ADD-SORT-RULE ,pattern ,replacement
+          (t `(ADD-KEYWORD-SORT-RULE ,pattern ,replacement
                ,(if again 1 0))))))
 
 #-:ORDULES
@@ -453,7 +453,14 @@ For more information see the description of the [[ordrules]]-package.
 
 
 %% $Log$
-%% Revision 1.8  1996/04/29 08:37:34  kehr
+%% Revision 1.9  1996/04/30 09:26:40  kehr
+%% Changes the adding of location-classes to an index. Old definitions
+%% will now be removed if a new location-class with the same name is
+%% added. The forall-location-classes iterator was rewritten. It is now
+%% named map-location-class and its behaviour is now comparable to a
+%% map-function with implicit removal of nil in the result-list.
+%%
+%% Revision 1.8  1996/04/29  08:37:34  kehr
 %% Don't remember any changes.
 %%
 %% Revision 1.7  1996/03/28  16:46:35  kehr

@@ -85,7 +85,7 @@ incrementally filled with more information.
      (cat-attrs            :accessor get-cat-attrs
                            :initform (make-catattr-groups))
      (locclasses           :accessor get-locclasses
-                           :initform '())
+                           :initform '() :type list)
      (keyword-merge-rules  :accessor get-keyword-merge-rules
                            :initform '())
      (keyword-sort-rules   :accessor get-keyword-sort-rules
@@ -106,7 +106,7 @@ incrementally filled with more information.
 (export '(indexclass              make-indexclass
           get-name                get-basetypes
           get-cat-attrs           get-locclasses
-	  get-keyword-merge-rules get-keyword-sort-rules
+          get-keyword-merge-rules get-keyword-sort-rules
           get-succ-table
 ;          get-keyword-markup      set-keyword-markup
           <<Export-list for indexing rules>>
@@ -176,12 +176,34 @@ indexclass.
 (defmethod add ((idxcls indexclass) (catattr category-attribute))
   (add (get-cat-attrs idxcls) catattr)
   idxcls)
-
-(defmethod add ((idxcls indexclass) (loccls location-class))
-  (setf (get-locclasses idxcls)
-        (acons (get-name loccls) loccls (get-locclasses idxcls)))
-  idxcls)
 @ %def add
+
+\no Adding a new location-class needs special treatment, since we want
+matching in the correct order of declaration. If later on, more than
+on match succeeds the first one is taken and a warnig should be
+issued. If this location-class is already known we remove first remove
+it. In all cases we add the new location-class.
+
+<<Mutators for \class{indexclass}>>=
+(defmethod add ((idxcls indexclass) (loccls location-class))
+  (let* ((loccls-name (get-name loccls))
+         (old-loccls (cdr (lookup-location-class idxcls loccls-name))))
+    (when old-loccls
+      (remove-location-class idxcls old-loccls))
+    (if (get-locclasses idxcls)
+        (rplacd (last (get-locclasses idxcls))
+                (acons loccls-name loccls nil))
+        (setf (get-locclasses idxcls)
+              (acons loccls-name loccls nil))))
+  idxcls)
+
+(defmethod remove-location-class ((idxcls indexclass) (loccls location-class))
+  (setf (get-locclasses idxcls)
+        (delete-if #'(lambda (elt)
+                       (eq (cdr elt) loccls))
+                   (get-locclasses idxcls)))
+  idxcls)
+@ %def add remove-location-class
 
 \no Here follow the mutators for the merge-rules. Remember that
 \irule{drop-if-merged} implies \irule{merge-to}.
@@ -272,20 +294,33 @@ functions are prefixed with [[lookup-]].
 Iterators are used to iterate over the elements of a slot value.  The
 following function iterates over all location-classes in the
 indexclass and calls the given function [[apply-func]] for all
-existing location-classes. Function [[apply-func]] takes three
-arguments: the current indexclass, the current location-class and the
-[[&rest]] arguments given to [[forall-location-classes]].
+existing location-classes. Function [[apply-func]] \emph{must} have
+the following signature:
+
+\begin{defunc}{apply-func}{\type{indexclass} \res
+    \type{location-class} \opt{arguments}}
+\end{defunc}
+
+\no The results of all calls to [[apply-func]] are returned in a list.
 
 <<Iterators for \class{indexclass}>>=
-(defun forall-location-classes (apply-func
-                                &rest arguments)
-  (let ((idxcls *indexstyle*))
-    (maphash #'(lambda (key loccls)
-                 (declare (ignore key))
-                 (funcall apply-func idxcls loccls arguments))
-             (get-locclasses idxcls))))
-@ %def forall-location-classes
+(defmacro map-location-classes (apply-func &rest arguments)
+  `(LET ((IDXCLS *INDEXSTYLE*))
+    (APPLY #'NCONC
+           (MAPCAR
+            #'(LAMBDA (ELT)
+                (LET ((RES
+                       (FUNCALL ,apply-func
+                                IDXCLS
+                                (CDR ELT) #|ELT is ("name".<LOCATION-CLASS>))|#
+                                ,@arguments)))
+                  (WHEN RES (LIST RES))))
+            (GET-LOCCLASSES IDXCLS)))))
+@ %def map-location-classes
 
+<<Export-list of submodule \module{idxclass}>>=
+(export 'map-location-classes)
+@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Hooks for indexing rules}
@@ -558,7 +593,14 @@ hash-table representation via calling [[make-ready]].
 @
 
 %% $Log$
-%% Revision 1.9  1996/03/13 16:50:41  kehr
+%% Revision 1.10  1996/04/30 09:26:36  kehr
+%% Changes the adding of location-classes to an index. Old definitions
+%% will now be removed if a new location-class with the same name is
+%% added. The forall-location-classes iterator was rewritten. It is now
+%% named map-location-class and its behaviour is now comparable to a
+%% map-function with implicit removal of nil in the result-list.
+%%
+%% Revision 1.9  1996/03/13  16:50:41  kehr
 %% Ok, here I am. Included support for regular expressions. Minor changes
 %% in all other parts of this module. Made some tests but had some
 %% problems with LISP stack overflow errors. Don't know where they came
