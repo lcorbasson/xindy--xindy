@@ -47,17 +47,23 @@ platform.
   (info "Copyright (c) 1996  Roger Kehr~%~%"))
 
 (defun startup (&key idxstyle rawindex output logfile
-		     show-version markup-trace)
+                     show-version markup-trace)
   (issue-startup-message)
   (when show-version (exit))
   (when markup-trace (setq *markup-verbose-mode* t))
   #+:HANDLER
   (handler-case
       (do-startup idxstyle rawindex output logfile)
-    (error (condition)
-	   (oops (simple-condition-format-string    condition)
-		 (simple-condition-format-arguments condition))
-	   (error-exit)))
+    (condition
+       (condition)
+       (oops (simple-condition-format-string    condition)
+             (simple-condition-format-arguments condition))
+       (error-exit))
+    (error
+       (condition)
+       (oops (simple-condition-format-string    condition)
+             (simple-condition-format-arguments condition))
+       (error-exit)))
   #-:HANDLER
   (do-startup idxstyle rawindex output logfile))
 @ %def issue-startup-message startup
@@ -68,21 +74,21 @@ platform.
   (when logfile
     (info "~&Opening logfile ~S " logfile)
     (handler-case
-	(setq *logging-stream* (open logfile
-				     :direction :output
-				     :if-does-not-exist :create))
+        (setq *logging-stream* (open logfile
+                                     :direction :output
+                                     :if-does-not-exist :create))
       (error ()
-	     (oops "Opening logfile ~S failed!" logfile)
-	     (error-exit)))
+             (oops "Opening logfile ~S failed!" logfile)
+             (error-exit)))
     (info "(done)~%")
     (setq *logging-on* t)
     (multiple-value-bind (sec min hour day mon year)
-	(get-decoded-time)
+        (get-decoded-time)
       (gol t ";; This logile was generated automatically by `xindy'~%")
       (gol t ";; at ~2,'0D.~2,'0D.~4,'0D  ~2,'0D:~2,'0D:~2,'0D~%"
-	   day mon year hour min sec))
-      (gol t ";; Indexstyle: ~S, Rawindex: ~S, Output: ~S~%~%"
-	   idxstyle raw-index output)
+           day mon year hour min sec))
+    (gol t ";; Indexstyle: ~S, Rawindex: ~S, Output: ~S~%~%"
+         idxstyle raw-index output)
     )
 
   (info "~&Reading indexstyle...~%")
@@ -125,6 +131,36 @@ platform.
     (when sp (idxstyle:set-searchpath-by-string sp))))
 @ %def set-searchpath-by-environment
 
+\subsubsection{The BREAK-driver}
+
+The Break-driver is necessary to make \cmd{clisp} handle
+user-interrupts via \texttt{CRTL-C} correctly. The installed handler
+calls the break-driver (which is \texttt{SYSTEM::BREAK-LOOP} by
+default---\emph{see} \texttt{user1.lsp} in the \cmf{clisp}-source)
+when a user interrupt happens. This handler is called with the first
+argument set to \texttt{T} indicating, that the handler may continue.
+We replace this handler with a new one that simply exits. Now a user
+break will result in a program stop and not in an annoying habit of
+simple ignoring users commands ;-)
+
+The handler must be installed when dumping \xindy.
+
+\begin{quote}
+  Hmmmm. Doesn't work as expected. Now most of the errors won't get
+  handled... Must ask someone...
+\end{quote}
+
+<<The BREAK-driver>>=
+(fmakunbound '*break-driver*)
+
+(defun *break-driver* (continuable)
+  (declare (ignore continuable))
+  (exit))
+
+(export '*break-driver*)
+@ %def  *break-driver*
+
+
 \subsubsection{The submodule root}
 
 <<Submodule \module{startup}>>=
@@ -140,6 +176,7 @@ platform.
 
 <<Global definitions>>
 <<Startup functions>>
+<<The BREAK-driver>>
 
 <<Export-list of submodule \module{startup}>>
 @
@@ -150,7 +187,10 @@ platform.
 
 
 %% $Log$
-%% Revision 1.6  1996/07/22 15:55:29  kehr
+%% Revision 1.7  1996/07/24 13:50:55  kehr
+%% Added the *break-driver*. But this is still not working correctly.
+%%
+%% Revision 1.6  1996/07/22  15:55:29  kehr
 %% Replaced some of the oops-macros by nraw-macros. Removed apply-oops
 %% macros.
 %%
