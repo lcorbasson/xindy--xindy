@@ -29,13 +29,27 @@ CVSAdd(ChangeLog Imakefile)
 CVSAdd(Report Presentation)
 CVSAdd(Doc)
 CVSAdd(noweb src testsuite)
+CVSAdd(distrib)
 CVSAdd(rx)
+CVSAdd(tools)
 CVSAdd(submodules)
+
+Distrib : Release force
+	for subdir in Doc tools\
+        do\
+           (cd $$subdir; make Distrib)\
+        done
+
+force:
+
 
 /*======================================================================
  *
  * $Log$
- * Revision 1.12  1996/05/29 14:15:07  kehr
+ * Revision 1.13  1996/06/24 09:08:30  kehr
+ * Added support for the distribution-tree.
+ *
+ * Revision 1.12  1996/05/29  14:15:07  kehr
  * Complete checkin after the major changes in the markup. See ChangeLog
  * for details.
  *
