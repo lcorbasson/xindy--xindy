@@ -18,12 +18,11 @@ which contains the most up-to-date information about xindy.
 
 Currently we support binary-distributions for the following platforms:
 
-    Linux ELF        i386
-    AIX-3.2          rs6000
-    HP-UX 9.x        hppa
-    Solaris 2.4      sun4m
-    Solaris 2.5      sun4m
-    IRIX 5.3	     mips
+    Linux ELF			i386
+    AIX-3.2			rs6000
+    HP-UX 9.x			hppa
+    Solaris 2.4, 2.5, 2.5.1     sun4m/sun4u
+    IRIX 5.3			mips (available soon)
 
 Everybody is encouraged to port xindy to new platforms. For any kind
 of suggestions, helpful comments, questions, bug reports and such,
