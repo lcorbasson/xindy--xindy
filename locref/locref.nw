@@ -124,7 +124,7 @@ following mutators and predicates.
 <<Export-list of submodule \module{locref}>>=
 (export '(layered-location-reference
           make-layered-location-reference
-          get-layers get-ordnums get-catattr
+          get-layers       get-ordnums       get-catattr
           get-origin       set-origin
           state-normal-p   state-virtual-p   state-deleted-p
           set-state-normal set-state-virtual set-state-deleted
@@ -313,11 +313,10 @@ i really need it.
 (in-package "LOCREF")
 (provide "LOCREF")
 
-(eval-when (eval compile load)
-  (use-package "CLOS")
-  (use-package "XP")
-  (require "base")
-  (use-package "BASE"))
+(use-package "CLOS")
+(use-package "XP")
+(require "base")
+(use-package "BASE")
 
 <<Submodule \module{basetype}>>
 <<Submodule \module{locclass}>>
@@ -383,7 +382,11 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.17  1996/05/07 08:59:35  kehr
+%% Revision 1.18  1996/05/09 11:49:54  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.17  1996/05/07  08:59:35  kehr
 %% Added CVS support for xfig-pictures.
 %%
 %% Revision 1.16  1996/05/06  10:01:49  kehr

@@ -83,13 +83,19 @@ following slots:
 (export '(base-index make-base-index get-entry-list))
 @
 
-<<Class \class{base-index}>>=
-(defun create-index (idxclass)
-  (make-instance 'base-index :idxclass idxclass))
-@ %def create-index
+\subsubsection{Index initialisation}
+
+<<Global index initialisation>>=
+(defparameter *index* nil)
+
+(defun create-index ()
+  (setq *index* (make-base-index *indexstyle*)))
+
+(create-index)
+@ %def *index* create-index
 
 <<Export-list of submodule \module{index}>>=
-(export '(create-index))
+(export '(*index* create-index))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -216,7 +222,7 @@ for further details).
   (set-main-key (join-with-precedence (get-main-key idxent) main-key) idxent)
   (set-sort-key (join-with-precedence (get-sort-key idxent) sort-key) idxent)
   (set-print-key (join-with-precedence (get-print-key idxent) print-key) idxent)
-  (add idxent locref))
+  (add-location-reference-to-indexentry idxent locref))
 
 (defun join-with-precedence (x y)
   (declare (inline))
@@ -237,6 +243,7 @@ location-reference
   (let* ((locref-list
           (map-location-classes
            #'(lambda (idxcls loccls)
+               (declare (ignore idxcls))
                (build-location-reference loccls  locref-str
                                          catattr attribute)))))
     (case (length locref-list)
@@ -296,7 +303,9 @@ we simply markup the index and start right out of the box.
 (defmethod process-index ((index base-index))
   (sort-indexentries index)
   ;(set-entry-table nil index)
-  ;(markup-index)
+  (mapc #'(lambda (idxent-cons)
+            (process-indexentry (cdr idxent-cons)))
+        (get-entry-list index))
   index)
 @ %def process-index
 
@@ -320,8 +329,9 @@ we simply markup the index and start right out of the box.
 (use-package "BASE")
 (require "locref")
 (use-package "LOCREF")
-(require "idxstyle")
-(use-package "IDXSTYLE")
+(eval-when (compile load eval)
+  (require "idxstyle")
+  (use-package "IDXSTYLE"))
 
 ;; The following construct must be separated since the definition of
 ;; the *feature* :ORDRULES was added via loading the package
@@ -344,11 +354,13 @@ we simply markup the index and start right out of the box.
 
 <<Submodule \module{index}>>=
 <<Class \class{base-index}>>
-<<Export-list of submodule \module{index}>>
 
 <<Adding an indexentry>>
 <<Sorting an index>>
 <<Processing an index>>
+<<Global index initialisation>>
+
+<<Export-list of submodule \module{index}>>
 @
 
 <<RCS-Identifier>>=
@@ -357,7 +369,11 @@ we simply markup the index and start right out of the box.
 
 
 %% $Log$
-%% Revision 1.12  1996/05/06 10:01:26  kehr
+%% Revision 1.13  1996/05/09 11:49:44  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.12  1996/05/06  10:01:26  kehr
 %% Minor changes in nearly all modules.
 %%
 %% Revision 1.11  1996/04/30  15:54:17  kehr

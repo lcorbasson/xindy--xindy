@@ -95,6 +95,7 @@ indexclass.
                (show val)) hash))
 @
 
+
 <<global definitions>>=
 (defparameter *default-class-name* "default")
 (defvar *indexclasses* '())
@@ -129,7 +130,11 @@ The error message system is necessary to handle all error messages.
 %% End:
 %%
 %% $Log$
-%% Revision 1.6  1996/04/29 08:36:54  kehr
+%% Revision 1.7  1996/05/09 11:49:01  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.6  1996/04/29  08:36:54  kehr
 %% Added assert! macro.
 %%
 %% Revision 1.5  1996/01/31  16:19:02  kehr

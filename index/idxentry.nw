@@ -105,19 +105,20 @@ function [[add]]. (For a detailed description see
 \look{sec:precondition})
 
 <<Class \class{indexentry}>>=
-(defmethod add ((idxent indexentry) (locref location-reference))
+(defmethod add-location-reference-to-indexentry ((idxent indexentry)
+                                                 (locref location-reference))
   (unless (some #'(lambda (lref) (locref= locref lref))
                 (get-locrefs idxent))
     (set-locrefs (cons locref (get-locrefs idxent)) idxent))
   idxent)
-@ %def add
+@ %def add-location-reference-to-indexentry
 
 <<Export-list of submodule \module{idxentry}>>=
 (export '(indexentry make-indexentry
           get-main-key get-merge-key get-sort-key get-print-key
           get-locrefs set-locrefs get-idxclass
           get-subentries set-subentries
-          add))
+          add-location-reference-to-indexentry))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -264,9 +265,14 @@ We need it, for instance, to generate the list separated/mixed-groups
 in the location-reference-processing.
 
 <<Convert sublists into group objects --- [[convert-sublists-to-group-objects]]>>=
-(defun convert-sublists-to-group-objects (list-of-sublists object-type)
+(defun convert-sublists-to-group-objects (list-of-sublists
+                                          object-type
+                                          &key (initializer-func nil))
   (mapcar #'(lambda (sublist)
-              (make-locref-group object-type sublist))
+              (let ((locref-grp (make-locref-group object-type sublist)))
+                (if initializer-func
+                    (funcall initializer-func locref-grp)
+                    locref-grp)))
           list-of-sublists))
 @ %def convert-sublists-to-group-objects
 
@@ -317,11 +323,16 @@ After creation of those objects we call [[process-group]] on them.
 
 An object of type [[locref-class-group]] contains location-references
 which belong the same location-class. The method
-[[process-indexentry]] creates these kind of objects for us.
+[[process-indexentry]] creates these kind of objects for us. Since all
+location-references belonging to the same location-class are put into
+on object of this type, we separate them from each other. The
+initializer-function, sets the slot [[locclass]] to the location-class
+all the location-references belong to. We need this only for an easy
+dispatching during the markup process.
 
 <<Class \class{locref-class-group}>>=
 (defclass locref-class-group (locref-group)
-    ())
+    ((locclass :reader get-locclass :writer set-locclass :initform 'nil)))
 @ %def locref-class-group
 
 <<Separating the location-references by using [[split-list]] and [[convert-sublists-to-group-objects]]>>=
@@ -331,13 +342,23 @@ which belong the same location-class. The method
                                 (get-ordnum (get-locclass locref)))
                             #'<
                             (get-locrefs idxent))
-                'locref-class-group)
+                'locref-class-group
+                :initializer-func
+                #'(lambda (locref-cls-grp)
+                    (set-locclass (get-locclass
+                                   (car (get-members locref-cls-grp)))
+                                  locref-cls-grp)
+                    locref-cls-grp))
                idxent)
-  )
+  (mapc #'(lambda (locref-cls-grp)
+            (process-group locref-cls-grp *indexstyle*))
+        (get-locrefs idxent))
+  idxent)
 @ %def process-indexentry
 
 <<Export-list of submodule \module{idxentry}>>=
-(export '(locref-group make-locref-group process-group process-indexentry))
+(export '(locref-group get-members locref-class-group get-locclass
+          make-locref-group process-group process-indexentry))
 @
 
 \paragraph*{Further processing}
@@ -738,6 +759,10 @@ don't need it at all).
   locref-cls-grp)
 @ %def category-attribute-group separate-into-catattr-groups
 
+<<Export-list of submodule \module{idxentry}>>=
+(export '(category-attribute-group))
+@
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{The submodule root}
@@ -831,7 +856,11 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.13  1996/05/06 10:01:22  kehr
+%% Revision 1.14  1996/05/09 11:49:41  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.13  1996/05/06  10:01:22  kehr
 %% Minor changes in nearly all modules.
 %%
 %% Revision 1.12  1996/04/30  15:54:14  kehr

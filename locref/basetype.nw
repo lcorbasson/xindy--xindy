@@ -9,7 +9,7 @@
 %% History at end
 %%
 %% Module:    location-reference (locref)
-%% Submodule: basetype		 (basetype)
+%% Submodule: basetype           (basetype)
 %%
 %%
 \RCS $Id$%
@@ -260,7 +260,11 @@ Here is the root chunk of this submodule.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.11  1996/01/17 16:55:57  kehr
+%% Revision 1.12  1996/05/09 11:49:51  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.11  1996/01/17  16:55:57  kehr
 %% Improved documentation and threw out some of the markup-stuff.
 %%
 %% Revision 1.10  1996/01/15  19:17:25  kehr
@@ -341,7 +345,7 @@ Here is the root chunk of this submodule.
 %%
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:
 

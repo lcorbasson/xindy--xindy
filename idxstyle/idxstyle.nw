@@ -50,28 +50,13 @@ definitions among the user-defined indexclasses.
 
 \subsubsection{The Indexstyle}
 
-The \term{indexstyle} is organised by a hierarchy of indexclasses.
-Currently we only support a assoc-list of different indexclasses
-indexed by name.  Therefore the notion \term{scope} describes the
-environment that is defined by a given indexclass. The list of
-indexclasses is stored in the variable [[*indexstyle*]]. It is the
-root of all indexstyle descriptions. We also keep track of the
-currently active indexclass-name which is stored in
-[[*active-idxcls-name*]].\footnote{This is currently unused.}
-
-<<Global indexstyle definitions>>=
-(defvar *active-idxcls-name* nil)
-@
-
 <<The indexstyle>>=
 (defun create-indexclass (idxcls-name)
-  (setq *active-idxcls-name* idxcls-name)
   (setq *indexstyle* (make-indexclass idxcls-name)))
-@ %def *active-idxcls-name* create-indexclass
+@ %def create-indexclass
 
 <<Export-list of submodule \module{idxstyle}>>=
-(export '(*active-idxcls-name*
-          create-indexclass))
+(export 'create-indexclass)
 @
 
 \begin{TODO}
@@ -85,24 +70,46 @@ currently active indexclass-name which is stored in
 
 \subsubsection{Predefined default style}
 
-<<Default style>>=
-<<Default alphabets>>
-<<Default enumerations>>
+\subsubsection{Global definitions}
+
+The indexstyle itself will be initialised later after all functions are known.
+
+<<Global indexstyle definitions>>=
+(defparameter *indexstyle* nil)
+(defparameter *default-minimum-range-length* 3)
+@ %def *indexstyle* *default-minimum-range-length*
+
+<<Global indexstyle initialisation>>=
+<<Initialize indexclass [[default]]>>
+<<Define default alphabets>>
+<<Define default enumerations>>
 @
 
-These are the predefined alphabets for upper- and lowercase letters.
-
-<<Default alphabets>>=
-(basetype-by-string "ALPHA" "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-(basetype-by-string "alpha" "abcdefghijklmnopqrstuvwxyz")
-(basetype-by-string "digits" "0123456789")
+<<Initialize indexclass [[default]]>>=
+(create-indexclass "default")
 @
 
-Here follows a general-purpose function
+\no These are the predefined alphabets for upper- and lowercase letters.
+
+<<Define default alphabets>>=
+(defmacro string-expand (str)
+  (let ((str-expansion
+         (map 'list
+              #'(lambda (c)
+                  (make-string 1 :initial-element c))
+              str)))
+    `(QUOTE ,str-expansion)))
+
+(define-alphabet "ALPHA"  (string-expand "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+(define-alphabet "alpha"  (string-expand "abcdefghijklmnopqrstuvwxyz"))
+(define-alphabet "digits" (string-expand "0123456789"))
+@ %def string-expand
+
+\no Here follows a general-purpose function
 [[prefix-match-for-radix-numbers]] which is capable to recognize
 radix-based numbers with a radix ranging from 2\ldots36.
 
-<<Default enumerations>>=
+<<Define default enumerations>>=
 (defun prefix-match-for-radix-numbers (str radix)
   (let* ((n nil)
          (strlen (length str))
@@ -117,8 +124,8 @@ radix-based numbers with a radix ranging from 2\ldots36.
             n)))
 @
 
-Here follows the definition of a enumeration type for positive arabic
-numbers. First we define a new class that is subclass of
+\no Here follows the definition of a enumeration type for positive
+arabic numbers. First we define a new class that is subclass of
 [[enumeration]]. We then define the method [[prefix-match]] which is
 bound to our new class and calculation is forwarded by giving the
 help-function [[prefix-match-for-radix-numbers]] a radix of 10. We
@@ -129,15 +136,11 @@ known in the indexclass [[default]] by defining a new class of name
 [[enumeration-arabic-numbers]], a name and the string containing the
 basetype-characters. Quiet easy, isn't it ?
 
-<<Default enumerations>>=
-(defclass enumeration-arabic-numbers (enumeration) ())
-
-(defmethod prefix-match ((str string) (enum enumeration-arabic-numbers))
-  (prefix-match-for-radix-numbers str 10))
-
-(enumeration 'enumeration-arabic-numbers
-             "Arabic Numbers"
-             "01234567890")
+<<Define default enumerations>>=
+(define-enumeration arabic-numbers
+                    #'(lambda (str)
+                        (prefix-match-for-radix-numbers str 10))
+                    "01234567890")
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,13 +154,13 @@ basetype-characters. Quiet easy, isn't it ?
 (in-package "IDXSTYLE")
 (provide "IDXSTYLE")
 
-(eval-when (compile load eval)
-  (use-package "CLOS")
-  (use-package "XP")
-  (require "locref")
-  (use-package "LOCREF")
-  <<Use [[ordrules]]-package if available>> ;; see submodule idxrule
-  )
+(use-package "CLOS")
+(use-package "XP")
+(require "base")
+(use-package "BASE")
+(require "locref")
+(use-package "LOCREF")
+<<Use [[ordrules]]-package if available>> ;; see submodule intface
 
 <<Global indexstyle definitions>>
 
@@ -186,7 +189,11 @@ basetype-characters. Quiet easy, isn't it ?
 @
 
 %% $Log$
-%% Revision 1.7  1996/03/28 16:46:33  kehr
+%% Revision 1.8  1996/05/09 11:49:32  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.7  1996/03/28  16:46:33  kehr
 %% Changed indexstule modules to work with the new foreign package `ordrules'.
 %%
 %% Revision 1.6  1996/03/13  16:50:47  kehr

@@ -72,6 +72,13 @@ nothing).
 (defparameter *markup-verbose-mode*  nil)
 (defparameter *markup-verbose-open*  "<")
 (defparameter *markup-verbose-close* ">")
+(defparameter *markup-indentation* 2)
+(defparameter *markup-indent-level* 0)
+
+(defun markup-indent ()
+  (incf *markup-indent-level* *markup-indentation*))
+(defun markup-outdent ()
+  (decf *markup-indent-level* *markup-indentation*))
 @ %def *markup-output-stream*
 
 <<Export-list of submodule \module{markup}>>=
@@ -96,15 +103,24 @@ markup algorithm.
 verbose-mode is turned on.
 
 <<Markup primitives>>=
-(defun markup-default (str &optional number)
+(defun markup-default (str &optional object)
   (declare (inline))
   (when *markup-verbose-mode*
+    (loop for x from 1 to *markup-indent-level*
+          do (write-string " "))
     (markup-string *markup-verbose-open*)
     (markup-string str)
-    (when number
-      (markup-string "-")
-      (write number :stream *markup-output-stream*))
-    (markup-string *markup-verbose-close*)))
+    (when object
+      (etypecase object
+        (string (markup-string " [")
+                (markup-string object)
+                (markup-string "]"))
+        (number (markup-string " [")
+                (write object :stream *markup-output-stream*)
+                (markup-string "]"))))
+    (markup-string *markup-verbose-close*)
+    (terpri)
+    ))
 @ %def markup-default
 
 \no The following macro is a convenience tool to express the markup of
@@ -215,16 +231,21 @@ subtargets for an indexentry markup.
                    :sep-body   (markup-keyword-sep   new-depth)
                    :close-body (markup-keyword-close new-depth)))
 
-    (markup-locclass-grps (get-locrefs idxent))
+    (markup-list (get-locrefs idxent)
+                 :identifier LOCCLS-GRP
+                 :open-body  (markup-loccls-grp-list-open)
+                 :elt-body   (markup-loccls-grp LOCCLS-GRP)
+                 :sep-body   (markup-loccls-grp-list-sep)
+                 :close-body (markup-loccls-grp-list-close))
 
     (let ((subentries (get-subentries idxent)))
       (when subentries
         (markup-list subentries
                      :identifier IDXENT
-                     :open-body  (markup-indexentry-list-open   new-depth)
+                     :open-body  (markup-indexentry-list-open  new-depth)
                      :elt-body   (markup-indexentry IDXENT new-depth)
-                     :sep-body   (markup-indexentry-list-sep    new-depth)
-                     :close-body (markup-indexentry-list-close  new-depth))))
+                     :sep-body   (markup-indexentry-list-sep   new-depth)
+                     :close-body (markup-indexentry-list-close new-depth))))
 
     (markup-indexentry-close depth)))
 @ %def markup-indexentry
@@ -256,7 +277,8 @@ subtargets for an indexentry markup.
 <<Indexentry markup>>=
 (defmethod markup-indexentry-list-open ((depth number))
   (declare (ignore depth))
-  (markup-default "IDXENT-LST:OPEN"))
+  (markup-default "IDXENT-LST:OPEN")
+  (markup-indent))
 
 (defmethod markup-indexentry-list-sep ((depth number))
   (declare (ignore depth))
@@ -264,7 +286,8 @@ subtargets for an indexentry markup.
 
 (defmethod markup-indexentry-list-close ((depth number))
   (declare (ignore depth))
-  (markup-default "IDXENT-LST:CLOSE"))
+  (markup-default "IDXENT-LST:CLOSE")
+  (markup-outdent))
 @ %def markup-indexentry-list-*
 
 <<Export-list of submodule \module{markup}>>=
@@ -280,11 +303,149 @@ subtargets for an indexentry markup.
 @
 
 
-\paragraph{Indexentry markup}
+\paragraph{Location-class-group markup}
 
 <<Location-class-group markup>>=
-(defmethod markup-locclass-grps (x)
-  (print x))
+(defmethod markup-loccls-grp ((locref-cls-grp locref-class-group))
+  (let ((locclass (get-locclass locref-cls-grp)))
+    (markup-loccls-grp-open locclass)
+
+    (markup-list (get-members locref-cls-grp)
+                 :identifier CATATTR-GRP
+                 :open-body  (markup-catattr-grp-list-open)
+                 :elt-body   (markup-catattr-grp CATATTR-GRP)
+                 :sep-body   (markup-catattr-grp-list-sep)
+                 :close-body (markup-catattr-grp-list-close))
+
+    (markup-loccls-grp-close locclass)))
+
+(defmethod markup-loccls-grp-open ((loccls location-class))
+  (markup-default "LOCCLS-GRP:OPEN" (get-name loccls)))
+
+(defmethod markup-loccls-grp-close ((loccls location-class))
+  (markup-default "LOCCLS-GRP:CLOSE" (get-name loccls)))
+
+(defmethod markup-loccls-grp-list-open ()
+  (markup-default "LOCCLS-GRP-LST:OPEN")
+  (markup-indent))
+
+(defmethod markup-loccls-grp-list-sep ()
+  (markup-default "LOCCLS-GRP-LST:SEP"))
+
+(defmethod markup-loccls-grp-list-close ()
+  (markup-default "LOCCLS-GRP-LST:CLOSE")
+  (markup-outdent))
+@ %def markup-loccls-grp*
+
+<<Export-list of submodule \module{markup}>>=
+(export '(markup-loccls-grp
+          markup-loccls-grp-open
+          markup-loccls-grp-close
+          markup-loccls-grp-list-open
+          markup-loccls-grp-list-sep
+          markup-loccls-grp-list-close))
+@
+
+\paragraph{Catattr-group markup}
+
+<<Catattr-group markup>>=
+(defmethod markup-catattr-grp ((catattr-grp category-attribute-group))
+  (let ((ordnum (get-ordnum catattr-grp)))
+    (markup-catattr-grp-open ordnum)
+
+    (markup-list (get-members catattr-grp)
+                 :identifier LOCREF
+                 :open-body  (markup-locref-list-open)
+                 :elt-body   (markup-locref LOCREF)
+                 :sep-body   (markup-locref-list-sep)
+                 :close-body (markup-locref-list-close))
+
+    (markup-catattr-grp-close ordnum)))
+
+(defmethod markup-catattr-grp-open ((ordnum number))
+  (markup-default "CATATTR-GRP:OPEN" ordnum))
+
+(defmethod markup-catattr-grp-close ((ordnum number))
+  (markup-default "CATATTR-GRP:CLOSE" ordnum))
+
+(defmethod markup-catattr-grp-list-open ()
+  (markup-default "CATATTR-GRP-LST:OPEN")
+  (markup-indent))
+
+(defmethod markup-catattr-grp-list-sep ()
+  (markup-default "CATATTR-GRP-LST:SEP"))
+
+(defmethod markup-catattr-grp-list-close ()
+  (markup-default "CATATTR-GRP-LST:CLOSE")
+  (markup-outdent))
+@
+
+<<Export-list of submodule \module{markup}>>=
+(export '(markup-catattr-grp
+          markup-catattr-grp-open
+          markup-catattr-grp-close
+          markup-catattr-grp-list-open
+          markup-catattr-grp-list-sep
+          markup-catattr-grp-list-close))
+@
+
+\paragraph{Location-reference markup}
+
+<<Location-reference markup>>=
+(defmethod markup-locref ((locref layered-location-reference))
+  (let ((loccls (get-locclass locref)))
+    (markup-locref-open loccls)
+
+    (markup-list (get-layers locref)
+                 :identifier LOCREF-LAYER
+                 :open-body  (markup-locref-layer-list-open)
+                 :elt-body   (markup-string LOCREF-LAYER)
+                 :sep-body   (markup-locref-layer-list-sep)
+                 :close-body (markup-locref-layer-list-close))
+
+    (markup-locref-close loccls)))
+
+(defmethod markup-locref-open ((loccls location-class))
+  (markup-default "LOCREF:OPEN"))
+
+(defmethod markup-locref-close ((loccls location-class))
+  (markup-default "LOCREF:CLOSE"))
+
+(defmethod markup-locref-list-open ()
+  (markup-default "LOCREF-LST:OPEN")
+  (markup-indent))
+
+(defmethod markup-locref-list-sep ()
+  (markup-default "LOCREF-LST:SEP"))
+
+(defmethod markup-locref-list-close ()
+  (markup-default "LOCREF-LST:CLOSE")
+  (markup-outdent))
+@
+
+<<Location-reference markup>>=
+(defmethod markup-locref-layer-list-open ()
+  (markup-default "LOCREF-LAYER-LST:OPEN")
+  (markup-indent))
+
+(defmethod markup-locref-layer-list-sep ()
+  (markup-default "LOCREF-LAYER-LST:SEP"))
+
+(defmethod markup-locref-layer-list-close ()
+  (markup-default "LOCREF-LAYER-LST:CLOSE")
+  (markup-outdent))
+@
+
+<<Export-list of submodule \module{markup}>>=
+(export '(markup-locref-grp
+          markup-locref-grp-open
+          markup-locref-grp-close
+          markup-locref-grp-list-open
+          markup-locref-grp-list-sep
+          markup-locref-grp-list-close
+          markup-locref-layer-list-open
+          markup-locref-layer-list-sep
+          markup-locref-layer-list-close))
 @
 
 \subsubsection{The module root}
@@ -299,6 +460,8 @@ subtargets for an indexentry markup.
 (use-package "XP")
 (require "base")
 (use-package "BASE")
+(require "locref")
+(use-package "LOCREF")
 (require "index")
 (use-package "INDEX")
 
@@ -319,6 +482,8 @@ subtargets for an indexentry markup.
 <<Indexentry markup>>
 <<Index markup>>
 <<Location-class-group markup>>
+<<Catattr-group markup>>
+<<Location-reference markup>>
 
 <<Export-list of submodule \module{markup}>>
 @
@@ -334,7 +499,11 @@ subtargets for an indexentry markup.
 
 
 %% $Log$
-%% Revision 1.4  1996/05/06 10:01:57  kehr
+%% Revision 1.5  1996/05/09 11:50:00  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.4  1996/05/06  10:01:57  kehr
 %% Minor changes in nearly all modules.
 %%
 %% Revision 1.3  1996/04/29  08:38:39  kehr

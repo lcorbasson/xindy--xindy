@@ -183,6 +183,8 @@ It can be imported by other packages by calling
   '(*indexstyle*
     *default-minimum-range-length*
     define-alphabet
+    define-enumeration
+    define-expand-alphabet
     define-location-class
     define-attributes
     ))
@@ -193,38 +195,76 @@ It can be imported by other packages by calling
 (export *user-interface-definitions*)
 @
 
-\subsubsection{Global definitions}
-
-The indexstyle itself will be initialised later after all functions are known.
-
-<<Global indexstyle definitions>>=
-(defparameter *indexstyle* nil)
-(defparameter *default-minimum-range-length* 3)
-@ %def *indexstyle* *default-minimum-range-length*
-
-<<Global indexstyle initialisation>>=
-(setq *indexstyle* (create-indexclass "default"))
-@
-
 \subsubsection{Helpers}
 
-<<Helpers>>=
-(defun stringify (name)
-  (etypecase name
-    (symbol (symbol-name name))
-    (string name)
-    (number (write-to-string name))))
-@ %def stringify
+The following functions help the macros to test for syntactic errors.
+Since in the submodule \module{idxstyle} we start to define the
+default indexstyle which is expressed via macros that use the
+following function [[stringify]], this function must be evaluable
+during the compilation process. This is assured through the
+[[eval-when]] special form.
 
-<<Check functions>>=
+<<Helpers>>=
+(eval-when (compile load eval)
+  (defun stringify (name)
+    (declare (inline))
+    (etypecase name
+      (symbol (symbol-name name))
+      (string name)
+      (number (write-to-string name)))))
+
 (defun list-of-strings-p (x)
   (cond ((not (listp x)) nil)
         ((every #'(lambda (elt)
                     (or (stringp elt) (symbolp elt) (numberp elt)))
                 x))))
-@ %def list-of-strings-p
+@ %def stringify list-of-strings-p
+
+\no Here we introduce a well-formed-list. In this term a well-formed
+list is a list containing only non-empty lists as elements. All
+elements of the latter lists must be strings. The input list must be a
+list containing symbols, strings, numbers and lists. The latter lists
+may only consist of symbols, strings and numbers. Function
+[[make-well-formed-list]] transforms ist argument into a well-formed
+list if possible and signals an error, if its argument is of wrong
+type or structure.
+
+<<Helpers>>=
+(defun make-well-formed-list (attr-list)
+  (mapcar #'(lambda (x)
+              (cond ((null x)
+                       (error "empty lists are not allowed !"))
+                    ((or (symbolp x) (stringp x) (numberp x))
+                       (list (stringify x)))
+                    ((listp x)
+                       (map-to-strings x))))
+          attr-list))
+
+(defun map-to-strings (slist)
+  (mapcar #'(lambda (x)
+              (cond ((null x)
+                       (error "empty lists are not allowed !"))
+                    ((or (symbolp x) (stringp x) (numberp x))
+                       (stringify x))
+                    ((listp  x)
+                       (error "nesting level too deep !"))
+                    (t (error "~A is not a string !" x))))
+          slist))
+
+(export '(stringify list-of-strings-p
+          make-well-formed-list map-to-strings))
+@ %def make-well-formed-list map-to-strings
+
 
 \subsubsection{Alphabets}
+
+We introduce two different forms of alphabet definitions. The first
+macro does \emph{not} expand the [[string-list]]-argument, wheras the
+second form \emph{does} so. Which of the two forms is chosen depends
+on the first symbol in the argument [[string-list]], which is assumed
+an expression if its [[car]] is a symbol which is [[fboundp]]. I'm not
+experienced enough with \Lisp to decide if this is a good idea. Any
+comments are helpful.
 
 <<Defining alphabets>>=
 (defmacro define-alphabet (&optional name string-list)
@@ -232,16 +272,49 @@ The indexstyle itself will be initialised later after all functions are known.
            (error "missing argument <name> !"))
         ((not (or (symbolp name) (stringp name)))
            (error "~A is not a symbol or a string" name))
-        ((null string-list)
+        ((not (listp string-list))
            (error "missing argument <string-list> !"))
+        ((let ((scar (car string-list)))
+           (and (symbolp scar) (fboundp scar)))
+           `(LET ((NAME (STRINGIFY ',name))
+                  (STRING-LIST ,string-list))
+             (UNLESS (LIST-OF-STRINGS-P STRING-LIST)
+               (ERROR "~A is not a list of strings" STRING-LIST))
+             (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
+               (WARN "redefining alphabet `~A'" NAME))
+             (ADD *indexstyle* (MAKE-ALPHABET NAME STRING-LIST))))
         ((not (list-of-strings-p string-list))
            (error "~A is not a list of strings" string-list))
         (t `(LET ((NAME (STRINGIFY ',name)))
              (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
                (WARN "redefining alphabet `~A'" NAME))
-             (ADD *indexstyle*
-              (MAKE-ALPHABET NAME ',string-list))))))
-@ %def define-alphabet
+             (ADD *indexstyle* (MAKE-ALPHABET NAME ',string-list))))))
+@ %def define-expand-alphabet
+
+
+\subsubsection{Enumerations}
+
+<<Defining enumerations>>=
+(defmacro define-enumeration (&optional name prefix-match-func base-alphabet)
+  (cond ((null name)
+           (error "missing argument <name> !"))
+        ((not (or (symbolp name) (stringp name)))
+           (error "~A is not a symbol or a string" name))
+        ((null prefix-match-func)
+           (error "missing argument <prefix-match-function> !"))
+        (t (let* ((name   (stringify name))
+                  (symbol (make-symbol
+                           (concatenate 'string "ENUMERATION-" name))))
+             `(LET () #| PROGN instead of LET () yields a runtime error !? |#
+               (IF (LOOKUP-BASETYPE *indexstyle* ,name)
+                   (WARN "redefining alphabet `~A'" ,name)
+                   (PROGN
+                     (DEFCLASS ,symbol (ENUMERATION) ())
+                     (ADD *indexstyle*
+                          (MAKE-ENUMERATION ',symbol ,name ,base-alphabet))))
+               (DEFMETHOD PREFIX-MATCH ((STR STRING) (ENUM ,symbol))
+                 (FUNCALL ,prefix-match-func STR)))))))
+@ %def define-enumeration
 
 
 \subsubsection{Location-classes}
@@ -281,6 +354,7 @@ The indexstyle itself will be initialised later after all functions are known.
                )))))
 @ %def define-location-class
 
+
 \subsubsection{Attributes}
 \label{sec:intface:attributes}
 
@@ -302,39 +376,6 @@ The indexstyle itself will be initialised later after all functions are known.
                (INITIALIZE-CATEGORY-ATTRIBUTES ',wf-attr-list *indexstyle*))
              ))))
 @ %def define-attributes
-
-\no Here we introduce a well-formed-list. In this term a well-formed
-list is a list containing only non-empty lists as elements. All
-elements of the latter lists must be strings. The input list must be a
-list containing symbols, strings, numbers and lists. The latter lists
-may only consist of symbols, strings and numbers. Function
-[[make-well-formed-list]] transforms ist argument into a well-formed
-list if possible and signals an error, if its argument is of wrong
-type or structure.
-
-<<Helpers>>=
-(defun make-well-formed-list (attr-list)
-  (mapcar #'(lambda (x)
-              (cond ((null x)
-                       (error "empty lists are not allowed !"))
-                    ((or (symbolp x) (stringp x) (numberp x))
-                       (list (stringify x)))
-                    ((listp x)
-                       (map-to-strings x))))
-          attr-list))
-
-(defun map-to-strings (slist)
-  (mapcar #'(lambda (x)
-              (cond ((null x)
-                       (error "empty lists are not allowed !"))
-                    ((or (symbolp x) (stringp x) (numberp x))
-                       (stringify x))
-                    ((listp  x)
-                       (error "nesting level too deep !"))
-                    (t (error "~A is not a string !" x))))
-          slist))
-@ %def make-well-formed-list map-to-strings
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -371,9 +412,7 @@ the root-chunk of module \module{idxstyle}.
                 (mapcar #'package-name
                         (list-all-packages))
                 :test #'equal)
-    (pushnew ':ORDRULES *features*)
-    (eval-when (eval)
-      (use-package "ORDRULES"))))
+    (pushnew ':ORDRULES *features*)))
 @
 %%
 \begin{arguments}{replacement}
@@ -435,12 +474,12 @@ For more information see the description of the [[ordrules]]-package.
 ;; $Id$
 
 <<Destructuring-switch-bind macro>>
+<<Helpers>>
 <<Defining alphabets>>
+<<Defining enumerations>>
 <<Defining location-classes>>
 <<Defining attributes>>
 <<Defining keyword rules>>
-<<Helpers>>
-<<Check functions>>
 
 <<User-interface-definitions>>
 
@@ -453,7 +492,11 @@ For more information see the description of the [[ordrules]]-package.
 
 
 %% $Log$
-%% Revision 1.9  1996/04/30 09:26:40  kehr
+%% Revision 1.10  1996/05/09 11:49:35  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.9  1996/04/30  09:26:40  kehr
 %% Changes the adding of location-classes to an index. Old definitions
 %% will now be removed if a new location-class with the same name is
 %% added. The forall-location-classes iterator was rewritten. It is now

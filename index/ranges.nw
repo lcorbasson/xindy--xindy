@@ -219,7 +219,7 @@ could be performed.
                        (setq prev-object
                              (join prev-object curr-locref-grp)))
                      (progn
-                       (when prev-object
+                       (when prev-object #| we are about to start |#
                          (setq result-list
                                (cons (post-process prev-object
                                                    drop-function)
@@ -313,7 +313,8 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 <<Successor handling>>=
 (defun ordnum-successor-p (ordnums-1 ordnums-2)
   (declare (inline))
-  (and (equal (butlast ordnums-1) (butlast ordnums-2))
+  (and ordnums-1 #|is there really something in it, or we are about to start?|#
+       (equal (butlast ordnums-1) (butlast ordnums-2))
        (equal (1+ (car (last ordnums-1)))
               (car (last ordnums-2)))))
 @ %def ordnum-successor-p
@@ -378,12 +379,16 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 @
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1996/01/09 14:27:30  kehr
+%% Revision 1.2  1996/05/09 11:49:46  kehr
+%% Changes in all submodules, due to macro-expansion problems during
+%% compilation.
+%%
+%% Revision 1.1  1996/01/09  14:27:30  kehr
 %% Moved submodule `ranges' from module `locref' to this module.
 %% Nearly complete rewrite of all submodules. See ChangeLog for further details.
 %%

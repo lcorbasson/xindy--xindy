@@ -67,7 +67,8 @@ program.tex: program.nw							@@\
 /*TeXFileTarget(latex,program,tex)*/                                    @@\
 TeXDocTarget(latex,program)                                             @@\
                                                                         @@\
-clean::                                                                 @@\
+clean::									@@\
+        $(RM) *.mtc?							@@\
         $(RM) program.tex
 
 #endif /* NowebLaTeXDocTargetWrap */
@@ -87,6 +88,7 @@ program.tex: docs							@@\
 TeXDocTarget(latex,program)                                             @@\
                                                                         @@\
 clean::                                                                 @@\
+        $(RM) *.mtc?							@@\
         $(RM) program.tex
 
 #endif /* NowebLaTeXDocTargetsWrap */
@@ -107,12 +109,14 @@ ReleaseLispObjects(LispModuleObjects(program))
 #endif /* NowebLispModuleTarget */
 
 
-
-
 /* ============================================================
 
 $Log$
-Revision 1.3  1995/12/15 17:05:37  kehr
+Revision 1.4  1996/05/09 11:49:26  kehr
+Changes in all submodules, due to macro-expansion problems during
+compilation.
+
+Revision 1.3  1995/12/15  17:05:37  kehr
 Rewrote module handling. Now the module source is generated from all
 dependend submodules. So there exists only one final source .lsp and
 one final Lisp-library (.fas and .lib). Had to many problems with
