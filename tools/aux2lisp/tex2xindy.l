@@ -81,7 +81,8 @@ ARGCLOSE \}
 <key,print>{QUOTE}     { qc(input()); }
 <key,print>{ENCAP}     { printf("\")) :attr \"");
                          range = NO_RANGE; BEGIN(encap); }
-<key,print>{LEVEL}     { printf("\") (\""); }
+<key>{LEVEL}           { printf("\") (\""); }
+<print>{LEVEL}         { printf("\") (\""); BEGIN(key); }
 <key,print>{ARGOPEN}   { ECHO; braces++; }
 <key,print>{ARGCLOSE}  { if ( braces > 0 )
                            {ECHO; braces--;}
@@ -177,6 +178,9 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.5  1997/01/21 16:44:36  kehr
+  Bugfix: State <print> was not changed back to <key> if {LEVEL} was found.
+
   Revision 1.4  1997/01/17 16:30:37  kehr
   Rewrote makeindex4 and heavily modified tex2xindy.
 

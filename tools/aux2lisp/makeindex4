@@ -47,8 +47,7 @@ EOMSG
 $numArgs = $#ARGV;          # number of Commandline-Arguments
 if ( $numArgs eq 0 )        # only one argument
   { $Index = $ARGV[0]; }    # the index
-else
-  { welcome; }
+else { &welcome; }
 
 print "Index = $Index\n" if $debug;
 $IndexBase = $Index;
@@ -184,6 +183,9 @@ exec($CmdLine);
 
 #
 # $Log$
+# Revision 1.3  1997/01/21 16:44:33  kehr
+# Bugfix: State <print> was not changed back to <key> if {LEVEL} was found.
+#
 # Revision 1.2  1997/01/17 16:30:35  kehr
 # Rewrote makeindex4 and heavily modified tex2xindy.
 #
