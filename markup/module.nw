@@ -1,0 +1,41 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: markup (locref)
+%%
+%%
+\RCS $Id$
+\RCS $Author$
+\RCS $Revision$
+\RCS $RCSfile$
+\RCS $State$
+\RCS $Date$
+%
+
+\chapter{Module \module{markup}}
+
+%\ModuleTitle{}
+
+\section{Introduction}
+
+
+
+%% $Log$
+%% Revision 1.1  1996/01/17 16:19:07  kehr
+%% Initial setup of the module-body.
+%%
+%%
+%%
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
