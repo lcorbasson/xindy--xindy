@@ -100,11 +100,11 @@
 
 \begin{document}
 
-\date{April 1997}
+\date{\today}
 
 \title{A Simple Context-Based Markup Algorithm and its Efficient
   Implementation in \textsc{Clos}\\[2ex]
-  \Huge\sffamily %%DRAFT VERSION
+  \Huge\sffamily DRAFT VERSION
   }
 
 \author{Roger Kehr}
@@ -197,8 +197,8 @@ The rest of this paper is organised as follows. In
 section~\ref{relwrk} we first discuss existing systems that already
 contributed solutions to this kind of problem. In section~\ref{CCBM}
 we describe the application domain for which we needed an efficient
-solution to the problem. We present our traversing algorithm and its
-efficient implementation in \CLOS~\cite{Keene:88}.
+solution to the problem. Finally we present our traversing algorithm
+and its efficient implementation in \CLOS~\cite{Keene:88}.
 
 
 
@@ -256,7 +256,7 @@ The nodes of the tree are instances of internally defined classes as
 well as user-defined classes. An example of such user-defined classes
 are the so-called \term{location classes} that can be specified in the
 \term{index style}\footnote{The index style contains a description of
-  the occuring location classes and other objects}. Other nodes in the
+  the occuring location classes and other objects.}. Other nodes in the
 tree are lists containing other objects as their elements. Since the
 markup of different location classes may be different, we decided to
 offer to the users a context-based markup scheme to be sufficient
@@ -294,7 +294,7 @@ bindings.
 
 
 
-\subsubsection*{Context Based Markup via Multi-Method Dispatch}
+\subsubsection*{Context-Based Markup via Multi-Method Dispatch}
 \label{sec:tagging}
 
 The tagging process directly operates on the tree representation as
@@ -345,7 +345,7 @@ of the context arguments.
 
 A sample method that is called in response to an event generated when
 entering a location reference owning the attribute \emph{definition},
-belonging to class \emph{pagenums}, and being positioned on an
+belonging to class \emph{pagenums}, and being positioned at an
 arbitrary depth is represented through the following method.
 
 {\small\begin{verbatim}
@@ -357,8 +357,9 @@ arbitrary depth is represented through the following method.
 \end{verbatim}
     }
 
-\noindent This method simple outputs the string ``\verb|\macro{|'' to the markup  stream. It is specialised\footnote{Specialisation is done with the
-    argument to the \texttt{eql}-specialiser. The notation
+\noindent This method simply outputs the string ``\verb|\macro{|'' to
+  the markup stream. It is specialised\footnote{Specialisation is done
+    with the argument to the \texttt{eql}-specialiser. The notation
     \texttt{\#<...>} simply denotes an instance of some class.} to an
   attribute instance and a location reference class
   instance\footnote{Location classes are themselves instances of
@@ -490,11 +491,11 @@ simply use it to resolve this kind of ambiguity for us.\footnote{In
 
 \smallskip
 
-\noindent A common way of tagging ranges is as follows: a range of
-length 1 is printed with the starting page number and the suffix `f.',
-those of length 2 with suffix `f\kern0ptf.', and all others in the form
-`$x$--$y$'. Assume we want to do this for the location class
-\emph{pagenums} we can specify the markup as follows:
+\noindent A common way of tagging ranges of location references is as
+follows: a range of length 1 is printed with the starting page number
+and the suffix `f.', those of length 2 with suffix `f\kern0ptf.', and
+all others in the form `$x$--$y$'. Assume we want to do this for the
+location class \emph{pagenums} we can specify the markup as follows:
 
 {\small\begin{verbatim}
   (markup-range :class "pagenums" :close "f."  :length 1 :ignore-end)
@@ -503,7 +504,7 @@ those of length 2 with suffix `f\kern0ptf.', and all others in the form
 \end{verbatim}
     }
 
-\noindent The first two commands specialise on two different depths',
+\noindent The first two commands specialise on two different depths,
 whereas the third command can be seen as the otherwise-case that is
 invoked for all ranges which are not of length one or two. The special
 switch \texttt{:ignore-end} causes the second location reference to be
@@ -530,10 +531,10 @@ markup commands:
 \noindent The first command indicates that all location references shall be
 separated by a comma followed by a blank character. The second line
 says that the different layers the location references consist of
-shall be separated by a hyphen character.\footnote{The location
-  reference \emph{A-1} consists of the following list of layers
-  (\emph{A}\ \emph{1}).} Our example could also be represented using
-a much more compact form:
+shall be separated by a hyphen character. The location reference
+\emph{A-1} consists of the following list of layers (\emph{A}\
+\emph{1}). Our example could also be represented using a much more
+compact form:
 \begin{center}
    \itshape A 1, 7, 11; B 3, 4, 5; C 1, 8, 12, 13, 22
 \end{center}
@@ -583,6 +584,9 @@ compact and easily maintainable and extensible.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % $Log$
+% Revision 1.2  1997/05/02 12:10:59  kehr
+% Minor corrections.
+%
 % Revision 1.1  1997/03/28 13:01:27  kehr
 % Initial Checkin of the Context-Based Markup Report.
 %
