@@ -230,112 +230,165 @@ called \term{inheritance-operator}.\footnote{The idea is simply
   borrowed from similar notations which are used with variable
   substitutions in denotational semantics and unification.}
 
-\bigskip
+\paragraph{Initally accessible data}
 
 \no We start with an initial set $R$ of location-references such that
 \[\forall l,k\in R: l\not=k\Rightarrow\fcatattr{l}\not=\fcatattr{k}\vee
 \fordnum{l}\not=\fordnum{k}\vee \floccls{l}\not=\floccls{k}.\] So we
-imply that there exist no duplicates in $R$.
+can assume that there exist no \term{duplicates} in $R$.
 
+
+\paragraph{Separating into location-classes}
+
+Divide $R$ into equivalence-classes of location-references based on
+the location-classes. We receive a set of disjoint sets of
+location-references $R:=\{L_1,\ldots,\L_n\}$, where in each subset
+$L_i$ for each pair $l,k\in{}L_i$, $i=1\ldots{}n$ of
+location-references holds \func{loccls}($l$)=\func{loccls}($k$).
+Additionally holds $\forall x\in~L_j,\forall y\in~L_k,
+j\not=k\Rightarrow\func{loccls}(j)\not=\func{loccls}(k)$.
+
+\bigskip\noindent Process the following steps for each subset $L_i$
+separately:
+
+
+
+\newcommand{\Sid}{\irule{substitute-if-double}\xspace}
+\newcommand{\sid}{\irule{subs-if-dbl}\xspace}
+
+\paragraph{Apply all \Sid-rules}
+\label{sec:subs-if-dbl}
+
+This application operates on a set $L_i$ of location-references. All
+\Sid-rules define a relation on the set $C$ of category-attributes
+(ca). The relation is notated in the form `\Sid~$x$~$y$' or
+abbreviated `\sid~$x$~$y$'.
+
+There are two ways the user can specify these relations:
 \begin{enumerate}
-\item Divide $R$ into equivalence-classes of location-references
-  based on the location-classes. We receive a set of sets of
-  location-references $R:=\{L_1,\ldots,\L_n\}$, where in each subset
-  $L_i$ for each pair $l,k\in{}L_i$, $i=1\ldots{}n$ of
-  location-references holds: \func{loccls}($l$)=\func{loccls}($k$).
+\item By explictly defining a set $C_U$ of rules of the form
+  `\sid~$x$~$y$' with $x,y\in C$.
+\item By defining virtual category-attributes (vca's). E.g.\@the
+  definition of a vca $v:=(x~y~z)$ composed of the ca's $x,y,z$
+  defines implicitely `\sid~$x$~$y$' and `\sid~$y$~$z$'. Tis set of
+  rules is denoted $C_V$.
+\end{enumerate}
+%%
+The question now arises if we should deduce that also implicitely
+holds `\sid~$x$~$z$'? This means if we should calculate the
+\term{transitive hull} on our relation. In a simple case like this the
+user can add the remaining rule by her-/himself, but in more complex
+cases we can calculate the transivie hull for him without the danger
+of making any mistakes. We think that the user may expect a behaviour
+that says `replace $z$ because we already have it in the form of $x$.'
+and therefore define the transitive hull of the defined vca's. This is
+a design decision but we will add a user-definable hook to change this
+behaviour by not calculating the transitive hull. We denote the
+transitive-hull operator with an appended star ($*$).  The resulting
+relation $C_R$ can now be calculated in several ways:
+\begin{enumerate}
+\item $C_R:=C_U\cup C_V$$*$, defined as the default.
+\item $C_R:=C_U$$*\cup C_V$$*$, if the user wants the transitive
+  hull also be generated over his specification.
+\item $C_R:=(C_U\cup C_V)*$, if the user wants a global transitive
+  hull generation.
+\end{enumerate}
+%%
+We conclude that we probably need three separate hooks for the
+transitive-hull-calculation of $C_U,C_V$ and $C_U\cup C_V$. The user
+is then free to do whatever (more or less) she/he wants.
 
-  Process the following steps for each subset $L_i$ separately:
+Additionally we could include a check to see if some of the relations
+are \term{refexive} what actually doesn't make any sense, since no
+location-reference wants to substitute itself.
 
-\item Apply all \irule{substitute-if-double}-rules.
+Until now we didn't define what \term{substitution} actually means.
+There are two ways.
+\begin{enumerate}
+\item To substitute means to \term{remove} in a way that the
+  substituted location-reference will be removed.
+\item It means to set the state of the substituted location-reference
+  to \term{virtual} to allow it to be joined into a range.
+\end{enumerate}
+Both ways make sense so we need another hook to specify in what sense
+to substitute.
 
-  This application operates on a set $L_i$ of location-references. All
-  \irule{substitute-if-double}-rules define a relation on the set of
-  category-attributes $C$. At first consider the following example:
+\medskip
 
-  Given are the relations `\irule{substitute-if-double} \texttt{bold}
-  \texttt{italic}' and `\irule{substitute-if-double} \texttt{italic}
-  \texttt{default}' and the location-references `\texttt{1}' and `1'.
-  It is not clear whether `\textbf{1}' should substitute `1', or not.
-  If it should do so then we need the transitive hull of
-  \irule{substitute-if-double}-relations to express the desired
-  behaviour.  Otherwise it would be possible to define the relations
-  `\irule{substitute-if-double}~\texttt{bold}~\texttt{italic}' and
-  `\irule{substitute-if-double}~\texttt{italic}~\texttt{bold}' which
-  actually makes no sense, but would be possible without a transitive
-  hull.
+Informally we can describe this process as follows: $\forall l\in L_i$
+test, if there exists $k\in L_i$ with $k\not=l\wedge\fstat{k}=\Real
+\wedge\fordnum{k}=\fordnum{l}\wedge \exists
+r=`\sid~\fcatattr{k}~\fcatattr{l}'\in C_R$ in which case we set
+\fstat{$l$} to \Virt or remove $l$.
 
-  We decide to use the transitive hull for determining the
-  substitution rules mainly for two reasons:
-  \begin{itemize}
-  \item We actually need it in the definition of virtual
-    category-attributes to express their precedence order.
-  \item In some sense the behaviour is more under control of the
-    system and the user may be informed about a circular definition.
-    This is done by implementing a check to test if a
-    category-attribute substitutes itself which obviously indicates an
-    error in the relation definition. It seems more restrictive, but
-    the user should receive results he expected to see.
-  \end{itemize}
-  We denote the transitive hull with
-  $\irule{substitute-if-double}^\Phi$.
-
-  Informally we can describe this process as follows. For all
-  location-references $l$ in $L_i$ test, if there exists $k$ with
-  \fstat{$k$}=\Real, \fordnum{$k$}=\fordnum{$l$} and a rule
-  `$\irule{substitute-if-double}^\Phi~\fcatattr{k}~\fcatattr{l}$' in which
-  case we set \fstat{$l$} to \Virt.
-
-  Actually we reset $l$'s state to \Virt means to move it from the set
-  of \emph{real} location-references into the set of \emph{virtual}
-  location-references. This happens only in the case that there really
-  exists a location-reference $k$ which is \Real.
-  \begin{note}
-    The definition of a virtual category-attribute \texttt{(bold
-      italic default)} implies the following rules:
-    \begin{enumerate}
-    \item \irule{substitute-if-double} \texttt{bold} \texttt{italic}
-    \item \irule{substitute-if-double} \texttt{italic} \texttt{default}
-    \end{enumerate}
-    When generating the transitive hull of both rules
-    `\irule{substitute-if-double}$^\Phi$ \texttt{bold}
-    \texttt{default}' holds.
-  \end{note}
-
-\item Apply all \irule{merge-to}-rules. Initialize the set of new
-  location-references $L_i^+:=\{\}$. For all $l\in{}L_i$ (virtual or
-  not) if exists a rule `$\irule{merge-to}~\fcatattr{l}~x$' then
-  $L_i^+:=L_i^+\cup{}l_+$ with
-  \[l_+:=l\,[\Fstat{}:=\Virt,\Fcatattr{}:=x].\]
-  or if additionally holds `\irule{drop-if-merged}~\fcatattr{l}~x'
-  \[l_+:=l\,[\Fstat{}:=\Virt,\Fcatattr{}:=x,\Fparent:=\fparent{l}].\]
-
-  The idea is to generate new location-references that are equal to
-  their parents but with \Fstat set to \Virt and if there exists
-  an applicable \irule{drop-if-merged}-rule additionally \Fparent
-  holds a reference to the parent location-reference, since we must be
-  able to actually \emph{drop} the parent, if necessary.
-
-\item Union both sets to receive the extended set $L_i:=L_i\cup L_i^+$.
-
-\item Remove all duplicate location-references from $L_i$ and all
-  \[l\in L_i \fstat{l}=\Virt\wedge\exists k:\fstat{k}=\Real\wedge\fcatattr{k}=\fcatattr{l}\wedge\fordnum{k}=\fordnum{k}.\]
-  We remove all virtual location-references that have a real
-  neighbour.
-  Then the following holds:%
-  \[\forall l,k\in L_i:
-  \fcatattr{l}\not=\fcatattr{k}\vee \fordnum{l}\not=\fordnum{k}.\]
+Actually we reset $l$'s state to \Virt means to move it from the set
+of \emph{real} location-references into the set of \emph{virtual}
+location-references. This happens only in the case that there really
+exists a location-reference $k$ which is \Real.
 
 
-\item The virtual category-attributes are described by a injective
-  function $\phi$ from the set $C$ of category-attributes to the set
-  $V$ of virtual ca's. We set $\fvcatattr{l}:=\phi(\fcatattr{l})$
+\paragraph{Apply all \irule{merge-to}- and \irule{drop-if-merged}-rules}
 
-  Divide $L_i$ into equivalence-classes $K_1,\ldots,K_m$ that for each
-  pair $l,k\in{}K_j$ holds:
-  $\fvcatattr{l}=\fvcatattr{k}$.\footnote{This is actually implemented
-    in a more effective way.}
+Initialize the set of new location-references $L_i^+:=\{\}$. For all
+$l\in{}L_i$ (virtual or not) if exists a rule
+`$\irule{merge-to}~\fcatattr{l}~x$' then $L_i^+:=L_i^+\cup{}l_+$ with
+\[l_+:=l\,[\Fstat{}:=\Virt,\Fcatattr{}:=x].\]
+or if additionally holds `\irule{drop-if-merged}~\fcatattr{l}~x'
+\[l_+:=l\,[\Fstat{}:=\Virt,\Fcatattr{}:=x,\Fparent:=\fparent{l}].\]
 
-\item Building ranges in all $K_j$. This is separated into two stages:
+\noindent The basic idea is to generate new location-references that
+are equal to their parents but with \Fstat{} set to \Virt and if there
+exists an applicable \irule{drop-if-merged}-rule additionally
+\Fparent{} holds a reference to the parent location-reference, since
+we must be able to actually \emph{drop} the parent, if necessary.
+
+
+
+\paragraph{Cleaning up}
+
+We do the following clean-up steps:
+\begin{itemize}
+\item After applying the last steps we first need to union $L_i$ and
+  $L^+_i$ to receive the extended set $L_i:=L_i\cup L_i^+$.
+
+\item Then we need to remove all duplicate location-references (there
+  exist only virtual ones) from $L_i$ (they may have been created by
+  appling several \irule{merge-to}-rules).
+
+\item Then we should remove all virtual location-references that are
+  \term{shadowed} by a normal one. These lref's are the ones for which
+  holds
+  \[\begin{array}{rl}
+    l\in L_i~\fstat{l}=\Virt\wedge\exists k:&\fstat{k}=\Real\wedge%%
+    \\&\fcatattr{k}=\fcatattr{l}\wedge\fordnum{k}=\fordnum{k}.
+  \end{array}\]
+\end{itemize}
+After this clean-up the following holds:%
+\[\forall l,k\in L_i:
+l\not=k\Rightarrow\fcatattr{l}\not=\fcatattr{k}\vee
+\fordnum{l}\not=\fordnum{k}.\]
+
+
+\paragraph{Generate virtual catattrs}
+
+The virtual category-attributes (vca's) are described by a injective
+function $\phi$ from the set $C$ of category-attributes to the set $V$
+of virtual ca's. Since $\phi$ is somehow we do $\forall l\in L_i:
+\fvcatattr{l}:=\phi(\fcatattr{l})$.
+
+\smallskip
+
+\noindent Divide $L_i$ into equivalence-classes $K_1,\ldots,K_m$ that
+for each pair $l,k\in{}K_j$ holds: $\fvcatattr{l}=\fvcatattr{k}$.
+Additionally holds $\forall x\in K_j,\forall y\in
+K_k,j\not=k\Rightarrow\fvcatattr{j}\not=\fvcatattr{k}$.
+
+
+
+
+\paragraph{Building ranges in all $K_j$}
+
+This is separated into two stages:
   \begin{enumerate}
   \item Process all $K_{\phi(j)}$ for which exists a
     `$\irule{merge-to}~x~j$'-rule.
@@ -352,11 +405,64 @@ imply that there exist no duplicates in $R$.
   These steps must be done in the described order because the
   \irule{drop-if-merged}-rule.
 
-\end{enumerate}
-
 
 \subsubsection{Building of ranges}
 
+\subsubsection{Transitive hull}
+
+We already mentioned in \secref{sec:subs-if-dbl} that we need a
+transitive hull calculation base on the category-attibutes.  Because
+we calculate this only a few times with usually only a small number of
+elements we don't need to worry about an effective implementation.
+More interesting is a fast access to prove if two elements are in
+relation.
+
+The usual calculation-algorithm needs to know the whole set
+$V_i=\{v_{i,1},\ldots,v_{i,n}\}$ of neighbours of node $v_i$ for which
+holds $\forall v'\in V_i: v_i\rightarrow v'$. So we need a
+representation that is based on sets. We use association-lists with
+nodes as key and a list of neighbours as elements, \eg
+\begin{center}
+  ( (\emph{node$_1$} . (\emph{neighbours of node$_1$})) \ldots
+  (\emph{node$_n$}. ($n_i,n_j,\ldots,n_l$)) ).
+\end{center}
+%%
+\begin{note}
+  It is absolutely necessary that nodes with no neighbours are
+  represented in the relation, too. So a node $v$ with no successors
+  is represented in the relation as a \texttt{(acons $v$ $\{\}$)}.
+  Otherwise the algorithm will produce wrong results.
+\end{note}
+The following destructive function [[transitive-hull]] needs a weel-formed
+relation of the specified structure and returns the same modified
+relation which represents the transitive hull of the given relation.
+
+<<Transitive hull algorithm>>=
+(defun transitive-hull (relation)
+  (mapc #'(lambda (j)
+            (mapc #'(lambda (i)
+                      (when (member (car j) (cdr i))
+                        (mapc #'(lambda (k)
+                                  (when (member (car k) (cdr j))
+                                    (rplacd (last i)
+                                            (list (car k)))))
+                              relation)))
+                  relation))
+        relation)
+  )
+@ %def transitive-hull
+
+\no The relation is calculated once and used heavily afterwards. The
+only operation we need later is to check if $x$ is in relation to $y$
+or not. Therefore we transform the represenation now into a faster
+hash-table representation.
+
+<<Transform relation into hash-table>>=
+(defun init (relation)
+  (let ((ht (make-hash-table)))
+    (
+)))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -759,33 +865,7 @@ The next class defines all location-references that have the same
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-(defun transitive-hull1 (relation)
-  (mapc #'(lambda (j)
-            (format t "j=~A: looking for ~A in i-lists~%" j (car j))
-            (mapc #'(lambda (i)
-                      (format t "  i=~A: " i)
-                      (cond ((member (car j) (cdr i))
-                               (progn
-                                 (format t "found ~A in ~A !~%" (car j) (cdr i))
-                                 (mapc #'(lambda (k)
-                                           (format t "     k=~A: looking for ~A in ~A~%" k (car k) (cdr j))
-                                           (when (member (car k) (cdr j))
-                                             (format t "found ~A !~%" (car k))
-                                             (rplacd (last i)
-                                                     (list (car k)))
-                                             (format t "new relation: ~A~%"
-                                                     relation)
-                                             (format t "new j: ~A~%" j)
-                                             (format t "new i: ~A~%" i)
-                                             )
-                                           )
-                                       relation)))
-                            (t (format t "~%"))))
-                  relation)
-            (format t "~%"))
-        relation)
-  )
-
+<<test>>=
 (defun transitive-hull (relation)
   (mapc #'(lambda (j)
             (format t "j=~A: looking for ~A in i-lists~%" j (car j))
@@ -839,6 +919,7 @@ The next class defines all location-references that have the same
   )
 
 (transitive-hull rel)
+@
 
 %% Local Variables:
 %% mode: latex
@@ -846,7 +927,11 @@ The next class defines all location-references that have the same
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1995/12/13 14:07:25  kehr
+%% Revision 1.4  1995/12/13 16:44:16  kehr
+%% Extended the specification of the location-reference-handling. Implemented
+%% the transitive-hull algorithm.
+%%
+%% Revision 1.3  1995/12/13  14:07:25  kehr
 %% Just a check-in to preserve the transitive-hull-function.
 %%
 %% Revision 1.2  1995/12/11  17:37:01  kehr
