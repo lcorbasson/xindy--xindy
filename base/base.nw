@@ -39,6 +39,10 @@ the project.
 (setq *print-pretty* t)
 (setq *print-escape* t)
 
+(defparameter *mappings-trace* nil)
+(defparameter *locref-trace*   nil)
+(export '(*mappings-trace* *locref-trace*))
+
 <<Error message system>>
 <<Useful macros>>
 <<Assertions>>
@@ -164,6 +168,9 @@ The following macro can be used to declare assertions.
 @
 
 %% $Log$
+%% Revision 1.16  1997/01/23 21:32:24  kehr
+%% Added global tracing-flags *....-trace*.
+%%
 %% Revision 1.15  1997/01/23 19:04:12  kehr
 %% Added (oops*)-function.
 %%
