@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!@XINDY_PERL@
 #
 # $Id$
 #
@@ -211,10 +211,10 @@ if ( $filtprg ) {
     # create tmpfile
     $tmpfile = "/tmp/xindy.$$";
     &sig_setup; # setup signal handler for cleanup
-    print "Running filter: $filtprg \< $Rawidx > $tmpfile\n";
-    system "$filtprg \< $Rawidx > $tmpfile";
+    print "Running filter: $filtprg < $Rawidx > $tmpfile\n";
+    system "$filtprg < $Rawidx > $tmpfile";
     print "Finished running filter.\n\n";
-    $rawindex = &quote_string($tmpfile);
+    $Rawidx = &quote_string($tmpfile);
 }
 
 # Prepare logfile option.
@@ -254,6 +254,9 @@ if ( $try ) {
 
 #
 # $Log$
+# Revision 1.10  1998/03/12 10:58:21  kehr
+# Fixed bug with -f option.
+#
 # Revision 1.9  1997/04/03 13:23:51  kehr
 # Many bugs fixed during testing.
 #
