@@ -44,10 +44,12 @@ the project.
 
 (use-package 'clos)
 (use-package 'xp)
+(setq *print-pretty* t)
 
 <<export-list of module \module{base}>>
 <<global definitions>>
 <<show generic functions>>
+<<Error message system>>
 
 (defvar *RCS-Identifier* '(("base" . "$Id$")))
 @
@@ -99,13 +101,29 @@ indexclass.
 (defvar *active-idxcls-name*)
 @
 
+\subsection{Error message system}
+
+The error message system is necessary to handle all error messages.
+<<Error message system>>=
+(defun issue-warning (msg &optional (stream *error-output*))
+  (format stream msg))
+
+(defun fatal-error (msg &optional (stream *error-output*))
+  (declare (ignore stream))
+  (error msg))
+@
+
+
 %% Local Variables:
 %% mode: latex
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1995/12/19 10:57:51  kehr
+%% Revision 1.4  1996/01/09 14:25:23  kehr
+%% Minor modifications.
+%%
+%% Revision 1.3  1995/12/19  10:57:51  kehr
 %% Minor changes.
 %%
 %% Revision 1.2  1995/11/29  16:51:04  kehr
