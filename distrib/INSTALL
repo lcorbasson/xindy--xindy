@@ -44,7 +44,7 @@ you will obtain the following directory structure:
 1. Take the most recent machine-independent package and unpack it
    using
 
-	gtar xzvf xindy-<version>.tar.gz
+	gunzip -c xindy-<version>.tar.gz | tar xvf -
 
    It will unpack itself into the directory ./xindy/xindy-<version>/.
 
@@ -65,7 +65,7 @@ you will obtain the following directory structure:
 3. If you not have received a binary distribution for your preferred
    platform(s), get one and unpack it in the TOPLEVEL-directory with
 
-	gtar xzvf xindy-<version>-<platform>.tar.gz
+	gunzip -c xindy-<version>-<platform>.tar.gz | tar xvf -
 
    The binaries will be stored into the directory TOPLEVEL/binaries/<platform>.
 
@@ -87,7 +87,7 @@ you will obtain the following directory structure:
       Note: This only compiles xindy and modifies some scripts but does
 	    *not* install anything!
 
-       After a while (between 60 seconds and 10 minutes--depending on
+       After a while (between 30 seconds and 5 minutes--depending on
        your system) you should receive a message saying that the
        compilation has finished. If not, see file PROBLEMS for further
        hints.

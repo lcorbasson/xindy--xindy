@@ -16,8 +16,8 @@ follows:
    class/       some example classes
 
    markup/      some markups for
-      tex/
-      html/
+
+   tex/		TeX-specific stuff
 
    misc/	everything that doesn't fit into the above categories.
 
