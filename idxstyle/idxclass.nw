@@ -117,7 +117,8 @@ incrementally filled with more information.
                            :initform '())
      (succ-table           :accessor get-succ-table
                            :initform (make-hash-table))
-     (keyword-markup       :accessor get-keyword-markup
+     (keyword-markup       :reader get-keyword-markup
+                           :writer set-keyword-markup
                            :initform '())
      <<Rules for indexing>>
      ))
@@ -130,7 +131,8 @@ incrementally filled with more information.
 (export '(indexclass      make-indexclass
           get-name        get-basetypes
           get-cat-attrs   get-locclasses
-          get-succ-table  get-keyword-markup
+          get-succ-table
+          get-keyword-markup set-keyword-markup
           <<Export-list for indexing rules>>
           ))
 @
@@ -234,14 +236,22 @@ indexclass.
                                                                (catattr-2 category-attribute))
   (rel-insert (get-explicit-subst-rules idxcls) catattr-1 catattr-2)
   idxcls)
-
-;(defmethod add ((idxcls-name string) (keyword-markup markup))
-;  (let ((idxcls (lookup-indexclass idxcls-name)))
-;    (unless (null idxcls)
-;      (setf (get-keyword-markup idxcls)
-;            (append (get-keyword-markup idxcls) (list keyword-markup))))))
-
 @ %def add set add-merge-rule add-drop-if-merged-rule add-implicit-substitution-rule add-explicit-substitution-rule
+
+\no There exists no special method to add [[keyword-markups]] to the
+indexclass. The complete management of markups is done in the
+submodule \module{markup} of module \module{index}. From the
+indexclass' point of view the structure of its slot [[keyword-markup]]
+is unknown and handled in module \module{markup}.
+
+This decision is somewhat cruical because it breaks the rule that an
+indexclass manages all of its slots. Since the markup is also used in
+submodule \module{locclass} the markup must be stored in one of the
+lower-level-modules. Because there is no appropriate
+lower-level-module to store this information we handle the complete
+markup from the top. Because I don't like the idea to split the markup
+of all objects over all modules this central management is easier to
+maintain.
 
 <<Export-list of submodule \module{idxclass}>>=
 (export '(add set
@@ -572,7 +582,11 @@ hash-table representation via calling [[make-ready]].
 %% End:
 %%
 %% $Log$
-%% Revision 1.5  1996/01/09 14:26:09  kehr
+%% Revision 1.6  1996/01/10 15:24:06  kehr
+%% Changed som parts of `idxclass' for handling markup.
+%% Minor changes in the Imakefile.
+%%
+%% Revision 1.5  1996/01/09  14:26:09  kehr
 %% Major modifications.
 %%
 %% Revision 1.4  1995/12/19  10:58:46  kehr
