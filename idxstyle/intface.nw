@@ -179,8 +179,8 @@ string-termination character.
   (let ((ch nil)
         (str (make-array 32
                          :element-type
-			 #+CLISP 'string-char
-			 #-CLISP 'base-char
+                         #+CLISP 'string-char
+                         #-CLISP 'base-char
                          :adjustable t
                          :fill-pointer 0)))
     (loop
@@ -718,7 +718,7 @@ find one we load it as usual.
 
 <<Including files>>=
 (defun find-file (filename)
-  (let ((file (pathname filename)))
+  (let ((file (parse-namestring filename)))
     (when (equal (file-namestring file) "")
       (error "~S is not a valid filename !" filename))
     (let ((found (some #'(lambda (path)
@@ -736,11 +736,11 @@ find one we load it as usual.
                      echo)
   (let ((stream (open (setq filename (pathname filename))
                       :direction
-		      #+CLISP :input-immutable
-		      #-CLISP :input
+                      #+CLISP :input-immutable
+                      #-CLISP :input
                       :element-type
-		      #+CLISP 'string-char
-		      #-CLISP 'base-char
+                      #+CLISP 'string-char
+                      #-CLISP 'base-char
                       :if-does-not-exist nil))
         (lineno 1))
     (if stream
@@ -856,13 +856,26 @@ adding the filename to the directory resulting in the corrected
 pathname.
 
 <<Setting the searchpath>>=
+#+CLISP
 (defun make-real-pathname (pathname-str)
   (let* ((pn     (pathname pathname-str))
          (fname  (file-namestring pn)))
-    (cond ((string/= fname "")
-             (make-pathname :directory (append (pathname-directory pn)
-                                               (list fname))))
-          (t pn))))
+    (if (string/= fname "")
+        (make-pathname :directory
+                       (append (pathname-directory pn) (list fname)))
+        pn)))
+@
+
+<<Setting the searchpath>>=
+#-CLISP
+(defun make-real-pathname (pathname-str)
+  (let ((pn (parse-namestring
+             (if (eql (elt pathname-str (1- (length pathname-str))) #\/)
+                 pathname-str
+                 (concatenate 'string pathname-str "/")))))
+    (if (pathname-directory pn)
+        pn
+        (make-pathname :directory (list :relative (pathname-name pn))))))
 @ %def make-real-pathname
 
 \no The following function takes two pathnames and appends the second
@@ -1000,15 +1013,15 @@ NIL in cases where no switch keyword was found in EXPR.
     ` (LET ((<DESTRUCTURING-SWITCH-FORM> ,expr))
         (LET ,bindings
           (HANDLER-CASE
-	      (DESTRUCTURING-BIND ,lambdalist
-		  (SET-DIFFERENCE-KEEP-ORIGINAL-ORDER
-		   <DESTRUCTURING-SWITCH-FORM>
-		   ',switchkeys)
-		,@body)
+              (DESTRUCTURING-BIND ,lambdalist
+                  (SET-DIFFERENCE-KEEP-ORIGINAL-ORDER
+                   <DESTRUCTURING-SWITCH-FORM>
+                   ',switchkeys)
+                ,@body)
             (ERROR (COND)
-	      (DECLARE (IGNORE COND))
-	      (ERROR "~&Syntax Error in ~S." WHOLE)
-	      )
+              (DECLARE (IGNORE COND))
+              (ERROR "~&Syntax Error in ~S." WHOLE)
+              )
             )
           )
         )
@@ -1016,9 +1029,9 @@ NIL in cases where no switch keyword was found in EXPR.
 
 (defun set-difference-keep-original-order (set1 set2)
   (mapcan #'(lambda (elt)
-	      (unless (member elt set2)
-		(list elt)))
-	  set1))
+              (unless (member elt set2)
+                (list elt)))
+          set1))
 
 #|
 (destructuring-switch-bind (name &rest args &key foo bar
@@ -1066,6 +1079,9 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.28  1997/03/27 17:16:29  kehr
+%% Modifications that make Allegro CL now be able to find files, too.
+%%
 %% Revision 1.27  1997/03/26 16:18:26  kehr
 %% Several changes to make the source ANSI and X3J13 compliant.
 %%
