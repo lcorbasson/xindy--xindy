@@ -1,0 +1,54 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Imakefile for Source of the xindy-Project
+ *
+ * (history at end)
+ */
+
+
+/* needed modules */
+#include <Project.imk>
+#include <noweb-wrap.imk>
+
+XCOMM ------------------------------------------------------------
+XCOMM continue in Imakefile
+
+      NW_HEADER  = $(TOPDIR)/noweb/header.tex
+      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+
+NowebLaTeXDocTargetWrap(mkindex4,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(base,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(basetype,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(idxclass,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(idxentry,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(idxrule,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(idxstyle,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(index,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(intface,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(locclass,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(locref,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(ranges,$(NW_HEADER),$(NW_TRAILER))
+NowebLaTeXDocTargetWrap(style,$(NW_HEADER),$(NW_TRAILER))
+
+CVSAdd(*.nw)
+CVSAdd(Imakefile defwords.tex rcs.sty xindy-noweb.sty)
+CVSCommentLeader("%% ", *.nw *.sty)
+CVSCommit()
+
+clean::
+	$(RM) modules.tex
+
+/* ============================================================
+ *
+ * $Log$
+ * Revision 1.1  1995/10/16 19:17:16  kehr
+ * Added Imakefile-support for source.
+ *
+
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */
