@@ -12,19 +12,20 @@
 
 <title><sf/xindy/
 
-<subtitle>A Flexible Indexing System
+<subtitle><sf/A Flexible Indexing System/
 
 <author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
 
 <date>Tutorial Edition July 1996 for xindy version 0.9
 
 <abstract>
-This is a tutorial for the <sf/xindy/ indexing system. <sf/xindy/ is a
-general purpose index processor that can be configured for a variety
-of document preparation system. We will demonstrate step by step the
-incremental specification of a complete indexstyle. The examples are
-based on indexes that are delivered with the system so one can get
-acquainted with it practically.
+<em>This is a tutorial for the <sf/xindy/ indexing system. <sf/xindy/
+is a general purpose index processor that can be configured for a
+variety of document preparation system. We will demonstrate step by
+step the incremental specification of a complete indexstyle. The
+examples are based on indexes that are delivered with the system so
+one can get acquainted with it practically.
+</em>
 </abstract>
 
 <!-- Table of contents -->
@@ -34,12 +35,22 @@ acquainted with it practically.
 
 <!-- ================================================================= -->
 
-<sect>Motivation
+<sect>About <sf/xindy/
 <p>
+<sf/xindy/ means fle<bf/X/ible <bf/IND/exing s<bf/Y/stem. It is an
+indexing system that can be used to generate book-like indexes for
+arbitrary document-preparation systems. This term includes systems
+such as TeX and LaTeX, the roff-family or SGML-based systems (e.g.
+HTML) that process some kind of text and generate indexing
+information. It is not fixed to any specific system, but can be
+configured for a wide variety of purposes.
 
+Autors sometimes wish to include an index into their document, but
+very often their document-preparation systems aren't able to produce
+indexes on their own, or the capabilities of the built-in indexers are
+very limited or ugly-looking. More often they use separate specialized
+tools for this purpose, sometimes called <em/index processors/.
 
-<sect>Why using <sf/xindy/?
-<p>
 In comparison to other index processors <sf/xindy/ has several
 powerful features that make it an ideal framework for describing and
 generating complex indices. Its most interesting features are
@@ -445,7 +456,7 @@ location-reference "ii" did not match any location-class! (ignored)
  ...
 </verb></tscreen>
 
-The index contains new, and therefore unkown, location-classes. The
+The index contains new, and therefore unknown, location-classes. The
 first one has an appendix-like style, whereas the second one seems to
 be lowercase Roman numbers. <sf/xindy/ reported, that it doesn't know
 these locations and therefore knows nothing about their internal
@@ -695,6 +706,12 @@ markup-phase. An example output might look like the following:
  ...
 </verb></tscreen>
 
+The symbolic tags directly lead one to the command that is responsible
+for the definition of that markup-tag. For example, the tag
+<vb><LETTER-GROUP-LIST:OPEN></vb> indicates that the command
+<vb>markup-letter-group-list</vb> is responsible for replacing this
+symbolic tag by a real one.
+
 Give it a try if you find yourself confused by your own markup
 specification.
 
@@ -721,7 +738,7 @@ you can throw away the complete index if you like, which would be a
 real pity!
 
 
-<sect>References and Acknowledgments
+<sect>References <!-- and Acknowledgments -->
 <p>
 
 The following books and papers were referenced in this document.
@@ -740,8 +757,10 @@ Cahiers GUTenberg, 10, p81-90, 1991
 Studienarbeit FB Informatik, TH-Darmstadt, November 1995.
 </enum>
 
+<!--
+
 I'd like to thank the following persons who mainly contributed to the
-development of the <sf/xindy/-system---Joachim Schrod who was a very
+development of the <sf/xindy/ system Joachim Schrod who was a very
 inspiring senior partner despite the fact that he was sometimes very
 busy, Klaus Guntermann who was always very sensitive for future
 problems that might have arosen in many situations and finally Gabor
@@ -749,6 +768,8 @@ Herr who helped me with many problems I had in mastering Lisp, UNIX
 boxes and many design decisions. Additionally I'd like to thank Prof.
 Waldschmidt who financial supported the finishing of the project up to
 its current state.
+
+-->
 
 </article>
 
