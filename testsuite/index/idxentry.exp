@@ -162,7 +162,10 @@ expect_T
 xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 1) ca-default) (cons '(2 1) ca-typewriter) (cons '(2 2) ca-italic) (cons '(2 2) ca-typewriter) (cons '(2 3) ca-typewriter))) (print "ready"))}
 expect -re ".*ready.*$prompt$" { pass "$test" }
 
-xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 3) ca-bold) (cons '(2 4) ca-default) (cons '(2 4) ca-bold) (cons '(2 4) ca-italic) (cons '(2 7) ca-typewriter) (cons '(2 10) ca-typewriter) (cons '(2 7) ca-default) (cons '(2 8) ca-default) (cons '(2 7) ca-italic) (cons '(2 4) ca-slanted) (cons '(2 10) ca-slanted) (cons '(2 10) ca-italic))) (print "ready"))}
+xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 3) ca-bold) (cons '(2 4) ca-default) (cons '(2 4) ca-bold) (cons '(2 4) ca-italic) (cons '(2 7) ca-typewriter) (cons '(2 10) ca-typewriter))) (print "ready"))}
+expect -re ".*ready.*$prompt$" { pass "$test" }
+
+xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 7) ca-default) (cons '(2 8) ca-default) (cons '(2 7) ca-italic) (cons '(2 4) ca-slanted) (cons '(2 10) ca-slanted) (cons '(2 10) ca-italic))) (print "ready"))}
 expect -re ".*ready.*$prompt$" { pass "$test" }
 
 #

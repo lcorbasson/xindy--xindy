@@ -18,20 +18,24 @@ ProjectTop()
  *     Presentation     A set of presentation slides
  */
 
+#define submodules base locref idxstyle index xindy
+
 /* ATTN: modules are made in list order! */
 BuildProjectModules(Report Presentation\
-		    src locref idxstyle index xindy base\
-		    testsuite)
+		    submodules testsuite)
 
 CVSAdd(ChangeLog Imakefile)
 CVSAdd(Report Presentation)
 CVSAdd(noweb src testsuite)
-CVSAdd(base xindy locref index idxstyle)
+CVSAdd(submodules)
 
 /*======================================================================
  *
  * $Log$
- * Revision 1.8  1995/12/07 18:21:57  kehr
+ * Revision 1.9  1996/01/10 16:45:37  kehr
+ * .
+ *
+ * Revision 1.8  1995/12/07  18:21:57  kehr
  * Renamed module `idxclass' by `idxstyle'.
  *
  * Revision 1.7  1995/12/05  18:44:33  kehr

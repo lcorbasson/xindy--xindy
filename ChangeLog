@@ -1,3 +1,10 @@
+Wed Jan 10 17:42:11 1996  Roger Kehr  <kehr@spock>
+
+	* Today I started testing of the keyword-markup. Write a script to
+	  generate a bigger index for testing. Have some problems with
+	  expect. I don't know how to fix them, yet.
+	  (4 hrs)
+
 Wed Jan 10 00:09:15 1996    (kehr@eliade.hrz.th-darmstadt.de)
 
 	* Re-implemented the submodule `markup'.

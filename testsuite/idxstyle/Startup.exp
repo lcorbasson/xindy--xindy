@@ -2,7 +2,7 @@
 # this tests just if clisp responds correctly
 #
 
-set timeout 10
+set timeout 20
 
 xsend "(use-package 'clos)"
 expect_T
@@ -25,3 +25,5 @@ expect_T
 
 xsend {(use-package 'idxstyle)}
 expect_T
+
+set timeout 10
