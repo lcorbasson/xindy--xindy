@@ -3,7 +3,7 @@
 
 XCOMM ======================================================================
 XCOMM Imake module for DejaGnu-Framework
-XCOMM $ITI$
+XCOMM $Id$
 
 /* history at end */
 
@@ -89,7 +89,10 @@ realclean ::							@@\
 
 /* ============================================================
 
-$ITIlog$
+$Log$
+Revision 1.2  1995/11/22 16:44:09  kehr
+Changed the Id for RCS.
+
 */
 
 
