@@ -51,15 +51,15 @@ INDEXENTRY   \\indexentry
 
 %%
 
-^{INDEXENTRY}[ \t]*\{   printf("(indexentry :tkey ((\""); BEGIN(key);
+^{INDEXENTRY}[ \t]*\{  { printf("(indexentry :tkey ((\""); BEGIN(key); }
 
-<key,print>[^\"\|@\}\{!\\]*   ECHO; /* until the meta-chars */
-<key,print>\\       qc('\\'); qc(input());
-<key,print>\"       qc(input());
+<key,print>[^\"\|@\}\{!\\]* { ECHO; }/* until the meta-chars */
+<key,print>\\     {  qc('\\'); qc(input()); }
+<key,print>\"     {  qc(input()); }
 <key,print>\|     { printf("\")) :attr \"");
                     range = NO_RANGE; BEGIN(encap); }
 <key,print>!        printf("\") (\"");
-<key,print>\{       ECHO; braces++;
+<key,print>\{     { ECHO; braces++; }
 <key,print>\}     { if ( braces > 0 )
                          {ECHO; braces--;}
                       else
@@ -67,14 +67,14 @@ INDEXENTRY   \\indexentry
 		          BEGIN(skip2location);}
                   }
 
-<key>@              printf("\" \""); BEGIN(print);
-<print>@            err( "multiple @'s" );
+<key>@            { printf("\" \""); BEGIN(print); }
+<print>@          { err( "multiple @'s" ); }
 
-<encap>\|           err( "multiple |'s" );
-<encap>\\           qc('\\'); qc(input());
-<encap>\(           range = OPEN_RANGE;
-<encap>\)           range = CLOSE_RANGE;
-<encap>\{           ECHO; braces++;
+<encap>\|         { err( "multiple |'s" ); }
+<encap>\\         { qc('\\'); qc(input()); }
+<encap>\(         { range = OPEN_RANGE; }
+<encap>\)         { range = CLOSE_RANGE; }
+<encap>\{         { ECHO; braces++; }
 <encap>\}         { if ( braces > 0 )
                        {ECHO; braces--;}
                     else {
@@ -88,15 +88,15 @@ INDEXENTRY   \\indexentry
 		       BEGIN(skip2location);
 		    }
                   }
-<encap>.            ECHO;
+<encap>.          { ECHO; }
 
-<skip2location>[ \t]*\{   printf(" :locref \""); BEGIN(location);
+<skip2location>[ \t]*\{  { printf(" :locref \""); BEGIN(location); }
 
-<location>\}        printf("\")\n"); BEGIN(0);
+<location>\}      { printf("\")\n"); BEGIN(0); }
 <location>.         ECHO;
 
-\n                  lineno++;
-.
+\n                { lineno++; }
+.                 { ; }
 
 %%
 
@@ -109,7 +109,13 @@ main()
 
 /*
   $Log$
-  Revision 1.2  1996/07/11 14:16:55  kehr
+  Revision 1.3  1996/07/19 17:15:18  kehr
+  Made this program comaptible with lex by correctly enclosing all
+  actions--stupid bug, 'cause lex didn't complain and flex did some
+  wonderful matching of all the actions such that no error was
+  discovered.
+
+  Revision 1.2  1996/07/11  14:16:55  kehr
   Complete Major checkin before changing the letter-groups.
 
   Revision 1.1  1996/06/24  08:53:57  kehr
