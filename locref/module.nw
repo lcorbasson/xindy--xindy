@@ -46,13 +46,25 @@ The module is separated into the following parts:
 \item [ranges]
 \end{deflist}
 
+\noindent The representation of the dependencies of all submodules is
+as follows:
+
+\begin{verbatim}
+locref: <base> basetype locclass
+locclass: <base> basetype
+basetype: -
+\end{verbatim}
+
 %% Local Variables:
 %% mode: latex
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1995/12/05 13:53:43  kehr
+%% Revision 1.4  1995/12/05 18:47:11  kehr
+%% Minor changes (nreverse etc.)
+%%
+%% Revision 1.3  1995/12/05  13:53:43  kehr
 %% Complete restructuring of submodule `locclass'. New generic functions
 %% introduced and separation of standard- and var-classes implemented.
 %%

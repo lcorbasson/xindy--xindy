@@ -114,14 +114,14 @@ The following symbols are exported:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \sans{location-class}}
-
+\label{sec:location-class}
 
 A location-class is the abstract base-class of all location-class
 types. The only common slot to all subclasses is [[name]].
 
 <<class \class{location-class}>>=
 (defclass location-class ()
-    ((name    :reader get-name  :initarg :name)
+    ((name    :reader   get-name   :initarg :name)
      (ordnum  :accessor get-ordnum :initform (gen-next-loccls-ordnum))))
 @ %def location-class
 
@@ -139,13 +139,16 @@ location-class must implement a method [[perform-match]]
 
 \no We define a relation between location-classes that is used to sort
 instances of location-references due to the order of their
-corresponding location-classes. We introduce the relation [[location-class<]]
-that compares two location-classes [[loccls-1]] and [[loccls-2]] and
-returns [[t]] if the first one is \emph{smaller} than the second one.
+corresponding location-classes. We introduce the relations
+[[location-class<]] and [[location-class=]] that compare two
+location-classes [[loccls-1]] and [[loccls-2]] and returns [[t]] if
+the first one is \emph{smaller} than/\emph{equal} to the second one.
 
 <<class \class{location-class}>>=
 (defgeneric location-class< (location-class-1 location-class-2))
-@ %def location-class<
+
+(defgeneric location-class= (location-class-1 location-class-2))
+@ %def location-class< location-class=
 
 \no It is implemented as a generic function to achieve a simple
 implementation that is extendable.
@@ -171,7 +174,11 @@ follows:
 (defmethod location-class< ((loccls-1 location-class)
                             (loccls-2 location-class))
   (< (get-ordnum loccls-1) (get-ordnum loccls-2)))
-@ %def location-class<
+
+(defmethod location-class= ((loccls-1 location-class)
+                            (loccls-2 location-class))
+  (= (get-ordnum loccls-1) (get-ordnum loccls-2)))
+@ %def location-class< location-class=
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -423,7 +430,7 @@ location-class [[loccls]]. This is achieved by successively matching
 all layers and separators against the string. It returns a
 multiple-value of the form
 \begin{center}
-  (\emph{layer-string-list}, \emph{ordnum-list} : \tintlist) \quad
+  (\emph{layer-list} : \tstrlist, \emph{ordnum-list} : \tintlist) \quad
   or \quad ([[nil nil]]).
 \end{center}
 The second alternative is used to indicate that a match was not
@@ -479,12 +486,12 @@ the appropriate multiple value, otherwise we return the multiple value
               ((numberp ordnum)
                  (setq locstring rest-string)
                  (setq layer-list
-                       (append layer-list (list matched-string)))
-                 (setq ordnum-list (append ordnum-list (list ordnum))))
+                       (cons matched-string layer-list))
+                 (setq ordnum-list (cons ordnum ordnum-list)))
               (t (setq locstring rest-string)))
         ))
     (if (not give-up)
-        (values layer-list ordnum-list)
+        (values (nreverse layer-list) (nreverse ordnum-list))
         (values nil nil))))
 @ %def perform-match
 
@@ -523,12 +530,12 @@ is not an error, because we do a prefix-matching.
               ((numberp ordnum)
                  (setq locstring rest-string)
                  (setq layer-list
-                       (append layer-list (list matched-string)))
-                 (setq ordnum-list (append ordnum-list (list ordnum))))
+                       (cons matched-string layer-list))
+                 (setq ordnum-list (cons ordnum ordnum-list)))
               (t (setq locstring rest-string)))
         ))
     (if (not give-up)
-        (values layer-list ordnum-list)
+        (values (nreverse layer-list) (nreverse ordnum-list))
         (values nil nil))))
 @ %def perform-match
 
@@ -550,6 +557,9 @@ is not an error, because we do a prefix-matching.
 \subsubsection{The root}
 
 <<*>>=
+;; $Id$
+;;
+
 (eval-when (compile load)
   (use-package 'clos)
   (use-package 'xp)
@@ -583,7 +593,10 @@ is not an error, because we do a prefix-matching.
 %% End:
 %%
 %% $Log$
-%% Revision 1.4  1995/12/05 13:53:39  kehr
+%% Revision 1.5  1995/12/05 18:47:07  kehr
+%% Minor changes (nreverse etc.)
+%%
+%% Revision 1.4  1995/12/05  13:53:39  kehr
 %% Complete restructuring of submodule `locclass'. New generic functions
 %% introduced and separation of standard- and var-classes implemented.
 %%

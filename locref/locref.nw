@@ -49,7 +49,7 @@ A location-reference is a set
 \end{center}
 with
 \begin{deflistit}{locclassXX}
-\item [layers] is \type{locref-layer-list}
+\item [layers] is a \tstrlist
 \item [ordnums] is a \tintlist
 \item [catattr] is a \tcatattr
 \item [locclass] is a \tloccls.
@@ -105,175 +105,99 @@ details).
                  :catattr catattr  :locclass locclass))
 @ %def make-location-reference
 
+<<export-list of module \module{locref}>>=
+(export '(location-reference make-location-refrence))
+@
 
-\subsubsection{Class \class{locref-layer}}
-
-A \term{location-reference-layer} layer is a \tstring. It is the
-smallest entity in the location-reference data hierarchy. It consists
-only of the string that matched with the corresponding layer during
-the input-parsing of raw location-references.
-
-<<class \class{locref-layer}>>=
-(defclass locref-layer ()
-    ((layer  :reader get-layer  :initarg :layer)))
-
-(defun make-locref-layer (layer)
-  (make-instance 'locref-layer :layer layer))
-@ %def locref-layer make-locref-layer
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsubsection{Matching strings with location-classes}
-
-During parsing the input stream of raw-index entries one of the tasks
-to be done is the matching of the location reference strings against
-a location-class description. As mentioned in the technical
-description we must distiguish between standard- and var-classes.
-Standard-classes are of fixed structure and the matching succeeds only
-if \emph{all} layers and separators together matched completely the
-given string. Var-classes are a set of different classes and we must
-perform so-called \emph{prefix-matching}.
-
-One remaining problem is the matching of separators in var-classes. It
-is not yet stated if separators must match always or not. If the
-strings `[[1]]', `[[1.]]' and `[[1.2]]' are compared to var-class
-`[[num.num]]' the first and third should always match, but is not yet
-clear if the second alternative should be valid or not.  Strictly
-spoken we must declare if the separator acts as a \emph{prefix} to
-hierarchy No.~2 or if it acts like a \emph{postfix} to hierarchy
-No.~1.
-
-To implement those two strategies we define a generic function
-[[match-object]] that dispatches over all kinds of location-classes.
-The corresponding methods implement the described matching technique.
-
-<<Matching strings with location-classes>>=
-(defgeneric match-object (string loccls))
-@ %def match-object
-
-\no It tries to match the given \tstring [[locstring]] on the given
-location-class [[loccls]].  This is achieved by successively matching
-all layers and separators against the string. It returns a
-multiple-value of the form
+%%\subsubsection{Class \class{locref-layer}}
 %%
-\begin{center}
-  (\emph{layer-separator-list}, \emph{ordnum-list} : \tintlist).
-\end{center}
+%%A \term{location-reference-layer} layer is a \tstring. It is the
+%%smallest entity in the location-reference data hierarchy. It consists
+%%only of the string that matched with the corresponding layer during
+%%the input-parsing of raw location-references.
 %%
-%It is split into several functions, that can only be used in
-%conjunction because we use [[special]] bindings to make some variables
-%visible for all functions. I didn't want to have a large function, so
-%I split it into three small pieces. I could also make use of noweb's
-%facilities to insert chunks into code, but this prevents me from
-%testing the whole function in the [[emacs]]-editor.
-%
-%Indeed, it looks very ugly and I should rewrite it once more.
-%
-%\medskip
-
-\no So what is the way of success? Ok, at first we iterate over all
-layers of the locclass description until no more elements are left
-over or until [[locstring]] has been completely eaten up. Inside the
-loop we match [[locstring]] against each layer which can be a
-\type{locref-layer} or a \type{loccls-separator}. Then the appropriate
-subfunctions are invoked which update [[layer-list]] and
-[[ordnum-list]].
-
-<<Matching strings with location-classes>>=
-(defmethod match-locclass-by-string ((locstring string)
-                                     (loccls    location-class))
-  (declare (special locstring loccls))
-  (let ((layer-list  '())
-        (ordnum-list '())
-        (finished nil))
-    (declare (special layer-list ordnum-list finished))
-    (do ((layers (get-layers loccls) (cdr layers)))
-        ((or finished (endp layers) (= 0 (length locstring))))
-      (declare (special layers))
-      (let ((curr-layer (car layers))
-            (locstring-len (length locstring)))
-        (declare (special curr-layer locstring-len))
-        (cond ((typep curr-layer 'loccls-layer)
-                 (match-loccls-layer))
-              ((typep curr-layer 'loccls-separator)
-                 (match-loccls-separator))
-              (t (error "match-locclass-by-string: wrong element in list")))))
-    (if (= 0 (length locstring))
-        (values layer-list ordnum-list)
-        (values nil nil))))
-@
-
-\no To match a loccls-layer we simply invoke [[prefix-match]] that
-dispatches over all basetypes and (hopefully) tells us a correct match
-or the multiple value [[(nil nil nil)]]. We only check the value of
-[[ordnum]] against [[nil]] to recognize a failure.
-
-<<Matching strings with location-classes>>=
-(defun match-loccls-layer ()
-  (declare (special layer-list ordnum-list finished locstring curr-layer))
-  (multiple-value-bind (matched-string rest-string ordnum)
-      (prefix-match locstring (get-basetype curr-layer))
-    (if (null ordnum)
-        (setq finished t)
-      (progn
-        (setq locstring rest-string)
-        (setq layer-list
-              (append layer-list
-                      (list (make-locref-layer matched-string))))
-        (setq ordnum-list
-              (append ordnum-list (list ordnum)))))))
-@
-
-\no Matching agains a separator ist just prefix-matching of two
-strings.
-
-<<Matching strings with location-classes>>=
-(defun match-loccls-separator ()
-  (declare (special curr-layer locstring))
-  (let* ((sepstr    (get-separator curr-layer))
-         (seplen    (length sepstr))
-         (match-len (string/= sepstr locstring)))
-    (when (or (null match-len) (eql seplen match-len))
-      (setq locstring (subseq locstring seplen)))))
-@
+%%<class \class{locref-layer}>>=
+%%(defclass locref-layer ()
+%%    ((layer  :reader get-layer  :initarg :layer)))
+%%
+%%(defun make-locref-layer (layer)
+%%  (make-instance 'locref-layer :layer layer))
+%%@ %def locref-layer make-locref-layer
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Sorting of location-references}
 
-To compare two location-references based on their \term{total order}
-we first determine the order of their corresponding location-classes.
-If those are equal we compare the list of ordnums. We successively
-compare the order-numbers and stop, if we find one number being
-smaller than the other. Now sorting the location-references is a
-simple thing. We just do a [[sort]] on the references with [[locref<]]
-as the sort-function.
+We are now interested how to sort a list of location-references
+belonging to a indexentry. When building ranges and examine
+successor-relationships we need three sorting criteria that are
+possible with location-references.
+%%
+\begin{enumerate}
+\item The order given by the location-class. It is defined via the
+  [[location-class<]]-relation (\look{sec:location-class}).
+\item The order given by the location-ordnums. The ordnums are a list
+  of numbers. To compare two lists of ordnums, we successively compare
+  the order-numbers and stop, if we find one number being smaller than
+  the other.
+\item The order given by the category-attribute ([[catattr<]]).
+\end{enumerate}
+%%
+We define the three predicates for their \emph{less-than}- and
+\emph{equal}-relations. Here are the predicates for the location-class
+relation.
 
-<<location-reference-sorting>>=
-(defun locref< (locref-1 locref-2)
-  (let ((ordnum-1 (get-ordnum (get-locclass locref-1)))
-        (ordnum-2 (get-ordnum (get-locclass locref-2))))
-    (cond ((= ordnum-1 ordnum-2)
-             (numberlist< (get-ordnums locref-1) (get-ordnums locref-2)))
-          (t (< ordnum-1 ordnum-2)))))
+<<Sorting location-references>>=
+(defun locref-class< (locref-1 locref-2)
+  (< (get-locclass locref-1) (get-locclass locref-2)))
 
-(defun numberlist< (numlist-1 numlist-2)
-  (cond ((equal numlist-1 numlist-2) nil)
-        (t
-           (do ((rest-1 numlist-1 (cdr rest-1))
-                (rest-2 numlist-2 (cdr rest-2)))
+(defun locref-class= (locref-1 locref-2)
+  (= (get-locclass locref-1) (get-locclass locref-2)))
+@ %def locref-class< locref-class=
+
+\no Here follows the implementation of the ordnum-relation.
+
+<<Sorting location-references>>=
+(defun locref-ordnum< (ordnum-list-1 ordnum-list-2)
+  (cond ((equal ordnum-list-1 ordnum-list-2) nil)
+        (t (do ((rest-1 ordnum-list-1 (cdr rest-1))
+                (rest-2 ordnum-list-2 (cdr rest-2)))
                ((or (endp rest-1) (endp rest-2)
                     (/= (first rest-1) (first rest-2)))
                   (cond ((endp rest-1) t)
                         ((endp rest-2) nil)
                         (t (< (first rest-1) (first rest-2)))))))))
-@ %def locref< numberlist<
+
+(defun locref-ordnum= (ordnum-list-1 ordnum-list-2)
+  (equal ordnum-list-1 ordnum-list-2))
+@ %def locref-ordnum< locref-ordnum=
+
+\no Finally we define a combined version of both. I'm not yet sure if
+i really need it.
+
+<<Sorting location-references>>=
+(defun locref< (locref-1 locref-2)
+  (cond ((locref-class= locref-1 locref-2)
+           (locref-ordnum< locref-1 locref-2))
+        (t (locref-class< locref-1 locref-2))))
+
+(defun locref= (locref-1 locref-2)
+  (cond ((locref-class= locref-1 locref-2)
+           (locref-ordnum= locref-1 locref-2))
+        (t nil)))
+@ %def locref< locref=
+
+<<export-list of module \module{locref}>>=
+(export '(locref-class<  locref-class=
+          locref-ordnum< locref-ordnum=
+          locref<        locref=))
+@
 
 \begin{TODO}
   \item The following part is uncorrected yet.
 \end{TODO}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -305,6 +229,9 @@ location-reference and a secondary attribute.
 
 
 <<*>>=
+;; $Id$
+;;
+
 (in-package 'locref)
 
 (use-package 'clos)
@@ -318,9 +245,7 @@ location-reference and a secondary attribute.
 
 <<class \class{location-reference}>>
 <<class \class{vitual-locref}>>
-<<class \class{locref-layer}>>
-<<Matching strings with location-classes>>
-<<location-reference-sorting>>
+<<Sorting location-references>>
 <<pretty-print>>
 <<markup methods>>
 @
@@ -415,7 +340,10 @@ printing of the layer-string.
 %% End:
 %%
 %% $Log$
-%% Revision 1.5  1995/12/05 13:53:41  kehr
+%% Revision 1.6  1995/12/05 18:47:09  kehr
+%% Minor changes (nreverse etc.)
+%%
+%% Revision 1.5  1995/12/05  13:53:41  kehr
 %% Complete restructuring of submodule `locclass'. New generic functions
 %% introduced and separation of standard- and var-classes implemented.
 %%

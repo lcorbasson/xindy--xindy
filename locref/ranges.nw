@@ -8,7 +8,7 @@
 %%
 %% History at end
 %%
-%% Module: ranges
+%% Submodule: ranges
 %%
 %%
 \RCS $Id$%
@@ -317,7 +317,10 @@ The method for building ranges looks like that.
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1995/11/29 16:53:30  kehr
+%% Revision 1.3  1995/12/05 18:47:13  kehr
+%% Minor changes (nreverse etc.)
+%%
+%% Revision 1.2  1995/11/29  16:53:30  kehr
 %% Changed class hierarchy below class `location-class'. Defined a
 %% location-class< predicate and wrote several regression tests. Wrote a
 %% lot of documentation for submodule `locclass'.
