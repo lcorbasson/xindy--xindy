@@ -574,7 +574,11 @@ hash-table representation via calling [[make-ready]].
                           (pprint-slot-block-line
                            "merge-drop-hook {"
                            (write (get-merge-drop-hook idxcls) :stream s))
-                          )))
+
+                          (pprint-slot-block
+                           "keyword-markup {"
+                           (write (get-keyword-markup idxcls) :stream s))
+                           )))
 @
 
 %% Local Variables:
@@ -582,7 +586,10 @@ hash-table representation via calling [[make-ready]].
 %% End:
 %%
 %% $Log$
-%% Revision 1.6  1996/01/10 15:24:06  kehr
+%% Revision 1.7  1996/01/10 16:46:39  kehr
+%% Made some modifications for the keyword-markup-slot.
+%%
+%% Revision 1.6  1996/01/10  15:24:06  kehr
 %% Changed som parts of `idxclass' for handling markup.
 %% Minor changes in the Imakefile.
 %%
