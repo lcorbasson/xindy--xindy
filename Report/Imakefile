@@ -21,7 +21,7 @@ XCOMM $Id$
 #define SRC \
 	 abstract.tex           implementierung.tex    prefix.tex\
 	 analyse.tex            indexverarbeitung.tex  title.tex\
-	 einleitung.tex         modellentwurf.tex      \
+	 einleitung.tex         modellentwurf.tex      danksagung.tex\
 	 glossar.tex            postfix.tex            xindy.tex\
 	 hyphenations.tex	zusammenfassung.tex
 
@@ -47,7 +47,10 @@ CVSCommentLeader("%% ", SRC STY)
 /* ============================================================
 
 $Log$
-Revision 1.2  1995/10/20 11:57:31  kehr
+Revision 1.3  1995/10/26 16:05:35  kehr
+Ver"anderung des Titels und Hinzunahme des Abstracts und der Danksagung.
+
+Revision 1.2  1995/10/20  11:57:31  kehr
 Korrektur nach Klaus' Durchsicht.
 
 Revision 1.1  1995/10/16  17:31:43  kehr
