@@ -753,20 +753,26 @@ modified their sort-key according to the sort-mapping.
 (lisp:in-package "INDEX")
 (lisp:provide "index")
 
-(lisp:use-package "CLOS")
-(lisp:require "base")
-(lisp:use-package "BASE")
-#+(and :XP CLISP) (lisp:use-package "XP")
-(lisp:require "locref")
-(lisp:use-package "LOCREF")
-(lisp:require "idxstyle")
-(lisp:use-package "IDXSTYLE")
+#+CLISP (lisp:require "base")
+#+CLISP (lisp:require "locref")
+#+CLISP (lisp:require "idxstyle")
+
+(eval-when (compile load eval)
+  (lisp:use-package "CLOS")
+  #+(and :XP CLISP) (lisp:use-package "XP")
+  #-CLISP (lisp:require "base")
+  #-CLISP (lisp:require "locref")
+  #-CLISP (lisp:require "idxstyle")
+  (lisp:use-package "BASE")
+  (lisp:use-package "LOCREF")
+  (lisp:use-package "IDXSTYLE"))
 
 ;; The following construct must be separated since the definition of
 ;; the *feature* :ORDRULES was added via loading the package
 ;; "idxstyle" but is only active *after* reading the whole SEXP.
 
-#+:ORDRULES (use-package "ORDRULES")
+(eval-when (compile load eval)
+  #+:ORDRULES (use-package "ORDRULES"))
 
 <<Submodule \module{idxentry}>>
 <<Submodule \module{ranges}>>
@@ -795,7 +801,9 @@ modified their sort-key according to the sort-mapping.
 <<Raw-index interface-definitions>>
 <<Raw-index interface>>
 
-<<Export-list of submodule \module{index}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{index}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -804,6 +812,9 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
+%% Revision 1.31  1997/03/26 16:18:37  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.30  1997/03/18 14:50:04  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

@@ -597,7 +597,9 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 <<Successor handling>>
 <<Building of location-reference-ranges>>
 
-<<Export-list of submodule \module{ranges}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{ranges}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -653,6 +655,9 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
+%% Revision 1.11  1997/03/26 16:18:41  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.10  1997/03/18 14:50:08  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

@@ -254,7 +254,9 @@ Here is the root chunk of this submodule.
 <<Class \class{alphabet}>>
 <<Class \class{enumeration}>>
 
-<<Export-list of submodule \module{basetype}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{basetype}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -265,6 +267,9 @@ Here is the root chunk of this submodule.
 %%======================================================================
 %%
 %% $Log$
+%% Revision 1.17  1997/03/26 16:18:47  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.16  1997/03/18 14:50:14  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

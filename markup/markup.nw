@@ -194,19 +194,20 @@ string-stream that was never printed.
                                            signature
                                            &key open close sep declare body)
   (let ((name (stringify name)))
-    `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
-      (CL:DEFMETHOD
-          ,(intern (string-upcase (concatenate 'string name "-open"))
-                   'markup)
-          ,signature ,@declare ,@open ,@body)
-      (CL:DEFMETHOD
-          ,(intern (string-upcase (concatenate 'string name "-close"))
-                   'markup)
-          ,signature ,@declare ,@close ,@body)
-      (CL:DEFMETHOD
-          ,(intern (string-upcase (concatenate 'string name "-sep"))
-                   'markup)
-          ,signature ,@declare ,@sep ,@body))))
+    `(EVAL-WHEN (COMPILE LOAD EVAL)
+      (HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
+       (CL:DEFMETHOD
+	   ,(intern (string-upcase (concatenate 'string name "-open"))
+		    'markup)
+	   ,signature ,@declare ,@open ,@body)
+       (CL:DEFMETHOD
+	   ,(intern (string-upcase (concatenate 'string name "-close"))
+		    'markup)
+	   ,signature ,@declare ,@close ,@body)
+       (CL:DEFMETHOD
+	   ,(intern (string-upcase (concatenate 'string name "-sep"))
+		    'markup)
+	   ,signature ,@declare ,@sep ,@body)))))
 @ %def define-list-environment-methods
 
 <<Method-defining primitives>>=
@@ -214,24 +215,26 @@ string-stream that was never printed.
                                       signature
                                       &key open close declare body)
   (let ((name (stringify name)))
-    `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
-      (CL:DEFMETHOD
-          ,(intern (string-upcase (concatenate 'string name "-open"))
-                   'markup)
-          ,signature ,@declare ,@open ,@body)
-      (CL:DEFMETHOD
-          ,(intern (string-upcase (concatenate 'string name "-close"))
-                   'markup)
-          ,signature ,@declare ,@close ,@body))))
+    `(EVAL-WHEN (COMPILE LOAD EVAL)
+      (HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
+       (CL:DEFMETHOD
+	   ,(intern (string-upcase (concatenate 'string name "-open"))
+		    'markup)
+	   ,signature ,@declare ,@open ,@body)
+       (CL:DEFMETHOD
+	   ,(intern (string-upcase (concatenate 'string name "-close"))
+		    'markup)
+	   ,signature ,@declare ,@close ,@body)))))
 
 (defmacro define-method (name
                          signature
                          &key declare body)
   (let ((name (stringify name)))
-    `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
-      (CL:DEFMETHOD
-          ,(intern (string-upcase name) 'markup)
-          ,signature ,@declare ,@body))))
+    `(EVAL-WHEN (COMPILE LOAD EVAL)
+      (HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
+       (CL:DEFMETHOD
+	   ,(intern (string-upcase name) 'markup)
+	   ,signature ,@declare ,@body)))))
 @ %def define-environment-methods define-method
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -963,15 +966,37 @@ dispatching braches to the right methods.
 (define-list-environment-methods do-markup-range
     ((loccls layered-location-class) (length number))
   :open  ((do-markup-default "RANGE:OPEN"  (get-name loccls) length)
-          (do-markup-indent))
+	  (do-markup-indent))
   :close ((do-markup-outdent)
-          (do-markup-default "RANGE:CLOSE" (get-name loccls) length))
-  :sep   ((do-markup-default "RANGE:SEP"   (get-name loccls) length)))
+	  (do-markup-default "RANGE:CLOSE" (get-name loccls) length))
+  :sep   ((do-markup-default "RANGE:SEP" (get-name loccls) length)))
 
 (defmethod markup-range-print-end-p ((loccls layered-location-class)
                                      (length number))
   t)
 @ %def do-markup-range
+<<x>>=
+
+> ;;;Evaluating defmacro destructuring-switch-bind
+
+DESTRUCTURING-SWITCH-BIND
+> (macroexpand '(destructuring-switch-bind (&key
+                              open close sep class length
+                              &switch ignore-end)
+					 (list open close sep class length ignore-end)))
+(LET
+  ((<DESTRUCTURING-SWITCH-FORM> (LIST OPEN CLOSE SEP CLASS LENGTH IGNORE-END)))
+  (LET ((IGNORE-END (FIND :IGNORE-END <DESTRUCTURING-SWITCH-FORM>)))
+    (HANDLER-CASE
+      (DESTRUCTURING-BIND (&KEY OPEN CLOSE SEP CLASS LENGTH)
+        (SET-DIFFERENCE <DESTRUCTURING-SWITCH-FORM> '(:IGNORE-END))
+      )
+      (ERROR (COND) (DECLARE (IGNORE COND))
+        (ERROR "~&Syntax Error in ~S." WHOLE)
+) ) ) ) ;
+T
+>
+@
 
 <<Markup interface>>=
 (defmacro markup-range (&whole whole &rest args)
@@ -1131,17 +1156,22 @@ Their elements are simple cross-references.
 (lisp:defpackage "MARKUP")
 (lisp:in-package "MARKUP")
 (lisp:provide "markup")
+#+CLISP (lisp:require "base")
+#+CLISP (lisp:require "locref")
+#+CLISP (lisp:require "idxstyle")
+#+CLISP (lisp:require "index")
 
-(lisp:use-package "CLOS")
-(lisp:require "base")
-(lisp:use-package "BASE")
-#+(and :XP CLISP) (lisp:use-package "XP")
-(lisp:require "locref")
-(lisp:use-package "LOCREF")
-(lisp:require "idxstyle")
-(lisp:use-package "IDXSTYLE")
-(lisp:require "index")
-(lisp:use-package "INDEX")
+(eval-when (compile load eval)
+  (lisp:use-package "CLOS")
+  #+(and :XP CLISP) (lisp:use-package "XP")
+  #-CLISP (lisp:require "base")
+  #-CLISP (lisp:require "locref")
+  #-CLISP (lisp:require "idxstyle")
+  #-CLISP (lisp:require "index")
+  (lisp:use-package "BASE")
+  (lisp:use-package "LOCREF")
+  (lisp:use-package "IDXSTYLE")
+  (lisp:use-package "INDEX"))
 
 <<Submodule \module{markup}>>
 
@@ -1203,9 +1233,11 @@ Their elements are simple cross-references.
 <<Attribute-group markup>>
 <<Location-reference markup>>
 <<Markup interface>>
-
 <<User-interface-definitions>>
-<<Export-list of submodule \module{markup}>>
+
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{markup}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -1214,6 +1246,9 @@ Their elements are simple cross-references.
 
 
 %% $Log$
+%% Revision 1.24  1997/03/26 16:18:58  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.23  1997/03/18 14:50:26  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

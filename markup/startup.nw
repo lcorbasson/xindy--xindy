@@ -53,7 +53,7 @@ particular platform.
 (defun startup (&key idxstyle rawindex output logfile
                      show-version markup-trace (trace-level 0))
   (issue-startup-message)
-  (when show-version (exit))
+  (when show-version (exit-normally))
   (when markup-trace (setq *markup-verbose-mode* t))
   #+:HANDLER
   (handler-case
@@ -75,7 +75,8 @@ particular platform.
     (handler-case
         (setq *logging-stream* (open logfile
                                      :direction :output
-                                     :if-does-not-exist :create))
+                                     :if-does-not-exist :create
+				     :if-exists :overwrite))
       (error ()
              (oops "Opening logfile ~S failed!" logfile)
              (error-exit)))
@@ -116,7 +117,8 @@ particular platform.
       (setq *markup-output-stream*
             (open output
                   :direction :output
-                  :if-does-not-exist :create))
+                  :if-does-not-exist :create
+		  :if-exists :overwrite))
     (error ()
            (oops "Opening file ~S failed!" output)
            (error-exit)))
@@ -136,7 +138,11 @@ particular platform.
 
 <<Startup functions>>=
 (defun set-searchpath-by-environment ()
-  (let ((sp (system::getenv "XINDY_SEARCHPATH")))
+  (let ((sp (#+CLISP
+	     system::getenv
+	     #+ALLEGRO
+	     sys:getenv
+	     "XINDY_SEARCHPATH")))
     (when sp (idxstyle:set-searchpath-by-string sp))))
 @ %def set-searchpath-by-environment
 
@@ -181,7 +187,9 @@ The handler must be installed when dumping \xindy.
   (when (and condition print-it)
     (terpri *error-output*)
     (write-string "*** - " *error-output*)
-    (system::print-condition condition *error-output*))
+    #+CLISP (system::print-condition condition *error-output*)
+    #-CLISP (print condition *error-output*)
+    )
   (format *ERROR-OUTPUT* "~&Bye.")
   (error-exit))
 
@@ -189,10 +197,11 @@ The handler must be installed when dumping \xindy.
 (defun *break-driver* (continuable &rest rest)
   (declare (ignore continuable rest))
   (format *ERROR-OUTPUT* "~&Bye.")
-  (exit))
+  (error-exit))
 
 #+:BREAK-DRIVER
-(export '*break-driver*)
+(eval-when (compile load eval)
+  (export '*break-driver*))
 @ %def  *break-driver*
 
 
@@ -203,10 +212,12 @@ The handler must be installed when dumping \xindy.
 
 (lisp:defpackage  "XINDY")
 (lisp:in-package  "XINDY")
-(lisp:use-package "BASE")
-(lisp:use-package "MARKUP")
-(lisp:use-package "CLOS")
-(lisp:import markup:*markup-user-interface-definitions*)
+
+(eval-when (compile load eval)
+  (lisp:use-package "BASE")
+  (lisp:use-package "MARKUP")
+  (lisp:use-package "CLOS")
+  (lisp:import markup:*markup-user-interface-definitions*))
 
 (eval-when (compile load eval)
   (pushnew :HANDLER      *features*))
@@ -217,7 +228,9 @@ The handler must be installed when dumping \xindy.
 <<Startup functions>>
 <<The BREAK-driver>>
 
-<<Export-list of submodule \module{startup}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{startup}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -226,6 +239,9 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
+%% Revision 1.17  1997/03/26 16:19:03  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.16  1997/03/18 14:50:30  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

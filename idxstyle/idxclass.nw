@@ -801,7 +801,9 @@ delayed until the markup).
 <<Apply substitution-hooks>>
 <<Indexclass cleanups>>
 
-<<Export-list of submodule \module{idxclass}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{idxclass}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -919,6 +921,9 @@ delayed until the markup).
 @
 
 %% $Log$
+%% Revision 1.20  1997/03/26 16:18:16  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.19  1997/03/18 14:49:46  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

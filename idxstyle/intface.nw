@@ -145,11 +145,12 @@ type or structure.
                        (error "nesting level too deep !"))
                     (t (error "~S is not a string !" x))))
           slist))
-
-(export '(stringify list-of-strings-p
-          make-well-formed-list map-to-strings))
 @ %def make-well-formed-list map-to-strings
 
+<<Export-list of submodule \module{intface}>>=
+(export '(stringify list-of-strings-p
+          make-well-formed-list map-to-strings))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -915,7 +916,8 @@ whole]] mechanism as part of their macro-arguments.
 ;(in-package 'util-lib)
 
 (defvar whole)
-(export '(destructuring-switch-bind &switch whole))
+(eval-when (compile load eval)
+  (export '(destructuring-switch-bind &switch whole)))
 
 (defmacro destructuring-switch-bind (lambdalist expr . body)
   "Similar to 'destructuring-bind' but also allows switch options at the
@@ -1012,9 +1014,6 @@ NIL in cases where no switch keyword was found in EXPR.
         )
     ))
 
-
-(export 'destructuring-switch-bind)
-
 (defun set-difference-keep-original-order (set1 set2)
   (mapcan #'(lambda (elt)
 	      (unless (member elt set2)
@@ -1056,7 +1055,9 @@ NIL in cases where no switch keyword was found in EXPR.
 
 <<User-interface-definitions>>
 
-<<Export-list of submodule \module{intface}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{intface}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -1065,6 +1066,9 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.27  1997/03/26 16:18:26  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.26  1997/03/26 14:04:57  kehr
 %% Fixed a bug in (destructuring-switch-bind) that made the system fail on
 %% Allegro CL. Bug did not occur in CLISP since (set-difference) keeps

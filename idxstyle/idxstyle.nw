@@ -293,13 +293,18 @@ above form and define two instances to the enumerations for both
 (lisp:in-package "IDXSTYLE")
 (lisp:provide "idxstyle")
 
-(lisp:use-package "CLOS")
-(lisp:require "base")
-(lisp:use-package "BASE")
-#+(and :XP CLISP) (lisp:use-package "XP")
-(lisp:require "locref")
-(lisp:use-package "LOCREF")
-<<Use [[ordrules]]-package if available>> ;; see submodule intface
+#+CLISP (lisp:require "base")
+#+CLISP (lisp:require "locref")
+
+(eval-when (compile load eval)
+  (lisp:use-package "CLOS")
+  #+(and :XP CLISP) (lisp:use-package "XP")
+  #-CLISP (lisp:require "base")
+  #-CLISP (lisp:require "locref")
+  (lisp:use-package "BASE")
+  (lisp:use-package "LOCREF")
+  <<Use [[ordrules]]-package if available>> ;; see submodule intface
+  )
 
 <<Global indexstyle definitions>>
 
@@ -315,7 +320,9 @@ above form and define two instances to the enumerations for both
 
 (defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
 
-<<Export-list of submodule \module{idxstyle}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{idxstyle}>>
+  )
 @
 
 \subsubsection{The submodule root}
@@ -329,6 +336,9 @@ above form and define two instances to the enumerations for both
 @
 
 %% $Log$
+%% Revision 1.19  1997/03/26 16:18:23  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.18  1997/03/26 14:04:54  kehr
 %% Fixed a bug in (destructuring-switch-bind) that made the system fail on
 %% Allegro CL. Bug did not occur in CLISP since (set-difference) keeps

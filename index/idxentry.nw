@@ -992,7 +992,9 @@ intuitive solution for the moment.
 <<Class \class{index-entry}>>
 <<Processing an indexentry>>
 
-<<Export-list of submodule \module{idxentry}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{idxentry}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -1121,6 +1123,9 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
+%% Revision 1.28  1997/03/26 16:18:33  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.27  1997/03/18 14:50:00  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

@@ -33,12 +33,13 @@ and macros, that are used in the other modules.
 
 #+:CMU17 (defpackage "CLOS")
 
-(lisp:use-package "CLOS")
+(eval-when (compile load eval)
+  (lisp:use-package "CLOS"))
 
 (eval-when (eval load compile)
   #+CLISP (when (find-package "XP")
             (pushnew :XP *features*))
-  #(or +ALLEGRO-V4.3 :CMU17) (pushnew :XP *features*)
+  #+(or ALLEGRO :CMU17) (pushnew :XP *features*)
   )
 
 (setq *print-pretty* t)
@@ -46,7 +47,8 @@ and macros, that are used in the other modules.
 
 (defparameter *mappings-trace* nil)
 (defparameter *locref-trace*   nil)
-(export '(*mappings-trace* *locref-trace*))
+(eval-when (compile load eval)
+  (export '(*mappings-trace* *locref-trace*)))
 
 <<Kludges>>
 <<Error message system>>
@@ -57,7 +59,9 @@ and macros, that are used in the other modules.
 
 (defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
 
-<<Export-list of module \module{base}>>
+(eval-when (compile load eval)
+  <<Export-list of module \module{base}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -77,13 +81,19 @@ Allegro CL has exit in package [[excl]]. CMU-CL uses
 <<Useful macros>>=
 (defun error-exit ()
   #+CLISP (exit 1)
-  #+:ALLEGRO-V4.3 (excl:exit 1)
-  #+:CMU17 (unix:unix-exit 1)
+  #+ALLEGRO (excl:exit 1)
+  #+CMU17 (unix:unix-exit 1)
+  )
+
+(defun exit-normally ()
+  #+CLISP (exit 0)
+  #+ALLEGRO (excl:exit 0)
+  #+CMU17 (unix:unix-exit 0)
   )
 @ %def error-exit
 
 <<Export-list of module \module{base}>>=
-(export '(ifnot error-exit))
+(export '(ifnot error-exit exit-normally))
 @
 
 [[CLISP]] still defines [[simple-condition-format-string]] instead of
@@ -95,7 +105,8 @@ the necessary redefinition for all other Lisps.
 (defmacro simple-condition-format-string (&rest args)
   `(simple-condition-format-control ,@args))
 #-CLISP
-(export '(simple-condition-format-string))
+(eval-when (compile load eval)
+  (export '(simple-condition-format-string)))
 @
 
 
@@ -285,6 +296,7 @@ delivers. The result is a list containing the sorted sublists.
 <<Splitting lists into sublists --- [[split-list]]>>=
 (defun split-list (split-function list &key sortfunc headfunc)
   #+:ASSERT! (assert (not (and sortfunc headfunc))
+		     ()
                      "split-list")
   (let ((list-len (length list)))
     (if (= 1 list-len)
@@ -347,6 +359,9 @@ despite the fact that we use a temporary array with a fill-pointer.
 
 
 %% $Log$
+%% Revision 1.20  1997/03/26 16:17:58  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.19  1997/03/18 14:49:33  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

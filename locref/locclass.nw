@@ -504,7 +504,9 @@ is not an error, because we do a prefix-matching.
 
 <<Matching strings with location-classes>>
 
-<<Export-list of submodule \module{locclass}>>
+(eval-when (compile load eval)
+  <<Export-list of submodule \module{locclass}>>
+  )
 @
 
 <<RCS-Identifier>>=
@@ -555,6 +557,9 @@ is not an error, because we do a prefix-matching.
 
 
 %% $Log$
+%% Revision 1.21  1997/03/26 16:18:49  kehr
+%% Several changes to make the source ANSI and X3J13 compliant.
+%%
 %% Revision 1.20  1997/03/18 14:50:17  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd
