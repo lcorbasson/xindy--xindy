@@ -97,7 +97,7 @@ if two location-references are successors that may be joined at at
 certain level.
 
 <<class location-class>>=
-(defun joinable-on-layer-x-p (loccls-name level-number)
+(defmethod joinable-on-layer-x-p ((loccls structured-location-cl level-number)
   (find level-number
           (get-join-layers (find-location-class loccls-name))))
 @
@@ -182,7 +182,10 @@ for future extensions.
 %% End:
 %%
 %% $Log$
-%% Revision 1.4  1995/12/07 13:21:36  kehr
+%% Revision 1.5  1996/01/09 14:29:22  kehr
+%% ?
+%%
+%% Revision 1.4  1995/12/07  13:21:36  kehr
 %% Dies ist das Projekt zum Zeitpunkt der Abgabe.
 %%
 %% Revision 1.3  1995/11/21  14:55:17  kehr
