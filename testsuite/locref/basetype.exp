@@ -1,0 +1,163 @@
+#
+# test some primitives
+#
+
+####################
+#
+#  make-alphabet
+#
+####################
+
+set test {(setq a1 (make-alphabet "alph1" '("A" "B" "C" "a" "b" "c")))}
+send "$test\n"
+expect {
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq a2 (make-alphabet "alph2" '("1" "2" "3" "4" "5" "6")))}
+send "$test\n"
+expect {
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq a3 (make-alphabet "alph3" '("abc" "cde" "efg")))}
+send "$test\n"
+expect {
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq a4 (make-alphabet "alph2" '("1" "11" "12" "2" "22" "3")))}
+send "$test\n"
+expect {
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(prefix-match "ABC" a1)}
+send "$test\n"
+expect {
+    -re "\"A\" ;.*\"BC\" ;.*0.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "BA" a1)}
+send "$test\n"
+expect {
+    -re "\"B\" ;.*\"A\" ;.*1.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "" a1)}
+send "$test\n"
+expect {
+    -re "\"\" ;.*\"\" ;.*NIL.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "x" a1)}
+send "$test\n"
+expect {
+    -re "\"\" ;.*\"x\" ;.*NIL.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+
+
+set test {(prefix-match "" a2)}
+send "$test\n"
+expect {
+    -re "\"\" ;.*\"\" ;.*NIL.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "1" a2)}
+send "$test\n"
+expect {
+    -re "\"1\" ;.*\"\" ;.*0.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "x" a2)}
+send "$test\n"
+expect {
+    -re "\"\" ;.*\"x\" ;.*NIL.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+
+
+set test {(prefix-match "" a3)}
+send "$test\n"
+expect {
+    -re "\"\" ;.*\"\" ;.*NIL.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "x" a3)}
+send "$test\n"
+expect {
+    -re "\"\" ;.*\"x\" ;.*NIL.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "abx" a3)}
+send "$test\n"
+expect {
+    -re "\"ab\" ;.*\"x\" ;.*0.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "cba" a3)}
+send "$test\n"
+expect {
+    -re "\"c\" ;.*\"ba\" ;.*1.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "efg" a3)}
+send "$test\n"
+expect {
+    -re "\"efg\" ;.*\"\" ;.*2.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+#
+# Alphabets with prefixes
+#
+
+set test {(prefix-match "1" a4)}
+send "$test\n"
+expect {
+    -re "\"1\" ;.*\"\" ;.*0.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "2" a4)}
+send "$test\n"
+expect {
+    -re "\"2\" ;.*\"\" ;.*3.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "12" a4)}
+send "$test\n"
+expect {
+    -re "\"12\" ;.*\"\" ;.*2.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+set test {(prefix-match "22" a4)}
+send "$test\n"
+expect {
+    -re "\"22\" ;.*\"\" ;.*4.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+
+set test {(prefix-match "21" a4)}
+send "$test\n"
+expect {
+    -re "\"2\".* ;.*\"1\" ;.*3.*$prompt$" { pass "$test" }
+    -re ".*NIL.*$prompt$" { fail "$test" }
+}
+
+

@@ -1,0 +1,496 @@
+#
+# test some primitives
+#
+
+####################
+#
+#  gen-next-loccls-ordnum
+#
+####################
+
+set test "(import 'locref::gen-next-loccls-ordnum)"
+send "$test\n"
+expect_T
+
+set test "(import 'locref::*curr-loccls-ordnum*)"
+send "$test\n"
+expect_T
+
+set test "*curr-loccls-ordnum*"
+send "$test\n"
+expect {
+    -re "0.*$prompt$"  { pass "$test" }
+}
+
+set test "(gen-next-loccls-ordnum)"
+send "$test\n"
+expect {
+    -re "1.*$prompt$"  { pass "$test" }
+}
+
+set test "(gen-next-loccls-ordnum)"
+send "$test\n"
+expect {
+    -re "2.*$prompt$"  { pass "$test" }
+}
+
+
+#
+# create some alphabets for testing
+#
+
+set test "(import 'locref::gen-next-loccls-ordnum)"
+send "$test\n"
+expect_T
+
+set test {(setq alph-digit (make-alphabet "digit" '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9")))}
+send "$test\n"
+expect {
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq alph-a-h (make-alphabet "a-h" '("a" "b" "c" "d" "e" "f" "g" "h")))}
+send "$test\n"
+expect {
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# create some location-class layers (empty markup)
+#
+
+set test {(setq loccls-layer-digit (make-loccls-layer alph-digit nil))}
+send "$test\n"
+expect {
+    -re "\#<LOCCLS-LAYER.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq loccls-layer-a-h (make-loccls-layer alph-a-h nil))}
+send "$test\n"
+expect {
+    -re "\#<LOCCLS-LAYER.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# create some location-class separators (empty markup)
+#
+
+set test {(setq separator-minus (make-loccls-separator "-" nil))}
+send "$test\n"
+expect {
+    -re "\#<LOCCLS-SEPARATOR.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq separator-dot (make-loccls-separator "." nil))}
+send "$test\n"
+expect {
+    -re "\#<LOCCLS-SEPARATOR.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# create some location-classes
+#
+
+#
+# standard-classes
+#
+
+set test {(setq loccls-s1 (checked-make-standard-location-class "num" (list loccls-layer-digit) '()))}
+send "$test\n"
+expect {
+    -re "\#<STANDARD-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq loccls-s2 (checked-make-standard-location-class "numnum" (list loccls-layer-digit loccls-layer-digit) '()))}
+send "$test\n"
+expect {
+    -re "\#<STANDARD-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# var-classes
+#
+
+set test {(setq loccls-v1 (checked-make-var-location-class "num*" (list loccls-layer-digit)))}
+send "$test\n"
+expect {
+    -re "\#<VAR-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq loccls-v2 (checked-make-var-location-class "numnum*" (list loccls-layer-digit loccls-layer-digit)))}
+send "$test\n"
+expect {
+    -re "\#<VAR-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# extended var-classes
+#
+
+set test {(setq loccls-vx1 (checked-make-var-location-class "num.num*" (list loccls-layer-digit separator-dot loccls-layer-digit)))}
+send "$test\n"
+expect {
+    -re "\#<VAR-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+}
+
+set test {(setq loccls-vx2 (checked-make-var-location-class "num.num.num*" (list loccls-layer-digit separator-dot loccls-layer-digit separator-dot loccls-layer-digit)))}
+send "$test\n"
+expect {
+    -re "\#<VAR-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# test get-ordnum
+#
+
+set timeout 5
+set test "(import 'locref::get-ordnum)"
+send "$test\n"
+expect_T
+
+
+#
+# The following tests caused expect to get stumbled. I don't know why
+# this happend. It was a non-deterministc stupid thing. I'll just
+# leave them out.
+#
+
+#set test {(get-ordnum loccls-s1)}
+#send "$test\n"
+#expect {
+#    -re ".*$prompt$" { pass "passed (get-ordnum loccls-s1)" }
+#}
+
+#set test {(get-ordnum loccls-s2)}
+#send "$test\n"
+#expect {
+#    -re ".*$prompt$" { pass "passed (get-ordnum loccls-s2)" }
+#}
+
+set test {(< (get-ordnum loccls-s1) (get-ordnum loccls-s2))}
+send "$test\n"
+expect_T
+
+#
+# test location-class<
+#
+
+set test "(import 'locref::location-class<)"
+send "$test\n"
+expect_T
+
+set test {(location-class< loccls-s1 loccls-s2)}
+send "$test\n"
+expect_T
+
+set test {(location-class< loccls-s2 loccls-s1)}
+send "$test\n"
+expect_NIL
+
+
+#
+# test perform-match on loccls-s1
+#
+
+set test {(perform-match "0" loccls-s1)}
+send "$test\n"
+expect {
+    -re ".*0.*;.*0.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "1" loccls-s1)}
+send "$test\n"
+expect {
+    -re ".*1.*;.*1.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9" loccls-s1)}
+send "$test\n"
+expect {
+    -re ".*9.*;.*9.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "12" loccls-s1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "x" loccls-s1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "" loccls-s1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+#
+# test perform-match on loccls-s2
+#
+
+set test {(perform-match "00" loccls-s2)}
+send "$test\n"
+expect {
+    -re ".*0.*0.*;.*0.*0.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "12" loccls-s2)}
+send "$test\n"
+expect {
+    -re ".*1.*2.*;.*1.*2.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9" loccls-s2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "x9" loccls-s2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9x" loccls-s2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9 " loccls-s2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "xx" loccls-s2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "" loccls-s2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+#
+# test perform-match on loccls-v1
+#
+
+set test {(perform-match "0" loccls-v1)}
+send "$test\n"
+expect {
+    -re ".*0.*;.*0.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "1" loccls-v1)}
+send "$test\n"
+expect {
+    -re ".*1.*;.*1.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9" loccls-v1)}
+send "$test\n"
+expect {
+    -re ".*9.*;.*9.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "12" loccls-v1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "x" loccls-v1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "" loccls-v1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+#
+# test perform-match on loccls-v2
+#
+
+set test {(perform-match "00" loccls-v2)}
+send "$test\n"
+expect {
+    -re ".*0.*0.*;.*0.*0.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "12" loccls-v2)}
+send "$test\n"
+expect {
+    -re ".*1.*2.*;.*1.*2.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9" loccls-v2)}
+send "$test\n"
+expect {
+    -re ".*9.*;.*9.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "x9" loccls-v2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9x" loccls-v2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9 " loccls-v2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "xx" loccls-v2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "" loccls-v2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+#
+# test perform-match on loccls-vx1
+#
+
+set test {(perform-match "0.0" loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*0.*0.*;.*0.*0.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "1.2" loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*1.*2.*;.*1.*2.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9" loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*9.*;.*9.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9." loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*9.*;.*9.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "x.9" loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9.x" loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "9. " loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "x.x" loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "." loccls-vx1)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+
+#
+# test perform-match on loccls-vx2
+#
+
+set test {(perform-match "1" loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*1.*;.*1.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "1." loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*1.*;.*1.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "1.2" loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*1.*2.*;.*1.*2.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "1.2." loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*1.*2.*;.*1.*2.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "1.2.3" loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*1.*2.*3.*;.*1.*2.*3.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "1.2.3." loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "12.3" loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "123" loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match ".123" loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}
+
+set test {(perform-match "." loccls-vx2)}
+send "$test\n"
+expect {
+    -re ".*NIL.*;.*NIL.*$prompt$" { pass "$test" }
+}

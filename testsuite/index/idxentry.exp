@@ -1,0 +1,208 @@
+#
+# prepare indexclasses for testing with idxentry
+#
+
+xsend {(setq ic (create-indexclass "default"))}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq num-0-20 (make-alphabet "num-0-20" '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "20")))}
+expect -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq alph-a-h (make-alphabet "a-h" '("a" "b" "c" "d" "e" "f" "g" "h")))}
+expect {
+    -re "\#<ALPHABET.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# create some location-class layers (empty markup)
+#
+
+xsend {(setq loccls-layer-digit (make-loccls-layer num-0-20 nil))}
+expect {
+    -re "\#<LOCCLS-LAYER.*>.*$prompt$" { pass "$test" }
+}
+
+xsend {(setq loccls-layer-a-h (make-loccls-layer alph-a-h nil))}
+expect {
+    -re "\#<LOCCLS-LAYER.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# create some location-class separators (empty markup)
+#
+
+xsend {(setq separator-minus (make-loccls-separator "-" nil))}
+expect {
+    -re "\#<LOCCLS-SEPARATOR.*>.*$prompt$" { pass "$test" }
+}
+xsend {(setq separator-dot (make-loccls-separator "." nil))}
+expect {
+    -re "\#<LOCCLS-SEPARATOR.*>.*$prompt$" { pass "$test" }
+}
+
+#
+# standard-classes
+#
+
+xsend {(setq loccls-num-0-20 (checked-make-standard-location-class "num-0-20" (list loccls-layer-digit) 2))}
+expect -re "\#<STANDARD-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq loccls-Alph-num (checked-make-standard-location-class "Alph-num" (list loccls-layer-digit) 3))}
+expect -re "\#<STANDARD-LOCATION-CLASS.*>.*$prompt$" { pass "$test" }
+
+#
+# Now test storing into indexclass
+#
+
+xsend {(add ic num-0-20)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add ic alph-a-h)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add ic loccls-num-0-20)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add ic loccls-Alph-num)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+#
+# Generate some category-attributes
+#
+xsend {(mapc #'(lambda (x) (add ic (make-category-attribute x))) '("bold" "italic" "slanted" "default" "typewriter"))}
+expect -re ".*(.*).*$prompt$" { pass "$test" }
+
+xsend {(initialize-category-attributes '(("bold" "italic" "slanted") "default" "typewriter") (get-cat-attrs ic) (get-implicit-subst-rules ic))}
+expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq ca-bold (lookup (get-cat-attrs ic) "bold"))}
+expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq ca-slanted (lookup (get-cat-attrs ic) "slanted"))}
+expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq ca-italic (lookup (get-cat-attrs ic) "italic"))}
+expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq ca-default (lookup (get-cat-attrs ic) "default"))}
+expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq ca-typewriter (lookup (get-cat-attrs ic) "typewriter"))}
+expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
+
+xsend {(add-explicit-substitution-rule ic ca-default ca-typewriter)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add-explicit-substitution-rule ic ca-italic ca-typewriter)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+#
+# create some structured-locrefs
+#
+xsend {(setq ie (make-indexentry :main-key '("Keyword") :idxclass ic))}
+expect -re "\#<INDEXENTRY.*>.*$prompt$" { pass "$test" }
+
+# xsend {(pprint ie)}
+# expect -re ".*{.*}.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(11) :catattr ca-default :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(13) :catattr ca-default :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(14) :catattr ca-default :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(15) :catattr ca-default :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(17) :catattr ca-default :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(25) :catattr ca-default :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+
+# xsend {(add ie (make-structured-locref :ordnums '(12) :catattr ca-bold :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(15) :catattr ca-bold :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(25) :catattr ca-bold :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+xsend {(set-substitution-subst-hook #'set-state-virtual ic)}
+expect -re "\#<.*SET-STATE-VIRTUAL.*>.*$prompt$" { pass "$test" }
+
+#
+# now check relations
+#
+xsend {(make-ready ic)}
+expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+xsend {(substitutable-p ic (make-structured-locref :catattr ca-default) (make-structured-locref :catattr ca-typewriter))}
+expect_NIL
+
+xsend {(substitutable-p ic (make-structured-locref :catattr ca-default) (make-structured-locref :catattr ca-default))}
+expect_NIL
+
+xsend {(substitutable-p ic (make-structured-locref :catattr ca-typewriter) (make-structured-locref :catattr ca-default))}
+expect_T
+
+#
+# make some location-references
+#
+
+xsend {(mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 1) ca-default) (cons '(2 1) ca-typewriter) (cons '(2 2) ca-italic) (cons '(2 2) ca-typewriter) (cons '(2 3) ca-typewriter) (cons '(2 3) ca-bold) (cons '(2 4) ca-default) (cons '(2 4) ca-bold) (cons '(2 4) ca-italic) (cons '(2 7) ca-typewriter) (cons '(2 10) ca-typewriter) (cons '(2 7) ca-default) (cons '(2 8) ca-default) (cons '(2 7) ca-italic) (cons '(2 4) ca-slanted) (cons '(2 10) ca-slanted) (cons '(2 10) ca-italic)))}
+expect -re ".*CAT.*$prompt$" { pass "$test" }
+
+#
+# now some duplicates to be ignored
+#
+
+# xsend {(add ie (make-structured-locref :ordnums '(25) :catattr ca-default :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+# xsend {(add ie (make-structured-locref :ordnums '(15) :catattr ca-default :locclass loccls-num-0-20))}
+# expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+#
+# start application of subst-rules
+#
+
+xsend {(process-indexentry ie)}
+expect -re ".*indexentry.*$prompt$" { pass "$test" }
+
+xsend {(setq pg (car (get-locrefs ie)))}
+expect -re "\#<.*>.*$prompt$" { pass "$test" }
+
+
+#
+# merge-rules
+#
+
+xsend {(add-merge-rule ic ca-default ca-bold)}
+expect -re "\#<INDEXCLASS.*>.*$prompt$"  { pass "$test" }
+
+xsend {(add-drop-if-merged-rule ic ca-typewriter ca-italic)}
+expect -re "\#<INDEXCLASS.*>.*$prompt$"  { pass "$test" }
+
+xsend {(add-drop-if-merged-rule ic ca-typewriter ca-bold)}
+expect -re "\#<INDEXCLASS.*>.*$prompt$"  { pass "$test" }
+
+xsend {(add-drop-if-merged-rule ic ca-slanted ca-bold)}
+expect -re "\#<INDEXCLASS.*>.*$prompt$"  { pass "$test" }
+
+xsend {(set-merge-drop-hook #'set-state-deleted ic)}
+expect -re "\#<.*SET-STATE-DELETED.*>.*$prompt$" { pass "$test" }
+
+xsend {(make-ready ic)}
+expect -re "\#<INDEX.*$prompt$" { pass "$test" }
+
+xsend {(process-group pg ic)}
+expect -re "\#<.*LOCREF-CLASS-GROUP.*>.*$prompt$" { pass "$test" }
+
+xsend {(pprint ie)}
+expect -re ".*{.*}.*$prompt$" { pass "$test" }

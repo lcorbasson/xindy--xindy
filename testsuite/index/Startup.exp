@@ -1,0 +1,31 @@
+#
+# prepare all used modules
+#
+
+set timeout 10
+
+xsend {(use-package 'clos)}
+expect_T
+
+xsend {(use-package 'xp)}
+expect_T
+
+#
+# this loads the index package
+#
+
+new_timeout 20
+
+xsend {(load 'index)}
+expect_T
+backup_timeout
+
+xsend {(use-package 'locref)}
+expect_T
+
+xsend {(use-package 'idxstyle)}
+expect_T
+
+xsend {(use-package 'index)}
+expect_T
+

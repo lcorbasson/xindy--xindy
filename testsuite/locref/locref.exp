@@ -1,0 +1,55 @@
+#
+# test some primitives
+#
+
+####################
+#
+#  numberlist<
+#
+####################
+
+set test {(import 'locref::locref-ordnum<)}
+send "$test\n"
+expect_T
+
+set test {(locref-ordnum< '() '())}
+send "$test\n"
+expect_NIL
+
+set test {(locref-ordnum< '(1) '())}
+send "$test\n"
+expect_NIL
+
+set test {(locref-ordnum< '(1) '())}
+send "$test\n"
+expect_NIL
+
+set test {(locref-ordnum< '(1) '(1))}
+send "$test\n"
+expect_NIL
+
+set test {(locref-ordnum< '(1) '(2))}
+send "$test\n"
+expect_T
+
+set test {(locref-ordnum< '(2) '(1))}
+send "$test\n"
+expect_NIL
+
+set test {(locref-ordnum< '(2) '(2 1))}
+send "$test\n"
+expect_T
+
+set test {(locref-ordnum< '(2 1) '(2 1))}
+send "$test\n"
+expect_NIL
+
+set test {(locref-ordnum< '(2 1) '(2))}
+send "$test\n"
+expect_NIL
+
+set test {(locref-ordnum< '(1 2) '(2))}
+send "$test\n"
+expect_T
+
+
