@@ -41,7 +41,7 @@ particular platform.
 <<Startup functions>>=
 (defun issue-startup-message ()
   (info "~&This is xindy ~A (~A).~%" *xindy-version* *xindy-platform*)
-  (info "Copyright (c) 1996,1997  Roger Kehr~%~%"))
+  ;;(info "Copyright (c) 1996,1997  Roger Kehr~%~%"))
 
 (defun startup (&key idxstyle rawindex output logfile
                      show-version markup-trace (trace-level 0))
@@ -218,6 +218,9 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
+%% Revision 1.12  1997/02/06 15:23:04  kehr
+%% Removed the copyright notice during startup.
+%%
 %% Revision 1.11  1997/01/23 21:36:05  kehr
 %% Introduced the :trace-level interface. Depending on this flag other
 %% global flags are set that control the different logging-schemes.
