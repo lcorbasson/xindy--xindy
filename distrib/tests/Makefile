@@ -11,7 +11,7 @@ RM = /bin/rm -f
 XINDY_PLATFORM   = test-arch
 ALLTESTS         = attr1 attr2 startup mappings infII xref-1 \
 		   ex1 ex2 deep err1 err2
-TESTS 	         = attr1 # $(ALLTESTS)
+TESTS 	         = $(ALLTESTS)
 XINDY_DIR        = ../../binaries/$(XINDY_PLATFORM)
 XINDY_MODULES    = ../modules
 LOGFILE	         = -l $$tst.xlg
@@ -43,13 +43,12 @@ tests: force
 	  done
 
 makeindex4_tests: force
-	set -vx;\
-	if [ ! -x $(XINDY_DIR)/xindy ]; then \
+	@if [ ! -x $(XINDY_DIR)/xindy ]; then \
 	  echo;\
 	  echo "!!! You must run \`make' in directory $(XINDY_DIR) before running any tests !!!";\
 	  echo; exit 1;\
 	 fi
-	  XINDY_LIBDIR=$(XINDY_DIR);\
+	-@XINDY_LIBDIR=$(XINDY_DIR);\
 	  export XINDY_LIBDIR; \
 	  XINDY_SEARCHPATH=.:$(XINDY_MODULES);\
 	  export XINDY_SEARCHPATH; \
