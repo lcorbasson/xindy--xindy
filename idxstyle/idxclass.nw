@@ -57,35 +57,6 @@ with
 
 \subsection{Concrete Specification}
 
-\subsubsection{External interface}
-
-The following symbols are exported:
-
-\begin{defcls}{indexclass}{}
-  Decribes indexclasses.
-\end{defcls}
-
-\begin{defunc}{make-indexclass}{\tstring \x \res \type{indexclass}}
-  The constructor of an \type{indexclass}.
-\end{defunc}
-
-\begin{defgen}{add}{\type{indexclass} \x object}
-  This generic function describes a set of methods that allow storing
-  of objects into the indexclass given by \type{indexclass}. The name
-  [[add]] suggests that we can call this methods several time to add
-  more and more objects. These objects are added to some kind of a
-  pool inside the indexclass. The behaviour inside this pool depends
-  on the semantics defined by the pool itself.
-\end{defgen}
-
-\begin{defgen}{set}{\type{indexclass} \x object}
-  This generic function describes a set of methods that allow storing
-  of objects into the indexclass named by \type{indexclass}. The name
-  [[set]] suggests that everytime we can call this method the old
-  object is discarded and replaced by the new one, since there exists
-  only one single object that can be set.
-\end{defgen}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -117,9 +88,9 @@ incrementally filled with more information.
                            :initform '())
      (succ-table           :accessor get-succ-table
                            :initform (make-hash-table))
-     (keyword-markup       :reader get-keyword-markup
-                           :writer set-keyword-markup
-                           :initform '())
+;     (keyword-markup       :reader get-keyword-markup
+;                           :writer set-keyword-markup
+;                           :initform '())
      <<Rules for indexing>>
      ))
 
@@ -132,7 +103,7 @@ incrementally filled with more information.
           get-name        get-basetypes
           get-cat-attrs   get-locclasses
           get-succ-table
-          get-keyword-markup set-keyword-markup
+;          get-keyword-markup set-keyword-markup
           <<Export-list for indexing rules>>
           ))
 @
@@ -575,18 +546,18 @@ hash-table representation via calling [[make-ready]].
                            "merge-drop-hook {"
                            (write (get-merge-drop-hook idxcls) :stream s))
 
-                          (pprint-slot-block
-                           "keyword-markup {"
-                           (write (get-keyword-markup idxcls) :stream s))
+;                          (pprint-slot-block
+;                           "keyword-markup {"
+;                           (write (get-keyword-markup idxcls) :stream s))
                            )))
 @
 
-%% Local Variables:
-%% mode: latex
-%% End:
-%%
 %% $Log$
-%% Revision 1.7  1996/01/10 16:46:39  kehr
+%% Revision 1.8  1996/01/31 15:29:20  kehr
+%% Made a lot of modifications to the whole module. Currently I'm working
+%% on the implementation of the indexstyle-interface.
+%%
+%% Revision 1.7  1996/01/10  16:46:39  kehr
 %% Made some modifications for the keyword-markup-slot.
 %%
 %% Revision 1.6  1996/01/10  15:24:06  kehr
@@ -648,3 +619,9 @@ hash-table representation via calling [[make-ready]].
 %% Revision 1.1  1995/07/09  18:14:27  kehr
 %% Initial checkin.
 %%
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+

@@ -11,12 +11,12 @@
 %% Module: indexstyle
 %%
 %%
-\RCS $Id$%
+\RCS $ITI: module.nw,v 1.2 1995/12/07 18:14:28 kehr Exp $%
 \RCS $Author$%
-\RCS $Revision$%
+\RCS $ITIRevision: 1.2 $%
 \RCS $RCSfile$%
 \RCS $State$%
-\RCS $Date$%
+\RCS $ITIDate: 1995/12/07 18:14:28 $%
 %
 
 \chapter{Module \module{indexstyle}}
@@ -51,17 +51,427 @@ intface:
 idxstyle: idxclass intface
 \end{verbatim}
 
+\begin{TODO}
+\item (idxstyle:)\\
+\item (idxclass:)\\
+\item (idxrule:)\\
+\end{TODO}
 
-%% Local Variables:
-%% mode: latex
-%% TeX-master: t
-%% End:
-%%
-%% $Log$
-%% Revision 1.2  1995/12/07 18:14:28  kehr
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\section{The Indexstyle-User-Interface (IstUI)}
+
+This section gives a brief summary of the necessary specifications for
+the indexstyle and their use. The following steps have to be done to set
+up the indexstyle.
+
+\subsection{General concepts}
+
+If we extend our model of the indexstyle to several indexclasses we
+need some mechanism to store information into a specific indexclass.
+To avoid specifying the indexclass as an optional argument to all of
+the following declarations we use the construct of an \emph{active}
+indexclass. New definitions are always performed in the active
+indexclass.
+
+\begin{istui}{in-indexclass}{\emph{indexclass-name}}
+  Declares a new indexclass with the given name. If this indexclass is
+  already existing simply make it the \emph{active} one. All of the
+  following declarations take place in this indexstyle.
+\end{istui}
+
+\subsection{Location-classes}
+
+\subsubsection{Declaration of basetypes}
+
+To define a new location-class we first need to declare any existing
+basetypes. Bastypes are alphabets or enumerations. Alphabets can be
+declared by simply declare a list of strings that serve as the
+alphabets' symbols.
+
+\begin{istui}{define-alphabet}{\emph{alphabet-name}
+    \List{\emph{strings}\ldots}}%%
+  Defines \emph{alphabet-name} to be an alphabet constisting of the
+  strings given by the sting-list. We implicitely assume that the
+  elements define also the \emph{successor}-Relation.
+\end{istui}
+
+\smallskip
+
+\noindent Enumerations can't be declared in this way since the
+\emph{matching} of their elements can only be done via a special
+method bound to a new class. A new declaration the consists of a
+class-definition and a method [[prefix-match]] bound to that specific
+class.
+
+\begin{istui}{define-enumeration}{\emph{enumeration-name}
+    \emph{method-body}}
+\end{istui}
+
+
+\subsection{Declaration of location-classes}
+
+\subsubsection{Structured location-classes}
+
+Location-classes are defined via composition of basetypes and
+separators. We distinguish structured location-classes (standard- and
+var-classes) and cross-reference classes.
+
+\begin{istui}{define-location-class}{\emph{loccls-name}
+    \opt{\sw{:var}$|$\sw{:min-range-length} \emph{integer}}\\%%
+    \hspace*{5cm}\List{ (\emph{basetype}$|$\emph{string})+ }}%%
+  Defines a location-class with name \emph{loccls-name} consisting of
+  the layers given by the list. The strings are assumed to be
+  \emph{separators}. If the switch \sw{:var} is specified the declared
+  class is of type \emph{variable}, i.e.\ it is a var-location-class.
+  If the keyword \sw{:min-range-length} is specified we define the
+  \term{minimum range-length} to be used when building ranges. If we
+  like to disallow buildung of ranges at all \emph{integer} can be
+  declared as \cmd{none}. Since building of ranges is currently only
+  allowed for standard classes \sw{:var} and \sw{:min-range-length}
+  mustn't be used together.
+\end{istui}
+
+\subsubsection{Cross-reference location-classes}
+
+
+\subsection{Location-attributes}
+
+%Attributes are involved in the markup and processing of
+%location-references. The indexstyle \emph{must} define a
+%\emph{default}-attribute.
+
+%\begin{istui}{define-location-attribute}{\emph{attr-name}}
+%  Introduces a new attribute.
+%\end{istui}
+
+Location-attributes are defined by the explicit definition of the
+\term{location-attribute groups}. A group is a sequence $A$ of
+  attributes for that holds:
+\[
+\forall a_i,a_j\in A: i<j \Rightarrow
+\textsf{substitute-if-double}~a_i~a_j \wedge~\func{sort-ordnum($a_i$)}
+< \func{sort-ordnum($a_j$)}
+\]
+The definition
+\begin{verbatim}
+      ( (bold italic slanted) default )
+\end{verbatim}
+consists of the groups \texttt{(bold italic slanted)} and
+\texttt{default}. The resulting substitution-rules are
+`\irule{substitute-if-double}~\texttt{bold}~\texttt{italic}~\texttt{slanted}'
+and `\irule{substitute-if-double}~\texttt{italic}~\texttt{slanted}'.
+A complete description is a sequence $G$ of attribute-groups such that
+holds:
+\[
+\forall g_i,g_j\in G, a_i\in g_i, a_j\in g_j: i<j \Rightarrow
+\wedge~\func{sort-ordnum($a_i$)} < \func{sort-ordnum($a_j$)}
+\]
+
+
+\subsection{Keyword-rules}
+
+The following rules are necessary to specify the keyword-rules:
+
+
+\begin{istui}{merge-rule}{\emph{pattern-regexp} \emph{subst-regexp} \opt{\sw{:again}} }
+  Defines a substitution based on the \emph{main-key} of an
+  indexentry. If the switch \sw{:again} is specified, repeated
+  substitution may occur.
+\end{istui}
+
+\begin{istui}{sort-rule}{\emph{pattern-regexp} \emph{subst-regexp} \opt{\sw{:again}} }
+  Defines a simple substitution based on the \emph{merge-key} of an
+  indexentry. If the switch \sw{:again} is specified, repeated
+  substitution may occur.
+\end{istui}
+
+
+\subsection{Processing-rules}
+
+The following rules are definable:
+
+\subsubsection{Merge-rules}
+
+\begin{istui}{merge-to}{\emph{loc-attr$_1$} \emph{loc-attr$_2$} \opt{\sw{:drop}}}%%
+  Declares that the two location-attributes are in relation when
+  considering the `\irule{merge-to}'-rule. If additionally the switch
+  \sw{:drop} is specified dropping of location-references is allowed
+  for the given attribute constellation.
+\end{istui}
+
+%\subsubsection{Substitution-rules}
+
+%\begin{istui}{substitute-if-double}{\emph{catattr$_1$} \emph{catattr$_2$}}
+%  Declares that the two category-attributes are in relation when
+%  considering the `\irule{substitute-if-double}'-rule.
+%\end{istui}
+%%%
+%Additionally depends on the next rules. Also transitive-hull
+%calculation must be considered.
+
+
+\subsubsection{Hooks}
+
+Here is missing the definition of the `\irule{drop-if-merged}'-hook.
+
+
+\subsection{Markup}
+
+
+\subsection{File-IO}
+
+
+\subsection{Indexentries}
+
+The parser of the raw-index is currently implemented as a
+\cmd{perl}-frontend. It parses the raw-index an generates
+\Lisp-expressions of the following form:
+
+\begin{istui}{indexentry}{}
+  Defines a new indexentry.
+\end{istui}
+
+
+\subsection{Miscellaneous}
+
+\begin{itemize}
+\item Debug- and verbosity-switches.
+\item Warning levels.
+\end{itemize}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\section{External interface of module \module{idxstyle}}
+
+\subsection{Submodule \module{idxclass}}
+
+\begin{defcls}{indexclass}{}
+  The class that describes an index
+\end{defcls}
+
+\begin{defunc}{make-indexclass}{\tstring \res \type{indexclass}\uip}
+  The constructor of a named \type{indexclass}.
+\end{defunc}
+
+\begin{defgen}{add}{\type{indexclass} \x object}
+  This generic function describes a set of methods that allow storing
+  of objects into the indexclass given by \type{indexclass}. The name
+  [[add]] suggests that we can call this methods several time to add
+  more and more objects. These objects are added to some kind of a
+  pool inside the indexclass. The behaviour inside this pool depends
+  on the semantics defined by the pool itself. The following methods
+  are available:
+
+  \begin{defmethod}{add}{\type{indexclass} \x \type{basetype}\uip}
+    Adds a basetype to the indexclass.
+  \end{defmethod}
+
+  \begin{defmethod}{add}{\type{indexclass} \x \type{category-attribute}\uip}
+    Adds a category-attribute to the indexclass.
+  \end{defmethod}
+
+  \begin{defmethod}{add}{\type{indexclass} \x \type{location-class}\uip}
+    Adds a location-class to the indexclass.
+  \end{defmethod}
+\end{defgen}
+
+\begin{defmethod}{add-merge-rule}{\type{indexclass} \x
+    \type{category-attribute} \x \type{category-attribute}\uip}%%
+  Adds a `\irule{merge-to}~$x~y$'-rule to the indexclass.
+\end{defmethod}
+
+\begin{defmethod}{add-drop-if-merged-rule}{\type{indexclass} \x
+    \type{category-attribute} \x \type{category-attribute}\uip}%%
+  Adds a `\irule{drop-if-merged}~$x~y$'-rule to the indexclass.
+  Implicitely adds a `\irule{merge-to}~$x~y$'-rule, too.
+\end{defmethod}
+
+\begin{defmethod}{add-???-substitution-rule}{\type{indexclass} \x
+    \type{category-attribute} \x \type{category-attribute}\uip}%%
+  Adds a `\irule{substitute-if-double}~$x~y$'-rule to the indexclass.
+\end{defmethod}
+
+
+%\begin{defgen}{set}{\type{indexclass} \x object}
+%  This generic function describes a set of methods that allow storing
+%  of objects into the indexclass named by \type{indexclass}. The name
+%  [[set]] suggests that everytime we can call this method the old
+%  object is discarded and replaced by the new one, since there exists
+%  only one single object that can be set.
+%\end{defgen}
+
+\begin{defmethod}{lookup-basetype}{\type{indexclass} \x \tstring\uip}
+  Looks up the basetype that is stored in the indexclass via its name.
+\end{defmethod}
+
+\begin{defmethod}{lookup-catattr}{\type{indexclass} \x \tstring\uip}
+  Looks up the category-attribute that is stored in the indexclass via
+  its name.
+\end{defmethod}
+
+\begin{defmethod}{lookup-location-class}{\type{indexclass} \x \tstring\uip}
+  Looks up the location-class that is stored in the indexclass via its
+  name.
+\end{defmethod}
+
+\begin{defmethod}{get-merge-drop-hook}{\type{indexclass}\uip}
+  Returns the function that is used to perform the \emph{dropping} of
+  a location-reference.
+\end{defmethod}
+
+\begin{defmethod}{set-merge-drop-hook}{\type{function} \x \type{indexclass}\uip}
+  Sets the function that is used to perform the \emph{dropping} of a
+  location-reference. The used function is given the
+  location-reference as its only argument and should somehow change
+  its state. Possible pre-defined methods are [[set-state-deleted]]
+  and [[set-state-virtual]].
+\end{defmethod}
+
+\begin{defmethod}{get-substitution-subst-hook}{\type{indexclass}\uip}
+  Returns the function that is used to perform the \emph{substitution} of
+  a location-reference.
+\end{defmethod}
+
+\begin{defmethod}{set-substitution-subst-hook}{\type{indexclass}\uip}
+  Sets the function that is used to perform the \emph{substitution} of
+  a location-reference.
+\end{defmethod}
+
+\begin{defmethod}{make-ready}{\type{indexclass}}
+  The method does some clean-up with the indexclass before actually
+  using it. Its main task is to transform all relations into their
+  faster hash-table representation and check for errors due to
+  reflexivity. Additionally the \emph{processing numbers} for the
+  category-attributes are calculated that are necessary to build
+  ranges in the correct order.
+\end{defmethod}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Submodule \module{idxrule}}
+
+\begin{defvcls}{index-rule}{}
+  Defines the abstract base-class for indexing-rules.
+\end{defvcls}
+
+\begin{defvcls}{relation-rule}{}
+  This is a subclass of [[index-rule]]. All indexing rules that are
+  based on relations such as `\irule{merge-to}',
+  `\irule{drop-if-merged}' and `\irule{substitute-if-double}' are
+  subclasses of this class.
+\end{defvcls}
+
+\begin{defcls}{merge-rule}{}
+  Defines the `\irule{merge-to}'-rules.
+\end{defcls}
+
+\begin{defunc}{make-merge-rule}{}
+  Constructor of class [[merge-rule]].\\ Activated by the [[:initform]]
+  of slot [[merge-rules]] of an indexclass.
+\end{defunc}
+
+\begin{defcls}{drop-if-merged-rule}{}
+  Defines the `\irule{drop-if-merged}'-rules.
+\end{defcls}
+
+\begin{defunc}{make-drop-if-merged-rule}{}
+  Constructor of class [[drop-if-merged-rule]].\\ Activated by the
+  [[:initform]] of slot [[drop-if-merged-rules]] of an indexclass.
+\end{defunc}
+
+\begin{defcls}{catattr-groups}{}
+  This class is a container for category-attributes and manages tho
+  forming of groups of catattrs.
+\end{defcls}
+
+\begin{defunc}{make-catattr-groups}{}
+  Constructor of class [[catattr-groups]].\\ Activated by the
+  [[:initform]] of slot [[cat-attrs]] of an indexclass.
+\end{defunc}
+
+\begin{defmethod}{add}{\type{catattr-groups} \x
+    \type{category-attribute}\uip}%%
+  Adds a category-attribute to a category-attribute-group.
+\end{defmethod}
+
+\begin{defmethod}{lookup}{\type{catattr-groups} \x \tstring}
+  Looks up a category-attribute via its name.
+\end{defmethod}
+
+\begin{defcls}{substitution-rule}{}
+  Defines `\irule{substitution-if-double}'-rules.
+\end{defcls}
+
+\begin{defunc}{make-substitution-rule}{}
+  Constructor of class [[substitution-rule]].
+\end{defunc}
+
+\begin{defcls}{relation}{}
+  Defines a class for creating and manipulating of relations.
+\end{defcls}
+
+\begin{defunc}{make-relation}{}
+  Constructor of class [[relation]].
+\end{defunc}
+
+\begin{defmethod}{rel-insert}{\type{relation} \x \emph{item} \x
+    \emph{item}}%%
+  Adds the given items into the relation. The items may be of any type.
+\end{defmethod}
+
+\begin{defmethod}{rel-merge}{\type{relation} \x \type{relation}}
+  Destructively inserts the second relation into the first one.
+\end{defmethod}
+
+\begin{defmethod}{relation-set}{\type{relation} \x \emph{item} \res
+    \tlist}%%
+  Returns a list $L$ of items such that holds $\forall y\in L:
+  x~\textsf{rel}~y$. The resulting list may be of any order.
+\end{defmethod}
+
+\begin{defmethod}{make-ready}{\type{relation}}
+  Transforms a relation into a hash-table representation for faster
+  queries.
+\end{defmethod}
+
+\begin{defmethod}{relation-p}{\type{relation} \x \emph{item} \x
+    \emph{item} \res \tbool}%%
+  Checks if the given items form are in relation.
+\end{defmethod}
+
+\begin{defmethod}{topsort}{\type{relation} \res \tlist}
+  Returns a topsorted list of all items contained in the relation. If
+  no topological sorting was possible [[nil]] is returned. (we don't
+  consider any empty relations here).
+\end{defmethod}
+
+\begin{defmethod}{transitive-hull}{\type{relation}}
+  This method extends a given relation by the calculation of its
+  transitive hull.
+\end{defmethod}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Submodule \module{idxstyle}}
+
+
+%% $ITIlog: module.nw,v $
+%% Revision 1.2  1995/12/07  18:14:28  kehr
 %% Renamed module `idxclass' to 'idxstyle'. Resturcturing module from scratch.
 %%
 %% Revision 1.1  1995/12/05  18:46:13  kehr
 %% Added module `idxclass' and restructured some parts.
 %%
-%%
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+
