@@ -5,7 +5,7 @@
 ;; makeindex4.
 ;;
 
-This file implements the Output Style Specifiers for plain
+;; This file implements the Output Style Specifiers for plain
 ;; makeindex (see manpage of makeindex 2.x) in conjuction with
 ;; TeX/LaTeX.
 ;;
@@ -29,17 +29,6 @@ This file implements the Output Style Specifiers for plain
 ;; The definiton of attributes and location classes is already done by
 ;; makeindex4. Here follows the rest of all declarations.
 ;;
-
-;; In makeindex: page_precedence <string>  "rnaRA"
-;; List all location classes appearing in your document.
-
-(define-location-class-order ("roman-page-numbers"
-			      "arabic-page-numbers"
-			      "alpha-page-numbers"
-			      "Roman-page-numbers"
-			      "Alpha-page-numbers"
-			      "see"))
-
 
 ;; preamble <string>        "\\begin{theindex}\n"
 ;; postamble <string>       "\n\n\\end{theindex}\n"

@@ -166,7 +166,6 @@ ARGCLOSE \}
 main(int argc, char* argv[])
 {
   fprintf(stderr, "This is `tex2xindy' $Revision$.\n");
-  fprintf(stderr, "Copyright (c) 1996,1997  Roger Kehr\n\n");
   if ( argc > 1 ) {
     fprintf(stderr, "Running in makeindex compatibility mode.\n");
     fprintf(stderr, "Writing attribute names to file \"%s\".\n\n", argv[1]);
@@ -178,6 +177,9 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.6  1997/02/13 14:42:50  kehr
+  Minor changes.
+
   Revision 1.5  1997/01/21 16:44:36  kehr
   Bugfix: State <print> was not changed back to <key> if {LEVEL} was found.
 
