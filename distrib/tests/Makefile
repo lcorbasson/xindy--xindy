@@ -9,11 +9,12 @@
 RM = /bin/rm -f
 
 XINDY_PLATFORM = test-arch
-ALLTESTS       = attr1 startup mappings infII xref-1 ex1 ex2 deep err1 err2
+ALLTESTS       = attr1 attr2 startup mappings infII xref-1 \
+		 ex1 ex2 deep err1 err2
 TESTS 	       = $(ALLTESTS)
 XINDY_DIR      = ../../binaries/$(XINDY_PLATFORM)
 LOGFILE	       = -l $$tst.xlg
-TRACE	       = -L 1 # -t
+TRACE	       = -L 2 # -t
 
 testsuite: banner clean tests compare
 
