@@ -51,7 +51,7 @@ NowebLaTeXDocTarget(intro)
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_NOWEB_SRC))
 
-CVSAdd(*.nw)
+CVSAdd(*.nw *.sty)
 CVSAdd(Imakefile)
 CVSCommentLeader("%% ", *.nw *.sty)
 CVSCommit()
@@ -62,7 +62,10 @@ clean::
 /* ============================================================
  *
  * $Log$
- * Revision 1.1  1995/11/06 16:46:06  kehr
+ * Revision 1.2  1995/11/06 16:47:42  kehr
+ * Initial checkin.
+ *
+ * Revision 1.1  1995/11/06  16:46:06  kehr
  * Initial checkin.
  *
  *
