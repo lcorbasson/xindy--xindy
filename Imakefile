@@ -20,18 +20,21 @@ ProjectTop()
 
 /* ATTN: modules are made in list order! */
 BuildProjectModules(Report Presentation\
-		    src locref idxclass index xindy base\
+		    src locref idxstyle index xindy base\
 		    testsuite)
 
 CVSAdd(ChangeLog Imakefile)
 CVSAdd(Report Presentation)
 CVSAdd(noweb src testsuite)
-CVSAdd(base xindy locref index idxclass)
+CVSAdd(base xindy locref index idxstyle)
 
 /*======================================================================
  *
  * $Log$
- * Revision 1.7  1995/12/05 18:44:33  kehr
+ * Revision 1.8  1995/12/07 18:21:57  kehr
+ * Renamed module `idxclass' by `idxstyle'.
+ *
+ * Revision 1.7  1995/12/05  18:44:33  kehr
  * Added modules `index' and `idxclass'.
  *
  * Revision 1.6  1995/11/21  14:55:05  kehr
