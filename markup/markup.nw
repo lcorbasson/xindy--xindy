@@ -523,7 +523,7 @@ subtargets for an indexentry markup.
   (do-markup-indexentry-open depth)
 
   (let ((print-key (get-print-key idxent)))
-    (do-markup-list (or print-key (get-main-key idxent))
+    (do-markup-list (merge-print-and-main-key print-key (get-main-key idxent))
       :identifier KEYWORD
       :open-body  (do-markup-keyword-list-open  depth)
       :elt-body   (do-markup-keyword   KEYWORD  depth)
@@ -533,23 +533,31 @@ subtargets for an indexentry markup.
   (let ((locrefs (get-locrefs idxent)))
     (unless (endp locrefs)
       (do-markup-list locrefs
-	:identifier LOCCLS-GRP
-	:open-body  (do-markup-locclass-list-open)
-	:elt-body   (do-markup-locclass LOCCLS-GRP)
-	:sep-body   (do-markup-locclass-list-sep)
-	:close-body (do-markup-locclass-list-close))))
+        :identifier LOCCLS-GRP
+        :open-body  (do-markup-locclass-list-open)
+        :elt-body   (do-markup-locclass LOCCLS-GRP)
+        :sep-body   (do-markup-locclass-list-sep)
+        :close-body (do-markup-locclass-list-close))))
 
   (let ((subentries (get-subentries idxent)))
     (unless (endp subentries)
       (let ((new-depth (1+ depth)))
-	(do-markup-list subentries
-	  :identifier IDXENT
-	  :open-body  (do-markup-indexentry-list-open  new-depth)
-	  :elt-body   (do-markup-indexentry IDXENT     new-depth)
-	  :sep-body   (do-markup-indexentry-list-sep   new-depth)
-	  :close-body (do-markup-indexentry-list-close new-depth)))))
+        (do-markup-list subentries
+          :identifier IDXENT
+          :open-body  (do-markup-indexentry-list-open  new-depth)
+          :elt-body   (do-markup-indexentry IDXENT     new-depth)
+          :sep-body   (do-markup-indexentry-list-sep   new-depth)
+          :close-body (do-markup-indexentry-list-close new-depth)))))
 
   (do-markup-indexentry-close depth))
+
+(defun merge-print-and-main-key (print-key main-key)
+  ;;(info "~&(merge-print-and-main-key ~S ~S)" print-key main-key)
+  (if print-key
+      (mapcar #'(lambda (print main)
+		  (or print main))
+	      print-key main-key)
+      main-key))
 @ %def do-markup-indexentry
 
 <<Indexentry markup>>=
@@ -1140,7 +1148,10 @@ Their elements are simple cross-references.
 
 
 %% $Log$
-%% Revision 1.15  1996/08/02 14:11:59  kehr
+%% Revision 1.16  1997/01/17 16:43:05  kehr
+%% Several changes for new version 1.1.
+%%
+%% Revision 1.15  1996/08/02  14:11:59  kehr
 %% Corrected bug when printing the percentage-list.
 %%
 %% Revision 1.14  1996/07/22  15:55:27  kehr

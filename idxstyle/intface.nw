@@ -155,42 +155,48 @@ type or structure.
 \paragraph{A special reader syntax for quoted strings}
 
 The following reader function simulates the reading of strings like C
-does. Its quote-symbol is `\texttt{\bslash}' which quotes every
-character appearing next in the input stream. If the next character is
-`\texttt{n}' it is converted to a \texttt{Newline}-character. The
-macro-character \texttt{\#} recognizes a new kind of strings such that
-the string
-\begin{center}
-  \verb|#"this is a string\n with two newlines \n"|
-\end{center}
-will be correctly parsed and all occurences of `\texttt{\bslash{}n}'
-converted to a \texttt{Newline}-character.
+does. Its quote-symbol is `\texttt{~}' which quotes every character
+appearing next in the input stream. If the next character is
+`\texttt{n}' it is converted to a \texttt{Newline}-character, the
+sequence `\texttt{~t} will be substituted by the
+\texttt{Tab}-character, `\texttt{~~}' to `\texttt{~}' and
+`\texttt{~"}' to `\texttt{"}'.
 
 Additionally this reader-function knows the correct values of the
-special characters `\texttt{\bslash{}b}' and `\texttt{\bslash{}e}'.
-The encoding of these special characters declares
-`\texttt{\bslash{}b}' to be the character no.~1, and
-`\texttt{\bslash{}e}' to be character no.~255 in the
-ISO-Latin-alphabet. We can't choose character no.~0 for
-`\texttt{\bslash{}b}' since the sort-key generation is performed via
-the C-library \module{ORDRULES} in which character no.~0 is used as
-the string-termination character.
+special characters `\texttt{~b}' and `\texttt{~e}'.  The encoding of
+these special characters declares `\texttt{~b}' to be the character
+no.~1, and `\texttt{~e}' to be character no.~255 in the
+ISO-Latin-alphabet. We can't choose character no.~0 for `\texttt{~b}'
+since the sort-key generation is performed via the C-library
+\module{ORDRULES} in which character no.~0 is used as the
+string-termination character.
 
 <<String reader function>>=
 (defun c-string-reader (stream char)
   (declare (ignore char))
   (let ((ch nil)
-        (str (make-array 10
+        (str (make-array 32
                          :element-type 'string-char
                          :adjustable t
                          :fill-pointer 0)))
     (loop
       (setq ch (read-char stream t #\Newline t))
       (case ch
-        (#\" (return str))              ;; "
-        (#\\ (setq ch (read-char stream t #\Newline t))
+        (#\" (let ((nextch (read-char-no-hang stream t #\Newline t)))
+               (when nextch
+                 (unread-char nextch stream)
+                 (case nextch
+                   (#\Newline)
+                   (#\t)
+                   (#\Space)
+                   (#\))
+                   (t (nraw "~&Possible read-error due to ill-formed string \"~A\" ~S"
+                            str *))))
+               (return str)))
+        (#\~ (setq ch (read-char stream t #\Newline t))
              (case ch
                (#\n (vector-push-extend #\Newline str))
+               (#\t (vector-push-extend #\Tab str))
                (#\b (vector-push-extend (character   1) str))
                (#\e (vector-push-extend (character 255) str))
                (t   (vector-push-extend ch str))))
@@ -317,7 +323,7 @@ experienced user.
            (setq min-range-length 0))
          `(LET ((NAME (STRINGIFY ',name))
                 (LAYERS (BUILD-LOCCLASS-LAYERS ',layer-list ',whole)))
-           (GOL T "~&define-location-class: ~S" LAYERS)
+           ;;(GOL T "~&define-location-class: ~S" LAYERS)
            (COND ((LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
                     (OOPS "replacing cross-reference-class `~S' is not allowed !"
                           NAME))
@@ -336,7 +342,7 @@ experienced user.
 (defun build-locclass-layers (layers whole)
   (let ((res-list '()))
     (loop
-      (gol t "~&build-locclass-layers: ~S" layers)
+      ;;(gol t "~&build-locclass-layers: ~S" layers)
       (when (endp layers) (return (nreverse res-list)))
       (cond ((eql :sep (car layers))
                (setq layers (cdr layers))
@@ -356,10 +362,8 @@ experienced user.
 \paragraph{Cross-reference location-classes}
 
 <<Defining location-classes>>=
-(defmacro define-crossref-class (&rest args)
-  (destructuring-switch-bind (&whole
-                              whole
-                              name
+(defmacro define-crossref-class (&whole whole &rest args)
+  (destructuring-switch-bind (name
                               &switch (verified :unverified))
       args
     (cond <<check name>>
@@ -473,17 +477,34 @@ For more information see the description of the [[ordrules]]-package.
 
 <<Defining keyword rules>>=
 #+:ORDRULES
-(defmacro merge-rule (&rest args)
+(defmacro merge-rule (&whole whole &rest args)
   (destructuring-switch-bind (pattern
                               replacement
-                              &switch (again :again))
+                              &switch
+                              (again           :again)
+                              (string          :string)
+                              (extended-regexp :eregexp)
+                              (basic-regexp    :bregexp))
       args
     (cond ((null pattern)
              (error "missing argument <pattern> !"))
+          ((or (and string extended-regexp) (and string basic-regexp)
+               (and extended-regexp basic-regexp))
+             (error "~&Only one of (:string :bregexp :eregexp) allowed in:~&~S !"
+                    whole))
           ((null replacement)
-             (error "missing argument <replacement> !"))
-          (t `(ORDRULES:ADD-KEYWORD-MERGE-RULE ,pattern ,replacement
-               ,(if again 1 0))))))
+             (error "~&Missing argument <replacement> in:~&~S!" whole))
+          (t `(PROGN
+               (UNLESS
+                   (ZEROP
+                    (ORDRULES:ADD-KEYWORD-MERGE-RULE ,pattern ,replacement
+                                                     ,(if again 1 0)
+                                                     ,(cond (string 1)
+                                                            (basic-regexp 2)
+                                                            (extended-regexp 3)
+                                                            (t 0))))
+                 (OOPS "~&Wrong regular expression ~S in:~%~S." ',pattern ',whole))
+               (FLUSH-ORDRULES-MESSAGE-BUFFER))))))
 
 #-:ORDRULES
 (defmacro merge-rule (&rest args)
@@ -493,24 +514,50 @@ For more information see the description of the [[ordrules]]-package.
 
 <<Defining keyword rules>>=
 #+:ORDRULES
-(defmacro sort-rule (&rest args)
+(defmacro sort-rule (&whole whole &rest args)
   (destructuring-switch-bind (pattern
                               replacement
-                              &switch (again :again))
+                              &switch
+                              (again           :again)
+                              (string          :string)
+                              (extended-regexp :eregexp)
+                              (basic-regexp    :bregexp))
       args
     (cond ((null pattern)
              (error "missing argument <pattern> !"))
+          ((or (and string extended-regexp) (and string basic-regexp)
+               (and extended-regexp basic-regexp))
+             (error "~&Only one of (:string :bregexp :eregexp) allowed in:~&~S !"
+                    whole))
           ((null replacement)
              (error "missing argument <replacement> !"))
-          (t `(ORDRULES:ADD-KEYWORD-SORT-RULE ,pattern ,replacement
-               ,(if again 1 0))))))
+          (t `(PROGN
+               (UNLESS
+                   (ZEROP
+                    (ORDRULES:ADD-KEYWORD-SORT-RULE ,pattern ,replacement
+                                                    ,(if again 1 0)
+                                                    ,(cond (string 1)
+                                                           (basic-regexp 2)
+                                                           (extended-regexp 3)
+                                                           (t 0))))
+                 (OOPS "~&Wrong regular expression ~S in:~%~S." ',pattern ',whole))
+               (FLUSH-ORDRULES-MESSAGE-BUFFER))))))
 
 #-:ORDRULES
 (defmacro sort-rule (&rest args)
   (declare (ignore args))
   (oops "sort-rule not supported! ignoring definition"))
+
+(defun flush-ordrules-message-buffer ()
+  #+:ORDRULES
+  (when (and *logging-on* ordrules::*message-logging*)
+    (gol t "~A" ordrules::*message-buffer*)
+    (setq ordrules::*message-buffer-ptr* 0)))
 @ %def sort-rule
 
+<<Export-list of submodule \module{intface}>>=
+(export 'flush-ordrules-message-buffer)
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -603,7 +650,21 @@ define several letter groups at once.
     (unless (member file *included-files* :test #'equalp)
       (push file *included-files*)
       (info "~&Loading module ~S..." filename)
-      (load file :verbose nil)
+      (let ((*standard-output* (make-string-output-stream)))
+        (handler-case
+            (load file :verbose nil :echo t)
+          (error (condition)
+                 (info "~&~%~A~%" ";;;;;;;;;;;;;;;;;;;;;;;;;;")
+                 (info "~A~%"     ";; BEGIN  INDEXSTYLE-FILE")
+                 (info "~A~%~%"   ";;;;;;;;;;;;;;;;;;;;;;;;;;")
+                 (info "~A" (get-output-stream-string *standard-output*))
+                 (info "~&~%~A~%" ";;;;;;;;;;;;;;;;;;;;;;;;")
+                 (info "~A~%"     ";; END  INDEXSTYLE-FILE")
+                 (info "~A~%~%"   ";;;;;;;;;;;;;;;;;;;;;;;;")
+;;                 (oops (simple-condition-format-string    condition)
+;;                       (simple-condition-format-arguments condition))
+                 (error-exit)))
+        )
       (info "~&Finished loading module ~S.~%" filename))))
 @ %def require do-require
 
@@ -695,16 +756,17 @@ pathname.
 
 \no The following function takes two pathnames and appends the second
 one (if its a [[:relative]] one) to the first one. It creates a new
-[[:directory]]-fieldand copies the [[name]]- and [[type]]-components
+[[:directory]]-field and copies the [[name]]- and [[type]]-components
 of the second argument. This function can therefore be used to take a
 relative file- or directory-name and append it to an existing
-directory.
+directory. If the second directory name is an absolute filename we
+return it immediately.
 
 <<Setting the searchpath>>=
 (defun append-pathnames (pn-dir pn-sub)
   (let ((dir-dir (pathname-directory pn-dir))
         (dir-sub (pathname-directory pn-sub)))
-    (cond ((not (eq :relative (car dir-sub))) nil)
+    (cond ((not (eq :relative (car dir-sub))) pn-sub)
           (t (make-pathname :directory (append dir-dir (cdr dir-sub))
                             :name (pathname-name pn-sub)
                             :type (pathname-type pn-sub))))))
@@ -813,12 +875,19 @@ NIL in cases where no switch keyword was found in EXPR.
     ;; construct the expansion form
     ` (LET ((<DESTRUCTURING-SWITCH-FORM> ,expr))
         (LET ,bindings
-          (DESTRUCTURING-BIND ,lambdalist
-              (SET-DIFFERENCE <DESTRUCTURING-SWITCH-FORM>
-                              ',switchkeys)
-            ,@body))
+	  (HANDLER-CASE
+	    (DESTRUCTURING-BIND ,lambdalist
+		(SET-DIFFERENCE <DESTRUCTURING-SWITCH-FORM>
+				',switchkeys)
+	      ,@body)
+	    (ERROR (COND)
+		   (DECLARE (IGNORE COND))
+		   (ERROR "~&Syntax Error in ~S !" WHOLE))
+	    )
+	  )
         )
       ))
+
 
 (export 'destructuring-switch-bind)
 
@@ -865,7 +934,10 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.20  1996/07/24 13:47:17  kehr
+%% Revision 1.21  1997/01/17 16:42:11  kehr
+%% Several changes for new version 1.1.
+%%
+%% Revision 1.20  1996/07/24  13:47:17  kehr
 %% Fixed a bug in the definition of define-alphabet that caused a Lisp
 %% stack overflow. A simple quote was forgotten in the macro-definition :-)
 %%

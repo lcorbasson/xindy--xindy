@@ -99,7 +99,9 @@
  *	Does your compiler choke on mixes of enums and ints?
  *	Then Boolean must not be an enum (better for debugging!), but an int.
  */
-#undef	NEED_BOOLEAN_INT
+/* Changed for gcc-2.7.0  17.01.1997 RK */
+/* #undef	NEED_BOOLEAN_INT */
+#define	NEED_BOOLEAN_INT
 
 /* HAVE_FUNCTION_TEMPLATES
  *	[C++ only] Does your C++ compiler supports function templates,
@@ -383,7 +385,10 @@
 /*======================================================================
  *
  * $Log$
- * Revision 1.1  1996/07/18 15:59:44  kehr
+ * Revision 1.2  1997/01/17 16:44:23  kehr
+ * Several changes for new version 1.1.
+ *
+ * Revision 1.1  1996/07/18  15:59:44  kehr
  * This file is necessary to complile the libordrules.
  *
  * Revision 1.7  1995/02/06  16:59:07  schrod

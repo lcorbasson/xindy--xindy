@@ -23,9 +23,9 @@
   Returns one of the error codes.
  */
 
-rxsub_errcode_t
 #define chkbuf( x )  if ( x ) return RXSUB_ESPACE;
 
+rxsub_errcode_t
 nrxsub  (char   *substpat,
 	 regmatch_t pmatch[],
 	 char   *source,

@@ -178,8 +178,16 @@ of functions:
                     whole))
           ((and locref xref) <<Error both reference types>>)
           (t (progn
-               (when tkey (multiple-value-setq (key print)
-                            (tkey-to-normal-key tkey whole)))
+               (if tkey
+                   (multiple-value-setq (key print)
+                     (tkey-to-normal-key tkey whole))
+                   (when print;; check for correct key-length
+                     (let ((keylen (length key)))
+                       (unless (= keylen (length print))
+                         (setq print;; take the first keylen elmts of print
+                               (mapcar #'(lambda (x y) x)
+                                       key
+                                       (append print (make-list keylen))))))))
                (cond ((not (listp key))
                         (error ":key ~S is not a list in~%~S." key whole))
                      ((not (listp print))
@@ -238,7 +246,7 @@ print-key.
                        (push (car key-elt) main-key)
                        (if (cdr key-elt)
                            (push (cadr key-elt) print-key)
-                           (push (car  key-elt) print-key)))
+                           (push nil print-key)))
                     (t <<[[:tkey-error]]>> )))
           tkey)
     (values (nreverse main-key) (nreverse print-key))))
@@ -276,7 +284,9 @@ supporting cross-references is implemented in a separate function.
   (if (and open-range close-range)
       <<Warning both :open-range and :close-range>>
       (progn
-        (unless catattr (setq catattr "default"))
+        (when (or (not catattr)
+                  (string= catattr ""))
+          (setq catattr "default"))
         (let ((catattr-obj (lookup-catattr idxcls catattr)))
           (if (not catattr-obj)
               (nraw "unknown attribute `~A'! (ignored)" catattr)
@@ -295,7 +305,7 @@ supporting cross-references is implemented in a separate function.
                     (if old-entry
                         (setf (gethash merge-key entry-table)
                               (join-indexentries
-                               (gethash merge-key entry-table)
+                               old-entry;;(gethash merge-key entry-table)
                                main-key print-key
                                location-reference))
                         (setf (gethash merge-key entry-table)
@@ -335,7 +345,7 @@ supporting cross-references is implemented in a separate function.
             (let ((old-entry (gethash merge-key entry-table)))
               (if old-entry
                   (setf (gethash merge-key entry-table)
-                        (join-indexentries (gethash merge-key entry-table)
+                        (join-indexentries old-entry ;;(gethash merge-key entry-table)
                                            main-key print-key
                                            cross-reference))
                   (setf (gethash merge-key entry-table)
@@ -362,7 +372,8 @@ supporting cross-references is implemented in a separate function.
   (let ((res (mapcar #'(lambda (str)
                          (gen-keyword-mergekey str))
                      list-of-strings)))
-    (gol t "~&merge-mapping: ~S -> ~S~%" list-of-strings res)
+    (flush-ordrules-message-buffer)
+    ;;(gol t "~&merge-mapping: ~S -> ~S~%" list-of-strings res)
     res))
 
 #+:ORDRULES
@@ -372,7 +383,8 @@ supporting cross-references is implemented in a separate function.
   (let ((res (mapcar #'(lambda (str)
                          (gen-keyword-sortkey str))
                      list-of-strings)))
-    (gol t "~&sort-mapping: ~S -> ~S~%" list-of-strings res)
+    (flush-ordrules-message-buffer)
+    ;;(gol t "~&sort-mapping: ~S -> ~S~%" list-of-strings res)
     res))
 @ %def gen-keyword-mergekey-list gen-keyword-sortkey-list
 
@@ -389,7 +401,12 @@ for further details).
   (let ((old-main-key  (get-main-key  idxent))
         (old-print-key (get-print-key idxent)))
     (unless old-main-key  (set-main-key  main-key  idxent))
-    (unless old-print-key (set-print-key print-key idxent))
+    (set-print-key (mapcar #'(lambda (old curr)
+                               (or old curr))
+                           old-print-key print-key)
+                   idxent)
+    ;; (info "~&(join-indexentries :old-main-key ~S :old-print-key ~S :new-print-key ~S)"
+    ;; old-main-key old-print-key (get-print-key idxent))
     (add-location-reference-to-indexentry idxent locref)))
 @ %def merge-indexentries join-with-precedence
 
@@ -554,12 +571,14 @@ letter-group-definitions.
 <<Processing an index>>=
 (defmethod build-indexentry-tree ((index base-index))
   (let ((index-hierdepth (get-hierdepth index)))
-    (gol t "~&~%--------------------~%Building indexentry-tree:~%")
-    (gol t "hierdepth of index is ~S~%" index-hierdepth)
+    (gol t "~&~%Building indexentry-tree:~%")
+    (gol t "Hierdepth of index is ~S~%~%"
+	 (if (= index-hierdepth most-positive-fixnum)
+	     :tree index-hierdepth))
     (set-entries (build-indexentry-tree-recursive (get-entry-list index)
                                                   index-hierdepth)
                  index)
-    (gol t "~&~%Forming letter-groups...")
+    (gol t "~&~%Forming letter-groups:~%")
     (let ((letter-groups (split-list #'(lambda (idxent)
                                          (get-ordnum
                                           (match-letter-group
@@ -567,7 +586,7 @@ letter-group-definitions.
                                            (car (get-sort-key idxent)))))
                                      (get-entries index)
                                      :sortfunc #'<)))
-      (gol t "(done)")
+      (info "(done)~%")
       (set-entries (mapcar #'(lambda (lg-indexentries)
                                (make-letter-group
                                 (sort-indexentries lg-indexentries)))
@@ -578,7 +597,7 @@ letter-group-definitions.
 \no The following function is responsible to build the desired tree
 structure of the index. For a flat index there is actually nothing to
 do since each entry cannot be split any further. The main task to be
-don is to convert the flat structure into a hierarchical one, that
+done is to convert the flat structure into a hierarchical one, that
 means indexentries can contain subentries, an so on. The [[max-depth]]
 of the hierarchy is given as an argument. The case [[max-depth]]=0
 means to completely transform the index into a tree. At first the list
@@ -625,7 +644,6 @@ slots with the neccessary data.
              (mapcar
               #'(lambda (sublist)
                   (let* ((idxent (car sublist))
-
                          (merge-key (get-merge-key idxent)))
                     (if (= 1 (length merge-key))
                         (progn #| length = 1 |#
@@ -642,17 +660,23 @@ slots with the neccessary data.
                            idxent)
                           idxent)
                         (let* #| length > 1 |#
-                            ((new-merge-key (take-first merge-key))
+                            ((main-key (get-main-key idxent))
+                             (new-merge-key (take-first merge-key))
+                             (some-print-key (find-print-key sublist))
+                             (new-print-key (list (or some-print-key
+                                                      (car main-key))))
                              (new-idxent
                               (make-index-entry
-                               :main-key  (take-first (get-main-key idxent))
+                               :main-key  (take-first main-key)
                                :merge-key new-merge-key
+                               :print-key new-print-key
                                :sort-key
                                #-:ORDRULES new-merge-key
                                #+:ORDRULES (gen-keyword-sortkey-list
                                             new-merge-key)
-                               ;;:print-key (take-first (get-print-key idxent))
                                :idxclass  (get-idxclass idxent))))
+                          ;; (info "~&(treeing :main ~S :some-print ~S :new-print ~S)"
+                          ;; main-key some-print-key new-print-key)
                           (set-subentries
                            (sort-indexentries
                             (build-indexentry-tree-recursive
@@ -662,6 +686,11 @@ slots with the neccessary data.
                            new-idxent)
                           new-idxent))))
               idxent-slist)))))
+
+(defun find-print-key (idxent-list)
+  (some #'(lambda (idxent)
+            (car (get-print-key idxent)))
+        idxent-list))
 @ %def take-first build-indexentry-tree-recursive
 
 <<Processing an index>>=
@@ -785,7 +814,10 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
-%% Revision 1.25  1996/08/02 14:11:31  kehr
+%% Revision 1.26  1997/01/17 16:42:30  kehr
+%% Several changes for new version 1.1.
+%%
+%% Revision 1.25  1996/08/02  14:11:31  kehr
 %% Corrected bug when printing the percentage-list.
 %%
 %% Revision 1.24  1996/07/24  13:49:30  kehr

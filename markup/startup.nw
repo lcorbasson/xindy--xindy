@@ -39,32 +39,29 @@ particular platform.
 @ %def *xindy-platform* *xindy-version*
 
 <<Startup functions>>=
-(defmacro error-exit ()
-  `(EXIT 1))
-
 (defun issue-startup-message ()
   (info "~&This is ~A (~A).~%" *xindy-version* *xindy-platform*)
-  (info "Copyright (c) 1996  Roger Kehr~%~%"))
+  (info "Copyright (c) 1996,1997  Roger Kehr~%~%"))
 
 (defun startup (&key idxstyle rawindex output logfile
-                     show-version markup-trace)
+                     show-version markup-trace mappings-trace)
   (issue-startup-message)
   (when show-version (exit))
   (when markup-trace (setq *markup-verbose-mode* t))
   #+:HANDLER
   (handler-case
-      (do-startup idxstyle rawindex output logfile)
+      (do-startup idxstyle rawindex output logfile mappings-trace)
     (error
        (condition)
        (oops (simple-condition-format-string    condition)
              (simple-condition-format-arguments condition))
        (error-exit)))
   #-:HANDLER
-  (do-startup idxstyle rawindex output logfile))
+  (do-startup idxstyle rawindex output logfile mappings-trace))
 @ %def issue-startup-message startup
 
 <<Startup functions>>=
-(defun do-startup (idxstyle raw-index output logfile)
+(defun do-startup (idxstyle raw-index output logfile mappings-trace)
   (set-searchpath-by-environment)
   (when logfile
     (info "~&Opening logfile ~S " logfile)
@@ -77,9 +74,11 @@ particular platform.
              (error-exit)))
     (info "(done)~%")
     (setq *logging-on* t)
+    #+:ORDRULES (when mappings-trace
+                 (setq ordrules::*message-logging* 1))
     (multiple-value-bind (sec min hour day mon year)
         (get-decoded-time)
-      (gol t ";; This logile was generated automatically by `xindy'~%")
+      (gol t ";; This logfile was generated automatically by `xindy'~%")
       (gol t ";; at ~2,'0D.~2,'0D.~4,'0D  ~2,'0D:~2,'0D:~2,'0D~%"
            day mon year hour min sec))
     (gol t ";; Indexstyle: ~S, Rawindex: ~S, Output: ~S~%~%"
@@ -193,8 +192,8 @@ The handler must be installed when dumping \xindy.
 (lisp:use-package "CLOS")
 (lisp:import markup:*markup-user-interface-definitions*)
 
-(eval-when (compile load eval)
-  (pushnew :HANDLER      *features*))
+;;(eval-when (compile load eval)
+;;  (pushnew :HANDLER      *features*))
 (eval-when (compile load eval)
   (pushnew :BREAK-DRIVER *features*))
 
@@ -211,7 +210,10 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
-%% Revision 1.8  1996/08/02 14:12:02  kehr
+%% Revision 1.9  1997/01/17 16:43:09  kehr
+%% Several changes for new version 1.1.
+%%
+%% Revision 1.8  1996/08/02  14:12:02  kehr
 %% Corrected bug when printing the percentage-list.
 %%
 %% Revision 1.7  1996/07/24  13:50:55  kehr

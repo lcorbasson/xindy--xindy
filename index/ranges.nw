@@ -83,7 +83,7 @@ Class \textsf{location-range} contains the following slots.
                  :last     last
                  :inner    inner
                  :ordnums  first-ordnum
-		 :layers   (get-layers first)
+                 :layers   (get-layers first)
                  :locclass locclass
                  :catattr  (get-catattr first)))
 @ %def location-range make-location-range
@@ -209,7 +209,7 @@ below and implements the given fsm-graph above.
                         <<Declare more variables>> )
                     (loop
                       <<Calculate new variable settings>>
-                      (case state
+                      (ecase state
                         (:START       <<Code for [[:START]]>> )
                         (:READ        <<Code for [[:READ]]>> )
                         (:OPEN-RANGE  <<Code for [[:OPEN-RANGE]]>> ))
@@ -232,7 +232,7 @@ push. The last case shouldn't occur!
       (no-typ-p     (newstat :READ)       (pushl))
       (open+close-p (newstat :READ)       (pushl))
       (open-p       (newstat :OPEN-RANGE) (pushl) (set-open-range))
-      (close-p      (warn-invalid-close locref))
+      (close-p      (warn-invalid-close locref) (newstat :START))
       (t (error
           "INTERNAL-ERROR in build-ranges - :START")))
 @
@@ -277,7 +277,7 @@ was never opened.
                              open-p))) (newstat :START) (keep) (make-range))
               (open-p                  (newstat :OPEN-RANGE)
                                        (pushl) (set-open-range))
-              (close-p  (warn-invalid-close locref))
+              (close-p  (warn-invalid-close locref) (newstat :READ))
               (t (error "INTERNAL-ERROR in build-ranges - :READ"))))))
 @
 
@@ -288,7 +288,8 @@ state [[:READ]] and another [[open]] is senseless.
 <<Code for [[:OPEN-RANGE]]>>=
 (cond (list-end  <<Warning unmatched [[:OPEN-RANGE]]>> (newstat :START))
       ((or no-typ-p open+close-p) (pushl))
-      (open-p    <<Warning that [[:OPEN-RANGE]] met [[:OPEN]]>> )
+      (open-p    <<Warning that [[:OPEN-RANGE]] met [[:OPEN]]>>
+                 (newstat :OPEN-RANGE))
       (close-p    (newstat :READ) (pushl))
       (t (error "INTERNAL-ERROR in build-ranges - :OPEN-RANGE")))
 @
@@ -392,16 +393,16 @@ the [[same-ordnum-list]].
 <<Do neccessary actions>>=
 (when make-flag
   (let ((range-len (- (car (last prev-ordnum)) (car (last first-ordnum)))))
-     (if (>= range-len join-length)
-         (push (list (list
-		       (make-location-range :first-ordnum first-ordnum
-                                                :locclass loccls
-                                                :inner  locref-stack
-                                                :first  first-locref
-                                                :last   (caar locref-stack)
-                                                :length range-len)))
-               result-list)
-         (push locref-stack result-list))
+    (if (>= range-len join-length)
+        (push (list (list
+                     (make-location-range :first-ordnum first-ordnum
+                                          :locclass loccls
+                                          :inner  locref-stack
+                                          :first  first-locref
+                                          :last   (caar locref-stack)
+                                          :length range-len)))
+              result-list)
+        (push locref-stack result-list))
     (setq locref-stack '())
     (setq make-flag nil)))
 (if back-flag
@@ -640,7 +641,10 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
-%% Revision 1.6  1996/07/01 09:19:34  kehr
+%% Revision 1.7  1997/01/17 16:42:34  kehr
+%% Several changes for new version 1.1.
+%%
+%% Revision 1.6  1996/07/01  09:19:34  kehr
 %% Added support for flat indexes and modified logfile-support.
 %%
 %% Revision 1.5  1996/06/03  10:01:39  kehr

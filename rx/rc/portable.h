@@ -611,7 +611,10 @@ extern int errno;	/* is often not defined in <errno.h> */
 /*======================================================================
  *
  * $Log$
- * Revision 1.1  1996/07/18 15:59:55  kehr
+ * Revision 1.2  1997/01/17 16:44:25  kehr
+ * Several changes for new version 1.1.
+ *
+ * Revision 1.1  1996/07/18  15:59:55  kehr
  * This file is necessary to complile the libordrules.
  *
  * Revision 1.20  1995/06/12  10:51:33  schrod

@@ -146,10 +146,16 @@ initialize [[base-alphabet]] with the result of function
 (defun make-alphabet (name symbols)
   (make-instance 'alphabet :name name :symbols symbols
                  :base-alphabet (calculate-base-alphabet symbols)))
+
+(defmethod make-copy ((alph alphabet) new-name)
+  (make-instance 'alphabet
+                 :name          new-name
+                 :symbols       (get-symbols alph)
+                 :base-alphabet (get-base-alphabet alph)))
 @ %def alphabet make-alphabet
 
 <<Export-list of submodule \module{basetype}>>=
-(export '(alphabet make-alphabet get-symbols))
+(export '(alphabet make-alphabet get-symbols make-copy))
 @
 
 \no Here follows the implementation of the [[calculate-base-alphabet]].
@@ -232,6 +238,11 @@ constructor.
   (make-instance enum-class
                  :name          name
                  :base-alphabet base-alphabet))
+
+(defmethod make-copy ((enum enumeration) new-name)
+  (make-instance (class-name (class-of enum))
+                 :name          new-name
+                 :base-alphabet (get-base-alphabet enum)))
 @ %def enumeration make-enumeration
 
 <<Export-list of submodule \module{basetype}>>=
@@ -261,7 +272,10 @@ Here is the root chunk of this submodule.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.13  1996/05/29 14:15:53  kehr
+%% Revision 1.14  1997/01/17 16:42:48  kehr
+%% Several changes for new version 1.1.
+%%
+%% Revision 1.13  1996/05/29  14:15:53  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%

@@ -23,38 +23,91 @@ RULE_TABLE MergeRules;	/* rules for generating mergekeys */
 GROUP_LIST GroupList;	/* list of character groups */
 GROUP_LIST HeadingList;	/* list of group headings */
 
+/* The following rule-types can be set by the user: */
+#define RT_AUTOMATIC         0
+#define RT_STRING            1
+#define RT_REGEXP_BASIC      2
+#define RT_REGEXP_EXTENDED   3
+
 static RULE_TYPE get_ruletype PROTO(( char *lside, char *rside ));
 static int       is_regexp PROTO(( char *s ));
+static int       is_CHR_RULE PROTO(( char *s, char *r ));
 
 #define BUFLEN ((size_t)1024)
-char ordrules_string_buffer [BUFLEN];
-int  ordrules_string_buffer_used_bytes = 0;
+
+char  ordrules_string_buffer [BUFLEN];
+int   ordrules_string_buffer_used_bytes = 0;
+
+       int   ordrules_msg_logging      = 0;
+       char* ordrules_msg_buffer       = 0;
+       int   ordrules_msg_buffer_ptr   = 0;
+static int   ordrules_msg_buffer_len   = BUFLEN;
+static int   ordrules_msg_buffer_avail = 0;
+
+#define DBG( expr ) if (ordrules_msg_logging!=0) { expr; }
 
 int
-add_sort_rule (left, right, isreject)
-char *left;
-char *right;
-int isreject;
+logs( msg )
+char* msg;
 {
-  return( add_rule( SortRules, left, right, isreject ));
+  size_t msglen = strlen( msg );
+
+  if (NULL == ordrules_msg_buffer) {
+    ordrules_msg_buffer = (char*) malloc (ordrules_msg_buffer_len);
+    ordrules_msg_buffer_avail = ordrules_msg_buffer_len - 1;
+    ordrules_msg_buffer_ptr = 0;
+  }
+  if (msglen > ordrules_msg_buffer_avail) {
+    ordrules_msg_buffer_len *= 2;
+   ordrules_msg_buffer = (char*) realloc (ordrules_msg_buffer,
+					       ordrules_msg_buffer_len);
+    ordrules_msg_buffer_avail = ordrules_msg_buffer_len -
+      ordrules_msg_buffer_ptr - 1;
+  }
+  strcpy(&ordrules_msg_buffer[ordrules_msg_buffer_ptr], msg );
+  ordrules_msg_buffer_ptr += msglen;
+  ordrules_msg_buffer_avail -= msglen;
+  ordrules_msg_buffer[ordrules_msg_buffer_ptr] = '\0';
 }
 
 int
-add_merge_rule (left, right, isreject)
+logc( c )
+char c;
+{
+  char msg[2];
+  msg[0] = c;
+  msg[1] = '\0';
+  logs(msg);
+}
+
+int
+add_sort_rule (left, right, isreject, ruletype)
 char *left;
 char *right;
 int isreject;
+int ruletype;
 {
-  return( add_rule( MergeRules, left, right, isreject ));
+  return( add_rule( SortRules, left, right, isreject, ruletype ));
+}
+
+int
+add_merge_rule (left, right, isreject, ruletype)
+char *left;
+char *right;
+int isreject;
+int ruletype;
+{
+  return( add_rule( MergeRules, left, right, isreject, ruletype ));
 }
 
 /* insert rule 'left --> right' into ruletable 'table' */
 int
-add_rule( table, left, right, isreject)
+add_rule( table, left, right, isreject, ruletype)
 RULE_TABLE table;
 char *left;
 char *right;
 int isreject;
+int ruletype;
 {
   RULE *r;
   RULE_LIST *list;
@@ -64,8 +117,10 @@ int isreject;
 
   /* new stuff */
   int errcode;
-  int cflags = 0; /* regcomp-flags */
   char errmsg[STRING_MAX];
+
+  /* Use extended regular expression syntax as default. */
+  int cflag = REG_EXTENDED;
 
   dispstart( add_rule );
   dispstr( left );
@@ -73,22 +128,38 @@ int isreject;
 
   r = (RULE *) malloc( sizeof(RULE) );
 
-  switch (r->type = get_ruletype( left, right )) {
+  switch ( ruletype ) {
+    case RT_AUTOMATIC:
+      r->type = get_ruletype( left, right ); break;
+    case RT_STRING:
+      r->type = is_CHR_RULE( left, right ); break;
+    case RT_REGEXP_BASIC:
+    case RT_REGEXP_EXTENDED:
+      r->type = REG_RULE; break;
+  }
+
+  switch (r->type) {
 
     case REG_RULE:
 
+      if (ruletype == RT_REGEXP_BASIC) {
+	/* Use the basic regular expressions as specified. */
+	cflag = 0;
+      }
       dispstart( REG_RULE );
       dispmsg( bptr copy );
       /* insert '^' in regular expression to match string prefix only */
       *bptr++ = '^'; strcpy( bptr, left );
+      r->r.reg.lstr  = (char *) malloc( strlen(buffer) + 1);
+      r->r.reg.type = cflag;
+      strcpy( r->r.reg.lstr, buffer );
       dispmsg( malloc );
       r->r.reg.lside = (regex_t*) malloc (sizeof(regex_t));
       displong( r->r.reg.lside );
       dispstart( regcomp );
-      if ( 0 != (errcode = regcomp( r->r.reg.lside, buffer, cflags )) ) {
+      if ( 0 != (errcode = regcomp( r->r.reg.lside, buffer, REG_EXTENDED ))) {
 	regerror( errcode, r->r.reg.lside, errmsg, STRING_MAX );
-	/* fprintf( stderr, "Regular Expression Error: %s\n", errmsg );
-	 */
+	DBG(logs("Regular Expression Error: "); logs(errmsg); logs("\n");)
 	return( errcode );
       }
       dispend( regcomp );
@@ -159,22 +230,27 @@ int isreject;
   r->next = NULL;
   dispend(inserting into table);
 
-#ifdef DEBUG
-  fprintf(stderr,"\nordrules: added %s%s-rule at position %d ",
-	  (r->type&REJECT)?"*":"",table == MergeRules ?
-	  "merge" : "sort",pos);
-  fprintf(stderr,"type %o.\n",r->type);
-  switch ( r->type & ~REJECT ) {
-    case CHR_RULE:
-      fprintf(stderr,"(CHR,'%c' --> '%c').",*left,r->r.chr); break;
-    case STR_RULE:
-      fprintf(stderr,"(STR,'%s' --> '%s').",r->r.str.lside,r->r.str.rside);
-      break;
-    case REG_RULE:
-      fprintf(stderr,"(REG,'%s' --> '%s').",buffer,r->r.reg.rside); break;
-  }
-  fprintf(stderr,"\n");
-#endif
+  DBG(
+    logs("Mappings: (add (");
+    if (table == MergeRules) logs("merge"); else logs("sort");
+    logs("-rule ");
+    switch ( r->type & ~REJECT ) {
+      case CHR_RULE:
+	logs(":char `");logc(*left);logs("' `");
+	logc(r->r.chr);logs("'");break;
+      case STR_RULE:
+	logs(":string `");logs(r->r.str.lside);
+	logs("' `");logs(r->r.str.rside);logs("'");
+	break;
+      case REG_RULE:
+	logs(":");logc( (r->r.reg.type == REG_EXTENDED) ? 'e' : 'b' );
+	logs("regexp `"); logs(buffer); logs("' `");
+	logs(r->r.reg.rside);logs("'");
+	break;
+    }
+    if (r->type&REJECT) logs(" :again");
+    logs(")).\n");
+  )
   dispend( add_rule );
   return( 0 );
 }
@@ -187,6 +263,17 @@ char *rside;
 {
   if ( is_regexp( lside ) || is_regexp( rside ) ) return REG_RULE;
 
+  if ( lside[0] != NUL && lside[1] == NUL &&
+       rside[0] != NUL && rside[1] == NUL ) return CHR_RULE;
+
+  return STR_RULE;
+}
+
+static
+int is_CHR_RULE ( lside, rside )
+char *lside;
+char *rside;
+{
   if ( lside[0] != NUL && lside[1] == NUL &&
        rside[0] != NUL && rside[1] == NUL ) return CHR_RULE;
 
@@ -262,15 +349,24 @@ register size_t buflen;
 
       if ( rtype == CHR_RULE ) {
 	dispstart( CHR_RULE );
-      	if ((r->type & REJECT)) newdest = dest;
-      	*dest++ = r->r.chr;
+      	if ((r->type & REJECT))
+	  newdest = dest;
+	DBG(
+	  logs("Mappings: (compare `");logs(source); logs("' :char `");
+	  logc(*source); logs("') match!\n");
+	  )
+	*dest++ = r->r.chr;
 	source++;
 	dispend( CHR_RULE );
-      	break;
+	break;
       }
 
       else if ( rtype == STR_RULE &&
 		!strncmp(source, r->r.str.lside, (size_t)r->r.str.llen)) {
+	DBG(
+	  logs("Mappings: (compare `");logs(source);logs("' :string `");
+	  logs(r->r.str.lside); logs("') match!\n");
+	  )
 	dispstart( STR_RULE );
 	displong( dest );
 	strcpy(dest, r->r.str.rside);
@@ -287,8 +383,15 @@ register size_t buflen;
       else {
 	if ( rtype == REG_RULE ) {
 	  dispstart( REG_RULE );
+	  DBG(
+	    logs("Mappings: (compare `");logs(source);logs("' :");
+	    logc( (r->r.reg.type == REG_EXTENDED) ? 'e' : 'b' );
+	    logs("regexp `");
+	    logs(r->r.reg.lstr); logs("')");
+	    )
 	  if ( 0 == regexec( r->r.reg.lside, source,
 			     NMATCH, regmatch, eflags ) ) {
+	    DBG( logs(" match!\n"); )
 	    nrxsub( r->r.reg.rside, regmatch, source, dest, buflen );
 	    if ((r->type & REJECT))
 	      newdest = dest;
@@ -297,6 +400,7 @@ register size_t buflen;
 	    dispend( REG_RULE );
 	    break;
 	  }
+	  DBG( logs("\n"); )
 	  dispend( REG_RULE );
 	}
       }
@@ -310,11 +414,19 @@ register size_t buflen;
       /* check regular expression rules, that could match all prefixes */
       for ( r = table[FORALL_POS].first; r; r = r->next ) {
 	dispstart( for-loop regexps );
-	displong( r->r.reg.lside );
-	dispstr(r->r.reg.rside );
+	dispstr( r->r.reg.lstr );
+	dispstr( r->r.reg.rside );
 	displong( r->type );
+	dispstr( source );
+	DBG(
+	  logs("Mappings: (compare `");logs(source);logs("' :");
+	  logc( (r->r.reg.type == REG_EXTENDED) ? 'e' : 'b' );
+	  logs("regexp `");
+	  logs(r->r.reg.lstr); logs("')");
+	  )
 	if ( 0 == regexec( r->r.reg.lside, source,
 			   NMATCH, regmatch, eflags ) ) {
+	  DBG( logs(" match!\n"); )
 	  dispstart( regexec match! );
 	  nrxsub( r->r.reg.rside, regmatch, source, dest, buflen );
       	  if ((r->type & REJECT)) newdest = dest;
@@ -328,6 +440,7 @@ register size_t buflen;
 	  dispend( for-loop regexps );
       	  break;
         }
+	DBG( logs("\n"); )
 	dispend( for-loop regexps );
       }
       /* no rule matched, copy character */
@@ -371,7 +484,7 @@ register size_t buflen;
 
 #ifdef DEBUG
   /* if ( strcmp(in,out) ) */
-    fprintf(stderr,"\nordrules: %s '%s' generated for '%s'.", table == MergeRules ? "mergekey" : "sortkey", out, in );
+  fprintf(stderr,"\nordrules: %s '%s' generated for '%s'.", table == MergeRules ? "mergekey" : "sortkey", out, in );
 #endif
 
   dispend( last part );
@@ -387,6 +500,10 @@ char *key;
   apply_rules( SortRules, key, ordrules_string_buffer, BUFLEN );
   sortkey = (char*) malloc (strlen( ordrules_string_buffer ) +1);
   strcpy( sortkey, ordrules_string_buffer );
+  DBG(
+    logs("Mappings: (sort-mapping `"); logs(key); logs("') -> `");
+    logs(sortkey); logs("'.\n\n");
+  )
   dispend( gen_sortkey );
   return( sortkey );
 }
@@ -399,6 +516,10 @@ char *key;
   apply_rules( MergeRules, key, ordrules_string_buffer, BUFLEN );
   mergekey = (char*) malloc (strlen( ordrules_string_buffer ) +1);
   strcpy( mergekey, ordrules_string_buffer );
+  DBG(
+    logs("Mappings: (merge-mapping `"); logs(key); logs("') -> `");
+    logs(mergekey); logs("'.\n\n");
+    )
   return( mergekey );
 }
 
@@ -458,7 +579,10 @@ int group;
 
 /*
  * $Log$
- * Revision 1.4  1996/07/18 15:56:40  kehr
+ * Revision 1.5  1997/01/17 16:43:40  kehr
+ * Several changes for new version 1.1.
+ *
+ * Revision 1.4  1996/07/18  15:56:40  kehr
  * Checkin after all changes that resulted from the define-letter-group
  * modification were finished. Additionally I found an ugly bug in the
  * ordrules.c file that was discovered when running the system under

@@ -394,7 +394,7 @@ ordnum of the letter-group-definition [[default]].
               (cdr match);; the corresponding letter-grp-def
               (lookup-letter-group-definition
                *indexstyle* *default-letter-group-definition*))))
-    (gol t "~&match-letter-group: ~S -> ~S"
+    (gol t "~&Letter-group: ~S -> ~S"
          letter (get-name letter-group-definition))
     letter-group-definition))
 @ %def match-letter-group
@@ -425,6 +425,11 @@ indexclass.
   (setf (gethash (get-name basetype) (get-basetypes idxcls))
         basetype)
   idxcls)
+
+(defmethod add-alias ((idxcls indexclass) basetype alias-name)
+  (let ((new-basetype (make-copy (lookup-basetype idxcls basetype)
+                                 alias-name)))
+    (add idxcls new-basetype)))
 
 (defmethod add ((idxcls indexclass) (catattr category-attribute))
   (add (get-cat-attrs idxcls) catattr)
@@ -898,7 +903,10 @@ delayed until the markup).
 @
 
 %% $Log$
-%% Revision 1.15  1996/07/16 14:05:48  kehr
+%% Revision 1.16  1997/01/17 16:42:05  kehr
+%% Several changes for new version 1.1.
+%%
+%% Revision 1.15  1996/07/16  14:05:48  kehr
 %% Checkin after all the changes to the `define-letter-group(s)' commands
 %% have been made.
 %%

@@ -9,6 +9,7 @@
 #ifndef _ORDRULES_H
 #define _ORDRULES_H
 
+#include <stdio.h>
 #include <rc/portable.h>
 #include "mkind.h"
 #undef debug
@@ -44,7 +45,9 @@ typedef struct rule {
 
     struct {		/* regular expression rule: 'rexp' --> 'str' */
       regex_t *lside;
+      char    *lstr;
       char    *rside;
+      char    type;
     } reg;
 
   } r;
@@ -100,15 +103,19 @@ extern GROUP_LIST HeadingList;	/* list of group headings */
 #define add_heading(group, head) \
 		add_group( &HeadingList, group, head )
 
+int open_debug_file PROTO(( char* filename ));
+int close_debug_file PROTO(( ));
+
 int get_group PROTO(( char *sortkey ));
 char *get_heading PROTO(( int group ));
 
-int  add_rule PROTO(( RULE_TABLE table, char *left, char *right, int isreject ));
+int  add_rule PROTO(( RULE_TABLE table, char *left, char *right,
+		      int isreject, int ruletype ));
 void apply_rules PROTO(( RULE_TABLE table, char *source, char *dest, size_t buflen ));
 void add_group PROTO(( GROUP_LIST *list, int group, char *letter ));
 
-int add_sort_rule  PROTO((char *left, char *right, int isreject));
-int add_merge_rule PROTO((char *left, char *right, int isreject));
+int add_sort_rule  PROTO((char *left, char *right, int isreject, int ruletype));
+int add_merge_rule PROTO((char *left, char *right, int isreject, int ruletype));
 
 char* gen_sortkey  PROTO((char *key));
 char* gen_mergekey  PROTO((char *key));
@@ -117,7 +124,10 @@ char* gen_mergekey  PROTO((char *key));
 
 /*
  * $Log$
- * Revision 1.3  1996/07/18 15:56:42  kehr
+ * Revision 1.4  1997/01/17 16:43:42  kehr
+ * Several changes for new version 1.1.
+ *
+ * Revision 1.3  1996/07/18  15:56:42  kehr
  * Checkin after all changes that resulted from the define-letter-group
  * modification were finished. Additionally I found an ugly bug in the
  * ordrules.c file that was discovered when running the system under

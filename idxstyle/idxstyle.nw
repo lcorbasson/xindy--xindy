@@ -240,12 +240,19 @@ above form and define two instances to the enumerations for both
                          *uppercase-roman-numbers-lookup-table*))
                     "IVXLCDM")
 
+(add-alias *indexstyle* "roman-numbers-uppercase" "ROMAN")
+(add-alias *indexstyle* "roman-numbers-uppercase" "roman-numerals-uppercase")
+
 (define-enumeration "roman-numbers-lowercase"
                     #'(lambda (str)
                         (roman-number-prefix-match
                          str
                          *lowercase-roman-numbers-lookup-table*))
                     "ivxlcdm")
+
+(add-alias *indexstyle* "roman-numbers-lowercase" "roman")
+(add-alias *indexstyle* "roman-numbers-lowercase" "roman-numerals-lowercase")
+
 @ %def roman-numbers-uppercase roman-numbers-lowercase
 
 
@@ -315,7 +322,10 @@ above form and define two instances to the enumerations for both
 @
 
 %% $Log$
-%% Revision 1.14  1996/07/03 18:41:41  kehr
+%% Revision 1.15  1997/01/17 16:42:08  kehr
+%% Several changes for new version 1.1.
+%%
+%% Revision 1.14  1996/07/03  18:41:41  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%
