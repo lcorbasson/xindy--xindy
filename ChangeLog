@@ -1,3 +1,12 @@
+Wed Nov 29 17:46:17 1995  Roger Kehr  (kehr@spelunke)
+
+	* Today I introduced a new class hierarchy in the submodule
+	  `locclass'. I wrote several regression tests due to this change.
+	  I cleared the location-class< predicate and it is now internally
+	  hidden in the module `locref'. Wrote regression tests, too.
+	  These regression tests work quite well and I'll continue with
+	  the submodule `locref'. (3 hrs)
+
 Wed Nov 22 17:37:23 1995  Roger Kehr  (kehr@spock)
 
 	* Today I set up a small testsuite for the locref-module. I had

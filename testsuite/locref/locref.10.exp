@@ -1,14 +1,55 @@
 #
-# this loads the locref package
+# test some primitives
 #
 
-new_timeout 20
-set test "(load 'locref)"
-send "(load 'locref)\n"
+####################
+#
+#  numberlist<
+#
+####################
+
+set test "(import 'locref::numberlist<)"
+send "$test\n"
 expect_T
-backup_timeout
+
+set test "(numberlist< '() '())"
+send "$test\n"
+expect_NIL
+
+set test "(numberlist< '(1) '())"
+send "$test\n"
+expect_NIL
+
+set test "(numberlist< '(1) '())"
+send "$test\n"
+expect_NIL
+
+set test "(numberlist< '(1) '(1))"
+send "$test\n"
+expect_NIL
+
+set test "(numberlist< '(1) '(2))"
+send "$test\n"
+expect_T
+
+set test "(numberlist< '(2) '(1))"
+send "$test\n"
+expect_NIL
+
+set test "(numberlist< '(2) '(2 1))"
+send "$test\n"
+expect_T
+
+set test "(numberlist< '(2 1) '(2 1))"
+send "$test\n"
+expect_NIL
+
+set test "(numberlist< '(2 1) '(2))"
+send "$test\n"
+expect_NIL
+
+set test "(numberlist< '(1 2) '(2))"
+send "$test\n"
+expect_T
 
 
-set test "(use-package 'locref)"
-send "(use-package 'locref)\n"
-expect_T

@@ -16,3 +16,18 @@ set test "(use-package 'xp)"
 send "(use-package 'xp)\n"
 expect_T
 
+#
+# this loads the locref package
+#
+
+new_timeout 20
+set test "(load 'locref)"
+send "(load 'locref)\n"
+expect_T
+backup_timeout
+
+
+set test "(use-package 'locref)"
+send "(use-package 'locref)\n"
+expect_T
+
