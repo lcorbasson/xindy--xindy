@@ -42,7 +42,7 @@ migrate to DocBook, we don't care for that problem. ;-)
   <inst>Joachim Schrod Net &amp; Publication Consultance GmbH</inst>
 </author>
 
-<date>$Revision$, $Date$, for xindy version 2.x
+<date>$Revision$, $Date$, for xindy version 2.2
 
 <abstract> The &xindy; FAQ presents answers to questions that are not
 adequately covered in other parts of the documentation, or are hard to
@@ -51,6 +51,15 @@ manual. The most up-to-date version of this FAQ can be obtained from
 the &xindy; homepage at <htmlurl
 url="http://www.xindy.org/doc/faq.html"
 name="http://www.xindy.org/doc/faq.html">.
+&lt;p>  <!-- substitute this with <p>, after running sgml2html -->
+While the content of this document is still valid, it has not been
+updated in years and doesn't describe new developments. In particular,
+it doesn't mention the many languages that are supported by Thomas
+Henlich's <em/make-rules/ system, and also doesn't know anything about
+the new commands that got introduced with the "LaTeX Companion
+Release". So, caveat. We don't want to throw out the document, though,
+since it still contains lots of useful information that's not
+available elsewhere.
 </abstract>
 
 <!-- Table of contents -->
@@ -214,75 +223,6 @@ an appropriate index style is an essential part of the document
 preparation process and should be tailored to each document anew.
 
 
-<!-- ================================================================= -->
-
-<sect1>What is <tt/tex2xindy/?
-<p>
-
-<tt/tex2xindy/ is a filter that parses `<tt/.idx/' or similar files
-and converts the <tt>\indexentry</tt> macros into a form readable by
-&xindy;.
-
-The parser of <tt/makeindex/ can be configured to recognize different
-quoting characters, etc. (see the man-page for <tt/makeindex/, section
-<em/input style specifiers/ for further details). We have tried to
-extract the parser from <tt/makeindex/ but due to several probems we
-have finally rewritten the parser using <tt/lex/. Scanners written
-with <tt/lex/ are usually fixed to a specific character set used in
-the regular expressions. Our parser, <tt/tex2xindy/ is therefore not
-configurable. If one uses a different configuration of the
-<tt/makeindex/ input style specifiers, one can change the source
-(<tt/tex2xindy.l/) to generate a completely new parser. From our
-personal experience we have rarely used more than two different
-parsers in practice so we have written <tt/tex2xindy/ in a form that
-is easily maintainable. The input specifiers are stored symbolically
-in the source. The definiton section looks like this:
-
-<tscreen><verb>
-KEYWORD  \\indexentry
-ENCAP    \|
-ACTUAL   @
-ESCAPE   \\
-LEVEL    !
-QUOTE    \"
-ROPEN    \(
-RCLOSE   \)
-ARGOPEN  \{
-ARGCLOSE \}
-</verb></tscreen>
-
-These definitions are essentially the input style specifiers as can be
-found in the man-page of <tt/makeindex/. Changing this section
-according to your needs and recompiling <tt/tex2xindy/ should be an
-easy task. Maybe we will include more pre-defined parsers in future
-releases if necessary.
-
-
-<!-- ================================================================= -->
-
-<sect1>What editor should I use when writing xindy style files?
-<p>
-
-Use <tt/Emacs/ or <tt/XEmacs/. Turn on the Lisp-mode with
-
-<tscreen><verb>
-M-x lisp-mode
-</verb></tscreen>
-
-and you can properly indent commands using <tt/M-q/. To enter this
-mode automatically add the following lines to the end of the style
-file:
-
-<tscreen><verb>
-^L
-;; Local Variables:
-;; mode: lisp
-;; End:
-</verb></tscreen>
-
-The <tt>^L</tt> (Control-L) can be entered with <tt/C-q C-l/.
-
-
 
 <!-- ================================================================= -->
 <!-- ================================================================= -->
@@ -368,6 +308,50 @@ appropriate definitions of the cross-reference classes as well.
 <!-- ================================================================= -->
 
 <sect>&xindy; and &LaTeX;
+
+
+<!-- ================================================================= -->
+
+<sect1>What is <tt/tex2xindy/?
+<p>
+
+<tt/tex2xindy/ is a filter that parses `<tt/.idx/' or similar files
+and converts the <tt>\indexentry</tt> macros into a form readable by
+&xindy;.
+
+The parser of <tt/makeindex/ can be configured to recognize different
+quoting characters, etc. (see the man-page for <tt/makeindex/, section
+<em/input style specifiers/ for further details). We have tried to
+extract the parser from <tt/makeindex/ but due to several probems we
+have finally rewritten the parser using <tt/lex/. Scanners written
+with <tt/lex/ are usually fixed to a specific character set used in
+the regular expressions. Our parser, <tt/tex2xindy/ is therefore not
+configurable. If one uses a different configuration of the
+<tt/makeindex/ input style specifiers, one can change the source
+(<tt/tex2xindy.l/) to generate a completely new parser. From our
+personal experience we have rarely used more than two different
+parsers in practice so we have written <tt/tex2xindy/ in a form that
+is easily maintainable. The input specifiers are stored symbolically
+in the source. The definiton section looks like this:
+
+<tscreen><verb>
+KEYWORD  \\indexentry
+ENCAP    \|
+ACTUAL   @
+ESCAPE   \\
+LEVEL    !
+QUOTE    \"
+ROPEN    \(
+RCLOSE   \)
+ARGOPEN  \{
+ARGCLOSE \}
+</verb></tscreen>
+
+These definitions are essentially the input style specifiers as can be
+found in the man-page of <tt/makeindex/. Changing this section
+according to your needs and recompiling <tt/tex2xindy/ should be an
+easy task. Maybe we will include more pre-defined parsers in future
+releases if necessary.
 
 
 <!-- ================================================================= -->
@@ -1014,6 +998,31 @@ Give it a try if you find yourself confused by your own markup
 specification.
 
 
+<!-- ================================================================= -->
+
+<sect1>What editor should I use when writing xindy style files?
+<p>
+
+Use <tt/Emacs/ or <tt/XEmacs/. Turn on the Lisp-mode with
+
+<tscreen><verb>
+M-x lisp-mode
+</verb></tscreen>
+
+and you can properly indent commands using <tt/M-q/. To enter this
+mode automatically add the following lines to the end of the style
+file:
+
+<tscreen><verb>
+^L
+;; Local Variables:
+;; mode: lisp
+;; End:
+</verb></tscreen>
+
+The <tt>^L</tt> (Control-L) can be entered with <tt/C-q C-l/.
+
+
 
 </article>
 
@@ -1021,6 +1030,12 @@ specification.
 <!--
 
 $Log$
+Revision 1.2  2004/05/24 21:43:16  jschrod
+    New command line interface, introduced with the "LaTeX Companion
+Release". FAQ is now processable, too.
+    Linuxdoc abstracts must not have paragraphs in them. I use a
+horrible kludge with sed to get around this.
+
 Revision 1.1  2004/01/04 21:52:35  jschrod
     Initial revision, from xindy by topic, revision 1.7.
 

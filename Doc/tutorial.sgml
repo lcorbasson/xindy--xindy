@@ -1,32 +1,47 @@
-<!doctype linuxdoc system>
+<!doctype linuxdoc system[
+<!-- $Id$
+  ======================================================================
 
-<!-- This is the tutorial of the xindy-system
+       This is the xindy style file tutorial
 
-     $Id$
+-->
 
- -->
+<!ENTITY xindy "<sf/xindy/">
+<!ENTITY XINDY "XINDY">
+<!ENTITY LaTeX "LaTeX">
+<!ENTITY TeX "TeX">
+
+]>
 
 <article>
 
 <!-- Title information -->
 
-<title>&XINDY;
+<title>&XINDY; Style File Tutorial
 
 <subtitle><sf/A Flexible Indexing System/
 
-<author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
+<author>
+  <name>Roger Kehr</name>
+  <inst>Computer Science Department, Technical University of Darmstadt</inst>
+<and>
+  <name>Joachim Schrod</name>
+  <inst>Joachim Schrod Net &amp; Publication Consultance GmbH</inst>
+</author>
 
 <date>Tutorial, Edition March 1997 for xindy version 1.1
 
-<abstract>
-<em>This is a tutorial for the &xindy; indexing system
+<abstract> This is a tutorial for the &xindy; indexing system
 &lsqb;5&rsqb;. &xindy; is a general purpose index processor that
 can be configured for a variety of document preparation systems. We
 will demonstrate step by step the incremental specification of a
 complete index style. The examples are based on indexes that are
 delivered with the system so one can get acquainted with it
 practically.
-</em>
+&lt;p>
+<bf/Caution:/ This tutorial does not describe the complete style file
+language. In particular, description of rule sets, the multi-run
+approach, and standard modules are missing.
 </abstract>
 
 <!-- Table of contents -->
@@ -115,7 +130,7 @@ This section incrementally introduces the most important aspects of
 the system. After reading this chapter you should be able to specify
 about 80% of the commonly used indexes. The examples are demonstrated
 with a &TeX; markup so one can easily typeset the results &xindy;
-produces. You need &LaTeX;2e and the ISO-Latin enhancements that come
+produces. You need &LaTeX; and the ISO-Latin enhancements that come
 with the <tt/inputenc/ package to run the following examples. Also the
 &xindy; system must already be installed.
 
@@ -142,11 +157,10 @@ file <tt/style1.xdy/ with the following content:
 (define-attributes (("definition" "usage")))
 </verb></tscreen>
 
-Now run &xindy; by typing (the switch `<tt/-l/' is the lowercase
-letter `L')
+Now run &xindy; by typing
 
 <tscreen><verb>
-eg$ xindy -l ex1.xlg style1.xdy ex1.raw
+eg$ xindy -t ex1.xlg -M style1 ex1.raw
 </verb></tscreen>
 
 You should see something like
@@ -222,7 +236,7 @@ some markup. Add the following lines to our index style:
 Now run &xindy; again and afterwards &LaTeX;:
 
 <tscreen><verb>
-eg$ xindy -l ex1.xlg style1.xdy ex1.raw
+eg$ xindy -t ex1.xlg -M style1 ex1.raw
 eg$ latex ex1.tex
 </verb></tscreen>
 
@@ -244,7 +258,7 @@ following is an excerpt of this file:
 </verb></tscreen>
 
 First of all you'll see that the file starts with the string
-<vb>\begin{theindex}</vb> and ends with <vb>\end{theindex}</vb>.
+<tt>\begin{theindex}</tt> and ends with <tt>\end{theindex}</tt>.
 Additionally some locations are correctly enclosed into a &TeX; macro
 that typesets them in shape boldface, whereas others aren't. The
 boldface ones are all those locations from the raw index that have the
@@ -270,12 +284,12 @@ terminology throughout the rest of this document.
 
 The third command caused &xindy; to insert a horizontal space
 between the keyword and the locations (the &TeX; command
-<vb>\quad{}</vb> simply inserts a specific horizontal space). The last
+<tt>\quad{}</tt> simply inserts a specific horizontal space). The last
 command caused &xindy; to separate all location references from
 each other with a comma followed by a blank, independently of any
 location class.
 
-As you already may have observed, the tilde sign (<vb>~</vb>) serves
+As you already may have observed, the tilde sign (<tt>~</tt>) serves
 as a <em/quoting character/.
 
 We continue specifying markup to get a printable result by adding more
@@ -374,9 +388,10 @@ mapping/ specified with the <tt/sort-rule/ command. The following
 scheme shows this mapping process:
 
 <figure>
-<img HTML="mappings.gif" TEX="mappings.latex"
-     PLAIN="key -> merge key -> sort key">
+<eps file="mappings.eps" height="25bp">
+<img src="mappings.gif">
 </figure>
+<#if output=txt><tscreen>key -> merge key -> sort key</tscreen></#if>
 
 We will use this command now to define a suitable sort mapping that
 fits our needs:
@@ -449,7 +464,7 @@ new file (now <tt/style2.xdy/) and run &xindy; on the raw index
 
 <tscreen><verb>
 eg$ cp style1.xdy style2.xdy
-eg$ xindy -l ex2.xlg style2.xdy ex2.raw
+eg$ xindy -t ex2.xlg -M style2 ex2.raw
 </verb></tscreen>
 
 You should see some error messages indicating that something is

@@ -1,0 +1,13 @@
+$Id$
+------------------------------------------------------------
+
+This directory contains documentation to `xindy'.
+
+Manual pages for the commands are in ../man/.
+PDF versions of the manual pages have been added for your convenience.
+
+The subdirectory ./tutorial/ contains the examples that are used in
+the tutorial.
+
+FAQ and tutorial are out of date. (Updates are welcome, of course.)
+You find more documentation at the xindy Web Site www.xindy.org.

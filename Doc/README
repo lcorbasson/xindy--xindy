@@ -19,7 +19,7 @@ associated include files from CVS. I won't specify a directory here as
 we plan to restructure the documentation directories anyhow.
 
 
-faq.sgml and manual.sgml has been migrated to linuxdoc 1.0.9.
+faq.sgml, manual.sgml, and tutorial.sgml have been migrated to linuxdoc 1.0.9.
 sgml2html works, sgml2latex has its big share of problems.
 We haven't tried sgml2info or sgml2txt.
 

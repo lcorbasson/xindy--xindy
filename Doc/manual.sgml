@@ -2,8 +2,7 @@
 <!-- $Id$
   ======================================================================
 
-       This is the xindy FAQ;
-       formerly known as xindy-by-topic manual
+       This is the xindy language manual.
 
 -->
 
@@ -20,18 +19,24 @@
 
 <title>&xindy; Manual
 
-<author>Roger Kehr, Computer Science Department, Darmstadt University
-of Technology
+<author>
+  <name>Roger Kehr</name>
+  <inst>Computer Science Department, Technical University of Darmstadt</inst>
+<and>
+  <name>Joachim Schrod</name>
+  <inst>Joachim Schrod Net &amp; Publication Consultance GmbH</inst>
+</author>
 
-<date>$Revision$, for xindy version 2.x,
-February 1998, minor changes $Date$
+<date>
+$Revision$, $Date$,
+for xindy version 2.2
 
 <abstract>
 This is the manual of the indexing system &xindy;. &xindy;
 is a powerful and flexible framework for generating indexes for many
-kinds of documents. This is Edition February 1998 and describes the
-features of &xindy; version 2.0. The most up-to-date version of
-this document can be obtained from the &xindy; Web Site at
+kinds of documents. This document describes the &xindy; processing
+model, terminology, and language, but not invocation and standard modules.
+The most up-to-date version can be obtained from the &xindy; Web Site at
 <htmlurl url="http://www.xindy.org/" name="http://www.xindy.org/">.
 </abstract>
 
@@ -50,10 +55,7 @@ this document can be obtained from the &xindy; Web Site at
 We assume that the reader is already familiar with the task of an
 index processor and has basic experience in using a markup-based
 document preparation systems such as &TeX;/&LaTeX; &lsqb;1, 2&rsqb;,
-the roff-family or SGML-based systems (e.g. its instance HTML).
-
-For a basic introduction into the handling and using of &xindy;
-refer to the tutorial that comes with this distribution.
+the roff-family, or SGML-based systems (e.g. its instance HTML).
 
 This document is structured as follows. The second part gives an
 overview on the index model that is used by our system and we define
@@ -61,10 +63,14 @@ general concepts and terms. The third part contains a list of all
 index style commands, their syntax, and a description of their
 purpose. The reader should at least have read the first part of the
 manual to understand the basic terminology to be able to use the
-command reference. The fourth part describes how &xindy; can be
-invoked, what command line options are available and more. The fifth
+command reference. The fourth
 part describes the different processing phases the system runs
 through.
+
+Invocation of &xindy; is not explained here. Please refer to the
+manual pages of the commands <tt/xindy/, <tt/texindy/,
+<tt/makeindex4/, and to the 2nd edition of the &LaTeX; Companion. The
+&xindy; Web Site has more documentation, too.
 
 
 <!-- ================================================================= -->
@@ -1806,76 +1812,6 @@ into tree like structures as defined in the index style.
 After the index has completely been processed, the markup phase
 traverses the tree-like structure of the index. Each step triggers the
 appropriate markup events resulting in the emitting of markup tags.
-This phase can be traced by using the command line option <tt/-t/.
-
-<!-- ================================================================= -->
-
-<sect>Invoking &xindy;
-
-<p>
-
-<!-- ================================================================= -->
-
-<label id="cmdline">
-<sect1>Command Line Options
-
-<p>
-The following command line options are accepted:
-
-<tscreen><verb>
-xindy  [-h] [-t] [-v] [-l logfile] [-o outfile]
-       [-L n] [-f filterprog]
-       indexstyle raw-index
-</verb></tscreen>
-
-The argument <tt/indexstyle/ names a file, containing the index style
-description. The argument <tt/raw-index/ names a file, containing the
-raw index. Both arguments are mandatory.
-
-<tscreen><verb>
-<tag/<tt/-h// Gives a short summary of all command line options.
-
-<tag/<tt/-l// Writes helpful information into the specified
-<tt/logfile/. For example, the keyword mappings are written into this
-file, so one can check if the intended mappings were actually
-performed this way.
-
-<tag/<tt/-o// Explicitly defines the name of the <tt/output/ file. If
-not given, the name of the <tt/raw-index/ is used with its extension
-changed to `<tt/.ind/' (or added, if it had no extension at all).
-
-<tag><tt/-t// Enters tracing mode of the symbolic markup tags. The
-format of the emitted tags can be defined with the command
-<tt/markup-trace/.
-
-<tag/<tt/-L// Set the &xindy; logging-level to <em/n/.
-
-<tag/<tt/-f// Run <tt/filterprog/ on <tt/raw-index/ before reading.
-The program must act as a filter reading from stdin and writing to
-stdout. The most obvious use of this option in conjunction with &TeX;
-is to run <tt/-f tex2xindy/ on the index file prior to reading the
-entries into &xindy;.
-
-
-<tag/<tt/-v// Shows the version number of &xindy;.
-
-</verb></tscreen>
-
-Errors and warnings are reported to <tt/stdout/ and additionally to
-the logfile if <tt/-l/ was specified.
-
-<!-- ================================================================= -->
-
-<label id="def searchpath">
-<sect1>Search Path
-
-<p>
-The system uses the concept of a <em/search path/ for finding the
-index style files and modules. The searchpath can be set with the
-environment variable <tt/XINDY_SEARCHPATH/ which must contain a list
-of colon-separated directories. If it ends with a colon, the built-in
-searchpath is added to the entire searchpath. See the command
-<tt>searchpath</tt> for further details.
 
 <#if output=html>
 
