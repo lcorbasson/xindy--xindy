@@ -23,8 +23,8 @@ XCOMM $Id$
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
-      NW_HEADER  = $(TOPDIR)/noweb/header.tex
-      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+      NW_HEADER  = $(TOPDIR)/xindy/noweb/header.tex
+      NW_TRAILER = $(TOPDIR)/xindy/noweb/trailer.tex
 
       ALL_LISP_SRC = base.lsp
 
@@ -51,7 +51,10 @@ DejaGnuTarget(base,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.3  1995/12/19 10:57:49  kehr
+ * Revision 1.4  1997/02/11 11:09:17  kehr
+ * Changed Imakefile and revisited source.
+ *
+ * Revision 1.3  1995/12/19  10:57:49  kehr
  * Minor changes.
  *
  * Revision 1.2  1995/11/21  14:55:13  kehr

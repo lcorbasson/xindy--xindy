@@ -1,4 +1,4 @@
-b%%
+%%
 %% This file is part of the `xindy'-project at the
 %% Technical University Darmstadt, Computer Science Department
 %% WG System Programming, Germany.
@@ -21,10 +21,8 @@ b%%
 
 \chapter{Module \module{Base}}
 
-This module is the basic part of the project. It defines generic
-functions, that are used in all other modules like pretty-printing and
-other stuff. It is like a library that may be used from other parts of
-the project.
+This module is the basic part of the project. It defines some funcions
+and macros, that are used in the other modules.
 
 \section{The root of the submodule}
 
@@ -73,18 +71,18 @@ the project.
 
 \subsection{Error message system}
 
-The error message system distinguished the following kind of errors:
+The error message system distinguishes the following kind of errors:
 
 \begin{description}
 \item[info] indicates a informative message for the user. The
   character of these messages is not an error but simply an
   information.
+\item[nraw] (reverse of `warn'). Use this to report a situation which
+  is correct but maybe unwanted. These are not reported to the logfile.
 \item[oops] indicates a serious problem. The user should correct the
   error or unpredictable behaviour might result. Use this macro to
   report a serious error. Additionally, all these problems are also
   reported to the logfile.
-\item[nraw] (reverse of `warn'). Use this to report a situation which
-  is correct but maybe unwanted. These are not reported to the logfile.
 \item[gol] (reverse of `log') writes some useful information into the
   logfile.
 \end{description}
@@ -96,6 +94,15 @@ The error message system distinguished the following kind of errors:
 @ %def info
 
 <<Error message system>>=
+(defparameter *nraw-error-message* "~&WARNING: ")
+
+(defmacro nraw (&rest msg)
+  `(PROGN
+    (FORMAT *ERROR-OUTPUT* BASE::*NRAW-ERROR-MESSAGE*)
+    (APPLY #'FORMAT *ERROR-OUTPUT* (LIST ,@msg))))
+@ %def nraw
+
+<<Error message system>>=
 (defparameter *oops-error-message* "~&ERROR: ")
 
 (defmacro oops (&rest msg)
@@ -105,27 +112,24 @@ The error message system distinguished the following kind of errors:
     (WHEN *LOGGING-ON*
       (FORMAT *LOGGING-STREAM* BASE::*OOPS-ERROR-MESSAGE*)
       (APPLY #'FORMAT *LOGGING-STREAM* MSG))))
+@ %def oops
 
+\noindent This is a more primitive version of [[oops]]. It expects a
+format string and the format string arguments as parameters.
+
+<<Error message system>>=
 (defmacro oops* (fmt args)
   `(LET ((FMT  ,fmt)
-	 (ARGS ,args))
+         (ARGS ,args))
     (FORMAT *ERROR-OUTPUT* BASE::*OOPS-ERROR-MESSAGE*)
     (APPLY #'FORMAT *ERROR-OUTPUT* FMT ARGS)
     (WHEN *LOGGING-ON*
       (FORMAT *LOGGING-STREAM* BASE::*OOPS-ERROR-MESSAGE*)
       (APPLY #'FORMAT *LOGGING-STREAM* FMT ARGS))))
-@ %def oops oops*
+@ %def oops*
 
-<<Error message system>>=
-(defparameter *nraw-error-message* "~&WARNING: ")
 
-(defmacro nraw (&rest msg)
-  `(PROGN
-    (FORMAT *ERROR-OUTPUT* BASE::*NRAW-ERROR-MESSAGE*)
-    (APPLY #'FORMAT *ERROR-OUTPUT* (LIST ,@msg))))
-@ %def nraw
-
-\subsection*{Logging message system}
+\subsection{Logging message system}
 
 The following macro can be used to issue useful logging-information
 into the stream \texttt{*log-stream*}. Logging can be dynamically
@@ -168,6 +172,9 @@ The following macro can be used to declare assertions.
 @
 
 %% $Log$
+%% Revision 1.17  1997/02/11 11:09:20  kehr
+%% Changed Imakefile and revisited source.
+%%
 %% Revision 1.16  1997/01/23 21:32:24  kehr
 %% Added global tracing-flags *....-trace*.
 %%
