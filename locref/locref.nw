@@ -172,8 +172,6 @@ following mutators and predicates.
 @
 
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \class{category-attribute}}
@@ -380,7 +378,10 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.14  1996/01/31 15:25:22  kehr
+%% Revision 1.15  1996/04/30 15:54:57  kehr
+%% Corrected some descriptions in the text.
+%%
+%% Revision 1.14  1996/01/31  15:25:22  kehr
 %% Minor modifications.
 %%
 %% Revision 1.13  1996/01/17  16:56:02  kehr

@@ -21,6 +21,8 @@
 
 \chapter{Module \module{location-reference}}
 
+\minitoc
+
 %\ModuleTitle{}
 
 \section{Introduction}
@@ -138,6 +140,12 @@ The following symbols are exported:
 \begin{defvcls}{location-class}{}%
   Abstract base-class of all location-classes.
 \end{defvcls}
+
+\begin{defmethod}{perform-match}{\tstring \x \type{location-class}\uip}%
+  Matches a string against a location-class. Returns the list of
+  strings and a list of ordnums, if it succeeded
+  (\look{sec:match.strings} for the details).
+\end{defmethod}
 
 \begin{defmethod}{set-ordnum}{\tint \x \type{location-class}\uip}%
   Sets the \emph{ordnum} of a location-class. This number is used as a
@@ -269,7 +277,10 @@ The following symbols are exported:
 
 
 %% $Log$
-%% Revision 1.9  1996/03/13 16:53:42  kehr
+%% Revision 1.10  1996/04/30 15:54:59  kehr
+%% Corrected some descriptions in the text.
+%%
+%% Revision 1.9  1996/03/13  16:53:42  kehr
 %% Don't remember specific changes. Just time to check-in.
 %%
 %% Revision 1.8  1996/01/31  15:25:25  kehr
