@@ -23,7 +23,6 @@ GROUP_LIST HeadingList;	/* list of group headings */
 
 static RULE_TYPE get_ruletype PROTO(( char *lside, char *rside ));
 static int       is_regexp PROTO(( char *s ));
-static void      unescape PROTO(( register char *s ));
 
 #define BUFLEN ((size_t)1024)
 char ordrules_string_buffer [BUFLEN];
@@ -158,17 +157,13 @@ int isreject;
   dispend( add_rule );
 }
 
-/* get the type of the rule 'lside --> rside', and delete escape sequences '\.'
-   in both strings if they are not regular expressions. */
+/* get the type of the rule 'lside --> rside' */
 static
 RULE_TYPE get_ruletype( lside, rside )
 char *lside;
 char *rside;
 {
   if ( is_regexp( lside ) || is_regexp( rside ) ) return REG_RULE;
-
-  unescape(lside);
-  unescape(rside);
 
   if ( lside[0] != NUL && lside[1] == NUL &&
        rside[0] != NUL && rside[1] == NUL ) return CHR_RULE;
@@ -190,6 +185,9 @@ char *s;
   return FALSE;
 }
 
+#if 0
+/* not necessary anymore */
+
 /* replace all '\x' sequences with the character they represent */
 static void
 unescape( s )
@@ -199,6 +197,7 @@ register char *s;
   for (d = s; *d = *s; d++)
     if (*s++ == BSH) *d = *s++;
 }
+#endif
 
 /* apply the rules from 'table' to 'source' and place the substituted result
    in 'dest' */
@@ -425,7 +424,12 @@ int group;
 
 /*
  * $Log$
- * Revision 1.2  1996/03/27 20:29:10  kehr
+ * Revision 1.3  1996/07/03 18:48:48  kehr
+ * Changed ordrules.c. The unescape() mechanism was removed so that not too
+ * much quoting is necessary anymore. This feature was olnly for the use in
+ * the old makeindex-3 systems.
+ *
+ * Revision 1.2  1996/03/27  20:29:10  kehr
  * It works. Today I had my first success in getting the FFI running with
  * the ordrules-library. The interface is defined in `ordrulei.lsp' and
  * allows direct access to the functions in `ordrules.c'.

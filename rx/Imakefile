@@ -25,7 +25,8 @@ XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
 OBJECTS = ordrules.o ordrulei.o rxsub.o rx.o regexi.o
-CLISP   = ./lisp.run -M ./lispinit.mem
+/* CLISP   = ./lisp.run -M ./lispinit.mem */
+CLISP   = clisp
 
 ordrulei.c: ordrulei.lsp
 	    $(CLISP) -c ordrulei.lsp
@@ -58,7 +59,12 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.3  1996/06/24 09:14:22  kehr
+ * Revision 1.4  1996/07/03 18:48:46  kehr
+ * Changed ordrules.c. The unescape() mechanism was removed so that not too
+ * much quoting is necessary anymore. This feature was olnly for the use in
+ * the old makeindex-3 systems.
+ *
+ * Revision 1.3  1996/06/24  09:14:22  kehr
  * Patched Imakefile. Expanded not correctly on other platforms than AIX.
  *
  * Revision 1.2  1996/03/27  20:29:01  kehr
