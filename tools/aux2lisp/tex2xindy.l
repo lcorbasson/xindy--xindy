@@ -156,7 +156,7 @@ ARGCLOSE \}
 
 
 
-<xref>{LEVEL}          { printf("\") (\""); }
+<xref>{LEVEL}          { printf("\" \""); }
 <xref,is>{ARGOPEN}     { QUOTE_ECHO; braces++; }
 <xref>{ARGCLOSE}       { if     ( braces >   1 )
                            {QUOTE_ECHO; braces--;}
@@ -217,6 +217,11 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.13  2002/01/29 13:32:58  thenlich
+  Fixed bug in crossref-to-subitem bugfix. The original one proposed by Roger Kehr
+  was right, only I copied it wrongly (shame on me). Thanks to Torsten Bronger
+  for pointing it out to me.
+
   Revision 1.12  1999/10/13 08:06:44  kehr
   Changed revision number message back to RCS-tag. No functional changes.
 
