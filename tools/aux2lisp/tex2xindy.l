@@ -98,7 +98,7 @@ ARGCLOSE \}
                             BEGIN(key); }
 
 {ESCAPE}{QUOTE}        { qs(yytext); }
-{QUOTE}                { qc(input()); }
+{QUOTE}                { qc(yytext[0]); }
 <key,print>{ENCAP}     { printf("\")) :attr \"");
                          range = NO_RANGE; BEGIN(encap); }
 <key,print>{IS}        { if (glos_mode == 1)
@@ -217,6 +217,10 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.14  2004/10/05 21:10:48  jschrod
+      Handles quote character correctly (bug ticket 1006128).
+  Test case: german-sty.
+
   Revision 1.13  2002/01/29 13:32:58  thenlich
   Fixed bug in crossref-to-subitem bugfix. The original one proposed by Roger Kehr
   was right, only I copied it wrongly (shame on me). Thanks to Torsten Bronger
