@@ -23,16 +23,16 @@
 <author>Roger Kehr, Computer Science Department, Darmstadt University
 of Technology
 
-<date>Edition February 1998 for xindy version 2.0
+<date>$Revision$, for xindy version 2.x,
+February 1998, minor changes $Date$
+
 <abstract>
-<em>This is the manual of the indexing system &xindy;. &xindy;
+This is the manual of the indexing system &xindy;. &xindy;
 is a powerful and flexible framework for generating indexes for many
 kinds of documents. This is Edition February 1998 and describes the
 features of &xindy; version 2.0. The most up-to-date version of
 this document can be obtained from the &xindy; Web Site at
-http://www.xindy.org/.
-
-</em>
+<htmlurl url="http://www.xindy.org/" name="http://www.xindy.org/">.
 </abstract>
 
 <!-- Table of contents -->

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-awk '
-/^@begin-comment/,/^@end-comment/ { next; }
-/^@begin-html/,   /^@end-html/    { next; }
-				  { print }
-'

@@ -3,14 +3,29 @@ $Id$
 
 This directory contains documentation to `xindy'.
 
-Note: The documents for GNU Info and the plain text file are a little
-      bit clumsy since they were generated from a SGML-document
-      automatically. The TeX and HTML versions look better.
-
 The subdirectory ./tutorial/ contains the examples that are used in
 the tutorial.
 
-=====================================================================
-Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
-Computer Science Department
-Technical University of Darmstadt, Germany
+
+SGML files use the LINUXDOC document type. This was used by the Linux
+Documentation Project, but is not developed further. So, migration to
+DocBook is planned for the future.
+
+
+xindy-by-topic.sgml and report.sgml are obsolete.
+xindy-by-topic.sgml has been transformed into faq.sgml;
+report.sgml is a LaTeX document now, available as techrep.tex and
+associated include files from CVS. I won't specify a directory here as
+we plan to restructure the documentation directories anyhow.
+
+
+faq.sgml and manual.sgml has been migrated to linuxdoc 1.0.9.
+sgml2html works, sgml2latex has its big share of problems.
+We haven't tried sgml2info or sgml2txt.
+
+Actually, work should be put into migration to DocBook and into a
+strategy that the generated HTML uses our layout. We see some
+alternatives to do this, btw: (1) Generate HTML and use the generated
+files as template files for HTML::Template, (2) generate XML and use
+our generic XSL scripts, (3) rebuild our XSL scripts in DSSSL, (4) or
+use DocBook XML from the start.
