@@ -14,6 +14,8 @@
 \pagestyle{noweb}
 \noweboptions{smallcode,noidentxref}
 
+\usepackage{minitoc}
+
 \tolerance=2000
 \emergencystretch=50pt
 
@@ -24,4 +26,10 @@
 \newcommand{\basicsloaded}{0}
 
 \input{noweb/defwords.tex}
+
+%% for use with minitoc
+\dominitoc
+\setcounter{minitocdepth}{3}
+\faketableofcontents
+
 
