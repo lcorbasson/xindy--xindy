@@ -1,0 +1,28 @@
+#
+# $Id$
+#
+# This is is the platform dependent part of the Makefile. Feel free to
+# change this section according to your needs.
+#
+
+# The files xindy, tex2xindy and makeindex4 go here.
+INSTBINDIR = /usr/local/bin
+
+XINDY_TOP = /usr/local/lib/xindy
+
+# Where the files xindy.run and xindy.mem can be found at runtime.
+LIBDIR = $(XINDY_TOP)/binaries/`cat PLATFORM`
+
+# Where the modules are stored
+MODULEDIR = $(XINDY_TOP)/modules
+
+# Where the files xindy.run and xindy.mem should be installed. Use a
+# different path here if for some reason the installation must be
+# somewhere else and not directly stored into LIBDIR.
+INSTLIBDIR = $(LIBDIR)
+
+# The same for the modules
+INSTMODULEDIR = $(MODULEDIR)
+
+# The documentation goes there
+INSTDOCDIR = $(XINDY_TOP)/doc
