@@ -1,3 +1,11 @@
+Tue Oct 17 16:50:45 1995  Roger Kehr  (kehr@spock)
+
+	* Today I continued to set up the Imake-environment. I had to
+	  add some Imake-templates for correct interaction of noweb and
+	  clisp. This took me quite a while but now everything works quiet
+	  fine for me. The sources are completely checked in an I can
+	  start to hack :-)
+
 Mon Oct 16 17:49:43 1995  Roger Kehr  (kehr@spelunke)
 
 	* I'll check in the whole project into CVS. Sources will be added
