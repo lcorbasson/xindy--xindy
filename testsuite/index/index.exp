@@ -14,8 +14,8 @@ expect -re ".*TABLE.*$prompt$" { pass "$test" }
 xsend {(load "../testsuite/index/testindex.lsp")}
 expect_T
 
-xsend {(print "READY")}
-expect -re ".*READY.*$prompt$" { pass "$test" }
+xsend {t}
+expect_T
 
 xsend {(process-index idx)}
 expect -re ".*INDEX.*$prompt$" { pass "$test" }
