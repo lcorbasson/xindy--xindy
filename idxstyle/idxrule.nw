@@ -537,13 +537,40 @@ should be replaced by the replacement if a valid match was found.
     ((pattern-string       :accessor get-pattern-string
                            :initarg  :pattern-string)
      (replacement-string   :accessor get-replacement-string
-                           :initarg  :replacement-string)))
+                           :initarg  :replacement-string)
+     (len-replacement-str  :accessor get-len-replacement-str
+                           :initarg  :len-replacement-str)))
 
 (defun make-string-keyword-rule (pattern replacement)
   (make-instance 'string-keyword-rule
                  :pattern-string pattern
-                 :replacement-string replacement))
+                 :replacement-string replacement
+                 :len-replacement-str (length replacement)))
 @ %def string-keyword-rule make-string-keyword-rule
+
+\no Matching and substituting substrings works as follows: we search
+the pattern in the given string. If a match was found we return a
+multiple value of the form
+\begin{center}
+  ( \emph{result-string}\ \emph{start-of-replacement}\
+  \emph{end-of-replacement} )
+\end{center}
+otherwise we return the multiple value (\emph{nil nil nil}).
+
+<<Class \class{string-keyword-rule}>>=
+(defmethod string-match+substitute ((str-rule string-keyword-rule)
+                                    (str      string)
+                                    (start2   number))
+  (let ((start (search (get-pattern-string str-rule) str :start2 start2)))
+    (when start
+      (let ((end (+ start (get-len-replacement-str str-rule))))
+        (values (concatenate 'string
+                             (subseq str 0 start)
+                             (get-replacement-string str-rule)
+                             (subseq str end))
+                start
+                end)))))
+@ %def string-match+substitute
 
 
 \paragraph{Class \class{regexp-keyword-rule}}
@@ -602,7 +629,7 @@ ourselves. The following chunk is included in the root-chunk of module
   string that may contain subexpr-replacement directives like
   \verb=\0=\ldots\verb=\9= and \verb=\&=. The replacement function is
   something like a specially constructed [[regsub]]-function which is
-  no available in the regexp-package.
+  not available in the regexp-package.
 \end{enumerate}
 
 <<Create an instance of regular-expression>>=
@@ -661,18 +688,6 @@ subexpr, \verb*| with FOO| (another string) and finally again the
                        '(SUFFIX) nil ;; nil is neccessary for the nconc/apply
                        ))))
     (coerce repl-func-list 'function)))
-
-;;(defmacro make-replacement-func (replacement)
-;;  (unless (stringp replacement)
-;;    (error "`~A' is not a string!" replacement))
-;;  (list #'(LAMBDA (SUBEXPR-LIST)
-;;       (CONCATENATE
-;;        ,@(mapcar #'(lambda (elt)
-;;                      (cond ((stringp elt) `,elt)
-;;                            ((numberp elt) `(MATCH-STRING
-;;                                             (AREF SUBEXPR-LIST ,elt)))))
-;;                  (melt-strings (split-replacement-string replacement))))
-;;       ))
 @ %def make-replacement-func
 
 \no Function [[split-replacement-string]] subdivides the replacement
@@ -717,9 +732,10 @@ above example yields
 @ %def split-replacement-string
 
 \no Since the split algorithm in some cases yields a list with several
-unconcatenated strings follow each other function [[melt-strings]]
-tries to melt srings together where possible. Its a kludge, I know but
-I don't have time to combine both functions into one.
+unconcatenated strings following each other the function
+[[melt-strings]] tries to melt strings together where possible. Its a
+kludge, I know but I don't have time to combine both functions into
+one.
 
 <<Melt split-list>>=
 #+REGEXP
@@ -768,18 +784,27 @@ form
 
 <<Class \class{regular-expression}>>=
 (defmethod regexp-match+substitute ((regexp regular-expression)
-                                    (str    string))
-  (multiple-value-bind (errcode matches)
-      (regexp-match regexp str)
-    (if (zerop errcode)
-        (let* ((match (aref matches 0))
-               (prefix (extract-string str 0 (regmatch_t-rm_so match)))
-               (suffix (extract-string str (regmatch_t-rm_eo match))))
-          (funcall (get-replacement-function regexp)
-                   str
-                   prefix suffix
-                   matches))
-        nil)))
+                                    (str    string)
+                                    (start  number))
+  (let ((seek-str (make-array (- (length str) start)
+                              :element-type 'string-char
+                              :displaced-to str
+                              :displaced-index-offset start)))
+    (multiple-value-bind (errcode matches)
+        (regexp-match regexp seek-str)
+      (if (zerop errcode)
+          (let* ((match (aref matches 0))
+                 (start-match (+ start (regmatch_t-rm_so match)))
+                 (prefix (extract-string str 0 start-match))
+                 (suffix (extract-string seek-str (regmatch_t-rm_eo match)))
+                 (res-string (funcall (get-replacement-function regexp)
+                                      seek-str
+                                      prefix suffix
+                                      matches)))
+            (values res-string
+                    start-match
+                    (- (length res-string) (length suffix))))
+          nil))))
 
 (defun extract-string (string start &optional (end (length string)))
   (declare (inline))
@@ -788,7 +813,6 @@ form
               :displaced-to string
               :displaced-index-offset start))
 @ %def regexp-match+substitute extract-string
-
 
 
 <<Export-list of submodule \module{idxrule}>>=
@@ -803,9 +827,20 @@ form
 
 (setq rx (make-regular-expression "X\\(.*\\)X" "Y\\1Y"))
 (describe rx)
-(regexp-match+substitute rx "abcXxxxxXaXxXbd")
+(regexp-match+substitute rx "abcXxxxxXaXxXbd" 0)
 (step (regexp-match+substitute rx "abcXxxxxXabd"))
 @
+
+
+\paragraph{Managing and applying the rules}
+
+After the basic implementation of the subtitution mechanism we must
+define a container for the rules and appropriate methods for the exact
+replacement strategy. Since the implementation should behave like the
+\emph{International Makeindex} we separate the rules into
+\term{prefixed} and \term{unprefixed} rules. If a pattern starts with
+a
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -878,7 +913,10 @@ form
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1996/03/13 16:50:44  kehr
+%% Revision 1.3  1996/03/28 10:52:34  kehr
+%% Unstable version.
+%%
+%% Revision 1.2  1996/03/13  16:50:44  kehr
 %% Ok, here I am. Included support for regular expressions. Minor changes
 %% in all other parts of this module. Made some tests but had some
 %% problems with LISP stack overflow errors. Don't know where they came
