@@ -79,18 +79,13 @@ following slots:
 (export '(base-index make-base-index))
 @
 
-<<markup methods>>=
-(defmethod markup-object ((idx base-index)
-                          (markup-list  list)
-                          (context-list list)
-                          (env-stack    list))
-  (do ((indexentries (get-entries idx) (cdr indexentries)))
-      ((endp indexentries)
-         (close-environments env-stack))
-    (let ((idxent (car indexentries)))
-      (setq env-stack (markup-object idxent markup-list
-                                     context-list env-stack))
-      (setq context-list (get-print-key idxent)))))
+<<Class \class{base-index}>>=
+(defun create-index (idxclass)
+  (make-instance 'base-index :idxclass idxclass))
+@ %def create-index
+
+<<Export-list of submodule \module{index}>>=
+(export '(create-index))
 @
 
 \no We are now interested in filling the index with indexentries. The
@@ -144,6 +139,10 @@ which is defined as $\lambda x,y.(if x x y)$.
   (if x x y))
 @ %def merge-indexentries join-with-precedence
 
+<<Export-list of submodule \module{index}>>=
+(export '(add-indexentry))
+@
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Sorting an index}
@@ -192,9 +191,13 @@ we simply markup the index and start right out of the box.
 <<Processing an index>>=
 (defmethod process-index ((index base-index))
   (sort-indexentries index)
-  ;(markup index)
-  )
+  ;(markup-index)
+  index)
 @ %def process-index
+
+<<Export-list of submodule \module{index}>>=
+(export '(process-index))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -248,7 +251,10 @@ we simply markup the index and start right out of the box.
 %% End:
 %%
 %% $Log$
-%% Revision 1.5  1996/01/10 11:09:00  kehr
+%% Revision 1.6  1996/01/10 16:47:19  kehr
+%% Tested and corrected the keyword-markup. Not finished, yet.
+%%
+%% Revision 1.5  1996/01/10  11:09:00  kehr
 %% Re-implemented the submodule `markup' .
 %%
 %% Revision 1.4  1996/01/09  15:58:36  kehr
