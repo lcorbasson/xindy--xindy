@@ -85,6 +85,10 @@ The indexstyle itself will be initialised later after all functions are known.
 (defparameter *default-locref-hierdepth*     0)
 @ %def *indexstyle* *indexstyle-readtable* *included-files* *default-load-paths* *default-minimum-range-length* *default-locref-hierdepth*
 
+<<Export-list of submodule \module{idxstyle}>>=
+(export '*load-paths*)
+@
+
 <<Global indexstyle initialisation>>=
 <<Initialize indexclass [[default]]>>
 <<Define default alphabets>>
@@ -325,6 +329,11 @@ above form and define two instances to the enumerations for both
 @
 
 %% $Log$
+%% Revision 1.18  1997/03/26 14:04:54  kehr
+%% Fixed a bug in (destructuring-switch-bind) that made the system fail on
+%% Allegro CL. Bug did not occur in CLISP since (set-difference) keeps
+%% the order of the first list there.
+%%
 %% Revision 1.17  1997/03/18 14:49:50  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd

@@ -177,7 +177,9 @@ string-termination character.
   (declare (ignore char))
   (let ((ch nil)
         (str (make-array 32
-                         :element-type 'string-char
+                         :element-type
+			 #+CLISP 'string-char
+			 #-CLISP 'base-char
                          :adjustable t
                          :fill-pointer 0)))
     (loop
@@ -732,8 +734,12 @@ find one we load it as usual.
                      (if-does-not-exist t)
                      echo)
   (let ((stream (open (setq filename (pathname filename))
-                      :direction :input-immutable
-                      :element-type 'string-char
+                      :direction
+		      #+CLISP :input-immutable
+		      #-CLISP :input
+                      :element-type
+		      #+CLISP 'string-char
+		      #-CLISP 'base-char
                       :if-does-not-exist nil))
         (lineno 1))
     (if stream
@@ -992,21 +998,28 @@ NIL in cases where no switch keyword was found in EXPR.
     ` (LET ((<DESTRUCTURING-SWITCH-FORM> ,expr))
         (LET ,bindings
           (HANDLER-CASE
-            (DESTRUCTURING-BIND ,lambdalist
-                (SET-DIFFERENCE <DESTRUCTURING-SWITCH-FORM>
-                                ',switchkeys)
-              ,@body)
+	      (DESTRUCTURING-BIND ,lambdalist
+		  (SET-DIFFERENCE-KEEP-ORIGINAL-ORDER
+		   <DESTRUCTURING-SWITCH-FORM>
+		   ',switchkeys)
+		,@body)
             (ERROR (COND)
-                   (DECLARE (IGNORE COND))
-                   (ERROR "~&Syntax Error in ~S." WHOLE)
-                   )
+	      (DECLARE (IGNORE COND))
+	      (ERROR "~&Syntax Error in ~S." WHOLE)
+	      )
             )
           )
         )
-      ))
+    ))
 
 
 (export 'destructuring-switch-bind)
+
+(defun set-difference-keep-original-order (set1 set2)
+  (mapcan #'(lambda (elt)
+	      (unless (member elt set2)
+		(list elt)))
+	  set1))
 
 #|
 (destructuring-switch-bind (name &rest args &key foo bar
@@ -1052,6 +1065,11 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.26  1997/03/26 14:04:57  kehr
+%% Fixed a bug in (destructuring-switch-bind) that made the system fail on
+%% Allegro CL. Bug did not occur in CLISP since (set-difference) keeps
+%% the order of the first list there.
+%%
 %% Revision 1.25  1997/03/18 14:49:53  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd
