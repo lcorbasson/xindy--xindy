@@ -196,6 +196,7 @@ The handler must be installed when dumping \xindy.
 <<Submodule \module{startup}>>=
 ;; $Id$
 
+(lisp:defpackage  "XINDY")
 (lisp:in-package  "XINDY")
 (lisp:use-package "BASE")
 (lisp:use-package "MARKUP")
@@ -220,6 +221,10 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
+%% Revision 1.15  1997/03/13 14:41:26  kehr
+%% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
+%% be compatible with ANSI CL. Bug was reported by Bernd Raichle.
+%%
 %% Revision 1.14  1997/03/10 15:52:34  kehr
 %% Modified startup-banner.
 %%

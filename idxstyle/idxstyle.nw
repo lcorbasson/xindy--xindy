@@ -284,8 +284,9 @@ above form and define two instances to the enumerations for both
 ;; $Id$
 ;;
 
+(lisp:defpackage "IDXSTYLE")
 (lisp:in-package "IDXSTYLE")
-(lisp:provide "IDXSTYLE")
+(lisp:provide "idxstyle")
 
 (lisp:use-package "CLOS")
 (lisp:require "base")
@@ -322,6 +323,10 @@ above form and define two instances to the enumerations for both
 @
 
 %% $Log$
+%% Revision 1.16  1997/03/13 14:40:51  kehr
+%% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
+%% be compatible with ANSI CL. Bug was reported by Bernd Raichle.
+%%
 %% Revision 1.15  1997/01/17 16:42:08  kehr
 %% Several changes for new version 1.1.
 %%

@@ -27,8 +27,9 @@ and macros, that are used in the other modules.
 \section{The root of the submodule}
 
 <<*>>=
+(lisp:defpackage "BASE")
 (lisp:in-package "BASE")
-(lisp:provide "BASE")
+(lisp:provide "base")
 
 (eval-when (eval load compile)
   (when (find-package "XP")
@@ -172,6 +173,10 @@ The following macro can be used to declare assertions.
 @
 
 %% $Log$
+%% Revision 1.18  1997/03/13 14:40:40  kehr
+%% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
+%% be compatible with ANSI CL. Bug was reported by Bernd Raichle.
+%%
 %% Revision 1.17  1997/02/11 11:09:20  kehr
 %% Changed Imakefile and revisited source.
 %%

@@ -1130,8 +1130,9 @@ Their elements are simple cross-references.
 <<*>>=
 ;; $Id$
 
+(lisp:defpackage "MARKUP")
 (lisp:in-package "MARKUP")
-(lisp:provide "MARKUP")
+(lisp:provide "markup")
 
 (lisp:use-package "CLOS")
 (lisp:require "base")
@@ -1215,6 +1216,10 @@ Their elements are simple cross-references.
 
 
 %% $Log$
+%% Revision 1.22  1997/03/13 14:41:23  kehr
+%% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
+%% be compatible with ANSI CL. Bug was reported by Bernd Raichle.
+%%
 %% Revision 1.21  1997/03/12 12:00:34  kehr
 %% Fixed the &WHOLE bug, that was reported by Bernd Raichle. Stupid
 %% bug, because I actually didn't need it.

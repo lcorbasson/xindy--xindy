@@ -90,7 +90,7 @@ structures.
      (origin    :reader get-origin :writer set-origin :initform 'nil)
      (subrefs                      :type list         :initform '())))
 
-(defmacro get-layers (locref)          `(SLOT-VALUE ,locref 'LAYERS))
+;; get-layers is already defined in locclass.nw
 (defmacro set-layers (layers locref)   `(SETF (SLOT-VALUE ,locref 'LAYERS) ,layers))
 
 (defmacro get-ordnums (locref)         `(SLOT-VALUE ,locref 'ORDNUMS))
@@ -386,8 +386,9 @@ i really need it.
 <<*>>=
 ;; $Id$
 
+(lisp:defpackage "LOCREF")
 (lisp:in-package "LOCREF")
-(lisp:provide "LOCREF")
+(lisp:provide "locref")
 
 (lisp:use-package "CLOS")
 (lisp:require "base")
@@ -483,6 +484,10 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
+%% Revision 1.26  1997/03/13 14:41:10  kehr
+%% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
+%% be compatible with ANSI CL. Bug was reported by Bernd Raichle.
+%%
 %% Revision 1.25  1997/03/10 15:51:59  kehr
 %% Added support for (merge-to :drop) which was inadvertently left out.
 %%

@@ -621,9 +621,6 @@ longer keyword). Otherwise we construct a new indexentry and fill its
 slots with the neccessary data.
 
 <<Processing an index>>=
-(defmacro take-first (list)
-  `(AND ,list (LIST (CAR ,list))))
-
 (defun build-indexentry-tree-recursive (idxent-list
                                         max-depth
                                         &optional (curr-depth 1))
@@ -755,8 +752,9 @@ modified their sort-key according to the sort-mapping.
 <<*>>=
 ;; $Id$
 
-(lisp:in-package 'index)
-(lisp:provide 'index)
+(lisp:defpackage "INDEX")
+(lisp:in-package "INDEX")
+(lisp:provide "index")
 
 (lisp:use-package "CLOS")
 (lisp:require "base")
@@ -764,10 +762,8 @@ modified their sort-key according to the sort-mapping.
 #+:XP (lisp:use-package "XP")
 (lisp:require "locref")
 (lisp:use-package "LOCREF")
-;(eval-when (compile load eval)
-  (lisp:require "idxstyle")
-  (lisp:use-package "IDXSTYLE")
-;)
+(lisp:require "idxstyle")
+(lisp:use-package "IDXSTYLE")
 
 ;; The following construct must be separated since the definition of
 ;; the *feature* :ORDRULES was added via loading the package
@@ -811,6 +807,10 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
+%% Revision 1.29  1997/03/13 14:41:00  kehr
+%% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
+%% be compatible with ANSI CL. Bug was reported by Bernd Raichle.
+%%
 %% Revision 1.28  1997/01/23 21:34:21  kehr
 %% Reincorporated (merge-to) rule into indexstyle.
 %% Found one bug in the creation of virtual attributes that made them be
