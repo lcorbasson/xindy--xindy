@@ -1,3 +1,32 @@
+Wed Jan 31 16:11:50 1996  Roger Kehr  <kehr@spock>
+
+	* Made minor modifications to some parts of the source. Wrote some
+	  simple parser for the .aux-files that generates Lisp-expressions
+	  to be read into the kernel system.
+
+Wed Jan 17 17:21:56 1996  Roger Kehr  <kehr@spock>
+
+	* Had some ideas how to manage the markup. Just discussed about it
+	  with Joachim and we modeled the markup-scheme. I'm now able to
+	  continue work.
+
+	* Continued to describe the external interface of the modules.
+
+Mon Jan 15 20:17:42 1996  Roger Kehr  <kehr@spock>
+
+	* Today I had a discussion with the others. I presented the whole
+	  work done yet. Explained my solutions to the
+	  location-reference-handling. Next week we will meet to discuss
+	  the user-interface. We also discussed the markup. The markup
+	  will then be based on the markup of Joachims `stil'-interpreter
+	  which is a SGML-tool for document restructuring and markup. Its
+	  features are great.
+	  (3 hrs)
+
+	* Friday I worked a lot on the markup-stuff. Had several
+	  theoretical problems.
+	  (5 hrs)
+
 Wed Jan 10 17:42:11 1996  Roger Kehr  <kehr@spock>
 
 	* Today I started testing of the keyword-markup. Write a script to

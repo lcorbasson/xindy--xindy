@@ -18,7 +18,7 @@ ProjectTop()
  *     Presentation     A set of presentation slides
  */
 
-#define submodules base locref idxstyle index xindy
+#define submodules base locref idxstyle index markup xindy
 
 /* ATTN: modules are made in list order! */
 BuildProjectModules(Report Presentation\
@@ -32,7 +32,10 @@ CVSAdd(submodules)
 /*======================================================================
  *
  * $Log$
- * Revision 1.9  1996/01/10 16:45:37  kehr
+ * Revision 1.10  1996/01/31 16:18:49  kehr
+ * Changed Imakefile.
+ *
+ * Revision 1.9  1996/01/10  16:45:37  kehr
  * .
  *
  * Revision 1.8  1995/12/07  18:21:57  kehr
