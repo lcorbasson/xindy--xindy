@@ -67,20 +67,26 @@ following slots:
 
 <<Class \class{base-index}>>=
 (defclass base-index ()
-    ((entry-table :accessor get-entry-table
+    ((entry-table :reader get-entry-table
+                  :writer set-entry-table
                   :initform (make-hash-table :test #'equal))
-     (entry-list  :reader get-entry-list
-                  :writer set-entry-list
-                  :initform '())
-     (idxclass    :reader get-idxclass
-                  :initarg :idxclass)))
+     (entry-list  :reader get-entry-list :writer set-entry-list)
+     (entries     :reader get-entries    :writer set-entries)
+     (idxclass    :reader get-idxclass   :initarg  :idxclass)
+     (hierdepth   :reader get-hierdepth  :initform *index-hierdepth-default*)))
 
 (defun make-base-index (idxclass)
-  (make-instance 'base-index :idxclass idxclass))
+  (make-instance 'base-index :idxclass idxclass ))
 @ %def base-index make-base-index
 
 <<Export-list of submodule \module{index}>>=
-(export '(base-index make-base-index get-entry-list))
+(export '(base-index make-base-index get-entries))
+@
+
+\subsubsection{Global index definitions}
+<<Global index definitions>>=
+(defparameter *index-hierdepth-default* 0) #| make all trees |#
+(defparameter *index-entry-table*     nil) #| faster access to the entry-table |#
 @
 
 \subsubsection{Index initialisation}
@@ -89,7 +95,8 @@ following slots:
 (defparameter *index* nil)
 
 (defun create-index ()
-  (setq *index* (make-base-index *indexstyle*)))
+  (setq *index* (make-base-index *indexstyle*))
+  (setq *index-entry-table* (get-entry-table *index*)))
 
 (create-index)
 @ %def *index* create-index
@@ -154,42 +161,141 @@ following steps:
 \no The description is now directly transformed into the following set
 of functions:
 
+<<Raw-index interface>>=
+(defmacro indexentry (&rest args)
+  (destructuring-switch-bind (&key
+                              key print attr locref xref
+                              &switch
+                              (open-range  :open-range)
+                              (close-range :close-range))
+      args
+    (cond ((not key)
+             (error "missing argument :key !"))
+          ((and locref xref)
+             (error "you can't specify :locref and :xref at the same time !"))
+          (locref `(ADD-LAYERED-LOCREF-INDEXENTRY
+                    :MAIN-KEY    ',key
+                    :PRINT-KEY   ',print
+                    :CATATTR     ',attr
+                    :LOCREF      ',locref
+                    :OPEN-RANGE  ',open-range
+                    :CLOSE-RANGE ',close-range))
+          (xref (when (or open-range close-range)
+                  (error "you can't specify :open-range or :close-range with :xref at the same time !"))
+                (unless attr
+                  (error "missing :attr in combination with :xref !"))
+                (add-crossref-indexentry :main-key key
+                                         :print-key print
+                                         :xref xref
+                                         :xref-class attr))
+          (t (error "you must at least specify :locref or :xref !")))))
+
+@ %def indexentry
+
+<<Raw-index interface-definitions>>=
+(defparameter *raw-index-interface-definitions*
+  '(indexentry))
+@ %def *raw-index-interface-definitions*
+
+<<Export-list of submodule \module{index}>>=
+(export '*raw-index-interface-definitions*)
+(export *raw-index-interface-definitions*)
+@
+
+\noindent The follwing function is used to add an indexentry
+containing a location-reference to the index. The function for
+supporting cross-references is implemented in a separate function.
+
 <<Adding an indexentry>>=
-(defun add-indexentry (entry-table idxcls locref
-                                   &key
-                                   (merge-key '()) (sort-key '())
-                                   (main-key  '()) (print-key '())
-                                   (catattr   nil)
-                                   (attribute nil))
-  #+:ASSERT! (assert! (and entry-table main-key idxcls locref))
+(defun add-crossref-indexentry (&key
+                                (entry-table *index-entry-table*)
+                                (idxcls *indexstyle*)
+                                (merge-key '()) (sort-key '()) (print-key '())
+                                main-key
+                                xref
+                                xref-class
+                                (attribute  nil))
+  #+:ASSERT! (assert! (and main-key xref xref-class))
 
-  (unless catattr (setq catattr "default"))
-  (let ((catattr-obj (lookup-catattr idxcls catattr)))
-    (if (not catattr-obj)
-        (warn "unknown attribute `~A'! (ignored)" catattr)
-        (let ((location-reference (create-location-reference-from-string
-                                   locref catattr-obj attribute)))
-          (when location-reference  #| only one vaild location-reference! |#
-            #+:ORDRULES (unless merge-key
-                          (setq merge-key (gen-keyword-mergekey-list main-key)))
-            #+:ORDRULES (unless sort-key
-                          (setq sort-key  (gen-keyword-sortkey-list merge-key)))
-            #-:ORDRULES (unless merge-key (setq merge-key main-key))
-            #-:ORDRULES (unless sort-key  (setq sort-key  merge-key))
-
+  (unless xref-class (setq xref-class "default"))
+  (let ((xref-class-obj (lookup-crossref-class idxcls xref-class)))
+    (if (not xref-class-obj)
+        (warn "unknown cross-reference-class `~A'! (ignored)" xref-class)
+        (let ((cross-reference (create-cross-reference xref-class-obj
+                                                       xref attribute)))
+          (when cross-reference
+            <<Manage the keyword rewrite-rules>>
             (let ((old-entry (gethash merge-key entry-table)))
               (if old-entry
                   (setf (gethash merge-key entry-table)
                         (join-indexentries (gethash merge-key entry-table)
-                                           main-key sort-key print-key locref))
+                                           main-key sort-key print-key
+                                           cross-reference))
                   (setf (gethash merge-key entry-table)
-                        (make-indexentry :main-key  main-key
-                                         :sort-key  sort-key
-                                         :merge-key merge-key
-                                         :print-key print-key
-                                         :locrefs   (list location-reference)
-                                         :indexclass idxcls)))))))))
-@ %def add-indexentry
+                        (make-index-entry :main-key  main-key
+                                          :sort-key  sort-key
+                                          :merge-key merge-key
+                                          :print-key print-key
+                                          :locrefs   (list cross-reference)
+                                          :indexclass idxcls)))))))))
+@ %def add-crossref-indexentry
+
+<<Adding an indexentry>>=
+(defun add-layered-locref-indexentry (&key
+                                      (entry-table *index-entry-table*)
+                                      (idxcls *indexstyle*)
+                                      locref main-key
+                                      (merge-key '())
+                                      (sort-key  '())  (print-key '())
+                                      (open-range nil) (close-range nil)
+                                      (catattr    nil) (attribute nil))
+  #+:ASSERT! (assert! (and main-key locref))
+
+  (if (and open-range close-range)
+      <<Warning both :open-range and :close-range>>
+      (progn
+        (unless catattr (setq catattr "default"))
+        (let ((catattr-obj (lookup-catattr idxcls catattr)))
+          (if (not catattr-obj)
+              (warn "unknown attribute `~A'! (ignored)" catattr)
+              (multiple-value-bind (num location-reference)
+                  (create-location-reference-from-string
+                   locref catattr-obj attribute)
+                (when (= 1 num) #| only one vaild location-reference! |#
+                  <<Manage the keyword rewrite-rules>>
+                  (cond (open-range  (set-rangeattr-open location-reference))
+                        (close-range (set-rangeattr-close location-reference)))
+                  (let ((old-entry (gethash merge-key entry-table)))
+                    (if old-entry
+                        (setf (gethash merge-key entry-table)
+                              (join-indexentries
+                               (gethash merge-key entry-table)
+                               main-key sort-key print-key
+                               location-reference))
+                        (setf (gethash merge-key entry-table)
+                              (make-index-entry :main-key  main-key
+                                                :sort-key  sort-key
+                                                :merge-key merge-key
+                                                :print-key print-key
+                                                :locrefs   (list
+                                                            location-reference)
+                                                :indexclass idxcls)))))))))))
+@ %def add-locref-indexentry
+
+<<Warning both :open-range and :close-range>>=
+(warn "specification of both :open-range and :close-range is invalid! (ignored)")
+@
+
+<<Manage the keyword rewrite-rules>>=
+            #+:ORDRULES (unless merge-key
+                          (setq merge-key (gen-keyword-mergekey-list main-key)))
+            #-:ORDRULES (unless merge-key (setq merge-key main-key))
+#| to be delayed
+#+:ORDRULES (unless sort-key
+                          (setq sort-key  (gen-keyword-sortkey-list merge-key)))
+#-:ORDRULES (unless sort-key  (setq sort-key  merge-key))
+|#
+@
 
 \no These functions perform the keword-rewriting on a list of strings.
 
@@ -219,40 +325,85 @@ for further details).
 
 <<Adding an indexentry>>=
 (defun join-indexentries (idxent main-key sort-key print-key locref)
-  (set-main-key (join-with-precedence (get-main-key idxent) main-key) idxent)
-  (set-sort-key (join-with-precedence (get-sort-key idxent) sort-key) idxent)
-  (set-print-key (join-with-precedence (get-print-key idxent) print-key) idxent)
-  (add-location-reference-to-indexentry idxent locref))
-
-(defun join-with-precedence (x y)
-  (declare (inline))
-  (if x x y))
+  (let ((old-main-key  (get-main-key  idxent))
+        (old-sort-key  (get-sort-key idxent))
+        (old-print-key (get-print-key idxent)))
+    (unless old-main-key  (set-main-key  main-key  idxent))
+    (unless old-sort-key  (set-sort-key  sort-key  idxent))
+    (unless old-print-key (set-print-key print-key idxent))
+    (add-location-reference-to-indexentry idxent locref)))
 @ %def merge-indexentries join-with-precedence
 
 <<Export-list of submodule \module{index}>>=
-(export '(add-indexentry))
+(export '(add-locref-indexentry add-crossref-indexentry))
 @
 
 \no The following function takes an string representing a
-location-reference and scans all possible location-classes if the
-location-reference-string matches with some of them. If it matches it
-location-reference
+location-reference and tries to create location-references from it.
+Since we cache already created instances of location-references in the
+\emph{locref-cache} we first look up the cache and return a copy of
+the template if we find one in the cache. Otherwise we scan all
+location-classes for a match. The results of that matching are then
+stored into the \emph{locref-cache}.
+
+The function returns a multiple value of the form \texttt{(\emph{num}
+  \emph{locref})} with \emph{num} being the number of matches and
+\emph{locref} being the generated location-reference.
 
 <<Adding an indexentry>>=
 (defun create-location-reference-from-string (locref-str catattr attribute)
-  (let* ((locref-list
-          (map-location-classes
-           #'(lambda (idxcls loccls)
-               (declare (ignore idxcls))
-               (build-location-reference loccls  locref-str
-                                         catattr attribute)))))
-    (case (length locref-list)
-      (0 (warn "location-reference ~S did not match any location-class! (ignored)" locref-str)
-         nil)
-      (1 (car locref-list) #| return its only member |#)
-      (t (warn "location-reference ~S did match multiple location-classes! (taking first one)" locref-str)
-         (car locref-list) #| return its first member |#))))
+  (let* ((idxcls *indexstyle*))
+    (multiple-value-bind (num locref)
+        (lookup-locref-cache idxcls locref-str)
+      (if num #| something was found! |#
+          (case num
+            (0 <<Warning none>>
+               (values nil nil))
+            (1 (values 1 (copy-locref-from-template locref catattr attribute))
+               #| return its only member |#)
+            (t <<Warning multiple>>
+               (values num (copy-locref-from-template locref catattr attribute))
+               #| return a copy of the stored template |#))
+          (let ((locref-list
+                 (map-location-classes
+                  idxcls
+                  #'(lambda (idxcls loccls)
+                      (declare (ignore idxcls))
+                      (build-location-reference loccls  locref-str
+                                                catattr attribute)))))
+            (case (length locref-list)
+              (0 <<Warning none>>
+                 (add-locref-cache idxcls locref-str 0 nil))
+              (1 (add-locref-cache idxcls locref-str 1 (car locref-list))
+                 #| return its only member |#)
+              (t <<Warning multiple>>
+                 (add-locref-cache idxcls locref-str 1 (car locref-list))
+                 #| return its first member |#)))))))
 @ %def create-location-reference-from-string
+
+<<Warning multiple>>=
+(warn "location-reference ~S did match multiple location-classes! (taking first one)"
+      locref-str)
+@
+
+<<Warning none>>=
+(warn "location-reference ~S did not match any location-class! (ignored)"
+      locref-str)
+@
+
+\no This function is creating a new location-reference by copying all
+common slots from the template into the new locref.
+
+<<Adding an indexentry>>=
+(defun copy-locref-from-template (locref catattr attribute)
+  (declare (inline))
+  (make-layered-location-reference :catattr   catattr
+                                   :attribute attribute
+                                   :string    (get-locref-string locref)
+                                   :locclass  (get-locclass      locref)
+                                   :layers    (copy-list (get-layers locref))
+                                   :ordnums   (copy-list (get-ordnums locref))))
+@ %def copy-locref-from-template
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -301,13 +452,89 @@ we simply markup the index and start right out of the box.
 
 <<Processing an index>>=
 (defmethod process-index ((index base-index))
-  (sort-indexentries index)
-  ;(set-entry-table nil index)
-  (mapc #'(lambda (idxent-cons)
-            (process-indexentry (cdr idxent-cons)))
-        (get-entry-list index))
-  index)
+  (let ((hash-list '()))
+    (maphash #'(lambda (key idxentry)
+                 (declare (ignore key))
+                 (setq hash-list (cons idxentry hash-list)))
+             (get-entry-table index))
+    #|
+    (loop for idxent being each hash-value of (index::get-entry-table index)
+    collect idxent)
+    |#
+    (set-entry-list hash-list index)
+    (build-indexentry-tree index)
+    ;;(sort-indexentries index)
+    (mapc #'process-indexentry (get-entry-list index))
+    index))
 @ %def process-index
+
+\noindent The following functions is necessary to form a flat index
+into a hierarchical one up to a maximum depth. The process is as
+follows. All indexentries that have the same top-most keyword are
+joined into a indexentry with several subentries.
+
+<<Processing an index>>=
+(defmethod build-indexentry-tree ((index base-index))
+  (let ((index-hierdepth (get-hierdepth index)
+         #|(slot-value index 'hierdepth)|#
+          ))
+    (when (numberp index-hierdepth)
+      (set-entries (build-indexentry-tree-recursive (get-entry-list index)
+                                                    index-hierdepth)
+                   index))))
+@ %def build-indexentry-tree
+
+<<Processing an index>>=
+ (defmacro take-first (list)
+  `(IF (ENDP ,list) '() (LIST (CAR ,list))))
+
+(defun build-indexentry-tree-recursive (idxent-list
+                                        max-depth
+                                        &optional (curr-depth 1))
+  (if (or (endp idxent-list)        #| nothing more to do |#
+          (<= curr-depth max-depth) #| something to do and not reached end |#
+          (= max-depth 0))          #| do all |#
+      (let ((idxent-slist (split-list #'(lambda (idxent)
+                                          (car (get-merge-key idxent)))
+                                      #'string<
+                                      idxent-list)))
+        (mapcar
+         #'(lambda (sublist)
+             (let ((car-sublist (car sublist)))
+               (if (= 1 (length (get-merge-key car-sublist)))
+                   (let ((new-idxent car-sublist))
+                     (set-subentries (build-indexentry-tree-recursive
+                                      (remove-first-keywords (cdr sublist))
+                                      max-depth
+                                      (1+ curr-depth))
+                                     new-idxent)
+                     new-idxent)
+                   (let* ((idxent car-sublist)
+                          (new-idxent
+                           (make-index-entry
+                            :merge-key (take-first (get-merge-key idxent))
+                            #|:print-key (take-first (get-print-key idxent))|#
+                            :idxclass  (get-idxclass idxent))))
+                     (set-subentries (build-indexentry-tree-recursive
+                                      (remove-first-keywords
+                                       sublist)
+                                      max-depth
+                                      (1+ curr-depth))
+                                     new-idxent)
+                     new-idxent))))
+         idxent-slist))
+      idxent-list  #| this is the otherwise case |#))
+@ %def build-indexentry-tree-recursive
+
+<<Processing an index>>=
+(defun remove-first-keywords (idxent-list)
+  (declare (inline))
+  (mapc #'(lambda (idxent)
+            (setf (slot-value idxent 'merge-key)
+                  (cdr (slot-value idxent 'merge-key))))
+        idxent-list)
+  idxent-list)
+@ %def take-first remove-first-keywords
 
 <<Export-list of submodule \module{index}>>=
 (export '(process-index))
@@ -353,12 +580,16 @@ we simply markup the index and start right out of the box.
 \subsubsection{The submodule root}
 
 <<Submodule \module{index}>>=
+<<Global index definitions>>
 <<Class \class{base-index}>>
 
 <<Adding an indexentry>>
 <<Sorting an index>>
 <<Processing an index>>
 <<Global index initialisation>>
+
+<<Raw-index interface-definitions>>
+<<Raw-index interface>>
 
 <<Export-list of submodule \module{index}>>
 @
@@ -369,7 +600,11 @@ we simply markup the index and start right out of the box.
 
 
 %% $Log$
-%% Revision 1.13  1996/05/09 11:49:44  kehr
+%% Revision 1.14  1996/05/20 08:48:51  kehr
+%% Major release of the modules locref, idxstyle and index. Added picture
+%% for the range-building FSM with a complete rewrite.
+%%
+%% Revision 1.13  1996/05/09  11:49:44  kehr
 %% Changes in all submodules, due to macro-expansion problems during
 %% compilation.
 %%
@@ -442,4 +677,4 @@ we simply markup the index and start right out of the box.
 %% Local Variables:
 %% mode: lisp
 %% TeX-master: t
-%% End:
+%% End:)

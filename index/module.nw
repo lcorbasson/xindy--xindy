@@ -107,7 +107,11 @@ process every indexentry.
 
 
 %% $Log$
-%% Revision 1.6  1996/04/30 15:54:19  kehr
+%% Revision 1.7  1996/05/20 08:48:53  kehr
+%% Major release of the modules locref, idxstyle and index. Added picture
+%% for the range-building FSM with a complete rewrite.
+%%
+%% Revision 1.6  1996/04/30  15:54:19  kehr
 %% Rewrote large parts of part that ist responsible for adding an
 %% indexentry. Moved some parts from idxentry to index and restructured
 %% the whole functions that deal with that topic.
@@ -130,6 +134,6 @@ process every indexentry.
 %%
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:

@@ -1,0 +1,65 @@
+\setlength{\unitlength}{0.012500in}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined
+% extract first six characters in \fmtname
+\def\x#1#2#3#4#5#6#7\relax{\def\x{#1#2#3#4#5#6}}%
+\expandafter\x\fmtname xxxxxx\relax \def\y{splain}%
+\ifx\x\y   % LaTeX or SliTeX?
+\gdef\SetFigFont#1#2#3{%
+  \ifnum #1<17\tiny\else \ifnum #1<20\small\else
+  \ifnum #1<24\normalsize\else \ifnum #1<29\large\else
+  \ifnum #1<34\Large\else \ifnum #1<41\LARGE\else
+     \huge\fi\fi\fi\fi\fi\fi
+  \csname #3\endcsname}%
+\else
+\gdef\SetFigFont#1#2#3{\begingroup
+  \count@#1\relax \ifnum 25<\count@\count@25\fi
+  \def\x{\endgroup\@setsize\SetFigFont{#2pt}}%
+  \expandafter\x
+    \csname \romannumeral\the\count@ pt\expandafter\endcsname
+    \csname @\romannumeral\the\count@ pt\endcsname
+  \csname #3\endcsname}%
+\fi
+\fi\endgroup
+\begin{picture}(326,206)(9,630)
+\thinlines
+\put( 67,681){\oval(56,32)}
+\put( 51,675){\makebox(0,0)[lb]{\smash{\SetFigFont{14}{16.8}{sf}End}}}
+\put(  9,821){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}Close}}}
+\put( 71,804){\oval(64,46)}
+\put(272,804){\oval(64,46)}
+\put(251,677){\oval(112,60)}
+\put(227,796){\vector(-1, 0){115}}
+\put(112,810){\vector( 1, 0){115}}
+\put(264,714){\vector( 0, 1){ 63}}
+\put( 54,777){\vector( 0,-1){ 73}}
+\put(208,698){\vector(-3, 2){114.231}}
+\put( 99,777){\vector( 3,-2){114}}
+\put(287,779){\vector( 0,-1){ 71}}
+\put(308,814){\line( 1, 0){ 18}}
+\put(326,814){\line( 0,-1){ 19}}
+\put(326,795){\vector(-1, 0){ 18}}
+\put( 33,814){\line(-1, 0){ 18}}
+\put( 15,814){\line( 0,-1){ 22}}
+\put( 15,792){\vector( 1, 0){ 18}}
+\put(314,666){\line( 1, 0){ 21}}
+\put(335,666){\line( 0,-1){ 23}}
+\put(335,643){\vector(-1, 0){ 21}}
+\put(127,787){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}End,  Open/Break,}}}
+\put( 59,724){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}End}}}
+\put(142,756){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}Open=PUSH}}}
+\put(330,810){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}Close=IGN}}}
+\put(330,794){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}LR/Succ,}}}
+\put(327,786){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}Open+Close/Succ}}}
+\put(333,775){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}=PUSH}}}
+\put(290,750){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}Open/Succ=PUSH}}}
+\put(259,630){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}LR, Open+Close=PUSH}}}
+\put(220,724){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}=PUSH}}}
+\put(216,732){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}Close}}}
+\put(110,815){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}LR, Open+Close=PUSH}}}
+\put(119,778){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}LR/Break=BACK,MAKE}}}
+\put(122,702){\makebox(0,0)[lb]{\smash{\SetFigFont{12}{14.4}{it}End=ERR}}}
+\put(251,796){\makebox(0,0)[lb]{\smash{\SetFigFont{14}{16.8}{sf}Read}}}
+\put( 54,796){\makebox(0,0)[lb]{\smash{\SetFigFont{14}{16.8}{sf}Start}}}
+\put(204,672){\makebox(0,0)[lb]{\smash{\SetFigFont{14}{16.8}{sf}Open-Range}}}
+\end{picture}

@@ -66,47 +66,36 @@ Class \textsf{location-range} contains the following slots.
 
 <<Class \class{location-range}>>=
 (defclass location-range ()
-    ((length   :accessor get-length                     :initform 2)
-     (first    :reader   get-first                      :initarg :first)
-     (last     :reader   get-last    :writer set-last   :initarg :last)
-     (inner    :reader   get-inner   :writer set-inner  :initarg :inner)
-     (ordnums  :reader   get-ordnums                    :initarg :ordnums)
-     (locclass :reader   get-locclass                   :initarg :locclass)
-     (catattr  :reader   get-catattr                    :initarg :catattr)))
+    ((length   :reader get-length                     :initarg :length)
+     (first    :reader get-first                      :initarg :first)
+     (last     :reader get-last    :writer set-last   :initarg :last)
+     (inner    :reader get-inner   :writer set-inner  :initarg :inner)
+     (ordnums                                         :initarg :ordnums)
+     (locclass                                        :initarg :locclass)
+     (catattr                                         :initarg :catattr)))
 
-(defun make-location-range (first last)
-  (let ((first-locref (car first)))
-    (make-instance 'location-range
-                   :first first-locref :last (car last)
-                   :inner (cons last (list first))
-                   :ordnums (get-ordnums first-locref)
-                   :locclass (get-locclass first-locref)
-                   :catattr  (get-catattr first-locref))))
-@ %def location-range length first last inner locclass catattr make-location-range
+#|:reader(s) get-catattr/get-locclass/get-ordnums are already optimized macros|#
 
-\no We now need to define how we join objects together to get a range.
-The following methods join together two locref-lists and a range with
-a locref-list. They both return the resulting range.
-
-<<Class \class{location-range}>>=
-(defmethod join ((locrange location-range) (locref-list list))
-  (set-inner (cons locref-list (get-inner locrange)) locrange)
-  (set-last  (car locref-list) locrange)
-  (incf (get-length locrange))
-  locrange)
-
-(defmethod join ((locref-list-1 list) (locref-list-2 list))
-  (make-location-range locref-list-1 locref-list-2))
-@ %def join
+(defun make-location-range (&key length first last first-ordnum inner locclass)
+  (make-instance 'location-range
+                 :length   length
+                 :first    first
+                 :last     last
+                 :inner    inner
+                 :ordnums  first-ordnum
+                 :locclass locclass
+                 :catattr  (get-catattr first)))
+@ %def location-range make-location-range
 
 <<Export-list of submodule \module{ranges}>>=
-(export '(location-range
-          get-first get-last))
+(export '(location-range get-first get-last))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Building of ranges}
+
+\subsection{Overview}
 
 \paragraph*{Precondition}
 
@@ -150,116 +139,379 @@ This structure is left to allow better testing. It may be cleaned up
 in further steps.
 
 <<Building of location-reference-ranges>>=
-(defmethod build-ranges ((catattr-list list)
+(defmethod build-ranges ((locref-list list)
                          (idxcls indexclass)
                          (loccls var-location-class))
-  catattr-list)
+  locref-list)
 @ %def build-ranges
 
-\no How does it work? For standard-location-classes we first test if
-the location-class all these location-references (passed by
-[[locref-list]]) belong to allows a range-building at all. If not we
-exit immediately and return the given list as it is.
 
-Otherwise we remove all location-references from the list whose state
-is `deleted'. This occurs in a situation when already applied
-\irule{drop-if-merged}-rules set their state to `deleted'. These
-location-references mustn't be used anymore. The resulting list is now
-split into sublists with location-references that share the same
-ordnum.
+\subsection{Building of ranges for \class{standard-location-class}}
 
-We initialise [[result-list]] which is used to collect the results of
-our process, [[prev-ordnum]] contains the ordnum of the previously
-processed location-reference(s), [[prev-object]] contains the
-previously processed object which can be a location-range or a list of
-location-references, [[drop-function]] calculates the drop-function
-which is needed later. Because it may be applied several times we
-calculated it right now for performance reasons.
+The location-references that are read from the raw-index stream have a
+tag associated with them stored in slot [[rangeattr]]. This flag
+indicates if this location-reference marks the beginning or end of a
+explicit range. If none of those the location-refrence is a normal
+location-reference. This tag must be carefully integrated into the
+process of range-building. Actually this is now the third major
+rewrite of the following code now resulting in a finite-state-machine
+driven process. The graph with the associated state transitions is
+presented here. It looks very ugly, but I think it may help to
+understand the code below much better.
 
-We then iterate over the sublists containing location-references with
-the same ordnum. For each of these sublists we calcuate the ordnum
-(stored in the [[ordnum]]-slot of one of its members (we take the
-first one by using [[car]]).
+\medskip
+\input{rangefsm.ltx}
+\medskip
 
-We then check if this ordnum is a successor of the previously
-processed object. In this case we join the [[previous-object]] with
-the [[curr-locref-grp]]. Method [[join]] is defined for both
-possilities (\emph{range locref-list}) and (\emph{locref-list
-  locref-list}) and returns a location-range which is stored in
-[[prev-object]]. In the other case we [[post-process]] the
-[[prev-object]] and append it to the [[result-list]]. Additionally the
-[[curr-locref-grp]] becomes the new [[prev-object]]. All cases
-[[curr-ordnum]] becomes the new [[prev-ordnum]].
+\no The states are as follows:
 
-At the end of the process mustn't forget to [[post-process]] the last
-[[prev-object]] because the [[do]]-loop was left before this action
-could be performed.
+\begin{states}{XXXXXXXXXXXX}
+\item[:START] indicates the start of a new process of building ranges.
+  If we encounter a [[close]] tag the input is invalid.
+\item[:READ] indicates that we are in the middle of a range-building.
+  If we encounter a [[close]] tag the input is invalid.
+\item[:OPEN-RANGE] indicates that we have met a [[open]] range and now
+  eat all location-references up to the next [[close]]. If we
+  encounter another [[open]] or reach the end of the list without
+  meeting a [[close]], then the input was invalid. Meaningful warnings
+  should be issued in these cases.
+\end{states}
+
+\no How does it work? First we remove all location-references from the
+list whose state is `deleted'. This occurs in a situation when already
+applied \irule{drop-if-merged}-rules set their state to `deleted'.
+These location-references mustn't be used anymore.
+
+If the location-class all these location-references (passed by
+[[locref-list]]) belong to, allows a range-building at all, we
+proceed, otherwise we return the [[valid-list]] as it is.
+
+The list is now split into sublists with location-references that
+share the same ordnum. Afterwards we enter the finite state machine
+which consists of a simple [[loop]]. It is described far more detailed
+below and implements the given fsm-graph above.
 
 <<Building of location-reference-ranges>>=
+<<Build-ranges macro definitions>>
 (defmethod build-ranges ((locref-list list)
                          (idxcls indexclass)
                          (loccls standard-location-class))
-  (cond ((joining-allowed-p loccls)
-           (let ((same-ordnum-list
-                  (split-same-locrefs
-                   (mapcan #'(lambda (locref)
-                               (unless (state-deleted-p locref)
-                                 (list locref)))
-                           locref-list)))
-                 (result-list '())
-                 (prev-ordnum '())
-                 (prev-object 'nil)
-                 (drop-function (get-merge-drop-hook idxcls)))
-             (do ((locref-list same-ordnum-list (cdr locref-list)))
-                 ((endp locref-list))
-               (let* ((curr-locref-grp (car locref-list))
-                      (curr-ordnum (get-ordnums (car curr-locref-grp))))
-                 (if (ordnum-successor-p prev-ordnum curr-ordnum)
-                     (progn
-                       (setq prev-object
-                             (join prev-object curr-locref-grp)))
-                     (progn
-                       (when prev-object #| we are about to start |#
-                         (setq result-list
-                               (cons (post-process prev-object
-                                                   drop-function)
-                                     result-list)))
-                       (setq prev-object curr-locref-grp)))
-                 (setq prev-ordnum curr-ordnum)))
-             (cons (post-process prev-object drop-function) result-list)))
-        (t locref-list)))
+  (let ((valid-list (mapcan #'(lambda (locref)
+                                (unless (state-deleted-p locref)
+                                  (list locref)))
+                            locref-list)))
+    (ifnot valid-list
+           '()
+           (ifnot (joining-allowed-p loccls)
+                  valid-list
+                  (let ((same-ordnum-list (split-same-locrefs valid-list))
+                        <<Declare more variables>> )
+                    (loop
+                      <<Calculate new variable settings>>
+                      (case state
+                        (:START       <<Code for [[:START]]>> )
+                        (:READ        <<Code for [[:READ]]>> )
+                        (:OPEN-RANGE  <<Code for [[:OPEN-RANGE]]>> ))
+                      <<Do neccessary actions>> ))))))
 @ %def build-ranges
 
-\no What for do we need a \term{post-processing}? Our approach is to
-build ranges even if their length may be too short that they are
-allowed to exist. Therefore we need the post-processing to check if
-the range-building is allowed at all. If it's not allowed, we simply
-return the list as it was before and drop the range. Otherwise we
-iterate over all location-references that were eaten up (they are
-stored in the [[inner]]-slot) and apply the [[drop-function]] on their
-parents if they have parents. This may result in the situtation that a
-parents state is reset to `deleted' or `virtual'.
+\no The following code manages the handling in state [[:START]]. If we
+encounter the end of the input list we return the [[result-list]].
+The normal case is that we meet location-references without any tag.
+We simply push them onto the stack and swith to state [[:READ]]. If we
+meet a [[open]] and a [[close]] location-reference at the same time,
+we assume that the are placed in the right order and switch into state
+[[:READ]] after pushing the locrefs to the stack. When seeing a
+[[open]] we switch to state [[:OPEN-RANGE]] also accompanied by a
+push. The last case shouldn't occur!
 
-The post-processing for a locref-list simply returns that list.
+<<Code for [[:START]]>>=
+(cond (list-end     (return (apply #'nconc  #| see note below for explanation |#
+                                   (apply #'nconc result-list))))
+      (no-typ-p     (newstat :READ)       (pushl))
+      (open+close-p (newstat :READ)       (pushl))
+      (open-p       (newstat :OPEN-RANGE) (pushl) (set-open-range))
+      (close-p      (warn-invalid-close locref))
+      (t (error
+          "INTERNAL-ERROR in build-ranges - :START")))
+@
 
 <<Building of location-reference-ranges>>=
-(defmethod post-process ((locrange location-range) (drop-function function))
-  (let ((locref-list (apply #'nconc (get-inner locrange))))
-    (cond ((>= (get-length locrange)
-               (get-join-length (get-locclass locrange)))
-             (mapc #'(lambda (locref)
-                       (let ((origin (get-origin locref)))
-                         (when origin
-                           (funcall drop-function origin))))
-                   locref-list)
-             (set-inner '() locrange)
-             (list locrange))
-          (t locref-list))))
+(defun warn-invalid-close (locref)
+  (warn
+   (with-output-to-string (s)
+     (format s "Found a :close-range in the index that wasn't opened before!~%")
+     (format s "Location-reference is ~A in keyword ~A~%"
+             (get-locref-string locref)
+             (get-main-key *currently-processed-indexentry*))
+     (format s "I'll continue and ignore this.~%"))))
+@
 
-(defmethod post-process ((locref-list list) x)
-  (declare (ignore x))
-  locref-list)
-@ %def post-process
+\no The piece of code for [[:READ]] is more sophisticated. If we meet
+the [[list-end]] we switch back to state [[:START]] accompanied by
+trying to make a range from the stack-contents. An important invarant
+of the algorithm is that there is always something on the stack when
+in states [[:READ]] or [[:OPEN-RANGE]], so [[make-range]] has always
+something to do. Otherwise we are interested if the location-reference
+is successor of the previous one, whose ordnum is stored in
+[[prev-ordnum]]. If the successor relationship holds and we encounter
+a tag-free location-reference or one with both tags set, we simply
+push it to the stack. If we met a location-reference that breaks the
+range we switch back to state [[:START]], keeping the current locref
+for the next start and trying to build a range. The last case is an
+error, since in [[:READ]]-mode we shouldn't encounter a [[close]] that
+was never opened.
+
+<<Code for [[:READ]]>>=
+(if list-end
+    (progn (newstat :START) (make-range))
+    (progn
+      (setq curr-ordnum (get-ordnums locref))
+      (let ((succ-p (ordnum-successor-p prev-ordnum curr-ordnum)))
+        (cond ((and succ-p
+                    (or no-typ-p
+                        open+close-p)) (pushl))
+              ((or no-typ-p
+                   (not (and succ-p
+                             open-p))) (newstat :START) (keep) (make-range))
+              (open-p                  (newstat :OPEN-RANGE)
+                                       (pushl) (set-open-range))
+              (close-p  (warn-invalid-close locref))
+              (t (error "INTERNAL-ERROR in build-ranges - :READ"))))))
+@
+
+\no In this mode we eat all until we find a [[close]]. If the list-end
+is reached we have an unmatched [[open]]. A [[close]] switches back to
+state [[:READ]] and another [[open]] is senseless.
+
+<<Code for [[:OPEN-RANGE]]>>=
+(cond (list-end  <<Warning unmatched [[:OPEN-RANGE]]>> (newstat :START))
+      ((or no-typ-p open+close-p) (pushl))
+      (open-p    <<Warning that [[:OPEN-RANGE]] met [[:OPEN]]>> )
+      (close-p    (newstat :READ) (pushl))
+      (t (error "INTERNAL-ERROR in build-ranges - :OPEN-RANGE")))
+@
+
+<<Warning unmatched [[:OPEN-RANGE]]>>=
+(warn
+   (with-output-to-string (s)
+     (format s "Found no :close-range matching an already opened one!~%")
+     (format s "Location-reference is ~A in keyword ~A.~%"
+             (get-locref-string last-open-locref)
+             (get-main-key *currently-processed-indexentry*))
+     (format s "Maybe I lost some of the regular location-references.~%")))
+@
+
+<<Warning that [[:OPEN-RANGE]] met [[:OPEN]]>>=
+(warn
+ (with-output-to-string (s)
+   (format s "Found :open-range that was already opened!~%")
+   (format s "Location-references are ~A and ~A in keyword ~A.~%"
+           (get-locref-string last-open-locref)
+           (get-locref-string locref)
+           (get-main-key *currently-processed-indexentry*))
+   (format s "I'll continue and ignore this.~%")))
+@
+
+\no Here are the neccessary macros. Their aim is to hide the
+implementation details from the interested reader.
+
+<<Build-ranges macro definitions>>=
+(defmacro newstat (s)
+  `(setq new-state ,s))
+
+(defmacro pushl ()
+  `(progn
+    (setq curr-ordnum (get-ordnums locref))
+    (unless locref-stack
+      (setq first-ordnum curr-ordnum)
+      (setq first-locref locref))
+    (setq prev-ordnum curr-ordnum)
+    (push locrefs locref-stack)))
+
+(defmacro set-open-range ()
+  `(setq last-open-locref locref))
+
+(defmacro keep ()
+  `(setq back-flag t))
+
+(defmacro make-range ()
+  `(setq make-flag t))
+@
+
+<<Declare more variables>>=
+(locref-stack '())
+(result-list  '())
+(state        :START)
+(join-length  (get-join-length loccls))
+new-state
+open-p close-p open+close-p no-typ-p list-end
+make-flag back-flag
+locrefs locref last-open-locref first-locref
+first-ordnum prev-ordnum curr-ordnum
+@
+
+<<Calculate new variable settings>>=
+(setq locrefs  (car same-ordnum-list))
+(setq locref   (car locrefs))
+(setq list-end (null locrefs))
+(setq open-p   (find-if #'(lambda (locref)
+                            (rangeattr-open-p (get-rangeattr locref)))
+                        locrefs))
+(setq close-p (find-if #'(lambda (locref)
+                           (rangeattr-close-p (get-rangeattr locref)))
+                       locrefs))
+(setq open+close-p  (and open-p close-p))
+(setq no-typ-p (not (or  open-p close-p)))
+@
+
+\no Here are the actions that are to performed at the end of every
+loop. If [[make-flag]] is set we try to build a range pushing the
+result to the [[result-list]] and resetting the flag. If the
+[[back-flag]] is set we are not allowed to remove the first element of
+the [[same-ordnum-list]].
+
+\begin{note}
+  Some remarks on the used data structures: The [[locref-stack]]
+  consists of a list of lists of location-references or -ranges, i.e.\
+  \texttt{( (\ldots) \ldots\ (\ldots) )}. The elements are on the
+  second level. When pushing the whole stack into the [[result-list]]
+  we must consider that this is actually a list of locref-stacks and
+  therfore has its leafs on the third level.
+
+  When pushing a location-range to the [[result-list]] we must take
+  care that is pushed onto the same level as the location-references.
+  This is the reason why we push it onto the list after enclosing it
+  into two [[list]]-forms (\emph{see} below in the code).
+
+  Before returning the list we simply remove all the unneccessary
+  braces from the [[result-list]] (\emph{see} code for [[:START]]).
+\end{note}
+
+<<Do neccessary actions>>=
+(when make-flag
+  (let ((range-len (- (car (last prev-ordnum)) (car (last first-ordnum)))))
+     (if (>= range-len join-length)
+         (push (list (list (make-location-range :first-ordnum first-ordnum
+                                                :locclass loccls
+                                                :inner  locref-stack
+                                                :first  first-locref
+                                                :last   locrefs
+                                                :length range-len)))
+               result-list)
+         (push locref-stack result-list))
+    (setq locref-stack '())
+    (setq make-flag nil)))
+(if back-flag
+    (setq back-flag nil)
+    (setq same-ordnum-list (cdr same-ordnum-list)))
+(setq state new-state)
+@
+
+\no That's all folks!
+
+%%(defmacro no-typ ()
+%%  `(= 1 (length elt)))
+%%(defmacro open-typ ()
+%%  `(MEMBER :OPEN (CDR ELT)))
+%%(defmacro close-typ ()
+%%  `(MEMBER :CLOSE (CDR ELT)))
+%%(defmacro open+close-typ ()
+%%  `(AND
+%%    (MEMBER :OPEN (CDR ELT))
+%%    (MEMBER :CLOSE (CDR ELT))))
+%%(defmacro nstat (s)
+%%  `(SETQ NSTATE ,s))
+%%(defmacro push-elt ()
+%%  `(PUSH (CAR ELT) TMP))
+%%(defmacro back ()
+%%  `(SETQ BACK-FLAG t))
+%%(defmacro make ()
+%%  `(SETQ MAKE-FLAG t))
+%%(defmacro succ ()
+%%  `(= (CAR ELT) (1+ (CAR TMP))))
+%%(defun FSM (list)
+%%  (let ((state :START)
+%%        (nstate nil)
+%%        (tmp   '())
+%%        (res   '())
+%%        (make-flag nil)
+%%        (back-flag nil)
+%%        (elt   nil))
+%%    (loop
+%%      (format t "state  = ~A~%" state)
+%%      (format t "list   = ~A~%" list)
+%%      (format t "res    = ~A~%" res)
+%%      (format t "tmp    = ~A~%" tmp)
+%%      (format t "finding  ~A~%~%" (car list))
+%%      (setq elt (car list))
+%%      (case state
+%%        (:START
+%%           (cond ((endp list)      (return res))
+%%                 ((open+close-typ) (nstat :READ) (push-elt))
+%%                 ((no-typ)         (nstat :READ) (push-elt))
+%%                 ((open-typ)       (nstat :OPEN-RANGE) (push-elt))
+%%                 ((close-typ)      (error ":START meets :CLOSE"))
+%%                 (t (error "wee forgot something in :START"))))
+%%        (:READ
+%%           (cond ((endp list)             (nstat :START)  (make))
+%%                 ((and (succ)
+%%                       (open+close-typ))  (push-elt))
+%%                 ((and (succ) (no-typ))   (push-elt))
+%%                 ((no-typ)                (nstat :START)  (back) (make))
+%%                 ((and (succ) (open-typ)) (nstat :OPEN-RANGE) (push-elt))
+%%                 ((close-typ)             (error ":READ meets :CLOSE"))
+%%                 (t (error "wee forgot something in :READ"))))
+%%        (:OPEN-RANGE
+%%           (cond ((endp list)           (error ":OPEN-RANGE meets END"))
+%%                 ((or (no-typ)
+%%                      (open+close-typ)) (push-elt))
+%%                 ((open-typ)            (error ":OPEN-RANGE meets :OPEN"))
+%%                 ((close-typ)           (nstat :READ) (push-elt))
+%%                 (t (error "wee forgot something in :OPEN-RANGE")))))
+%%      (when make-flag
+%%        (if (>= (- (car tmp) (car (last tmp))) 2)
+%%            (push (cons (car tmp) (car (last tmp)))
+%%                  res)
+%%            (push tmp res))
+%%        (setq tmp '())
+%%        (setq make-flag nil))
+%%      (if back-flag
+%%          (setq back-flag nil)
+%%          (pop list))
+%%      (setq state nstate)
+%%      )))
+
+%%\no What for do we need a \term{post-processing}? Our approach is to
+%%build ranges even if their length may be too short that they are
+%%allowed to exist. Therefore we need the post-processing to check if
+%%the range-building is allowed at all. If it's not allowed, we simply
+%%return the list as it was before and drop the range. Otherwise we
+%%iterate over all location-references that were eaten up (they are
+%%stored in the [[inner]]-slot) and apply the [[drop-function]] on their
+%%parents if they have parents. This may result in the situtation that a
+%%parents state is reset to `deleted' or `virtual'.
+
+%%The post-processing for a locref-list simply returns that list.
+
+%%<Building of location-reference-ranges old version>=
+%%(defmethod post-process ((locrange location-range) (drop-function function))
+%%  (let ((locref-list (apply #'nconc (get-inner locrange))))
+%%    (cond ((>= (get-length locrange)
+%%               (get-join-length (get-locclass locrange)))
+%%             (mapc #'(lambda (locref)
+%%                       (let ((origin (get-origin locref)))
+%%                         (when origin
+%%                           (funcall drop-function origin))))
+%%                   locref-list)
+%%             (set-inner '() locrange)
+%%             (list locrange))
+%%          (t locref-list))))
+
+%%(defmethod post-process ((locref-list list) x)
+%%  (declare (ignore x))
+%%  locref-list)
+%%@ %def post-process
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -384,7 +636,11 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1996/05/09 11:49:46  kehr
+%% Revision 1.3  1996/05/20 08:49:01  kehr
+%% Major release of the modules locref, idxstyle and index. Added picture
+%% for the range-building FSM with a complete rewrite.
+%%
+%% Revision 1.2  1996/05/09  11:49:46  kehr
 %% Changes in all submodules, due to macro-expansion problems during
 %% compilation.
 %%

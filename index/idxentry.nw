@@ -68,57 +68,90 @@ with
 
 The following symbols are exported:
 
-\begin{defcls}{indexentry}{}
+\begin{defcls}{index-entry}{}
   Decribes indexentries.
 \end{defcls}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Class \class{indexentry}}
+\subsubsection{Class \class{index-entry}}
 \label{sec:cls-indexentry}
 
-Class \class{indexentry} is directly derived from the specification
+Class \class{index-entry} is directly derived from the specification
 above.
 
-<<Class \class{indexentry}>>=
-(defclass indexentry ()
-    ((main-key   :reader get-main-key   :writer set-main-key   :initarg :main-key)
-     (merge-key  :reader get-merge-key                         :initarg :merge-key)
-     (sort-key   :reader get-sort-key   :writer set-sort-key   :initarg :sort-key)
-     (print-key  :reader get-print-key  :writer set-print-key  :initarg :print-key)
-     (locrefs    :reader get-locrefs    :writer set-locrefs    :initarg :locrefs)
-     (idxclass   :reader get-idxclass                          :initarg :idxclass)
+<<Class \class{index-entry}>>=
+(defclass index-entry ()
+    ((main-key   :initarg :main-key)
+     (merge-key  :initarg :merge-key)
+     (sort-key   :initarg :sort-key)
+     (print-key  :initarg :print-key)
+     (locrefs    :reader get-locrefs    :writer set-locrefs :initarg :locrefs)
+     (idxclass   :reader get-idxclass                      :initarg :idxclass)
      (subentries :reader get-subentries :writer set-subentries :initform '())))
 
-(defun make-indexentry (&key (main-key '()) (merge-key '())
+(defun make-index-entry (&key (main-key '()) (merge-key '())
                              (sort-key '()) (print-key '())
                              (locrefs '())  (idxclass nil)
                              &allow-other-keys)
-  (make-instance 'indexentry :main-key main-key :merge-key merge-key
+  (make-instance 'index-entry :main-key main-key :merge-key merge-key
                              :sort-key sort-key :print-key print-key
                              :locrefs  locrefs  :idxclass  idxclass))
-@ %def indexentry make-indexentry
+@ %def index-entry make-index-entry
+
+\no To keep track of the currently processed indexentry we store this
+value in the following global parameter.
+
+<<Class \class{index-entry}>>=
+(defvar *currently-processed-indexentry*)
+@ %def *currently-processed-indexentry*
 
 \no To add a location-reference to an indexentry we use the generic
 function [[add]]. (For a detailed description see
 \look{sec:precondition})
 
-<<Class \class{indexentry}>>=
-(defmethod add-location-reference-to-indexentry ((idxent indexentry)
-                                                 (locref location-reference))
-  (unless (some #'(lambda (lref) (locref= locref lref))
-                (get-locrefs idxent))
-    (set-locrefs (cons locref (get-locrefs idxent)) idxent))
-  idxent)
+<<Class \class{index-entry}>>=
+(defmacro add-location-reference-to-indexentry (idxent locref)
+  `(PROGN
+    (UNLESS (SOME #'(LAMBDA (LREF)
+                      (LOCREF= ,locref LREF))
+                  (GET-LOCREFS ,idxent))
+      (SET-LOCREFS (CONS ,locref (GET-LOCREFS ,idxent))
+                   ,idxent))
+    ,idxent))
 @ %def add-location-reference-to-indexentry
 
+<<Class \class{index-entry}>>=
+(defmacro get-main-key (locref)
+  `(SLOT-VALUE ,locref 'MAIN-KEY))
+(defmacro get-merge-key (locref)
+  `(SLOT-VALUE ,locref 'MERGE-KEY))
+(defmacro get-sort-key (locref)
+  `(SLOT-VALUE ,locref 'SORT-KEY))
+(defmacro get-print-key (locref)
+  `(SLOT-VALUE ,locref 'PRINT-KEY))
+@ %def get-merge-key get-main-key get-sort-key get-print-key
+
+<<Class \class{index-entry}>>=
+(defmacro set-main-key (key locref)
+  `(SETF (SLOT-VALUE ,locref 'MAIN-KEY) ,key))
+(defmacro set-merge-key (key locref)
+  `(SETF (SLOT-VALUE ,locref 'MERGE-KEY) ,key))
+(defmacro set-sort-key (key locref)
+  `(SETF (SLOT-VALUE ,locref 'SORT-KEY) ,key))
+(defmacro set-print-key (key locref)
+  `(SETF (SLOT-VALUE ,locref 'PRINT-KEY) ,key))
+@ %def set-merge-key set-main-key set-sort-key set-print-key
+
 <<Export-list of submodule \module{idxentry}>>=
-(export '(indexentry make-indexentry
+(export '(index-entry make-index-entry
           get-main-key get-merge-key get-sort-key get-print-key
+          set-main-key set-merge-key set-sort-key set-print-key
           get-locrefs set-locrefs get-idxclass
           get-subentries set-subentries
-          add-location-reference-to-indexentry))
+          add-location-reference-to-indexentry
+          main-key merge-key sort-key print-key))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -241,19 +274,53 @@ delivers. The result is a list containing the sorted sublists.
 
 <<Splitting lists into sublists --- [[split-list]]>>=
 (defun split-list (split-function sort-function list)
-  (let ((split-table (make-hash-table :test #'equal))
-        (sorted-keys '()))
-    (mapcar #'(lambda (x)
-                (let ((split-value (funcall split-function x)))
-                  (setf (gethash split-value split-table)
-                        (cons x (gethash split-value split-table)))))
-            list)
-    (maphash #'(lambda (key element)
-                 (declare (ignore element))
-                 (setq sorted-keys (cons key sorted-keys)))
-             split-table)
-    (mapcar #'(lambda (x) (gethash x split-table))
-            (sort sorted-keys sort-function))))
+  (let ((list-len (length list)))
+    (if (= 1 list-len)
+        (list list)
+        (let ((split-table (make-hash-table :test #'equal
+                                            :size (round (* 1.2 list-len))))
+              (key-list '()))
+          (mapc #'(lambda (elt)
+                    (let ((key (funcall split-function elt)))
+                      (setf (gethash key split-table)
+                            (cons elt (gethash key split-table)))))
+                list)
+          (maphash #'(lambda (key element)
+                       (declare (ignore element))
+                       (push key key-list))
+                   split-table)
+          (maplist #'(lambda (rest-list)
+                       (rplaca rest-list (gethash (car rest-list)
+                                                  split-table)))
+                   (sort key-list sort-function))
+          key-list))))
+
+#|
+This version seems to be a little bit slower than the above one,
+despite the fact that we use a temporary array with a fill-pointer.
+
+(defun split-list (split-function sort-function list)
+  (let ((list-len (length list)))
+    (if (= 1 list-len)
+        (list list)
+        (let ((split-table (make-hash-table :test #'equal
+                                            :size (round (* 1.5 list-len)))))
+          (mapc #'(lambda (elt)
+                    (let ((key (funcall split-function elt)))
+                      (setf (gethash key split-table)
+                            (cons elt (gethash key split-table)))))
+                list)
+          (let ((sort-array (make-array (hash-table-count split-table)
+                                        :fill-pointer 0)))
+            (maphash #'(lambda (key element)
+                         (declare (ignore element))
+                         (vector-push key sort-array))
+                     split-table)
+            (map 'list
+                 #'(lambda (key)
+                     (gethash key split-table))
+                 (sort sort-array sort-function)))))))
+|#
 @ %def split-list
 
 \paragraph{Converting sublists into group-objects}
@@ -332,11 +399,12 @@ dispatching during the markup process.
 
 <<Class \class{locref-class-group}>>=
 (defclass locref-class-group (locref-group)
-    ((locclass :reader get-locclass :writer set-locclass :initform 'nil)))
+    ((locclass  #| get-loccclass is macro |#  :writer set-locclass :initform 'nil)))
 @ %def locref-class-group
 
 <<Separating the location-references by using [[split-list]] and [[convert-sublists-to-group-objects]]>>=
-(defmethod process-indexentry ((idxent indexentry))
+(defun process-indexentry (idxent)
+  (setq *currently-processed-indexentry* idxent)
   (set-locrefs (convert-sublists-to-group-objects
                 (split-list #'(lambda (locref)
                                 (get-ordnum (get-locclass locref)))
@@ -369,8 +437,8 @@ Process the following steps for each subset $L_i$ separately.
 (defmethod process-group ((locref-cls-grp locref-class-group)
                           (idxcls indexclass))
   (apply-substitution-and-merge-rules locref-cls-grp idxcls)
-  (build-ranges locref-cls-grp idxcls t)
-  (cleanup locref-cls-grp)
+  (build-ranges-in-locref-class-group locref-cls-grp idxcls)
+  (remove-virtual-locrefs locref-cls-grp)
   (separate-into-catattr-groups locref-cls-grp)
   locref-cls-grp)
 
@@ -381,20 +449,17 @@ Process the following steps for each subset $L_i$ separately.
 
 \paragraph*{Implementation cleanup}
 
-To cleanup the funny-looking-list that is returned by [[build-range]]
-we need to iterate over its elements.
+This function removes all virtual location-references from the
+locref-list.
 
 <<Processing location-reference-groups>>=
-(defmethod cleanup ((locref-cls-grp locref-class-group))
-  (set-members
-   (delete-if #'(lambda (object)
-                  (and (typep object 'location-reference)
-                       (state-virtual-p object)))
-              (apply #'nconc
-                     (apply #'nconc
-                            (get-members locref-cls-grp))))
-   locref-cls-grp))
-@ %def cleanup
+(defun remove-virtual-locrefs (locref-cls-grp)
+  (set-members (delete-if #'(lambda (object)
+                              (and (typep object 'location-reference)
+                                   (state-virtual-p object)))
+                          (get-members locref-cls-grp))
+               locref-cls-grp))
+@ %def remove-virtual-locrefs
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -519,9 +584,12 @@ of the group.
 the same ordnums.
 
 <<Apply substitution-rules>>=
-(defmethod split-same-locrefs ((locrefs list))
-  (split-list #'(lambda (locref) (get-ordnums locref))
-              #'locref-ordnum<
+(defun split-same-locrefs (locrefs)
+  #+ASSERT! (assert! (listp locrefs))
+  (split-list #'(lambda (locref)
+                  (get-ordnums locref))
+              #'(lambda (locref-ordnum-1 locref-ordnum-2)
+                  (locref-ordnum< locref-ordnum-1 locref-ordnum-2))
               locrefs))
 @ %def split-same-locrefs
 
@@ -675,25 +743,26 @@ view on the location-references. In the last sections we processed
 location-references with equal ordnums in general. Now we must focus
 on location-references that have to the same category-attribute.
 
+Function [[build-ranges]] returns a list of location-references and
+--ranges. The call to [[mapcan]] is neccessary to remove the
+additional structure introduced by the mapping process.
+
 <<Building of ranges>>=
-(defmethod build-ranges ((locref-cls-grp locref-class-group)
-                         (idxcls indexclass)
-                         x)
-  (declare (ignore x))
+(defun build-ranges-in-locref-class-group (locref-cls-grp idxcls)
   (let ((locref-same-catattr-grps
          (split-list #'(lambda (locref) (get-catattr locref))
                      #'(lambda (x y)
                          (< (get-processing-ordnum x)
                             (get-processing-ordnum y)))
                      (get-members locref-cls-grp))))
-    (set-members (mapcar #'(lambda (catattr-sublist)
+    (set-members (mapcan #'(lambda (catattr-sublist)
                              (build-ranges catattr-sublist
                                            idxcls
-                                           (get-locclass (car catattr-sublist))))
+                                           (get-locclass
+                                            (car catattr-sublist))))
                          locref-same-catattr-grps)
-                 locref-cls-grp)
-    ))
-@ %def build-ranges
+                 locref-cls-grp)))
+@ %def build-ranges-in-locref-class-group
 
 \no The implementation of [[build-ranges]] is continued in submodule
 \module{ranges}.
@@ -732,9 +801,9 @@ don't need it at all).
 
 <<Separation into category-attribute-groups>>=
 (defclass category-attribute-group (locref-group)
-    ((ordnum :reader get-ordnum :writer set-ordnum :initform 'nil)))
+    ((ordnum #| get-ordnum is macro |# :writer set-ordnum :initform 'nil)))
 
-(defmethod separate-into-catattr-groups ((locref-cls-grp locref-class-group))
+(defun separate-into-catattr-groups (locref-cls-grp)
   (set-members (convert-sublists-to-group-objects
                 (split-list #'(lambda (object)
                                 (get-catattr-grp-ordnum (get-catattr object)))
@@ -743,7 +812,8 @@ don't need it at all).
                 'category-attribute-group)
                locref-cls-grp)
   (mapc #'(lambda (catattr-grp)
-            (set-ordnum (get-catattr-grp-ordnum (get-catattr (car (get-members catattr-grp))))
+            (set-ordnum (get-catattr-grp-ordnum
+                         (get-catattr (car (get-members catattr-grp))))
                         catattr-grp)
             (set-members
              (sort (get-members catattr-grp)
@@ -770,7 +840,7 @@ don't need it at all).
 <<Submodule \module{idxentry}>>=
 ;; $Id$
 
-<<Class \class{indexentry}>>
+<<Class \class{index-entry}>>
 <<Processing an indexentry>>
 
 <<Export-list of submodule \module{idxentry}>>
@@ -785,7 +855,7 @@ don't need it at all).
 \subsubsection{Pretty-printing}
 
 <<Pretty-printing>>=
-(set-pprint-dispatch 'indexentry
+(set-pprint-dispatch 'index-entry
                      #'(lambda (s idxent)
                          (pprint-logical-block
                           (s nil :suffix "}")
@@ -856,7 +926,11 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.14  1996/05/09 11:49:41  kehr
+%% Revision 1.15  1996/05/20 08:48:47  kehr
+%% Major release of the modules locref, idxstyle and index. Added picture
+%% for the range-building FSM with a complete rewrite.
+%%
+%% Revision 1.14  1996/05/09  11:49:41  kehr
 %% Changes in all submodules, due to macro-expansion problems during
 %% compilation.
 %%
