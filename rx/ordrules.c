@@ -18,7 +18,8 @@
 #define DEBUG
 #endif
 
-RULE_TABLE SortRules;	/* rules for generating sortkeys */
+RULE_TABLE* SortRules;  /* rules for generating sortkeys */
+
 RULE_TABLE MergeRules;	/* rules for generating mergekeys */
 GROUP_LIST GroupList;	/* list of character groups */
 GROUP_LIST HeadingList;	/* list of group headings */
@@ -43,10 +44,14 @@ int   ordrules_string_buffer_used_bytes = 0;
        int   ordrules_msg_buffer_ptr   = 0;
 static int   ordrules_msg_buffer_len   = BUFLEN;
 static int   ordrules_msg_buffer_avail = 0;
+static int   ordrules_sort_rule_tables = 0;
+
+#define DEFAULT_SORT_RULE_TABLES 8
 
 #define DBG( expr ) if (ordrules_msg_logging!=0) { expr; }
 
-int
+
+void
 logs( msg )
 char* msg;
 {
@@ -70,7 +75,7 @@ char* msg;
   ordrules_msg_buffer[ordrules_msg_buffer_ptr] = '\0';
 }
 
-int
+void
 logc( c )
 char c;
 {
@@ -80,14 +85,64 @@ char c;
   logs(msg);
 }
 
+void
+logi( n )
+int n;
+{
+  char msg[16];
+  sprintf(msg, "%d", n);
+  logs(msg);
+}
+
+/*
+ * This function initializes the memory for the SortRules. Since the
+ * number of tables is defined dynamically, we allow the repeated
+ * definition of tables. In this case the old table is discarded.
+ */
+
 int
-add_sort_rule (left, right, isreject, ruletype)
+initialize (num_sort_tables)
+int num_sort_tables;
+{
+  size_t fullsize = num_sort_tables * sizeof(RULE_TABLE);
+  if (SortRules != NULL) {
+    logs("ORDRULES: Removing old Sort-Tables!\n");
+    free( SortRules );
+  }
+  ordrules_sort_rule_tables = num_sort_tables;
+  SortRules = (RULE_TABLE*) malloc (fullsize);
+  if (SortRules == NULL) {
+      fprintf(stderr,"ordrules: malloc() of %d SortTables failed!\n",
+	      num_sort_tables);
+      exit(1);
+  }
+  logs("ORDRULES: Initializing "); logi(num_sort_tables);
+  logs(" Sort Tables.\n");
+  memset(SortRules, 0, fullsize);
+  return(num_sort_tables);
+}
+
+int
+add_sort_rule (run, left, right, isreject, ruletype)
+int run;
 char *left;
 char *right;
 int isreject;
 int ruletype;
 {
-  return( add_rule( SortRules, left, right, isreject, ruletype ));
+  if (SortRules == NULL) { /* No malloc() done yet */
+    if (ordrules_sort_rule_tables == 0) { /* No specification yet. */
+      ordrules_sort_rule_tables = DEFAULT_SORT_RULE_TABLES; /* use default */
+    }
+    logs("ORDRULES: Performing implicit initialization.\n");
+    initialize( ordrules_sort_rule_tables ); /* ...then initialize */
+  }
+  if (0 <= run && run < ordrules_sort_rule_tables) {
+    return( add_rule( SortRules[run], left, right, isreject, ruletype ));
+  } else {
+    logs("ORDRULES: add_sort_rule(): run is out of range.\n");
+    return -1;
+  }
 }
 
 int
@@ -113,7 +168,7 @@ int ruletype;
   RULE_LIST *list;
   char buffer[STRING_MAX];
   char *bptr = buffer;
-  unsigned int pos;
+  unsigned int pos = 0;
 
   /* new stuff */
   int errcode;
@@ -352,7 +407,7 @@ register size_t buflen;
       	if ((r->type & REJECT))
 	  newdest = dest;
 	DBG(
-	  logs("Mappings: (compare `");logs(source); logs("' :char `");
+	  logs("Mappings: (compare `");logs(source);logs("' :char `");
 	  logc(*source); logs("') match!\n");
 	  )
 	*dest++ = r->r.chr;
@@ -491,17 +546,29 @@ register size_t buflen;
   dispend( apply_rules );
 }
 
-char *gen_sortkey ( key )
+char *gen_sortkey ( key, run )
 char *key;
+int run;
 {
   char *sortkey;
   dispstart( gen_sortkey );
   dispstr( key );
-  apply_rules( SortRules, key, ordrules_string_buffer, BUFLEN );
+
+  /* If no initialization has been done yet, then do a fallback to the
+     default tables. This should not happen usually. */
+  if (SortRules == NULL) {
+    logs("ORDRULES: Performing implicit initialization.\n");
+    initialize( DEFAULT_SORT_RULE_TABLES );
+  }
+
+  if (0 <= run && run < ordrules_sort_rule_tables) {
+    apply_rules( SortRules[run], key, ordrules_string_buffer, BUFLEN );
+  }
   sortkey = (char*) malloc (strlen( ordrules_string_buffer ) +1);
   strcpy( sortkey, ordrules_string_buffer );
   DBG(
-    logs("Mappings: (sort-mapping `"); logs(key); logs("') -> `");
+    logs("Mappings: (sort-mapping `"); logs(key);
+    logs("' :run "); logi(run); logs(") -> `");
     logs(sortkey); logs("'.\n\n");
   )
   dispend( gen_sortkey );
@@ -579,6 +646,10 @@ int group;
 
 /*
  * $Log$
+ * Revision 1.6  1997/10/20 11:23:13  kehr
+ * New version of sorting rules. Sorting of more complex indexes (i.e.
+ * French) is now possible.
+ *
  * Revision 1.5  1997/01/17 16:43:40  kehr
  * Several changes for new version 1.1.
  *

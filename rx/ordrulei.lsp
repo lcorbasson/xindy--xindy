@@ -5,7 +5,8 @@
 
 (in-package "ORDRULES")
 
-(export '(add-keyword-sort-rule add-keyword-merge-rule
+(export '(initialize
+	  add-keyword-sort-rule add-keyword-merge-rule
 	  gen-keyword-sortkey   gen-keyword-mergekey))
 
 (use-package "FFI")
@@ -17,6 +18,11 @@
 (def-c-var *string-buffer*
     (:name "ordrules_string_buffer")
     (:type (c-array char 1024))
+    (:alloc :NONE))
+
+(def-c-var *string-buffer-used-bytes*
+    (:name "ordrules_string_buffer_used_bytes")
+    (:type int)
     (:alloc :NONE))
 
 (def-c-var *string-buffer-used-bytes*
@@ -39,9 +45,15 @@
     (:type int)
     (:alloc :NONE))
 
+(def-c-call-out initialize
+    (:name "initialize")
+    (:arguments (num-sort-tables int))
+    (:return-type int))
+
 (def-c-call-out add-keyword-sort-rule
     (:name "add_sort_rule")
-    (:arguments (left c-string)
+    (:arguments (run int)
+		(left c-string)
 		(right c-string)
 		(isreject int)
 		(ruletype int))
@@ -57,7 +69,8 @@
 
 (def-c-call-out gen-keyword-sortkey
     (:name "gen_sortkey")
-    (:arguments (key c-string))
+    (:arguments (key c-string)
+		(run int))
     (:return-type c-string :malloc-free))
 
 (def-c-call-out gen-keyword-mergekey
@@ -68,6 +81,10 @@
 #|
 
   $Log$
+  Revision 1.4  1997/10/20 11:23:12  kehr
+  New version of sorting rules. Sorting of more complex indexes (i.e.
+  French) is now possible.
+
   Revision 1.3  1997/01/17 16:43:38  kehr
   Several changes for new version 1.1.
 

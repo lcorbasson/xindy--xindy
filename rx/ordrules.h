@@ -79,7 +79,7 @@ typedef struct {
 
 typedef RULE_LIST RULE_TABLE[MAX_RULE_TABLE];
 
-extern RULE_TABLE SortRules;	/* rules for generating sortkeys */
+extern RULE_TABLE* SortRules;	/* rules for generating sortkeys */
 extern RULE_TABLE MergeRules;	/* rules for generating mergekeys */
 
 typedef struct grouprule {
@@ -103,6 +103,7 @@ extern GROUP_LIST HeadingList;	/* list of group headings */
 #define add_heading(group, head) \
 		add_group( &HeadingList, group, head )
 
+int initialize PROTO(( int num_sort_tables ));
 int open_debug_file PROTO(( char* filename ));
 int close_debug_file PROTO(( ));
 
@@ -114,16 +115,20 @@ int  add_rule PROTO(( RULE_TABLE table, char *left, char *right,
 void apply_rules PROTO(( RULE_TABLE table, char *source, char *dest, size_t buflen ));
 void add_group PROTO(( GROUP_LIST *list, int group, char *letter ));
 
-int add_sort_rule  PROTO((char *left, char *right, int isreject, int ruletype));
+int add_sort_rule  PROTO((int run, char *left, char *right, int isreject, int ruletype));
 int add_merge_rule PROTO((char *left, char *right, int isreject, int ruletype));
 
-char* gen_sortkey  PROTO((char *key));
+char* gen_sortkey  PROTO((char *key, int run));
 char* gen_mergekey  PROTO((char *key));
 
 #endif /* _ORDRULES_H */
 
 /*
  * $Log$
+ * Revision 1.5  1997/10/20 11:23:14  kehr
+ * New version of sorting rules. Sorting of more complex indexes (i.e.
+ * French) is now possible.
+ *
  * Revision 1.4  1997/01/17 16:43:42  kehr
  * Several changes for new version 1.1.
  *
