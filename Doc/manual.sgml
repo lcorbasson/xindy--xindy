@@ -1,0 +1,100 @@
+<!doctype linuxdoc system>
+
+<!-- This is the manual of the xindy-system
+
+     $Id$
+
+ -->
+
+<article>
+
+<!-- Title information -->
+
+<title>Manual of the <bf/xindy/ indexing system
+<author>Roger Kehr, <tt/kehr@iti.informatik.th-darmstadt.de/
+<date>$Date$
+<abstract>
+This document describes the indexing system <bf/xindy/.
+</abstract>
+
+<!-- Table of contents -->
+<toc>
+
+<!-- Begin the document -->
+
+<sect>About <bf/xindy/
+
+<p>
+
+<bf/xindy/ means fle<bf/x/ible <bf/ind/exing s<bf/y/stem. It is an
+indexing system that can be used to generate book-like indexes for
+arbitrary text-formatting systems. This term includes systems such as
+TeX and LaTeX, the roff-familiy or SGML-based systems that process
+some kind of text and generate a special output-file. It is not fixed
+to any specific system, but can be configured for a wide variety of
+purposes.
+<p>
+
+Those systems usually don't have the capability to build an index of
+their own, but use other tools to do these work. Such tools are often
+called <em/indexing systems/ or <em/indexers/. <bf/xindy/ is such a
+system that takes some input data (the <em/raw-index/) and a
+description how to process and markup the raw-index (the so-called
+<em/index-style/) and builds wonderful indexes that can be fed back
+into the text-formatting system.
+
+
+
+<sect>Introduction
+
+<sect1>A brief overview on indexing
+
+<sect1>History
+
+
+
+
+<sect>Basic concepts
+
+<sect1>Text formatting systems
+
+<sect1>Indexing systems
+
+
+
+<sect>How the index processor works
+
+
+<sect>Specifying and indexstyle
+
+<sect1>Overview
+
+<sect1>Location-classes
+
+<sect1>Attributes
+
+<sect1>Cross-reference-classes
+
+
+
+<sect>The markup
+
+<sect1>Viewing the index as a tree
+
+<sect1>Specifying markup tags
+
+
+
+<sect>Raw-index interface
+
+
+<sect>Invoking xindy
+
+
+<sect>Installation
+
+
+
+
+
+</article>

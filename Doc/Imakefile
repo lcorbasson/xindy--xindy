@@ -1,0 +1,51 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Imakefile for Documentation of the xindy-Project
+ *
+ * (history at end)
+ */
+
+/* needed modules */
+#include <Project.imk>
+
+
+XCOMM ------------------------------------------------------------
+XCOMM continue in Imakefile
+
+all::manual.tex manual.info manual.html manual.txt
+
+manual.tex: manual.sgml
+	    sgml2latex manual.sgml
+
+manual.html: manual.sgml
+	     sgml2html manual.sgml
+
+manual.info: manual.sgml
+	     sgml2info manual.sgml
+
+manual.tex: manual.sgml
+	    sgml2txt manual.sgml
+
+clean::
+	$(RM) manual*.html
+
+CVSAdd(*.sgml)
+CVSAdd(Imakefile)
+CVSAdd(manual.sgml)
+CVSCommit()
+
+/* ============================================================
+ *
+ * $Log$
+ * Revision 1.1  1996/05/29 15:29:49  kehr
+ * Initial checkin of the subdirectory `Doc'.
+ *
+ *
+
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */
