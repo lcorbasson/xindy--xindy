@@ -92,76 +92,126 @@ following slots:
 (export '(create-index))
 @
 
-\no We are now interested in the process of filling the index with
-indexentries. The first idea was to define a method [[add]] bound to
-an index and an indexentry that looks if the indexentry is already in
-the table. If not it is directly stored into the table, otherwise the
-indexentry is merged with the already existing indexentry with the
-same key.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This heavily creates instances of indexentries that mostly are merged
-with the already existing indexentry. Most of the time the
-indexentries are created and dropped immediately. This is a waste of
-space and time since the creation of an object isn't for free at all.
+\subsubsection{Adding indexentries to the index --- The interface}
 
-The idea is to define a function at a lower level to implement the
-desired behaviour. We perform the keyword substitions for the
-[[merge-key]] and the [[sort-key]] as described by the [[merge-rule]]
-and [[sort-rule]] replacements. Then we take an already existing
-indexentry from the index with the same [[merge-key]], if one exists,
-and merge both entries together.
-
-\begin{note}
-  The keyword argument [[:merge-key]] must \emph{always} be supplied
-  when calling this function.
-\end{note}
-
-The policies for all other keys are as follows:
+The process of adding an indexentry to the index consists of the
+following steps:
 \begin{enumerate}
-\item The [[merge-key]] is generated from the [[main-key]] by applying
-  the keyword-rules, or if this rewrite-mechanism is not activated
-  ([[#-:ORDRULES]]), the [[main-key]] directly.
-\item The [[sort-key]] is generated from the [[merge-key]] by applying
-  the keyword-rules, or if this rewrite-mechanism is not activated
-  ([[#-:ORDRULES]]), the [[merge-key]] directly.
-\item The [[print-key]] is only set, when it is specified explicitely.
-  If no explicit definition occured we take the [[main-key]] as the
-  [[print-key]]. This can only be done at markup-time since we know
-  only then if one of the raw-indexentries defined the print-key.
+\item We must check for a correct category-attribute class.
+
+\item The string that represents the location-reference must be
+  compared to all declared location-classes. This process returns a
+  list of location-reference-objects. If only one object was returned
+  this one is used as the location reference. If no object was
+  returned, the string was invalid and we should issue a warning to
+  the user. If more than object was returned the location-class
+  declarations are not sound. In this situation, we let the first one
+  win and also issue a warning.
+
+\item If the keyword-rewriting feature is active we must perform the
+  substitutions on the [[main-key]] (which is \emph{always}
+  neccessary), yielding the [[merge-key]], and the [[merge-key]],
+  yielding the [[sort-key]]. as described by the [[merge-rule]] and
+  [[sort-rule]] replacement-rules.
+
+  \begin{note}
+    The keyword argument [[:merge-key]] must \emph{always} be supplied
+    when calling this function.
+  \end{note}
+
+  The exact policies for all keys are as follows:
+  \begin{enumerate}
+  \item The [[merge-key]] is generated from the [[main-key]] by
+    applying the keyword-rules, or if this rewrite-mechanism is not
+    activated ([[#-:ORDRULES]]), the [[main-key]] directly.
+  \item The [[sort-key]] is generated from the [[merge-key]] by
+    applying the keyword-rules, or if this rewrite-mechanism is not
+    activated ([[#-:ORDRULES]]), the [[merge-key]] directly.
+  \item The [[print-key]] is only set, when it is specified
+    explicitely.  If no explicit definition occured we take the
+    [[main-key]] as the [[print-key]]. This can only be done at
+    markup-time since we know only then if one of the raw-indexentries
+    defined the print-key.
+  \end{enumerate}
+
+\item After these initial steps we check if there is already an
+  indexentry in the index with the same [[merge-key]] as ours. If so
+  we join both together, otherwise we create a new indexentry and
+  store it into the index. When joining both indexentries we must keep
+  care of the fact that we do not introduce duplicate
+  location-references into the same indexentry.
+
 \end{enumerate}
 
-<<Class \class{base-index}>>=
+\no The description is now directly transformed into the following set
+of functions:
+
+<<Adding an indexentry>>=
 (defun add-indexentry (entry-table idxcls locref
                                    &key
                                    (merge-key '()) (sort-key '())
-                                   (main-key '()) (print-key '()))
-#+:ASSERT! (assert! main-key)
-#+:ORDRULES (unless merge-key (setq merge-key (gen-mergekey main-key)))
-#+:ORDRULES (unless sort-key  (setq sort-key  (gen-sortkey  merge-key)))
-#-:ORDRULES (unless merge-key (setq merge-key main-key))
-#-:ORDRULES (unless sort-key  (setq sort-key  merge-key))
-  (let* ((old-entry (gethash merge-key entry-table)))
-    (if old-entry
-        (setf (gethash merge-key entry-table)
-              (join-indexentries (gethash merge-key entry-table)
-                                 main-key sort-key print-key locref))
-        (setf (gethash merge-key entry-table)
-              (make-indexentry :main-key  main-key      :sort-key   sort-key
-                               :merge-key merge-key     :print-key  print-key
-                               :locrefs   (list locref) :indexclass idxcls)))))
+                                   (main-key '()) (print-key '())
+                                   (catattr nil))
+  #+:ASSERT! (assert! (and entry-table main-key idxcls locref))
+
+  (unless catattr (setq catattr (lookup-catattr idxcls "default")))
+  (unless (lookup-catattr idxcls catattr)
+    (warn "unknown attribute `~A'! (ignored)" catattr))
+
+  (let ((location-reference
+         (create-location-reference-from-string locref catattr)))
+
+    #+:ORDRULES (unless merge-key
+                  (setq merge-key (gen-keyword-mergekey-list main-key)))
+    #+:ORDRULES (unless sort-key
+                  (setq sort-key  (gen-keyword-sortkey-list merge-key)))
+    #-:ORDRULES (unless merge-key (setq merge-key main-key))
+    #-:ORDRULES (unless sort-key  (setq sort-key  merge-key))
+
+    (let ((old-entry (gethash merge-key entry-table)))
+      (if old-entry
+          (setf (gethash merge-key entry-table)
+                (join-indexentries (gethash merge-key entry-table)
+                                   main-key sort-key print-key locref))
+          (setf (gethash merge-key entry-table)
+                (make-indexentry :main-key  main-key   :sort-key   sort-key
+                                 :merge-key merge-key  :print-key  print-key
+                                 :locrefs   (list location-reference)
+                                 :indexclass idxcls))))))
 @ %def add-indexentry
+
+\no These functions perform the keword-rewriting on a list of strings.
+
+<<Adding an indexentry>>=
+(defun gen-keyword-mergekey-list (list-of-strings)
+  #+ASSERT! (assert! (listp list-of-strings))
+  (mapcar #'(lambda (str)
+              (gen-keyword-mergekey str))
+          list-of-strings))
+
+(defun gen-keyword-sortkey-list (list-of-strings)
+  #+ASSERT! (assert! (listp list-of-strings))
+  (mapcar #'(lambda (str)
+              (gen-keyword-sortkey str))
+          list-of-strings))
+@ %def gen-keyword-mergekey-list gen-keyword-sortkey-list
 
 \no Function [[join-indexentries]] implements a
 \emph{default-behaviour} when joining indexentries. The
 indexentry-keys are joined by the [[join-with-precedence]]-function
-which is defined as $\lambda x,y.(if x x y)$.
+which is defined as $\lambda x,y.(if x x y)$. Adding a new
+location-reference to the indexentry is performed throuh the method
+[[add]], which also checks for duplicates (\look{sec:cls-indexentry}
+for further details).
 
-<<Class \class{base-index}>>=
+<<Adding an indexentry>>=
 (defun join-indexentries (idxent main-key sort-key print-key locref)
   (set-main-key (join-with-precedence (get-main-key idxent) main-key) idxent)
   (set-sort-key (join-with-precedence (get-sort-key idxent) sort-key) idxent)
   (set-print-key (join-with-precedence (get-print-key idxent) print-key) idxent)
-  (set-locrefs (cons locref (get-locrefs idxent)) idxent))
+  (add idxent locref))
 
 (defun join-with-precedence (x y)
   (declare (inline))
@@ -171,6 +221,23 @@ which is defined as $\lambda x,y.(if x x y)$.
 <<Export-list of submodule \module{index}>>=
 (export '(add-indexentry))
 @
+
+\no The following function takes an string representing a
+location-reference and scans all possible location-classes if the
+location-reference-string matches with some of them. If it matches it
+location-reference
+
+<<Adding an indexentry>>=
+(defun create-location-reference-from-string (locref-str catattr)
+  (let* ((locref-list
+	  (map-location-classes #'(lambda (loccls)
+				    (make-locref locref-str loccls catattr)))))
+    (case (length locref-list)
+      (0 (warn "location-reference ~A did not match any location-class! (ignored)" locref-str))
+      (1 (car locref-list) #| return its only member |#)
+      (t (warn "location-reference ~A did match multiple location-classes! (taking first one)" locref-str)
+	 (car locref-list) #| return its first member |#))))
+@ %def create-location-reference-from-string
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -239,22 +306,20 @@ we simply markup the index and start right out of the box.
 (in-package 'index)
 (provide 'index)
 
-(eval-when (compile load eval)
-  (use-package "CLOS")
-  (use-package "XP")
-  (require "base")
-  (use-package "BASE")
-  (require "locref")
-  (use-package "LOCREF")
-  (require "idxstyle")
-  (use-package "IDXSTYLE"))
+(use-package "CLOS")
+(use-package "XP")
+(require "base")
+(use-package "BASE")
+(require "locref")
+(use-package "LOCREF")
+(require "idxstyle")
+(use-package "IDXSTYLE")
 
 ;; The following construct must be separated since the definition of
 ;; the *feature* :ORDRULES was added via loading the package
 ;; "idxstyle" but is only active *after* reading the whole SEXP.
 
-(eval-when (compile load eval)
-  #+:ORDRULES (use-package "ORDRULES"))
+#+:ORDRULES (use-package "ORDRULES")
 
 <<Submodule \module{idxentry}>>
 <<Submodule \module{ranges}>>
@@ -273,6 +338,7 @@ we simply markup the index and start right out of the box.
 <<Class \class{base-index}>>
 <<Export-list of submodule \module{index}>>
 
+<<Adding an indexentry>>
 <<Sorting an index>>
 <<Processing an index>>
 @
@@ -283,7 +349,12 @@ we simply markup the index and start right out of the box.
 
 
 %% $Log$
-%% Revision 1.10  1996/04/29 08:38:09  kehr
+%% Revision 1.11  1996/04/30 15:54:17  kehr
+%% Rewrote large parts of part that ist responsible for adding an
+%% indexentry. Moved some parts from idxentry to index and restructured
+%% the whole functions that deal with that topic.
+%%
+%% Revision 1.10  1996/04/29  08:38:09  kehr
 %% Forgot some declarations.
 %%
 %% Revision 1.9  1996/03/28  16:47:36  kehr

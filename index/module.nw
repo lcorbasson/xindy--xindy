@@ -19,7 +19,13 @@
 \RCS $Date$%
 %
 
+\dominitoc
+\setcounter{minitocdepth}{3}
+%%\faketableofcontents
+
 \chapter{Module \module{index}}
+
+\minitoc
 
 %\ModuleTitle{}
 
@@ -101,7 +107,12 @@ process every indexentry.
 
 
 %% $Log$
-%% Revision 1.5  1996/01/31 16:13:32  kehr
+%% Revision 1.6  1996/04/30 15:54:19  kehr
+%% Rewrote large parts of part that ist responsible for adding an
+%% indexentry. Moved some parts from idxentry to index and restructured
+%% the whole functions that deal with that topic.
+%%
+%% Revision 1.5  1996/01/31  16:13:32  kehr
 %% Still working on th user-interface...
 %%
 %% Revision 1.4  1996/01/10  11:09:02  kehr

@@ -76,6 +76,7 @@ The following symbols are exported:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \class{indexentry}}
+\label{sec:cls-indexentry}
 
 Class \class{indexentry} is directly derived from the specification
 above.
@@ -118,51 +119,6 @@ function [[add]]. (For a detailed description see
           get-subentries set-subentries
           add))
 @
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\no The following function takes an indexentry and scans all possible
-location-classes if the location-reference matches with them. If it
-matches it creates a new indexentry with the corresponding
-location-reference that was built with the matching-information. We
-use the [[forall]]-construct to iterate over all location-classes and
-call [[gen-indexentry-if-matched]] as the apply-function.
-
-<<generate indexentries>>=
-(defun gen-indexentries (&rest keyword-arguments
-                         &key locref-str
-                         &allow-other-keys)
-  (forall-location-classes #'gen-indexentry-if-matched
-                           locref-str keyword-arguments))
-@ %def gen-indexentries
-
-\no Remember that the applier-function of [[forall-location-classes]]
-takes the three arguments indexclass, locationclass and given
-parameter-list. As the parameter-list we have constructed a list whose
-first element is the location-string and the rest is the given
-keyword-list. They are needed for instatiaton of the
-location-reference and the indexentry. Allowed keywords can be found
-in the corresponding class definitions. Keywords that will explicitely
-determined in this function (such as [[:layers]] and [[:ordnums]] for
-the location-reference. [[:locrefs]] and [[:idxclasses]] for
-indexentries) mustn't be set.
-
-<<generate indexentries>>=
-(defun gen-indexentry-if-matched (idxcls loccls keyword-arguments)
-  (let ((locref-str        (car  keyword-arguments))
-        (keyword-arguments (cadr keyword-arguments)))
-    (multiple-value-bind (layers ordnums)
-        (match-locclass-by-string locref-str loccls)
-      (unless (or (endp layers) (endp ordnums))
-        (let ((locref (apply #'make-structured-locref
-                             :layers   layers :ordnums ordnums
-                             :locclass (get-name loccls)
-                             keyword-arguments)))
-          (add-indexentry (apply #'make-indexentry
-                                 :locrefs (list locref)
-                                 keyword-arguments)
-                          :idxcls-name (get-name idxcls)))))))
-@ %def gen-indexentry
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -361,7 +317,7 @@ After creation of those objects we call [[process-group]] on them.
 
 An object of type [[locref-class-group]] contains location-references
 which belong the same location-class. The method
-[[process-indexentry]] creates these objects for us.
+[[process-indexentry]] creates these kind of objects for us.
 
 <<Class \class{locref-class-group}>>=
 (defclass locref-class-group (locref-group)
@@ -874,7 +830,12 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.11  1996/04/29 08:38:06  kehr
+%% Revision 1.12  1996/04/30 15:54:14  kehr
+%% Rewrote large parts of part that ist responsible for adding an
+%% indexentry. Moved some parts from idxentry to index and restructured
+%% the whole functions that deal with that topic.
+%%
+%% Revision 1.11  1996/04/29  08:38:06  kehr
 %% Forgot some declarations.
 %%
 %% Revision 1.10  1996/03/28  16:47:33  kehr
