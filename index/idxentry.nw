@@ -757,13 +757,99 @@ The next class defines all location-references that have the same
 <<markup methods>>
 @
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+(defun transitive-hull1 (relation)
+  (mapc #'(lambda (j)
+            (format t "j=~A: looking for ~A in i-lists~%" j (car j))
+            (mapc #'(lambda (i)
+                      (format t "  i=~A: " i)
+                      (cond ((member (car j) (cdr i))
+                               (progn
+                                 (format t "found ~A in ~A !~%" (car j) (cdr i))
+                                 (mapc #'(lambda (k)
+                                           (format t "     k=~A: looking for ~A in ~A~%" k (car k) (cdr j))
+                                           (when (member (car k) (cdr j))
+                                             (format t "found ~A !~%" (car k))
+                                             (rplacd (last i)
+                                                     (list (car k)))
+                                             (format t "new relation: ~A~%"
+                                                     relation)
+                                             (format t "new j: ~A~%" j)
+                                             (format t "new i: ~A~%" i)
+                                             )
+                                           )
+                                       relation)))
+                            (t (format t "~%"))))
+                  relation)
+            (format t "~%"))
+        relation)
+  )
+
+(defun transitive-hull (relation)
+  (mapc #'(lambda (j)
+            (format t "j=~A: looking for ~A in i-lists~%" j (car j))
+            (mapc #'(lambda (i)
+                      (format t "  i=~A: " i)
+                      (cond ((member (car j) (cdr i))
+                               (progn
+                                 (format t "found ~A in ~A !~%" (car j) (cdr i))
+                                 (mapc #'(lambda (k)
+                                           (format t "     k=~A: looking for ~A in ~A~%" k (car k) (cdr j))
+                                           (when (member (car k) (cdr j))
+                                             (format t "found ~A !~%" (car k))
+                                             (rplacd (last i)
+                                                     (list (car k)))
+                                             (format t "new relation: ~A~%"
+                                                     relation)
+                                             (format t "new j: ~A~%" j)
+                                             (format t "new i: ~A~%" i)
+                                             )
+                                           )
+                                       relation)))
+                            (t (format t "~%"))))
+                  relation)
+            (format t "~%"))
+        relation)
+  )
+
+(defun init ()
+  (setq a 'a)
+  (setq b 'b)
+  (setq c 'c)
+  (setq d 'd)
+  (setq e 'e)
+  (setq f 'f)
+
+  (setq z 'z)
+  (setq y 'y)
+  (setq x 'x)
+
+  (setq rel '())
+  (setq rel (acons z '() rel))
+  (setq rel (acons y (list z) rel))
+  (setq rel (acons x (list y) rel))
+
+  (setq rel (acons f '() rel))
+  (setq rel (acons e (list f) rel))
+  (setq rel (acons d (list e) rel))
+  (setq rel (acons c (list d) rel))
+  (setq rel (acons b (list c) rel))
+  (setq rel (acons a (list b) rel))
+  )
+
+(transitive-hull rel)
+
 %% Local Variables:
 %% mode: latex
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1995/12/11 17:37:01  kehr
+%% Revision 1.3  1995/12/13 14:07:25  kehr
+%% Just a check-in to preserve the transitive-hull-function.
+%%
+%% Revision 1.2  1995/12/11  17:37:01  kehr
 %% Added semi-formal description of the location-refernce handling.
 %%
 %% Revision 1.1  1995/12/05  18:46:29  kehr
