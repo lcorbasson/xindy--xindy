@@ -19,7 +19,8 @@ all:: xindy tex2xindy finish
 # This section generates the xindy script
 
 xindy: $(XINDY_IN)
-	-sed -e "s|@XINDY_LIBDIR@|$(LIBDIR)|" \
+	-sed -e "s|@XINDY_LIBDIR@|$(LIBDIR)|g" \
+	     -e "s|@XINDY_MODULEDIR@|$(MODULEDIR)|g" \
 	     < $(XINDY_IN) > xindy
 	-chmod a+x xindy
 

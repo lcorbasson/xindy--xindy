@@ -28,9 +28,6 @@ you will obtain the following directory structure:
 
         modules/      The library of pre-defined indexstyle-modules
 
-        binaries/     Some binaries separated into machine-depended
-		      subdirectories
-
         src/          The source of the xindy-system. Contains several
 		      scripts and tools forming the environment of
 		      xindy.
@@ -74,11 +71,16 @@ you will obtain the following directory structure:
 
 	  cd ./binaries/<platform>
 
-   b) Modify the `Makefile.platform' to reflect your system paths,
-      etc. The directory where xindy looks for its runtime-system is
+   b) Modify the `Makefile.platform' and `Makefile.install' to reflect
+      your system paths, etc. The directory where xindy looks for its
+      runtime-system is
 
-	  LIBDIR    where the main executable `xindy.run', the dumped
-		    file `xindy.mem' and the indexstyle-modules go.
+	  LIBDIR    where the main executable `xindy.run', and the dump
+		    file `xindy.mem' go.
+
+	  MODULEDIR where the modules go.
+
+      Other variables are documented in the Makefiles.
 
    c) Build all programs by typing
 
