@@ -21,7 +21,7 @@
 \ModuleTitle{}
 
 
-\section{Module \sans{user-interface}}
+\section{Submodule \sans{user-interface}}
 
 \subsection{Introduction}
 
@@ -46,15 +46,15 @@ interface.
 
 This method adds a new basetype to the list of defined basetypes.
 
-<<user-interface>>=
+<<User-interface>>=
 (defmethod basetype (name symbols &key (idxcls-name *active-idxcls-name*))
-  (add-indexclass idxcls-name (make-alphabet name symbols)))
+  (add idxcls-name (make-alphabet name symbols)))
 @
 
 This is a convenience-method to allow defining one-letter-alphabets by
 just giving on string whose characters define a symbol.
 
-<<user-interface>>=
+<<User-interface>>=
 (defmethod basetype-by-string (name string
                                &key (idxcls-name *active-idxcls-name*))
   (basetype name (string-to-list string) :idxcls-name idxcls-name))
@@ -65,11 +65,11 @@ class [[enumeration]] serves as a base-class we give the name of the
 class we like to make an instatiation of as a symbol. Have a look at
 the instantiations made in file [[idxstyle]] to see an example.
 
-<<user-interface>>=
+<<User-interface>>=
 (defun enumeration (enum-class enum-name
                     &optional (base-alphabet "")
                     &key (idxcls-name *active-idxcls-name*))
-  (add-indexclass idxcls-name
+  (add idxcls-name
                   (make-enumeration enum-class enum-name base-alphabet)))
 @
 
@@ -84,20 +84,20 @@ If no joining-layers are specified it defaults to the last layer of
 the compose location-class. We use function [[num-of-basetypes]] to
 calculate the number of basetypes defined in the structure.
 
-<<user-interface>>=
+<<User-interface>>=
 (defun compose-location-class (name
                                layers
                                &key
                                (join-layers (num-of-basetypes layers))
                                (indexclass *active-idxcls-name*))
-  (add-indexclass indexclass
+  (add indexclass
                   (checked-make-location-class name layers
                                                join-layers)))
 @
 
 \paragraph{Basetypes and separators}
 
-<<user-interface>>=
+<<User-interface>>=
 (defun compose-basetype (name &optional
                               (markup (make-locref-layer-markup)))
   (let ((base (find-basetype name)))
@@ -113,17 +113,17 @@ calculate the number of basetypes defined in the structure.
 
 \subsubsection{Markup}
 
-<<user-interface>>=
+<<User-interface>>=
 (defun keyword-markup (&rest arguments
                        &key (indexclass *active-idxcls-name*)
                        &allow-other-keys)
-  (add-indexclass indexclass
+  (add indexclass
                   (apply #'make-keyword-layer-markup arguments)))
 @
 
 \subsubsection{Indexentries}
 
-<<user-interface>>=
+<<User-interface>>=
 (defun idxent (locref key &optional (optattr "default"))
   (gen-indexentries :locref-str locref
                     :merge-key key
@@ -137,29 +137,34 @@ calculate the number of basetypes defined in the structure.
 The function [[merge-to]] is used as the external interface to add a
 rule to the active indexclass.
 
-<<user-interface>>=
+<<User-interface>>=
 (defun merge-to (source-attr target-attr)
-  (add-indexclass *active-idxcls-name*
-                  (make-rule-merge-to source-attr target-attr))
+  (add *active-idxcls-name*
+                  (make-merge-rule source-attr target-attr))
   (values))
 @
 
 To specify a \textsf{separated/mixed}-rule and add it to the currently
 active index use the following function.
 
-<<user-interface>>=
+<<User-interface>>=
 (defun separated-mixed (attribute-list)
-  (set-indexclass *active-idxcls-name*
+  (set *active-idxcls-name*
                   (make-rule-separated-mixed attribute-list)))
 @
 
 
 
 
-<<submodule \module{intface}>>=
+<<Submodule \module{intface}>>=
 
-<<user-interface>>
+<<User-interface>>
 @
+
+<<RCS-Identifier>>=
+("intface" . "$Id$")
+@
+
 
 %% Local Variables:
 %% mode: latex
@@ -167,7 +172,10 @@ active index use the following function.
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1995/12/15 17:08:28  kehr
+%% Revision 1.3  1995/12/19 10:58:50  kehr
+%% Complete restructuring.
+%%
+%% Revision 1.2  1995/12/15  17:08:28  kehr
 %% Rewrote module compilation with noweb and clisp.
 %%
 %% Revision 1.1  1995/12/07  18:14:26  kehr

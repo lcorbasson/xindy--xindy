@@ -8,7 +8,7 @@ XCOMM $Id$
  */
 
 #define NotangleStandardOptions -L';; line %L "%F"%N'
-#define NoweaveStandardOptions -n # -index # -delay
+#define NoweaveStandardOptions # -index # -delay
 
 /* needed modules */
 #include <Project.imk>
@@ -26,9 +26,8 @@ XCOMM continue in Imakefile
       NW_HEADER  = $(TOPDIR)/noweb/header.tex
       NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
 
-      ALL_NOWEB_SRC = idxclass.nw idxstyle.nw intface.nw
+      ALL_NOWEB_SRC = idxclass.nw idxstyle.nw intface.nw idxrule.nw
       ALL_DOC_SRC= module.nw $(ALL_NOWEB_SRC)
-
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_DOC_SRC))
 NowebLispModuleTarget(idxstyle,$(ALL_NOWEB_SRC))
@@ -49,7 +48,10 @@ DejaGnuTarget(idxstyle,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.3  1995/12/15 17:08:22  kehr
+ * Revision 1.4  1995/12/19 10:58:44  kehr
+ * Complete restructuring.
+ *
+ * Revision 1.3  1995/12/15  17:08:22  kehr
  * Rewrote module compilation with noweb and clisp.
  *
  * Revision 1.2  1995/12/07  18:14:20  kehr

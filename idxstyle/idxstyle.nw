@@ -21,7 +21,7 @@
 \ModuleTitle{}
 
 
-\section{Module \module{index-style}}
+\section{Submodule \module{index-style}}
 
 \subsection{Introduction}
 
@@ -30,18 +30,17 @@ user to define several different indexclasses for different purposes.
 We're currently unsure about the needs the users will have so we
 decided to use a simple model. We declare a pre-defined indexclass
 [[default]] that contains some basic alphabets and basetypes. The
-users are able to extend the definitions made in this class as they
-like.
+users are able to extend the definitions made in this class by
+defining location-classes, rules, markups \etc as they like.
 
 \bigskip
 
-In the future we plan that users may extend this class by defining
-location-classes, rules, markups \etc The user then may or may not
-define additional classes. If a user adds a new indexclass its
-definitions \emph{shadow} the definitions made in class [[default]].
-So a new indexclass \emph{inherits} is components from class
-[[default]] and extends or shadows those inherited definitions. There
-exist no inheritance definitions among the user-defined indexclasses.
+In the future we plan that users may define additional classes. If a
+user adds a new indexclass its definitions \emph{shadow} the
+definitions made in class [[default]].  So a new indexclass
+\emph{inherits} is components from class [[default]] and extends or
+shadows those inherited definitions. There exist no inheritance
+definitions among the user-defined indexclasses.
 
 
 \subsection{Concrete Specification}
@@ -60,83 +59,21 @@ root of all indexstyle descriptions. We also keep track of the
 currently active indexclass-name which is stored in
 [[*active-idxcls-name*]].\footnote{This is currently unused.}
 
-<<The indexstyle>>=
+<<Global indexstyle definitions>>=
 (defvar *indexstyle* '())
-(defvar *active-idxcls-name*)
+(defvar *active-idxcls-name* nil)
+@
 
+<<The indexstyle>>=
 (defun create-indexclass (idxcls-name)
-  (unless (find-indexclass idxcls-name)
-    (setf *indexstyle*
-          (acons idxcls-name (make-indexclass idxcls-name) *indexstyle*))
-    (setq *active-idxcls-name* idxcls-name)))
+  (setq *active-idxcls-name* idxcls-name)
+  (setf *indexstyle* (make-indexclass idxcls-name)))
 @ %def *indexstyle* *active-idxcls-name* create-indexclass
 
-
-\no To have read-access to the currently active scope of
-indexclasses we define functions that give back already stored
-information. These functions are prefixed with [[find-]] analogous to
-the \Lisp-function [[find]].
-
-When managing several different indexclasses that may be accessed by
-name we need a mechanism to find a name and return the found
-indexclass. The following function is looking for indexclass
-[[idxcls-name]] and returns it if was found or [[nil]] otherwise.
-This function currently returns indexclass [[default]].
-
-<<The indexstyle>>=
-(defun find-indexclass (idxcls-name)
-  (declare (ignore idxcls-name))
-  *indexstyle*)
-  ;; currently unused: (cdr (assoc idxcls-name *indexstyle* :test #'equal)))
-@ %def find-indexclass
-
-\no When searching for a basetype or a location-class-definition we
-must scan the the indexstyle to find the appropriate
-indexclass and return the desired object from it. The following
-functions follow this scheme and search for the desired object. The
-implemented hierarchy currently supports the only indexclass [[default]].
-
-<<The indexstyle>>=
-(defun find-basetype (basetype-name)
-  (gethash basetype-name
-           (get-basetypes (find-indexclass *active-idxcls-name*))))
-
-(defun find-location-class (loccls-name)
-  (assoc loccls-name
-         (get-locclasses (find-indexclass *active-idxcls-name*))))
-@ %def find-basetype find-location-class
-
-\no The following function iterates over all location-classes in the
-current scope\footnote{currently it only supports the currently active
-  indexclass} and calls the given function [[apply-func]] for all
-existing location-classes. Function [[apply-func]] takes three
-arguments: the current indexclass, the current location-class and the
-[[&rest]] arguments given to [[forall-location-classes]].
-
-<<The indexstyle>>=
-(defun forall-location-classes (apply-func
-                                &rest arguments)
-  (let ((idxcls (find-indexclass *active-idxcls-name*)))
-    (maphash #'(lambda (key loccls)
-                 (declare (ignore key))
-                 (funcall apply-func idxcls loccls arguments))
-             (get-locclasses idxcls))))
-@
-
-\no The following function iterates over all \textsf{merge-to}-rules
-in the current indexclass-scope.
-
-<<The indexstyle>>=
-(defun forall-merge-to-rules  (apply-func
-                               &rest arguments)
-  (let ((idxcls (find-indexclass *active-idxcls-name*)))
-    (dolist (merge-to-rule (get-merge-to-rules idxcls))
-      (funcall apply-func idxcls merge-to-rule arguments))))
-@
-
-<<external interface>>=
-(defun get-separate-mixed-rule ()
-  (get-sep-mix-rule (find-indexclass *active-idxcls-name*)))
+<<Export-list of submodule \module{idxstyle}>>=
+(export '(*indexstyle*
+          *active-idxcls-name*
+          create-indexclass))
 @
 
 \begin{TODO}
@@ -151,13 +88,13 @@ in the current indexclass-scope.
 \subsubsection{Predefined default style}
 
 <<Default style>>=
-<<default alphabets>>
-<<default enumerations>>
+<<Default alphabets>>
+<<Default enumerations>>
 @
 
 These are the predefined alphabets for upper- and lowercase letters.
 
-<<default alphabets>>=
+<<Default alphabets>>=
 (basetype-by-string "ALPHA" "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 (basetype-by-string "alpha" "abcdefghijklmnopqrstuvwxyz")
 (basetype-by-string "digits" "0123456789")
@@ -167,7 +104,7 @@ Here follows a general-purpose function
 [[prefix-match-for-radix-numbers]] which is capable to recognize
 radix-based numbers with a radix ranging from 2\ldots36.
 
-<<default enumerations>>=
+<<Default enumerations>>=
 (defun prefix-match-for-radix-numbers (str radix)
   (let* ((n nil)
          (strlen (length str))
@@ -194,7 +131,7 @@ known in the indexclass [[default]] by defining a new class of name
 [[enumeration-arabic-numbers]], a name and the string containing the
 basetype-characters. Quiet easy, isn't it ?
 
-<<default enumerations>>=
+<<Default enumerations>>=
 (defclass enumeration-arabic-numbers (enumeration) ())
 
 (defmethod prefix-match ((str string) (enum enumeration-arabic-numbers))
@@ -223,17 +160,27 @@ basetype-characters. Quiet easy, isn't it ?
     (load 'locref))
   (use-package 'locref))
 
-<<submodule \module{idxclass}>>
-<<submodule \module{indexstyle}>>
-<<submodule \module{intface}>>
+<<Global indexstyle definitions>>
+<<Submodule \module{idxrule}>>
+<<Submodule \module{idxclass}>>
+<<Submodule \module{indexstyle}>>
+<<Submodule \module{intface}>>
 
-<<pretty-printing>>
+<<Pretty-printing>>
+
+(defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
+
+<<Export-list of submodule \module{idxstyle}>>
 @
 
 \subsubsection{The submodule root}
 
-<<submodule \module{indexstyle}>>=
+<<Submodule \module{indexstyle}>>=
 <<The indexstyle>>
+@
+
+<<RCS-Identifier>>=
+("idxstyle" . "$Id$")
 @
 
 %% Local Variables:
@@ -242,7 +189,10 @@ basetype-characters. Quiet easy, isn't it ?
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1995/12/15 17:08:26  kehr
+%% Revision 1.3  1995/12/19 10:58:48  kehr
+%% Complete restructuring.
+%%
+%% Revision 1.2  1995/12/15  17:08:26  kehr
 %% Rewrote module compilation with noweb and clisp.
 %%
 %% Revision 1.1  1995/12/07  18:14:24  kehr
