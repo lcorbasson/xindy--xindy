@@ -1,0 +1,214 @@
+% $Id$
+%----------------------------------------------------------------------
+%
+% xindy -- A Flexible Indexing System (Abstarct EuroTeX'98)
+% Institut für Theoretische Informatik, TU Darmstadt
+%
+% [LaTeX2e]
+% (history at end)
+
+%\documentclass[titlepage,11pt]{article}
+\documentclass[titlepage,12pt,draft]{article}
+
+\hyphenation{
+  strength-en
+  Make-In-dex
+  }
+
+\usepackage{a4-9}
+\usepackage{xspace}
+\usepackage{environments}
+\usepackage{ssqquote}
+\usepackage{ifthen}
+\usepackage{theorem}
+\usepackage{bslash}
+\usepackage{alltt}
+\usepackage{enumerate}
+\usepackage{verbatim}
+\usepackage{afterpage}
+\usepackage{rotating}
+\usepackage{epsfig}
+\usepackage[hang,sf]{caption}
+%\usepackage[textures,bottomafter]{draftcopy}
+%\usepackage{version}
+
+\def\TechReport{1}
+\def\ReportMode{0}
+\usepackage{stdwrk}
+
+\usepackage{xindy}
+
+%\makeatletter
+%\renewcommand{\@oddfoot}{\textsf{DRAFT}\hfil\textsf{\thepage}\hfil\textsf{DRAFT}}
+%\makeatother
+
+\frenchspacing
+
+%%\def\mkidx{{\texttt{makeindex}}\xspace}
+\def\mkidx{\emph{MakeIndex}\xspace}
+\def\Xindy{{\normalfont\textsf{xindy}}\xspace}
+\def\imkidx{{\emph{International MakeIndex}}\xspace}
+
+\newcommand{\xindy}{%%
+   \mbox{\normalfont%%
+     \textsf{x\kern-0.6pt%%
+       \shortstack{{\scriptsize$\circ$}\\[-2pt]\i}%%
+       \kern-1pt%%
+       ndy}%%}%%
+     }\xspace}
+
+\newcommand{\XINDY}{%
+   \mbox{\normalfont\huge%%
+         \textsf{x\shortstack{{\large$\circ$}\\\i}ndy}}}
+
+%\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\newlength\vertspace
+
+\newenvironment{mfigure}[2]{%
+  \begin{figure}[htbp]%
+    \renewcommand{\tfigurecaption}%
+                 {\caption{#1}}        % save the caption
+    \renewcommand{\tfigurelabel}%
+                 {\label{#2}}          % save the label
+    \Hrule                             % start with horizontal line
+    \vspace*{3mm}                      % small vertical space
+}
+{\vspace*{3mm}                         % another skip at the end
+  \Hrule                               % another line
+  \normalfont                          %
+  \vskip\vertspace                     %
+  \tfigurecaption                      % insert caption
+  \tfigurelabel                        % and label
+\end{figure}%                          % ok, we're done
+}
+
+\newenvironment{mtable}[2]{%
+  \begin{table}[htbp]%
+    \renewcommand{\ttablecaption}%
+                 {\caption{#1}}        % save the caption
+    \renewcommand{\ttablelabel}%
+                 {\label{#2}}          % save the label
+    \Hrule                             % start with horizontal line
+    \vspace*{3mm}                      % small vertical space
+}
+{\vspace*{3mm}                         % another skip at the end
+  \Hrule                               % another line
+  \normalfont                          %
+  \vskip\vertspace                     %
+  \ttablecaption                       % insert caption
+  \ttablelabel                         % and label
+\end{table}%                           % ok, we're done
+}
+
+\begin{document}
+
+\date{October 1997}
+\title{\XINDY{}\\[1ex]%%
+  A Flexible Indexing System}
+
+\author{\textsc{Roger Kehr}\\[1ex]%%
+  Darmstadt University of Technology\\[1ex]%%
+  {\normalfont\normalsize\texttt{kehr@iti.informatik.tu-darmstadt.de}}}
+
+\maketitle
+
+\section*{Abstract}
+
+In this article we present a new index processor named \xindy that has
+been designed completely from scratch based on experiences with the
+\mkidx~\cite{Chen:UCB-TR-87-347,Schrod:Makeindex30} and
+\imkidx~\cite{Schrod:CG-10-81,Schrod:Makeindex30} systems.
+
+\mkidx is probably the most used index processor in the \TeX{}
+community. It covers a wide range of typical indexing problems and it
+offers default settings that make it relatively easy to use. Despite
+these advantages \mkidx has a lot of shortcomings. For example, it
+lacks support for arbitrary alphabets, which is a problem for most of
+the non-english speaking users. Additionally, its treatment of complex
+location structures is implemented only on an ad-hoc basis without a
+clean model.
+
+The \imkidx has extended \mkidx with nomalization and sorting
+mechanisms that support a general handling of the internationalization
+problem. Experiences from this project have also shown that \mkidx is
+hard to extend and further projects concerning indexing should start
+from a well-defined model.
+
+Based on these experiences we have developed a new indexing model that
+gives a solid ground for further index processors.  This model has
+contributed mostly to the concepts of \emph{locations} and
+\emph{location references}. Locations are the entities the location
+references of an index entry point to. Commonly used locations are
+page numbers, section numbers, etc.\ New kinds of types---called
+\emph{location classes}---can be composed of smaller entities like
+arabic numbers, roman numerals, letters, etc.\ Examples of these
+entities appear in books that have a page numbering scheme that starts
+from 1 for each new chapter resulting in page numbers of the form
+\emph{1-13, 2-15, 2-20,} etc. This type of locations can often be
+found in computer manuals. A more complex structure is represented by
+the locations \emph{Psalm~46, 1-8} and \emph{Genesis~1, 31}. The
+structure of this kind of location references can be described in our
+model and further processing such as sorting, merging and building of
+ranges of location references is possible.
+
+\xindy \cite{xindy,xindy:tr} is a full implementation of this model.
+Though compatibility with \mkidx or \imkidx was not a design goal,
+there exist tools and style files that make \xindy nearly behave as
+the other processors. The internationalization part of \imkidx has
+completely been incorporated into its implementation. Hence, it
+subsumes all versions and features of \mkidx.
+
+Another improvement is the \emph{markup backend}. Since an index
+processor is only one component in a document preparation system, it
+should fit smoothly into the rest of the environment. Our approach is
+based on the concept of environments which has proven to be expressive
+enough for most applications. The markup of an index can be defined in
+a very comfortable, though extremely powerful way. \xindy comes with a
+context-based markup strategy that uses a form of event dispatching
+mechanism. This implements a very general scheme hat removes all the
+existing limitations from the \mkidx systems and offers new dimensions
+in the markup of indexes.
+
+
+\section*{Presentation}
+
+The presentation focuses less on the model, but more on real-life
+examples that show how to use the basic concepts of \xindy. It
+includes examples how to use the internationalization part, the
+definition and processing of location classes, and a demonstration of
+the markup backend. From a talk held at the DANTE\,'97 meeting in Munich
+we think that 45 minutes are the minimum time to present \xindy. If
+requested there is enough to tell for even an hour.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\def\emdash{--}
+
+\def\Lisp{{\normalfont\textsc{Lisp}}\xspace}
+\def\STIL{{\normalfont\textsc{Stil}}\xspace}
+\def\CL{{\normalfont\textsc{Common Lisp}}\xspace}
+\def\CLOS{{\normalfont\textsc{Clos}}\xspace}
+\def\dps{document preparation system\xspace}
+\def\nroff{{\tt nroff}\xspace}
+\def\term#1{\emph{#1}}
+\def\pair#1{\mbox{$\langle$}#1\mbox{$\rangle$}}
+\def\ts{\hspace*{0.9ex}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliography{bibliographie}
+\bibliographystyle{abbrv}
+
+\end{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% $Log$
+% Revision 1.1  1997/11/25 19:06:07  kehr
+% Initial checkin of both texts.
+%
+%
+%

@@ -1,0 +1,517 @@
+% $Id$
+%----------------------------------------------------------------------
+
+%
+% eurotex98.tex
+%
+% Article to be submitted to EuroTeX'98
+%
+% [LaTeX]
+% (history at end)
+
+
+
+\documentclass[10pt,draft]{cah-gut}
+
+\usepackage[isolatin]{inputenc}
+\usepackage{rcs}
+\usepackage{xspace}
+\usepackage{jsdoc}
+%\usepackage{ssqquote}
+%\usepackage{ifthen}
+%\usepackage{theorem}
+%\usepackage{bslash}
+\usepackage{alltt}
+\usepackage{enumerate}
+\usepackage{verbatim}
+\usepackage{url}
+%\usepackage{afterpage}
+%\usepackage{rotating}
+\usepackage{epsfig}
+%\usepackage[hang,sf]{caption}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% This has been changed from the cah-gut.cls
+%% Uncomment this section if the style guide shouldn't be changed.
+%%
+
+% Use "Keywords":
+\renewcommand{\keywords}{\quotation\noindent\small\textbf{Keywords}:
+\textrm\bgroup}
+\def\endkeywords{\egroup\endquotation \normalsize}
+
+% Use "References":
+\renewcommand{\refname}{References}
+
+% Typeset references in \small
+\def\thebibliography#1{\section*{\refname}%
+\list{[\arabic{enumi}]}{\settowidth\labelwidth{[#1]}\leftmargin\labelwidth
+\advance\leftmargin\labelsep\usecounter{enumi}}\small %J.A. 31/07/95
+}\let\endthebibliography=\endlist
+
+% Remove the dot after the section numbers:
+\makeatletter
+\def\@sect#1#2#3#4#5#6[#7]#8{\ifnum #2>\c@secnumdepth
+     \def\@svsec{}\else
+     \refstepcounter{#1}\edef\@svsec{\csname the#1\endcsname{}\hskip 1em }\fi
+     \@tempskipa #5\relax
+      \ifdim \@tempskipa>\z@
+        \begingroup #6\relax
+          \@hangfrom{\hskip #3\relax\@svsec}{\interlinepenalty \@M #8\par}
+        \endgroup
+       \csname #1mark\endcsname{#7}\addcontentsline
+         {toc}{#1}{\ifnum #2>\c@secnumdepth \else
+                      \protect\numberline{\csname the#1\endcsname}\fi
+                    #7}\else
+        \def\@svsechd{#6\hskip #3\@svsec #8\csname #1mark\endcsname
+                      {#7}\addcontentsline
+                           {toc}{#1}{\ifnum #2>\c@secnumdepth \else
+                             \protect\numberline{\csname the#1\endcsname}\fi
+                       #7}}\fi
+     \@xsect{#5}}
+\makeatother
+
+%%
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hyphenation{
+  strength-en
+  Make-In-dex
+  }
+
+\def\mkidx{\emph{MakeIndex}\xspace}
+\def\Xindy{{\normalfont\textsf{xindy}}\xspace}
+\def\imkidx{{\emph{International MakeIndex}}\xspace}
+\def\term#1{\emph{#1}}
+\def\Lisp{\textsc{Lisp}\xspace}
+\def\CL{\textsc{Common Lisp}\xspace}
+
+\def\emdash{--}
+
+\newcommand{\xindy}{%%
+   \mbox{\normalfont%%
+     \textsf{x\kern-0.6pt%%
+       \shortstack{{\scriptsize$\circ$}\\[-2pt]\i}%%
+       \kern-1pt%%
+       ndy}%%}%%
+     }\xspace}
+
+\newcommand{\XINDY}{%
+   \mbox{\normalfont\huge%%
+         \textsf{x\shortstack{{\large$\circ$}\\\i}ndy}}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\title{\XINDY{} --- A Flexible Indexing System}
+\titlehead{\xindy{} --- A Flexible Indexing System}
+\authorhead{Roger Kehr}
+\affiliation{Institut für Theoretische Informatik\\
+  Darmstadt University of Technology\\
+  Wilhelminenstraße 7\\
+  D-64283 Darmstadt, Germany\\
+  {\normalfont\slshape\texttt{kehr@iti.informatik.tu-darmstadt.de}}}
+\author{Roger \textsc{Kehr}}
+
+\RCSdate $Date$
+
+\maketitle
+
+\begin{abstract}
+  \mkidx is an index processor which is suitable for the production of
+  indexes with many text formatters.  Its support for non-English
+  languages is weak and a new version called \imkidx has been
+  presented, that offers support for processing international
+  documents.  The improvements in \imkidx concentrate on the
+  internationalization of the sorting process for keywords in an
+  index. Though it does greatly improve the availability to sort new
+  languages, there are still weaknesses in the processing model
+  largely inherited from \mkidx. Through the experiences gained from
+  the \imkidx project we decided to implement a new index processor
+  from scratch that (a) improves the sorting of index entries at a
+  finer granularity than \imkidx, (b) offers new mechanisms for
+  processing structured location references besides page numbers and
+  Roman numerals, and (c) allows for complex markup schemes that were
+  not possible with the other processors.
+
+\end{abstract}
+
+\begin{keywords}
+  index processor, \mkidx, \imkidx, structured location references,
+  context-based markup
+\end{keywords}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Existing Systems}
+
+\noindent
+The probably most-used index processor in the \TeX{} community is
+\mkidx~\cite{Chen:SPE-19-9-897}. It is independent from the document
+preparation system, and must be adopted to a particular system using a
+configuration file called \term{index style}. \mkidx merges and sorts
+\term{index entries}, sorts the \term{location references} (such as
+page numbers), builds ranges if possible, and outputs the index with
+markup specified in the index style. Most of its functionality is
+hard-wired into the application itself, which is usually sufficient
+for most of the typical indexes. It works well in conjunction with
+English texts but if indexes in other languages have to be processed,
+the sorting model of \mkidx shows its drawbacks. Sorting index entries
+is based on the lexicographic order of the keywords which is a
+problem, if this representation does not fit the intended sorting
+order. The separation of the \term{print key} from the \term{sort key}
+offered in \mkidx is only a partial solution that leads to annoying
+and error-prone specifications in the document source. This and other
+problems are discussed in detail in \cite{Schrod:CG-10-81}.
+
+The \imkidx~\cite{Schrod:CG-10-81,Schrod:Makeindex30-rep} system is
+based on \mkidx and has been enhanced to support user defined rules
+for the specification of language-dependent sorting rules, simplifying
+the treatment of non-English languages.
+
+Our new index processor \xindy~\cite{xindy:tr,xindy:cbm} has been
+designed based on the experiences gained from the \imkidx project,
+demonstrating that further enhancements cannot be easily incorporated
+to the existing \mkidx source. It further refines the sorting model of
+\imkidx to achieve even better support for complex sorting rules. It
+introduces a new model of handling \term{structured location
+  references} which were supported in \mkidx only on an ad-hoc basis.
+As a result of the new model, the structure of an index has become
+more complex and a new mechanism for specifying markup based on
+context information has been developed. These improvements make \xindy
+a powerful framework for the processing of non-regular indexes.
+
+In the rest of this paper we introduce each each of the topics
+mentioned above and briefly outline the solutions \xindy offers. Since
+a complete discussion of all features \xindy offers is not possible in
+this article, the reader is encouraged to refer to the reports listed
+in the bibliography and the documentation available in the
+distribution.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Sorting Index Entries}
+
+\noindent
+The most obvious problems with \mkidx is its lack of support for
+sorting of index entries for non-English languages. Its sorting model
+is essentially based on the ISO-Latin alphabet, which is not an
+adequate sorting order for most languages. The \imkidx system has
+introduced the concept of \term{merge} and \term{sort mappings}. These
+mappings consist of \term{string rewrite rules} that are applied to a
+keyword to obtain a new keyword that is used for merging and sorting
+purposes. The mapping steps are shown in Figure~\ref{fig:mappings}.
+
+\begin{figure}[htbp]
+  \hspace*{2.3cm}\input{kmappings.latex}
+  \caption{Keyword mappings implemented in \imkidx.}
+  \label{fig:mappings}
+\end{figure}
+
+The merge mapping is used to \term{normalize} keywords, i.e.\ indicate
+that two different writings of a word should be treated equally. For
+example, one can define that the character sequences `\verb|\"a|' and
+`\verb|ä|' are to be treated equally. After this normalization step,
+that merges different index entries from the index into a compound
+index entry, the index entries must be sorted. The sort mappings map
+the merge key onto a sort key that determines the lexicographic order
+of the index entry. For example, one possible rule is to map
+`\verb|\"a|' onto `\verb|ae|' which is sometimes useful in German
+indexes. Hence, the sort rules should be written in such a way that
+the resulting sort key reflects the order of the index entry
+correctly. This mapping scheme has been implemented in \imkidx.
+
+Though this mechanism is a major improvement over the original \mkidx,
+it still does not cover all cases that appear in practice. As a
+running example we sort the French words \emph{cote}, \emph{côte},
+\emph{côté}, and \emph{coté}. The French sorting
+rules~\cite{ISO14651}---as well as other language sorting rules---have
+the concept of \term{sorting phases} that are applied successively to
+obtain a total order on a given set of keywords. The rules say, that
+in a first phase the diacritical marks should not be considered at
+all, and the non-diacritical counterparts should be used instead. This
+means for the words above that there is no distinction in a first
+sorting phase at all. They are treated equally but they are placed
+lexicographically somewhere between \emph{cotd} and \emph{cotf}. In
+another run there is an order on the diacritical marks specifying that
+letters with diacritical marks follow letters without diacritical
+marks. Additionally, the lexicographic order is from right to left.
+This exactly yields the words in the order shown above. Other
+languages such as German as well have the concept of sorting phases
+though they usually stay with the left-to-right lexicographic order.
+
+From an abstract point of view the model needs to be enhanced by the
+concept of multiple sorting phases and possible variations in the
+direction in which the lexicographic order should be processed.
+Figure~\ref{fig:xmappings} shows the mapping scheme that is implemented
+in \xindy.
+\begin{figure}[htbp]
+    \hspace*{1.8cm}\input{xmappings.latex}
+    \caption{Keyword mappings implemented in \protect\xindy.}
+    \label{fig:xmappings}
+\end{figure}
+It supports the user-defined specification of sort rules for several
+independent sort phases. For any set of keywords that are equal in a
+certain sort phase $n$, the sort rules of phase $n+1$ are applied to
+obtain a new order. This is done successively until a total order on
+the sort keys is derived or no sorting phases remain open. To achieve
+a better understanding on what happens in a sorting phase, \xindy
+offers means to debug the keyword mappings in detail.
+
+For a detailed discussion the reader may refer the documentation that
+comes with \xindy.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Location References or How to Sort Bible Verses}
+
+\noindent
+One of the initial reasons for the development of \xindy was to study
+the inherent structure of location references in an indexing model. A
+\term{location reference} is the entity that references a particular
+location in a document. Besides page numbers and Roman numerals one
+can think of locations such as Bible verses like \emph{Genesis~1,~31};
+\emph{Exodus~1,~7}; \emph{Leviticus~2,~3}. An index processor must
+provide solutions to at least two different aspects of location
+references: (a) the ability to correctly sort these location
+references, and (b) to form \term{ranges} of location references if
+possible and desired from the user. Mathematically speaking, (a) needs
+for a \term{total order} on the location references, whereas (b) needs
+for a well-defined \term{successor-relationship} among location
+references. The total order enables to sort the location references
+unambiguously, and the successor-relationship tests for a potential
+\term{joinability} of two location references to form a range.
+
+A closer look at location references shows that they usually have an
+inherent structure that gives information about the two relationships
+mentioned previously. For example, the location references
+\emph{Genesis~1,~31}; \emph{Exodus~1,~7}; and \emph{Leviticus~2,~3}
+consist of the name of the book, the number of the chapter, and the
+number of the verse. If we need to sort these location references we
+usually sort them in a first phase according to the book they belong
+to. The order of the books in the bible is fixed and does not follow
+any lexicographic convention. Inside a book, sorting is done first
+according to the chapter number and then according to the verse number
+inside a chapter. The structural entities these locations consist of
+can be described in the form of the following three \term{alphabets}:
+\begin{center}
+  \begin{tabular}{l@{ $\in$ }l}
+    \emph{book}    &$\{$\emph{Genesis, Exodus, Leviticus}$\}$\\
+    \emph{chapter} & set of Arabic numbers\\
+    \emph{verse}   & set of Arabic numbers
+  \end{tabular}
+\end{center}
+\noindent
+For each of these alphabets there exists a well-defined total
+order---for the set of Arabic numbers there exists a well-defined
+successor-relationship as well. Hence, sorting index entries is a
+problem of lexicographically sorting the components a location
+reference consists of. A structural description in this sense is
+called a \term{location class} since it serves as a template for
+concrete instances of this class, in our case concrete Bible verse
+references.
+
+To enable \xindy to process location references it must be given a
+definition of the location classes---consisting of a sequence of
+alphabets and separators---it may encounter in the raw index. As
+location references are read, it tries to match the location
+references (which are available as a plain string) against the
+location classes it knows about, and in case of a match it is able to
+decompose the structure into its components. A sample specification of
+this
+location class in \xindy is as follows:%%
+%%
+{\small\begin{alltt}
+   (define-alphabet "bible-chapters" ("Genesis" "Exodus" "Leviticus"))
+
+   (define-location-class "bible-verses"
+       ("bible-chapters" :sep\footnote{The argument \texttt{:sep} declares the following argument to be a separator.} "\verb*| |"
+        "arabic-numbers" :sep "," "arabic-numbers"))
+\end{alltt}}
+
+\noindent
+The first description defines the new alphabet \emph{bible-verses}
+that consists of the three enumerated \term{letters}\footnote{A letter
+  is actually any sequence of characters of the underlying document
+  alphabet.} \emph{Genesis}, \emph{Exodus}, and \emph{Leviticus}. The
+second definition composes a location class based on the new alphabet,
+the separator characters, solely used for matching the location
+references, and the built-in alphabet of Arabic numbers. This
+description now enables \xindy to correctly sort all instances of the
+class \emph{bible-verses} and additionally enables it to join location
+references into ranges, if desired. \xindy basically allows for the
+definition of new alphabets and location classes, which may be of
+variable length (such as 1, 1.1, 1.1.2, \ldots) as well. It offers a
+wide range of specifications how to join location references to form
+ranges.
+
+A new concept called \term{location reference attributes} can be used
+to tag location references with additional information that declares a
+location reference to be of a particular type, such as a reference to
+a definition of a term, another for its occurrence, and so on. This is
+especially important in indexes for manuals. \mkidx had a concept
+called \term{encapsulators} which were used for markup purposes only.
+We have generalized this concept to offer more flexibility in the
+sorting and merging phases, for example to indicate that a definition
+of a term should subsume its occurrence on the same page, to save
+space on the resulting output. To give an example of the possibilities
+to output a sequence of page numbers tagged as definitions (boldface)
+and occurrences based on policies such as separation of attributes,
+building ranges where possible, and subsumption of occurrences of
+location references with a definition on the same page the following
+sequences can be produced with \xindy:
+\begin{center}
+  \begin{tabular}{cc}
+    11 13 14 17\ \textbf{12 15 25} & 11 \textbf{12} 13 14 \textbf{15} 17 \textbf{25}\\
+    11 13--15 17\ \textbf{12 15 25} & 11 \textbf{12} 13--15 \textbf{15} 17 \textbf{25}\\
+    11--15 17\ \textbf{12 15 25} & 11--15 \textbf{12 15} 17 \textbf{25}\\
+    11--15 17\ \textbf{25} &  11 13 14 17 12 15 25
+  \end{tabular}
+\end{center}
+We hope that one might get an impression what kind of processing
+location references with \xindy is possible in general.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Context-Based Markup}
+
+\noindent
+Hand in hand with the new indexing features \xindy offers, there is
+also a need to allow for a general model to specify markup easily. The
+set of available markup tags is relatively limited and fixed in
+\mkidx. In \xindy the final index, after all processing steps have
+been done, is internally represented as a tree. Markup is implemented
+with a tree-walking algorithm that starts at the root node and visits
+each node of the tree in a depth-first manner. Every time a node is
+entered or left an \term{event} is generated. The user is now able to
+bind markup tags to each of these events. For example, the binding
+\begin{verbatim}
+      (markup-locref :class "bible-verses"
+                     :open "\\textit{" :close "}")
+\end{verbatim}
+denotes that the location references of class \emph{bible-verses}
+should be surrounded by the markup tags `\verb|\textit{|' and
+  `\verb|}|' defining an italicized \TeX{}-markup. If the parameter
+\verb|:class| would have been omitted, this specification would match
+all location classes, therefore acting as a default setting. If a
+markup event is raised, the \term{event dispatcher} is responsible to
+find the most specific binding matching this event. Events are
+parameterized by information from the context in which it was raised.
+For example, the events for location references contain information
+about the current location class, the current attribute, and the depth
+it is placed in. Bindings can be defined to any subset of the set of
+parameters. The tag \verb|:open| is the string to be emitted if a node
+is entered, whereas \verb|:close| defines the corresponding binding if
+a node is left.
+
+At a first glance this scheme sounds more complicated than it is in
+practice. Debugging facilities exist to aid the user in the
+specification of markup bindings. The whole markup phase can be
+traced, events are shown, and the bindings can be seen as they are
+activated. Usually only a small portion of all possible events
+actually need bindings. Just to give an impression the following
+results can be specified with \xindy by markup bindings only:
+\begin{center}
+  \begin{tabular}{cc}
+    \emph{A.1, A.3, A.7, B.5, B.12} & \emph{A 1,3,7; B 5,12}\\%%
+    \emph{\textbf{A}.1, \textbf{A}.3, \textbf{A}.7, \textbf{B}.5, \textbf{B}.12} &
+    \emph{\textbf{A} 1,3,7; \textbf{B} 5,12}\\
+    \emph{Genesis~1,~31}; \emph{Exodus~1,~7} &
+    \emph{Genesis~1(31)}; \emph{Exodus~1(7)} \\
+    \emph{Genesis~chap.\,1,~31}; \emph{Exodus~chap.\,1,~7} &
+    \emph{Genesis~\textbf{1}(31)}; \emph{Exodus~\textbf{1}(7)} \\
+  \end{tabular}
+\end{center}
+\noindent
+Again we hope that the reader might get an impression what flexibility
+\xindy offers in the processing and tagging of indexes. More examples
+and detailed descriptions, how these results can be obtained, are
+described in the documentation that comes with \xindy.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{ Implementation, Availability and Distribution}
+
+\noindent
+\xindy is largely implemented in \CL. We have chosen the freely
+available CLISP-implementation\footnote{Available at
+  \texttt{ftp://ma2s2.mathematik.uni-karlsruhe.de/pub/lisp/clisp/}.},
+and have extended it with the GNU \texttt{rx} regular expression
+library\footnote{Available at
+  \texttt{ftp://prep.ai.mit.edu/pub/gnu/}.} for the keyword mappings.
+
+It consists of about 4\,500 lines of \Lisp code and 600 lines of
+\textsf{C} code. A parser for the transformation from the
+\TeX{}-specific raw index in the format used by \xindy has been
+implemented using 150 lines of \texttt{lex} code. As a comparison,
+\mkidx is written in 4\,300 lines of \textsf{C}.
+
+The full implementation is available under the conditions of the GNU
+General Public License. Its home-page with further links is accessible
+at our web site
+\url{http://www.iti.informatik.tu-darmstadt.de/xindy/}. Source and
+binary distributions are available at CTAN in directory
+\url{pub/indexing/xindy/}. It is currently available in source and
+binary distributions for several Unix platforms and OS/2. Other
+platforms are to be supported soon. There is lots of documentation
+available in various formats and more detailed examples describe how
+to use \xindy, especially its treatment of sorting index entries and
+managing location references.
+
+
+\section{Conclusion}
+
+\noindent
+\xindy is an index processor that can be seen as a framework for the
+production of high-quality indexes, which first must be tailored for a
+certain task, such as sorting a French dictionary or a German Bible.
+
+It offers potential users many ways to sort indexes correctly in
+unambiguous ways, allows for the processing of structured location
+references, and additionally offers a very powerful markup back-end
+tailorable for many document preparation systems.
+
+Since a detailed specification involves many aspects and can be of
+considerable length, \xindy offers a module mechanism that allows for
+the inclusion of specific rule sets or location class descriptions.
+This mechanism makes it easy to master this system even for
+unexperienced users.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\begin{comment}
+\section{Acknowledgments}
+
+\noindent
+I would like to thank Joachim Schrod and Klaus Guntermann for their
+inspiring discussions in early phases of this project. Further, I
+would like to thank Gabor Herr, who was as excellent adviser in many
+implementation questions especially concerning \Lisp. Without him this
+project would not be in its current state. I would like to thank
+Prof.\ Waldschmidt who made it possible to finish this project.
+Finally, would like to thank the participants in our discussions on
+the \xindy mailing list most notably Chris Rowley.
+%\end{comment}
+
+\bibliography{bibliographie}
+\bibliographystyle{abbrv}
+
+\end{document}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+$Log$
+Revision 1.1  1997/11/25 19:06:08  kehr
+Initial checkin of both texts.
+
