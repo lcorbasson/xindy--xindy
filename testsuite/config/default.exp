@@ -62,5 +62,11 @@ expect_after {
     timeout { fail "$test (timeout)" }
 }
 
+proc xsend {expr} {
+    global test
+    set test $expr
+    send "$expr\n"
+}
+
 send_user "working directory: [pwd]\n"
 
