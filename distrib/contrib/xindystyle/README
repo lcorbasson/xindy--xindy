@@ -1,0 +1,18 @@
+$Id$
+------------------------------------------------------------
+
+This directory contains a LaTeX style with documentation that has been
+developed by Andreas Schlechte. It directly supports xindy and makes
+the usage of the filter program `tex2xindy' obsolete.
+
+Run `latex xindy.ins' and the files xindy.sty and xindy.dvi will be
+generated automatically.
+
+Refer to the dvi-file for further documentation.
+
+Please send comments and bug-reports to <Andreas.Schlechte@tu-clausthal.de>.
+
+=====================================================================
+Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
+Computer Science Department
+Technical University of Darmstadt, Germany
