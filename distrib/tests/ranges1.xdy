@@ -1,0 +1,22 @@
+;; $Id$
+;;
+
+(require "testbed.xdy")
+
+;;;;;;;;;;;;
+;;
+;; The rest
+
+(require "class/pagenums.xdy")
+
+(define-attributes (("foo" "default")))
+
+(markup-indexentry-list :sep "~n")
+
+(markup-attribute-group-list :open ": " :sep ", ")
+
+(markup-range :sep "-")
+(markup-locref-list :sep ", ")
+
+(markup-locref :attr "foo" :open "{" :close "}")
+
