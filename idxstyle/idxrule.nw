@@ -223,9 +223,9 @@ substitution-rule [[impl-subst-rule]] of the current indexclass.
       (mapc
        #'(lambda (sublist)
            (incf catattr-grp-counter)
-	   (let ((last-in-group (lookup-catattr-name catattr-grps
-						     (car (last sublist))))
-		 (prev-catattr nil))
+           (let ((last-in-group (lookup-catattr-name catattr-grps
+                                                     (car (last sublist))))
+                 (prev-catattr nil))
              (mapc
               #'(lambda (catattr)
                   (cond ((stringp catattr)
@@ -351,7 +351,13 @@ condition above) and insert it if it isn't known yet.
     (when (and (null y-node) (not (eql x y)))
       (setf (get-rel-sets rel) (cons (list y) (get-rel-sets rel)))))
   rel)
-@ %def rel-insert
+
+(defmethod rel-simple-insert ((rel relation) x)
+  (let* ((rel-sets (get-rel-sets rel))
+         (x-node (assoc x rel-sets)))
+    (unless x-node (setf (get-rel-sets rel) (cons (list x) rel-sets))))
+  rel)
+@ %def rel-insert rel-simple-insert
 
 \no Now we define a function [[rel-merge]] that merges two relations
 into one. This is a destructive operation that modifies [[rel-1]].
@@ -424,6 +430,26 @@ in relation with $y$ in relation [[rel]].
           relation-set relation-p))
 @
 
+\no Printing a relation is sometimes necessary, too. The [[printfunc]]
+parameter names a function taking one argument which returns a string
+representing the element. The additional keywords can be used to print
+some more markup information.
+
+<<Class \class{relation}>>=
+(defun print-relation (rel-sets stream printfunc
+                                &key open close headsep listsep)
+  (mapc #'(lambda (from)
+            (when open (format stream open))
+            (write (funcall printfunc (car from)) :stream stream)
+            (when headsep (format stream headsep))
+            (mapc #'(lambda (to)
+                      (write (funcall printfunc to) :stream stream)
+                      (when listsep (format stream listsep)))
+                  (cdr from))
+            (when close (format stream close)))
+        rel-sets))
+@ %def print-relation
+
 
 \subsubsection*{Topological sorting}
 
@@ -450,10 +476,10 @@ otherwise [[nil]].
           (mapc #'(lambda (x)
                     (rplacd x (delete zero-indeg-elt (cdr x) :test #'equal)))
                 rel-set)))
-      ;(format t "~A~%" rel-set)
       )
-    (when (null rel-set)
-      (nreverse topsort-list))))
+    (if (null rel-set)
+        (values topsort-list t)
+        (values nil rel-set))))
 @ %def topsort
 
 \subsubsection*{Transformation}
@@ -590,7 +616,11 @@ method twice.
 @
 
 %% $Log$
-%% Revision 1.8  1996/07/03 18:41:41  kehr
+%% Revision 1.9  1996/07/16 14:05:52  kehr
+%% Checkin after all the changes to the `define-letter-group(s)' commands
+%% have been made.
+%%
+%% Revision 1.8  1996/07/03  18:41:41  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%

@@ -88,8 +88,8 @@ incrementally filled with more information.
                            :initform '() :type list)
      (xref-classes         :accessor get-xref-classes
                            :initform '() :type list)
-     (letter-groups        :accessor get-letter-groups
-                           :initform '() :type list)
+     (letter-groups        :reader get-letter-groups
+                           :initform (make-letter-group-manager))
      <<Location-reference-cache definitions>>
      ;;     (succ-table           :accessor get-succ-table
      ;;                           :initform (make-hash-table))
@@ -171,9 +171,9 @@ following chunks define the data-structure layout of the locref-cache.
 (defmethod add-locref-cache ((idxcls indexclass)
                              (locref-string string)
                              (num    number)
-			     ;; the next one is typeless, since we
-			     ;; also want to store the value NIL into
-			     ;; it, to denote a mismatch
+                             ;; the next one is typeless, since we
+                             ;; also want to store the value NIL into
+                             ;; it, to denote a mismatch
                              locref)
   (setf (gethash locref-string (get-locref-cache idxcls))
         (cons num locref))
@@ -241,6 +241,170 @@ section~\ref{sec:rule-hooks}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsubsection{Class \class{letter-group-definition}}
+
+<<Class \class{letter-group-definition}>>=
+(defparameter *default-letter-group-definition* "default")
+
+(defclass letter-group-definition ()
+    ((name   :reader get-name  :initarg :name   :type string)
+     (ordnum                   :initarg :ordnum  :type number)))
+
+(defun make-letter-group-definition (name)
+  (make-instance 'letter-group-definition :name name :ordnum 0))
+
+(defclass letter-group-manager ()
+    ((prefixes      :accessor get-prefixes
+                    :initform (make-hash-table :test #'equal))
+     (letter-groups :accessor get-letter-groups
+                    :initform (make-hash-table :test #'equal))
+     (sort-relation :accessor get-sort-relation
+                    :initform (make-relation))
+     (lookup-list   :accessor get-lookup-list  :initform '())))
+
+(defun make-letter-group-manager ()
+  (let* ((lgm (make-instance 'letter-group-manager))
+         (letter-groups (get-letter-groups lgm))
+         (default-group (make-letter-group-definition
+                         *default-letter-group-definition*)))
+    (setf (gethash *default-letter-group-definition* letter-groups)
+          default-group)
+    (rel-simple-insert (get-sort-relation lgm) default-group)
+    lgm))
+@ %def letter-group-manager make-letter-group-definition letter-group-definition make-letter-group-definition
+
+\no The following function sorts a list of strings such that if in
+direct comparison, one string is a prefix of the other, the longer one
+is \emph{less that} the shorter one. This anomaly is necessary to sort
+the string \texttt{foobar} before \texttt{foo}. We need this to find
+the longest prefix-match in a list of prefixes. So
+\begin{center}
+  \texttt{(match "foo" '("bar" "foobar" "foo"))}
+\end{center}
+yields the correct answer \texttt{foobar} instead of \texttt{foo}.
+The function actually sorts a list of conses an does only sort the
+[[car]] of them.
+
+<<Class \class{letter-group-definition}>>=
+(defun make-lookup-list (lgm)
+  (setf (get-lookup-list lgm)
+        (let ((lookup-list '()))
+          (maphash #'(lambda (key elt)
+                       (push (cons key elt) lookup-list))
+                   (get-prefixes lgm))
+          (sort lookup-list #'prefix<))))
+
+(defun prefix< (x y)
+  (let ((cx (car x))
+        (cy (car y)))
+    (let ((same-prefix (string/= cx cy)))
+      (cond ((null same-prefix))
+            ((> same-prefix 0)
+               (and (= same-prefix (length (car y)))))
+            (t (string< cx cy))))))
+@ %def make-lookup-list prefix<
+
+\no The following function takes a manager, a letter-group name, a
+single string naming a prefix of the letter group and optionally the
+[[:before]] or [[:after]]-keyword argument. First we check if the
+letter group is already present. If not, we create an new onw with
+this name, add a link to it into the letter-groups hashtable.
+Additionally we update the relation with the [[re-simple-insert]] with
+the new group-name.
+
+Afterwards we check if a present binding is to be altered. Then we
+establish a link for the new prefix. Finally we insert the relations
+the new letter-group is being part of.
+
+<<Class \class{letter-group-definition}>>=
+(defun add-letter-group-to-manager (lgm name prefix &key before after)
+  (let* ((prefixes      (get-prefixes      lgm))
+         (letter-groups (get-letter-groups lgm))
+         (letter-group  (gethash name letter-groups)))
+    (unless letter-group;; this letter group is unknown -- create one!
+      (setq letter-group (make-letter-group-definition name))
+      (setf (gethash name letter-groups) letter-group)
+      (rel-simple-insert (get-sort-relation lgm) letter-group))
+    (let ((current-binding (gethash prefix prefixes)))
+      (and current-binding
+           (not (equal name (get-name current-binding)))
+           (warn "define-letter-group: prefix ~S now maps to letter group ~S"
+                 prefix name)))
+    (setf (gethash prefix prefixes) letter-group)
+    (when before
+      (rel-insert (get-sort-relation lgm)
+                  letter-group
+                  (lookup-letter-group-definition *indexstyle* before)))
+    (when after
+      (rel-insert (get-sort-relation lgm)
+                  (lookup-letter-group-definition *indexstyle* after)
+                  letter-group)))
+  lgm)
+
+(defmethod lookup-letter-group-definition ((idxcls indexclass) (letter string))
+  (gethash letter (get-letter-groups (get-letter-groups idxcls))))
+@ %def add-letter-group-to-manager
+
+\no Finalizing the letter-groups means to sort them topologically
+according to the defined relation(s) and assigning to eac of the
+groups their [[ordnum]] which is simply the position in the top-sorted
+list.
+
+<<Class \class{letter-group-definition}>>=
+(defmethod make-ready ((lgm letter-group-manager))
+  (make-lookup-list lgm)
+  (let ((sort-relation  (get-sort-relation lgm)))
+    (multiple-value-bind (topsorted-list remaining-relation)
+        (topsort sort-relation)
+      (if topsorted-list
+          (let ((ctr 0))
+            (mapc #'(lambda (grp-def)
+                      (setf (get-ordnum grp-def) (incf ctr)))
+                  topsorted-list))
+          (error
+           (concatenate 'string
+                        "The user-defined relations for the letter-groups contains cycles!~%The part of the relation containing cycles is"
+                        (with-output-to-string (s)
+                          (print-relation remaining-relation s
+                                          #'(lambda (lgdef)
+                                              (get-name lgdef))
+                                          :open "~%" :headsep " before "
+                                          :listsep " "))))))))
+@ %def make-ready
+
+\no The following function takes a keyword and finds the letter-group
+this keyword belongs to. We use the [[lookup-list]] to find the
+correct group easily and if a match was found we return the ordnum of
+its letter-group-definition. If we don't find a match we return the
+ordnum of the letter-group-definition [[default]].
+
+<<Class \class{letter-group-definition}>>=
+(defmethod match-letter-group ((idxcls indexclass) (letter string))
+  (let* ((lgm         (get-letter-groups idxcls))
+         (lookup-list (get-lookup-list lgm))
+         (match (find-if #'(lambda (prefix-cons)
+                             (let* ((prefix (car prefix-cons))
+                                    (match-len (string/= prefix letter)))
+                               (or (not match-len) #| full match |#
+                                   (= match-len    #| full match with lg |#
+                                      (length prefix)))))
+                         lookup-list))
+         (letter-group-definition
+          (if match
+              (cdr match);; the corresponding letter-grp-def
+              (lookup-letter-group-definition
+               *indexstyle* *default-letter-group-definition*))))
+    (gol t "~&match-letter-group: ~S -> ~S"
+         letter (get-name letter-group-definition))
+    letter-group-definition))
+@ %def match-letter-group
+
+<<Export-list of submodule \module{idxclass}>>=
+(export '(letter-group-definition match-letter-group))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{Mutators for \class{indexclass}}
 
 We now need to define the interface how an indexclass may be modified.
@@ -268,13 +432,14 @@ indexclass.
 @ %def add
 
 <<Mutators for \class{indexclass}>>=
-(defmethod add-letter-group ((idxcls indexclass)
-                             (letter string)
-                             (group  number))
-  (setf (get-letter-groups idxcls)
-        (acons letter group (get-letter-groups idxcls)))
-  idxcls)
-@ %def add-letter-group
+(defun add-letter-groups (idxcls name prefixes &key before after)
+  (let ((lgm (get-letter-groups idxcls)))
+    (mapc #'(lambda (prefix)
+              (add-letter-group-to-manager lgm name prefix
+                                           :before before
+                                           :after  after))
+          prefixes)))
+@ %def add-letter-groups
 
 \no Adding a new location-reference-class needs special treatment,
 since we want matching in the correct order of declaration. If later
@@ -360,7 +525,7 @@ maintain.
 
 <<Export-list of submodule \module{idxclass}>>=
 (export '(add set
-          add-letter-group
+          add-letter-groups
           add-merge-rule
           add-drop-if-merged-rule
           add-implict-substitution-rule
@@ -385,18 +550,6 @@ functions are prefixed with [[lookup-]].
 (defmethod lookup-catattr ((idxcls indexclass) (catattr-name string))
   (lookup-catattr-name (slot-value idxcls 'cat-attrs) catattr-name))
 
-(defmethod lookup-letter-group ((idxcls indexclass) (letter string))
-  (let ((letter-group (find-if #'(lambda (lg)
-                                   (let ((match-len
-                                          (string/= (car lg) letter)))
-                                     (or (not match-len) #| full match |#
-                                         (= match-len #| full match with lg |#
-                                            (length (car lg))))))
-                               (get-letter-groups idxcls))))
-    (if letter-group
-        (cdr letter-group)
-        0)))
-
 (defmethod lookup-location-class ((idxcls indexclass) (loccls-name string))
   (or (lookup-crossref-class idxcls loccls-name)
       (lookup-locref-class idxcls loccls-name)))
@@ -411,7 +564,7 @@ functions are prefixed with [[lookup-]].
 <<Export-list of submodule \module{idxclass}>>=
 (export '(lookup-basetype
           lookup-catattr
-          lookup-letter-group
+          lookup-letter-group-definition
           lookup-location-class
           lookup-crossref-class
           lookup-locref-class))
@@ -594,6 +747,7 @@ delayed until the markup).
   (apply-substitution-hooks idxcls)
   (make-ready (get-merge-rules idxcls))
   (make-ready (get-drop-if-merged-rules idxcls))
+  (make-ready (get-letter-groups idxcls))
   <<check for reflexivity>>
 
   ;(set-merge-rule-topsort (topsort (remove-reflexivity
@@ -605,11 +759,6 @@ delayed until the markup).
               (set-processing-ordnum (incf counter) catattr))
           (topsort (get-drop-if-merged-rules idxcls))))
 
-  (setf (get-letter-groups idxcls)
-        (sort (get-letter-groups idxcls)
-              #'(lambda (lg1 lg2)
-                  (> (length (car lg1))
-                     (length (car lg2))))))
   idxcls)
 @ %def make-ready
 
@@ -627,6 +776,7 @@ delayed until the markup).
 
 <<Global definitions of \module{idxclass}>>
 <<Class \class{indexclass}>>
+<<Class \class{letter-group-definition}>>
 <<Location-reference-cache>>
 <<Mutators for \class{indexclass}>>
 <<Finders for \class{indexclass}>>
@@ -748,7 +898,11 @@ delayed until the markup).
 @
 
 %% $Log$
-%% Revision 1.14  1996/07/03 18:41:40  kehr
+%% Revision 1.15  1996/07/16 14:05:48  kehr
+%% Checkin after all the changes to the `define-letter-group(s)' commands
+%% have been made.
+%%
+%% Revision 1.14  1996/07/03  18:41:40  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%

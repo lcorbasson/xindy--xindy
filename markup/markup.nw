@@ -1,4 +1,4 @@
-%
+%%
 %% This file is part of the `xindy'-project at the
 %% Technical University Darmstadt, Computer Science Department
 %% WG System Programming, Germany.
@@ -258,8 +258,10 @@ T
 @
 
 <<Check [[:group]]>>=
-((and group (not (integerp group)))
- (warn "parameter `~S' is not a number! (ignored)~%" group))
+((and group (progn
+	      (setq group (stringify group))
+	      (not (lookup-letter-group-definition *indexstyle* group))))
+ (warn "parameter `~S' is not a valid letter-group! (ignored)~%" group))
 @
 
 <<Check [[:class]] for location-reference class>>=
@@ -391,8 +393,8 @@ the markup of the list of all indexentries.
 
 <<Letter group markup>>=
 (defmethod do-markup-letter-group ((letter-grp letter-group))
-  (let ((group-id (get-group-id letter-grp)))
-    (do-markup-letter-group-open group-id)
+  (let ((group-definition (get-group-definition letter-grp)))
+    (do-markup-letter-group-open group-definition)
     (do-markup-list (get-members letter-grp)
       :identifier IDXENT #| the identifier to use in the expansion |#
       :open-body  (do-markup-indexentry-list-open  0
@@ -400,13 +402,14 @@ the markup of the list of all indexentries.
       :elt-body   (do-markup-indexentry IDXENT     0)
       :sep-body   (do-markup-indexentry-list-sep   0)
       :close-body (do-markup-indexentry-list-close 0))
-    (do-markup-letter-group-close group-id)))
+    (do-markup-letter-group-close group-definition)))
 
-(define-environment-methods do-markup-letter-group ((group number))
-  :open  ((do-markup-default "LETTER-GROUP:OPEN"  group)
+(define-environment-methods do-markup-letter-group
+    ((group letter-group-definition))
+  :open  ((do-markup-default "LETTER-GROUP:OPEN"  (get-name group))
           (do-markup-indent))
   :close ((do-markup-outdent)
-          (do-markup-default "LETTER-GROUP:CLOSE" group)))
+          (do-markup-default "LETTER-GROUP:CLOSE" (get-name group))))
 @ %def do-markup-letter-group
 
 <<Markup interface>>=
@@ -415,8 +418,11 @@ the markup of the list of all indexentries.
         <<Check [[:group]]>>
         (t `(markup::define-environment-methods
              DO-MARKUP-LETTER-GROUP
-             (,(if group `(group (EQL ,group)) '(group number)))
-             :declare ((declare (ignore group)))
+             (,(if group
+                   `(lg-def (EQL ,(lookup-letter-group-definition
+				   *indexstyle* group)))
+                   '(lg-def letter-group-definition)))
+             :declare ((declare (ignore lg-def)))
              :open  ,(when open  `((do-markup-string ,open)))
              :close ,(when close `((do-markup-string ,close)))))))
 @ %def markup-letter-group
@@ -1078,7 +1084,11 @@ Their elements are simple cross-references.
 
 
 %% $Log$
-%% Revision 1.11  1996/07/03 18:41:43  kehr
+%% Revision 1.12  1996/07/16 14:06:21  kehr
+%% Checkin after all the changes to the `define-letter-group(s)' commands
+%% have been made.
+%%
+%% Revision 1.11  1996/07/03  18:41:43  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%

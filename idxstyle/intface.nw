@@ -72,6 +72,7 @@ It can be imported by other packages by calling
     define-location-class-order
     define-attributes
     define-letter-group
+    define-letter-groups
     merge-rule
     sort-rule
     searchpath
@@ -84,7 +85,7 @@ It can be imported by other packages by calling
 (export '(*idxstyle-user-interface-definitions*
           *indexstyle*
           *indexstyle-readtable*
-	  set-searchpath-by-string
+          set-searchpath-by-string
           do-require))
 @
 
@@ -495,19 +496,69 @@ For more information see the description of the [[ordrules]]-package.
 
 \subsubsection{Letter groups}
 
+Letter group are intended to group indexentries together to be able to
+associate a special markup for each letter group. For example, one
+wants to define a group named ``Symbols'' and all indexentries
+describing symbols should be put into this group. Usually letter
+groups are defined via the prefic of the indexentries' keyword. The
+sorting of the letter groups may be different from the sorting of the
+\term{sort-key} of the indexentries. To specify a sort-order on the
+letter groups we decided to use a total order that can be defined with
+relations between letter group. Such a specification might be `b' is
+\emph{before} `c' and \emph{after} `a'. The user defines a partial
+order that must result in exactly one possible total order. This
+principle was chosen to overcome the old concept of assigning integer
+numbers as the group identifier. This concept proved to be very
+incomfortable and not easy to be understood. The partial order
+approach now allows to extend predefined modules such as one
+specifying the letter groups for latin-based alphabets with
+language-specific letters that may be inserted among the existing
+groups without the need to consider the group-numbers.
+
+The command \texttt{define-letter-group} now comes in a general form
+that allows to define a \emph{group-name} and a list of prefixes that
+should be mapped onto this group. Further prefixes that appear in more
+definitions for the same group are simply added to the list of
+prefixes.
+
 <<Defining letter groups>>=
-(defmacro define-letter-group (letter group)
-  (cond ((null letter)
-           (error "missing argument <letter> !"))
-        ((null group)
-           (error "missing argument <group> !"))
-        ((not (stringp letter))
-           (error "argument <letter> must be a string !"))
-        ((not (integerp group))
-           (error "argument <group> must be a integer number !"))
+(defmacro define-letter-group
+    (&whole whole name &key prefixes before after)
+  (cond <<check name>>
+        ((and before
+              (not (lookup-letter-group-definition *indexstyle* before)))
+           (error "~S does not name a letter group in~%~S" before whole))
+        ((and after
+              (not (lookup-letter-group-definition *indexstyle* after)))
+           (error "~S does not name a letter group in~%~S" after whole))
+        ((not (list-of-strings-p prefixes))
+           (error "argument <prefixes> is not a list of strings in~%~S"
+                  whole))
         (t `(LET ()
-             (ADD-LETTER-GROUP *INDEXSTYLE* ,letter ,group)))))
+             (ADD-LETTER-GROUPS *INDEXSTYLE*
+              ,name ',(or prefixes (list name))
+              :BEFORE ,before :AFTER ,after)))))
 @ %def define-letter-group
+
+\no Additionally we define a convenience-macro that allows us to
+define several letter groups at once.
+
+<<Defining letter groups>>=
+(defmacro define-letter-groups (&whole whole &optional letter-groups)
+  (cond ((not (list-of-strings-p letter-groups))
+           (error "~S is not a list of strings in~%~S" letter-groups whole))
+        (t `(LET ()
+             (ADD-LETTER-GROUPS *INDEXSTYLE*
+              ,(car letter-groups) ',(list (car letter-groups)))
+             ,@(let ((last (car letter-groups)))
+                    (mapcar #'(lambda (letter-group)
+                                (prog1
+                                    `(ADD-LETTER-GROUPS *INDEXSTYLE*
+                                      ,letter-group ',(list letter-group)
+                                      :AFTER ,last)
+                                  (setq last letter-group)))
+                            (cdr letter-groups)))))))
+@ %def define-letter-groups
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -794,7 +845,11 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.16  1996/07/11 14:16:19  kehr
+%% Revision 1.17  1996/07/16 14:05:54  kehr
+%% Checkin after all the changes to the `define-letter-group(s)' commands
+%% have been made.
+%%
+%% Revision 1.16  1996/07/11  14:16:19  kehr
 %% Complete Major checkin before changing the letter-groups.
 %%
 %% Revision 1.15  1996/07/03  18:41:42  kehr

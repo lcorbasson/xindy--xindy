@@ -218,6 +218,13 @@ The following rules are necessary to specify the keyword-rules:
 \end{istui}
 
 
+\subsubsection{Letter groups}
+
+\begin{istui}{define-letter-group}{\emph{name}\quad\List{\emph{prefixes}}
+    $|$ name}%%
+ foo
+\end{istui}
+
 \subsection{Processing-rules}
 
 The following rules are definable:

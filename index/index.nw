@@ -514,15 +514,30 @@ top-level indexentries into the appropriate letter-groups.
 
 <<Class \class{letter-group}>>=
 (defclass letter-group ()
-    ((members   :accessor get-members  :initarg :members  :type list)
-     (group-id  :accessor get-group-id :initarg :group-id :type number)))
-
-(defun make-letter-group (&key members group-id)
-  (make-instance 'letter-group :members members :group-id group-id))
+    ((members          :accessor get-members :type list
+                       :initarg  :members)
+     (group-definition :accessor get-group-definition
+                       :initarg  :group-definition)))
 @ %def letter-group make-letter-group
 
+\no Creating an instance of this class means so initialize the slot
+[[members]] with a list of indexentries belonging to this
+letter-group. Additionally we establish a link to the definition of
+this letter-group by matching the sort-key of the first indexentry of
+the list (all yield the same letter-group definition) against all
+letter-group-definitions.
+
+<<Class \class{letter-group}>>=
+(defun make-letter-group (members)
+  (make-instance 'letter-group
+                 :members members
+                 :group-definition (match-letter-group
+                                    *indexstyle*
+                                    (car (get-sort-key (car members))))))
+@ %def make-letter-group
+
 <<Export-list of submodule \module{index}>>=
-(export '(letter-group get-group-id get-members))
+(export '(letter-group get-members get-group-definition))
 @
 
 <<Processing an index>>=
@@ -535,19 +550,16 @@ top-level indexentries into the appropriate letter-groups.
                  index)
     (gol t "~&~%Forming letter-groups...")
     (let ((letter-groups (split-list #'(lambda (idxent)
-                                         (lookup-letter-group
-                                          *indexstyle*
-                                          (car (get-sort-key idxent))))
+                                         (get-ordnum
+                                          (match-letter-group
+                                           *indexstyle*
+                                           (car (get-sort-key idxent)))))
                                      (get-entries index)
                                      :sortfunc #'<)))
       (gol t "(done)")
       (set-entries (mapcar #'(lambda (lg-indexentries)
                                (make-letter-group
-                                :members  (sort-indexentries lg-indexentries)
-                                :group-id (lookup-letter-group
-                                           *indexstyle*
-                                           (car (get-sort-key
-                                                 (car lg-indexentries))))))
+                                (sort-indexentries lg-indexentries)))
                            letter-groups)
                    index))))
 @ %def build-indexentry-tree
@@ -589,56 +601,56 @@ slots with the neccessary data.
                                         max-depth
                                         &optional (curr-depth 1))
   (cond ((endp idxent-list) idxent-list)          #| nothing more to do |#
-	((> curr-depth max-depth)   #| we reached the end |#
-	   (gen-all-sort-keys idxent-list) #| this is the then case |#
-	   )
-	(t (let ((idxent-slist
-		  (split-list #'(lambda (idxent)
-				  (car (get-merge-key idxent)))
-			      idxent-list
-			      :headfunc
-			      #'(lambda (idxent)
-				  (= 1 (length (get-merge-key idxent)))))))
-	     (mapcar
-	      #'(lambda (sublist)
-		  (let* ((idxent (car sublist))
+        ((> curr-depth max-depth)   #| we reached the end |#
+           (gen-all-sort-keys idxent-list) #| this is the then case |#
+           )
+        (t (let ((idxent-slist
+                  (split-list #'(lambda (idxent)
+                                  (car (get-merge-key idxent)))
+                              idxent-list
+                              :headfunc
+                              #'(lambda (idxent)
+                                  (= 1 (length (get-merge-key idxent)))))))
+             (mapcar
+              #'(lambda (sublist)
+                  (let* ((idxent (car sublist))
 
-			 (merge-key (get-merge-key idxent)))
-		    (if (= 1 (length merge-key))
-			(progn #| length = 1 |#
-			  (set-sort-key #-:ORDRULES merge-key
-					#+:ORDRULES (gen-keyword-sortkey-list
-						     merge-key)
-					idxent)
-			  (set-subentries
-			   (sort-indexentries
-			    (build-indexentry-tree-recursive
-			     (remove-first-keywords (cdr sublist))
-			     max-depth
-			     (1+ curr-depth)))
-			   idxent)
-			  idxent)
-			(let* #| length > 1 |#
-			    ((new-merge-key (take-first merge-key))
-			     (new-idxent
-			      (make-index-entry
-			       :main-key  (take-first (get-main-key idxent))
-			       :merge-key new-merge-key
-			       :sort-key
-			       #-:ORDRULES new-merge-key
-			       #+:ORDRULES (gen-keyword-sortkey-list
-					    new-merge-key)
-			       ;;:print-key (take-first (get-print-key idxent))
-			       :idxclass  (get-idxclass idxent))))
-			  (set-subentries
-			   (sort-indexentries
-			    (build-indexentry-tree-recursive
-			     (remove-first-keywords sublist)
-			     max-depth
-			     (1+ curr-depth)))
-			   new-idxent)
-			  new-idxent))))
-	      idxent-slist)))))
+                         (merge-key (get-merge-key idxent)))
+                    (if (= 1 (length merge-key))
+                        (progn #| length = 1 |#
+                          (set-sort-key #-:ORDRULES merge-key
+                                        #+:ORDRULES (gen-keyword-sortkey-list
+                                                     merge-key)
+                                        idxent)
+                          (set-subentries
+                           (sort-indexentries
+                            (build-indexentry-tree-recursive
+                             (remove-first-keywords (cdr sublist))
+                             max-depth
+                             (1+ curr-depth)))
+                           idxent)
+                          idxent)
+                        (let* #| length > 1 |#
+                            ((new-merge-key (take-first merge-key))
+                             (new-idxent
+                              (make-index-entry
+                               :main-key  (take-first (get-main-key idxent))
+                               :merge-key new-merge-key
+                               :sort-key
+                               #-:ORDRULES new-merge-key
+                               #+:ORDRULES (gen-keyword-sortkey-list
+                                            new-merge-key)
+                               ;;:print-key (take-first (get-print-key idxent))
+                               :idxclass  (get-idxclass idxent))))
+                          (set-subentries
+                           (sort-indexentries
+                            (build-indexentry-tree-recursive
+                             (remove-first-keywords sublist)
+                             max-depth
+                             (1+ curr-depth)))
+                           new-idxent)
+                          new-idxent))))
+              idxent-slist)))))
 @ %def take-first build-indexentry-tree-recursive
 
 <<Processing an index>>=
@@ -761,7 +773,11 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
-%% Revision 1.21  1996/07/11 14:16:30  kehr
+%% Revision 1.22  1996/07/16 14:06:16  kehr
+%% Checkin after all the changes to the `define-letter-group(s)' commands
+%% have been made.
+%%
+%% Revision 1.21  1996/07/11  14:16:30  kehr
 %% Complete Major checkin before changing the letter-groups.
 %%
 %% Revision 1.20  1996/07/09  14:41:51  kehr
