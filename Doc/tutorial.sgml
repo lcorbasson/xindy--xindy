@@ -16,7 +16,7 @@
 
 <author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
 
-<date>Tutorial, Edition January 1997 for xindy version 1.1
+<date>Tutorial, Edition March 1997 for xindy version 1.1
 
 <abstract>
 <em>This is a tutorial for the &xindy; indexing system
@@ -129,6 +129,7 @@ distribution directory <tt>Doc/tutorial/</tt> by typing
 eg$ mkdir tutorial
 eg$ cd tutorial
 eg$ cp <distrib-dir>/Doc/tutorial/*.raw .
+eg$ cp <distrib-dir>/Doc/tutorial/*.tex .
 </verb></tscreen>
 
 with <tt/distrib-dir/ replaced by the actual location. Now create a
@@ -152,7 +153,6 @@ You should see something like
 
 <tscreen><verb>
 This is `xindy' version 1.1 January 1997 (some-arch).
-Copyright (c) 1996,1997 ...
 
 Opening logfile "ex1.xlg" (done)
 Reading indexstyle...
@@ -215,7 +215,7 @@ some markup. Add the following lines to our index style:
 (markup-locref :class "page-numbers" :attr "definition"
 	       :open  "{\bf " :close "}")
 
-(markup-locclass-list :open "\quad")
+(markup-locclass-list :open "\quad{}")
 (markup-locref-list :sep ", ")
 </verb></tscreen>
 
@@ -579,12 +579,14 @@ and add the other commands as well:
 (define-location-class "appendices"
                        ("ALPHA" :sep "-" "arabic-numbers")
 		       :hierdepth 2)
-(markup-locref-list           :sep "; " :depth 0 :class "appendices")
-(markup-locref-list :open "~" :sep ", " :depth 1 :class "appendices")
+(markup-locref-list            :sep "; " :depth 0 :class "appendices")
+(markup-locref-list :open "~~" :sep ", " :depth 1 :class "appendices")
 </verb></tscreen>
 
-Run &xindy; and view the output stored in <tt/ex2.ind/. The output
-looks similar to the following:
+<em>Note: Since the tilde character serves as our quoting character it
+must be quoted itself in the above example.</em> Run &xindy; and view
+the output stored in <tt/ex2.ind/. The output looks similar to the
+following:
 
 <tscreen><verb>
   ...

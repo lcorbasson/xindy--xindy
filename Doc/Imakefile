@@ -18,18 +18,20 @@ XCOMM continue in Imakefile
 DISTRIBDIR  = ../distrib/Doc
 HOMEPAGEDIR = $$HOME/.public_html/xindy-docs
 DOCS       = *.html *.dvi *.info *.txt *.ps
-MOREDOCS   = *.gif *.sgml README tutorial
+MOREDOCS   = *.gif README tutorial
 
 Distrib: distrib
 
-distrib: all
-	cp -R $(DOCS) $(MOREDOCS) $(DISTRIBDIR)
+distrib:: all
+	(cd $(DISTRIBDIR) && $(RM) -r *)
+	cp -R $(MOREDOCS) $(DISTRIBDIR)
+distrib::
 	(cd $(HOMEPAGEDIR) && $(RM) *)
 	cp *.html *.gif sort-rules.ps $(HOMEPAGEDIR)
 
 #define SGMLTarget(file)						@@\
 all:: file.sgml file.html file.dvi file.info file.txt file.ps		@@\
-dvi::   file.dvi						       	@@\
+dvi:: file.dvi								@@\
 file.tex: file.sgml							@@\
 	-./sgml2latex -2e file.sgml					@@\
 TeXTarget(latex,file)							@@\
@@ -50,9 +52,16 @@ realclean::								@@\
 	$(RM) file.info	file.tex file.txt file*.html file.ps file.ps.2  @@\
 	$(RM) *.xbm *.pbm
 
-SGMLTarget(manual)
-SGMLTarget(tutorial)
-SGMLTarget(xindy-by-topic)
+
+#define SGMLFullTarget(file)						@@\
+SGMLTarget(file)							@@\
+distrib::								@@\
+	cp file.dvi file.ps file*.info file.txt file*.html $(DISTRIBDIR)
+
+
+SGMLFullTarget(manual)
+SGMLFullTarget(tutorial)
+SGMLFullTarget(xindy-by-topic)
 SGMLTarget(sort-rules)
 
 CVSAdd(*.sgml)
@@ -69,6 +78,9 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
+ * Revision 1.13  1997/04/18 14:29:49  kehr
+ * *** empty log message ***
+ *
  * Revision 1.12  1997/03/03 16:12:26  kehr
  * *** empty log message ***
  *
