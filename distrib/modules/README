@@ -5,11 +5,13 @@ This directory contains a set of predefined modules that can be used
 to describe your own indexstyle. The directory is organized as
 follows:
 
-   lang/        contains several modules specifying alphabets for several
-                languages.
+   lang/        contains several modules specifying alphabets and
+		letter groups for several languages.
 
    enum/        contains more enumeration-types. See the header of
                 each file for a description.
+
+   ord/         some modules to construct ordering schemes
 
    class/       some example classes
 
