@@ -17,7 +17,8 @@ proc expect_T {} {
     global prompt
     global test
     expect {
-	-re "T.*$prompt$"  { pass $test }
+	-re "T.*$prompt$"    { pass $test }
+	-re "NIL.*$prompt$"  { fail $test }
     }
 }
 
@@ -26,6 +27,7 @@ proc expect_NIL {} {
     global test
     expect {
 	-re "NIL.*$prompt$"  { pass $test }
+	-re "T.*$prompt$"    { fail $test }
     }
 }
 
@@ -34,7 +36,24 @@ start_clisp
 set prompt "> "
 set timeout 3
 
+proc new_timeout {newtimeout} {
+    global timeout_old
+    global timeout
+    set timeout_old $timeout
+    set timeout $newtimeout
+    send_user "changing timeout to $timeout.\n"
+}
+
+proc backup_timeout {} {
+    global timeout_old
+    global timeout
+    set timeout $timeout_old
+    send_user "changing timeout to $timeout.\n"
+}
+
 expect_after {
+    #-re "NIL.*$prompt$"  { fail $test }
+    #-re "T.*$prompt$"    { fail $test }
     -re "\[^\n\r\]*Break$prompt$" {
 	fail "$test (broke)"
 	send "unwind\n"
