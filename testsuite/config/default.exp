@@ -41,14 +41,14 @@ proc new_timeout {newtimeout} {
     global timeout
     set timeout_old $timeout
     set timeout $newtimeout
-    send_user "changing timeout to $timeout.\n"
+    send_user "setting timeout to $timeout.\n"
 }
 
 proc backup_timeout {} {
     global timeout_old
     global timeout
     set timeout $timeout_old
-    send_user "changing timeout to $timeout.\n"
+    send_user "resetting timeout to $timeout.\n"
 }
 
 expect_after {
