@@ -1,3 +1,14 @@
+Sat Dec  2 20:24:53 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Today I finished the complete restructuring of submodule
+	  `locclass'. I took parts from `locref' into `locclass' to define
+	  a clear submodule-hierarchy. Now standard- and var-classes are
+	  parsed correctly. The introduced dispatching scheme is much
+	  easier to understand than the previous version. I tried to be
+	  very careful with the code documentation an set up more than 50
+	  regression tests for this topic. Now its time to go to a
+	  friends' diploma party (yeah!) (5 hrs)
+
 Wed Nov 29 17:46:17 1995  Roger Kehr  (kehr@spelunke)
 
 	* Today I introduced a new class hierarchy in the submodule
@@ -11,9 +22,9 @@ Wed Nov 22 17:37:23 1995  Roger Kehr  (kehr@spock)
 
 	* Today I set up a small testsuite for the locref-module. I had
 	  some timeout problems with `expect' because clisp took more than
-	  10 seconds to load some files wich caused timeouts. I changed
-	  the timeout-value and with a simple switch-model. Now everything
-	  works as `expect'ed :-) (2 hrs)
+	  10 seconds to load some files which caused expect to timeout. I
+	  changed the timeout-value and with a simple switch-model. Now
+	  everything works as `expect'ed :-) (2 hrs)
 
 Sun Nov 19 19:30:22 1995  Roger Kehr  (kehr@spock)
 
@@ -58,12 +69,13 @@ Fri Oct 13 17:58:06 1995  Roger Kehr  (kehr@spelunke)
 
 Mon Oct 16 17:49:43 1995  Roger Kehr  (kehr@spelunke)
 
-It was used when I developed at home on my small Linux-box. After end of
-July and mid of October I spend some days for holidays in Portugal and had
-to learn afterwards for my "Operating System" exam. Today I presented the
-Theoretical work and now its time to continue implementing....
+        * The following part was used when I developed at home on my small
+          Linux-box. After end of July and mid of October I spend some
+          days for holidays in Portugal and had to learn afterwards for my
+          "Operating Systems" exam. Today I presented the Theoretical work
+          at my institute and now its time to continue implementing....
 
-Here follows the old ChangeLog (its in german).
+	  Here follows the old ChangeLog (its in german).
 
 ===========================================================================
 
