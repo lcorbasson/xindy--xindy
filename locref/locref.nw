@@ -387,13 +387,13 @@ i really need it.
 <<*>>=
 ;; $Id$
 
-(in-package "LOCREF")
-(provide "LOCREF")
+(lisp:in-package "LOCREF")
+(lisp:provide "LOCREF")
 
-(use-package "CLOS")
-(use-package "XP")
-(require "base")
-(use-package "BASE")
+(lisp:use-package "CLOS")
+(lisp:use-package "XP")
+(lisp:require "base")
+(lisp:use-package "BASE")
 
 <<Submodule \module{basetype}>>
 <<Submodule \module{locclass}>>
@@ -478,7 +478,12 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.21  1996/06/03 10:01:48  kehr
+%% Revision 1.22  1996/06/24 09:13:00  kehr
+%% Several changes in all Lisp-modules due to the new startup-module and
+%% the implementation of the percentage bar appearing in the processing
+%% phases.
+%%
+%% Revision 1.21  1996/06/03  10:01:48  kehr
 %% Added support for treeing layered-location-references.
 %%
 %% Revision 1.20  1996/05/29  14:15:58  kehr

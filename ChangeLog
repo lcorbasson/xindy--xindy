@@ -1,3 +1,37 @@
+Mon Jun 24 11:01:51 1996  Roger Kehr  <kehr@spock>
+
+	* One more week and many new things are finished. The xindy
+	  wrapper shellscript is ready and works as expected. Additionally
+	  A new package `startup' was added to put some code for the
+	  startup of the whole system.
+	* In all modules minor changes were necessary to implement some
+	  processing output.
+	* Some handlers were added to catch errors appearing in the
+	  modules.
+	* A new directory-tree ./distrib was added. It reflects the
+	  structure of the distribution package. Makefile were written to
+	  allow automatic compilation of the Lisp-source and correct
+	  dumping of the system.
+
+Mon Jun 17 11:59:36 1996  Roger Kehr  <kehr@spock>
+
+	* Two weeks later. I have nearly written down the complete
+	  documentation. The linuxdoc-stuff is a hack, as its author
+	  tells, and I had to make several modifications. I also started
+	  to read something about SGML in general and I figured out the
+	  problems to write a document that should be mapped onto at least
+	  four different markups (LaTeX, HTML, GNU-Info, Plain-Text).
+	  Maybe I'll start a complete rewrite since the linuxdoc-stuff
+	  does not enough emphasise on structural markup. But it is a
+	  really good introduction to learn SGML by modification. Thanx!
+
+	  I just made clisp-1996-05-30 run under Solaris 2.4 and it passed
+	  some checks running xindy. So the third platform is available.
+
+	  The location-reference markup is finished and I need some real
+	  test-cases. Still missing is the TeX-style that I need to make
+	  the system usable with (La)TeX.
+
 Mon Jun  3 11:50:48 1996  Roger Kehr  <kehr@spock>
 
 	* I nearly finished the treeing of the location-references.
@@ -60,7 +94,7 @@ Wed Mar 27 21:29:27 1996  Roger Kehr  <kehr@spock>
 	  discovered, that it might be better to include some parts of the
 	  source (written in C) into my project. The reasons were simple.
 	  First these parts were well tested and only minor modifications
-	  (that's a lie) were neccessary to get it running under the Rx
+	  (that's a lie) were necessary to get it running under the Rx
 	  library. Additionally I wrote a `rxsub' routine (now in C) that
 	  implements the desired features im a more efficient way (it's
 	  damn fast!). Now I have a bunch of C-modules that are directly

@@ -8,7 +8,7 @@ expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 xsend {(add ic loccls-num-0-20)}
 expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 
-xsend {(define-attributes ("default"))}
+xsend {(idxstyle::define-attributes ("default"))}
 expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }
 
 xsend {(setq idx (create-index))}

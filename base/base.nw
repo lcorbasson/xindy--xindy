@@ -29,15 +29,14 @@ the project.
 \section{The root of the submodule}
 
 <<*>>=
-(in-package "BASE")
-(provide "BASE")
+(lisp:in-package "BASE")
+(lisp:provide "BASE")
 
 (setq *print-pretty* t)
 
 <<Error message system>>
 <<Useful macros>>
 <<Assertions>>
-<<Startup>>
 
 (defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
 
@@ -70,8 +69,13 @@ support a function that issues a simple warning.
   `(FORMAT *ERROR-OUTPUT* ,@msg))
 @ %def oops
 
+<<Error message system>>=
+(defmacro info (&rest msg)
+  `(FORMAT *ERROR-OUTPUT* ,@msg))
+@ %def info
+
 <<Export-list of module \module{base}>>=
-(export '(oops))
+(export '(oops info))
 @
 
 \subsection{Assertions}
@@ -91,26 +95,13 @@ The following macro can be used to declare assertions.
 (export 'assert!)
 @
 
-\subsection{Startup}
-
-The following function can be used to start up the whole system.
-
-<<Startup>>=
-(defun startup ()
-  (eval-when (eval)
-    (require 'locref)
-    (require 'idxstyle)
-    (require 'index)
-    (require 'markup)))
-@ %def startup
-
-<<Export-list of module \module{base}>>=
-(export 'startup)
-@
-
-
 %% $Log$
-%% Revision 1.9  1996/05/29 14:15:18  kehr
+%% Revision 1.10  1996/06/24 09:12:09  kehr
+%% Several changes in all Lisp-modules due to the new startup-module and
+%% the implementation of the percentage bar appearing in the processing
+%% phases.
+%%
+%% Revision 1.9  1996/05/29  14:15:18  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%

@@ -409,10 +409,12 @@ common slots from the template into the new locref.
 
 \subsubsection{Processing an index}
 
-After the index is filled with indexentries our first task is to sort the index.
-Additionally we need to process all indexentries. Because we decide to
-make the processing of the indexentries directly driven by the markup,
-we simply markup the index and start right out of the box.
+After the index is filled with indexentries our first task is to sort
+the index.  Additionally we need to process all indexentries. Because
+we decide to make the processing of the indexentries directly driven
+by the markup, we simply markup the index and start right out of the
+box. To inform the user about the ongoing process we add a simple
+percentage count.
 
 <<Processing an index>>=
 (defmethod process-index ((index base-index))
@@ -423,6 +425,18 @@ we simply markup the index and start right out of the box.
              (get-entry-table index))
     (set-entry-list hash-list index)
     (build-indexentry-tree index)
+
+    (setq *number-of-indexentries* (length (get-entry-list index)))
+    (setq *current-number* 0)
+    (setq *percentage-list*
+          (mapcar #'(lambda (percent)
+                      (cons (truncate (* (/ percent 100)
+                                         *number-of-indexentries*))
+                            percent))
+                  ;; MOST-POSITIVE-FIXNUM acts as sentinel such that
+                  ;; we never run out of elements
+                  `(10 20 30 40 50 60 70 80 90 100 ,MOST-POSITIVE-FIXNUM)))
+    (setq *processing-percentage-list* *percentage-list*)
     (mapc #'process-indexentry (get-entry-list index))
     index))
 @ %def process-index
@@ -602,18 +616,19 @@ slots with the neccessary data.
 <<*>>=
 ;; $Id$
 
-(in-package 'index)
-(provide 'index)
+(lisp:in-package 'index)
+(lisp:provide 'index)
 
-(use-package "CLOS")
-(use-package "XP")
-(require "base")
-(use-package "BASE")
-(require "locref")
-(use-package "LOCREF")
-(eval-when (compile load eval)
-  (require "idxstyle")
-  (use-package "IDXSTYLE"))
+(lisp:use-package "CLOS")
+(lisp:use-package "XP")
+(lisp:require "base")
+(lisp:use-package "BASE")
+(lisp:require "locref")
+(lisp:use-package "LOCREF")
+;(eval-when (compile load eval)
+  (lisp:require "idxstyle")
+  (lisp:use-package "IDXSTYLE")
+;)
 
 ;; The following construct must be separated since the definition of
 ;; the *feature* :ORDRULES was added via loading the package
@@ -656,7 +671,12 @@ slots with the neccessary data.
 
 
 %% $Log$
-%% Revision 1.16  1996/06/03 10:01:36  kehr
+%% Revision 1.17  1996/06/24 09:12:48  kehr
+%% Several changes in all Lisp-modules due to the new startup-module and
+%% the implementation of the percentage bar appearing in the processing
+%% phases.
+%%
+%% Revision 1.16  1996/06/03  10:01:36  kehr
 %% Added support for treeing layered-location-references.
 %%
 %% Revision 1.15  1996/05/29  14:15:43  kehr

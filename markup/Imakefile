@@ -26,7 +26,7 @@ XCOMM continue in Imakefile
       NW_HEADER  = $(TOPDIR)/noweb/header.tex
       NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
 
-      ALL_NOWEB_SRC = markup.nw
+      ALL_NOWEB_SRC = markup.nw startup.nw
       ALL_DOC_SRC= module.nw $(ALL_NOWEB_SRC)
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_DOC_SRC))
@@ -48,7 +48,12 @@ DejaGnuTarget(markup,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.1  1996/01/17 16:14:11  kehr
+ * Revision 1.2  1996/06/24 09:13:14  kehr
+ * Several changes in all Lisp-modules due to the new startup-module and
+ * the implementation of the percentage bar appearing in the processing
+ * phases.
+ *
+ * Revision 1.1  1996/01/17  16:14:11  kehr
  * Introduced a the new module `markup'. It is too important to be part
  * of the `index'-module.
  *

@@ -76,9 +76,13 @@ The indexstyle itself will be initialised later after all functions are known.
 
 <<Global indexstyle definitions>>=
 (defparameter *indexstyle* nil)
+(defparameter *indexstyle-readtable* (copy-readtable))
+(defparameter *included-files* '())
+(defparameter *default-load-paths* *load-paths*)
+
 (defparameter *default-minimum-range-length* 2)
 (defparameter *default-locref-hierdepth*     0)
-@ %def *indexstyle* *default-minimum-range-length* *default-locref-hierdepth*
+@ %def *indexstyle* *indexstyle-readtable* *included-files* *default-load-paths* *default-minimum-range-length* *default-locref-hierdepth*
 
 <<Global indexstyle initialisation>>=
 <<Initialize indexclass [[default]]>>
@@ -273,15 +277,15 @@ above form and define two instances to the enumerations for both
 ;; $Id$
 ;;
 
-(in-package "IDXSTYLE")
-(provide "IDXSTYLE")
+(lisp:in-package "IDXSTYLE")
+(lisp:provide "IDXSTYLE")
 
-(use-package "CLOS")
-(use-package "XP")
-(require "base")
-(use-package "BASE")
-(require "locref")
-(use-package "LOCREF")
+(lisp:use-package "CLOS")
+(lisp:use-package "XP")
+(lisp:require "base")
+(lisp:use-package "BASE")
+(lisp:require "locref")
+(lisp:use-package "LOCREF")
 <<Use [[ordrules]]-package if available>> ;; see submodule intface
 
 <<Global indexstyle definitions>>
@@ -311,7 +315,12 @@ above form and define two instances to the enumerations for both
 @
 
 %% $Log$
-%% Revision 1.12  1996/06/03 10:01:13  kehr
+%% Revision 1.13  1996/06/24 09:12:27  kehr
+%% Several changes in all Lisp-modules due to the new startup-module and
+%% the implementation of the percentage bar appearing in the processing
+%% phases.
+%%
+%% Revision 1.12  1996/06/03  10:01:13  kehr
 %% Added support for treeing layered-location-references.
 %%
 %% Revision 1.11  1996/05/29  15:42:35  kehr

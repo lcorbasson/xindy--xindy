@@ -1,4 +1,4 @@
-%%
+%
 %% This file is part of the `xindy'-project at the
 %% Technical University Darmstadt, Computer Science Department
 %% WG System Programming, Germany.
@@ -76,6 +76,9 @@ nothing).
 (defparameter *markup-indent-level*  0)
 (defparameter *empty-markup* "")
 
+(defvar *markup-percentage-list*)
+(defvar *current-number*)
+
 (defparameter *internal-error-output* (make-string-output-stream))
 #| can be visited and flushed by calling
 (get-output-stream-string *internal-error-output* )
@@ -91,7 +94,8 @@ nothing).
 (export '(*markup-output-stream*
           *markup-verbose-mode*
           *markup-verbose-open*
-          *markup-verbose-close*))
+          *markup-verbose-close*
+          *indexstyle-readtable*))
 @
 
 \paragraph{Markup primitives}
@@ -151,16 +155,16 @@ the second from the third, and so on until the $n$-1-th to the $n$-th.
 
 <<Markup primitives>>=
 (defmacro do-markup-list (some-list
-			  &key
-			  identifier counter
-			  elt-body   sep-body
-			  open-body  close-body)
+                          &key
+                          identifier counter
+                          elt-body   sep-body
+                          open-body  close-body)
   `(PROGN
     ,(when open-body `,open-body)
     (LET ,(if counter
-	      `((LIST-END (CAR (LAST ,some-list)))
-		(COUNTER ,counter))
-	      `((LIST-END (CAR (LAST ,some-list)))))
+              `((LIST-END (CAR (LAST ,some-list)))
+                (COUNTER ,counter))
+              `((LIST-END (CAR (LAST ,some-list)))))
       (DO ((SLIST ,some-list (CDR SLIST)))
           ((ENDP SLIST))
         (LET ((,identifier (CAR SLIST)))
@@ -233,64 +237,6 @@ T
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\paragraph{A special reader syntax for quoted strings}
-
-The following reader function simulates the reading of strings like C
-does. Its quote-symbol is `\texttt{\bslash}' which quotes every
-character appearing next in the input stream. If the next character is
-`\texttt{n}' it is converted to a \texttt{Newline}-character. The
-macro-character \texttt{\#} recognizes a new kind of strings such that
-the string
-\begin{center}
-  \verb|#"this is a string\n with two newlines \n"|
-\end{center}
-will be correctly parsed and all occurences of `\texttt{\bslash{}n}'
-converted to a \texttt{Newline}-character.
-
-Additionally this reader-function knows the correct values of the
-special characters `\texttt{\bslash{}b}' and `\texttt{\bslash{}e}'.
-The encoding of these special characters declares
-`\texttt{\bslash{}b}' to be the character no.~1, and
-`\texttt{\bslash{}e}' to be character no.~255 in the
-ISO-Latin-alphabet. We can't choose character no.~0 for
-`\texttt{\bslash{}b}' since the sort-key generation is performed via
-the C-library \module{ORDRULES} in which character no.~0 is used as
-the string-termination character.
-
-<<Markup primitives>>=
-(defun c-string-reader (stream subchar char)
-  (declare (ignore subchar char))
-  (let ((ch nil)
-        (str (make-array 10
-                         :element-type 'string-char
-                         :adjustable t
-                         :fill-pointer 0)))
-    (loop
-      (setq ch (read-char stream t #\Newline t))
-      (case ch
-        (#\" (return str))              ;; "
-        (#\\ (setq ch (read-char stream t #\Newline t))
-             (case ch
-               (#\n (vector-push-extend #\Newline str))
-               (#\b (vector-push-extend (character   1) str))
-               (#\e (vector-push-extend (character 255) str))
-               (t   (vector-push-extend ch str))))
-        (t (vector-push-extend ch str))))))
-
-(set-dispatch-macro-character #\# #\" #'markup::c-string-reader)
-
-#|
-(let ((x #\Null))
-  (loop for i from 1 to 255
-        do (progn (print (character i))
-                  (when (char>= x (character i))
-                    (print "Whee!"))
-                  (setq x (character i)))))
-|#
-@ %def c-string-reader
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \paragraph{Some chunks for checking correct arguments}
 
 <<Check [[:open]] and [[:close]]>>=
@@ -336,6 +282,21 @@ the string-termination character.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\paragraph{Markup tracing}
+
+<<Markup interface>>=
+(defmacro markup-trace (&key
+                        (open  *markup-verbose-open*)
+                        (close *markup-verbose-close*))
+  (cond <<Check [[:open]] and [[:close]]>>
+        (t `(LET ()
+             (SETQ *markup-verbose-open*  open)
+             (SETQ *markup-verbose-close* close)
+             (SETQ *markup-verbose-mode*  t)))))
+@ %def markup-trace
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \paragraph{Index markup}
 
 The markup of an index currently consits of the open/close markups and
@@ -343,6 +304,8 @@ the markup of the list of all indexentries.
 
 <<Index markup>>=
 (defmethod do-markup-index ((idx base-index))
+  (setq *current-number* 0)
+  (setq *markup-percentage-list* index:*percentage-list*)
   (do-markup-index-open idx)
   (do-markup-list (get-entries idx)
     :identifier LETTER-GRP
@@ -463,6 +426,10 @@ subtargets for an indexentry markup.
 <<Indexentry markup>>=
 (defmethod do-markup-indexentry ((idxent index-entry)
                                  (depth number))
+  (when (>= (incf *current-number*) (caar *markup-percentage-list*))
+    (info " [~A%]" (cdar *markup-percentage-list*))
+    (pop *markup-percentage-list*))
+
   (do-markup-indexentry-open depth)
 
   (let ((print-key (get-print-key idxent)))
@@ -663,7 +630,7 @@ dispatching braches to the right methods.
 
 <<Attribute-group markup>>=
 (defmethod do-markup-attribute-group ((attribute-group category-attribute-group)
-				      (loccls layered-location-class))
+                                      (loccls layered-location-class))
   (let ((ordnum (get-ordnum attribute-group)))
     (do-markup-attribute-group-open ordnum)
 
@@ -684,8 +651,8 @@ dispatching braches to the right methods.
 @ %def do-markup-attribute-group
 
 <<Markup interface>>=
-(defmacro markup-attribute-group (&key open close sep group)
-  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+(defmacro markup-attribute-group (&key open close group)
+  (cond <<Check [[:open]] and [[:close]]>>
         <<Check [[:group]]>>
         (t `(markup::define-environment-methods
              DO-MARKUP-ATTRIBUTE-GROUP
@@ -715,14 +682,14 @@ dispatching braches to the right methods.
   (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
         <<Check [[:depth]]>>
         <<Check [[:class]] for location-reference class>>
-	(t `(markup::define-list-environment-methods
+        (t `(markup::define-list-environment-methods
              DO-MARKUP-LOCREF-LIST
              (,(if class
                    `(locrefcls (EQL ,(cdr (lookup-locref-class
                                            *indexstyle* class))))
                    '(locrefcls layered-location-class))
-	      ,(if depth `(depth (EQL ,depth)) '(depth number)))
-	     :declare ((declare (ignore locrefcls depth)))
+              ,(if depth `(depth (EQL ,depth)) '(depth number)))
+             :declare ((declare (ignore locrefcls depth)))
              :open  ,(when open  `((do-markup-string ,open)))
              :close ,(when close `((do-markup-string ,close)))
              :sep   ,(when sep   `((do-markup-string ,sep)))))))
@@ -734,43 +701,43 @@ dispatching braches to the right methods.
 
 <<Location-reference markup>>=
 (defmethod do-markup-locref ((locref location-reference)
-			     (loccls layered-location-class)
-			     (depth  number))
+                             (loccls layered-location-class)
+                             (depth  number))
   #+ASSERT! (assert! (and (typep locref 'layered-location-reference)
-			  (typep depth 'number)))
+                          (typep depth 'number)))
   (let ((attr    (get-catattr  locref))
         (subrefs (get-subrefs  locref))
-	(new-depth (1+ depth)))
+        (new-depth (1+ depth)))
 
     (do-markup-locref-open attr loccls depth)
 
     (cond
       (subrefs
-	 (do-markup-list (get-layers locref)
-	   :identifier LAYER
-	   :counter    depth
-	   :open-body  (do-markup-locref-layer-list-open  loccls depth)
-	   :elt-body   (do-markup-locref-layer LAYER loccls (INCF COUNTER))
-	   :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
-	   :close-body (do-markup-locref-layer-list-close loccls depth))
+         (do-markup-list (get-layers locref)
+           :identifier LAYER
+           :counter    depth
+           :open-body  (do-markup-locref-layer-list-open  loccls depth)
+           :elt-body   (do-markup-locref-layer LAYER loccls (INCF COUNTER))
+           :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
+           :close-body (do-markup-locref-layer-list-close loccls depth))
 
-	 (do-markup-list subrefs
-	   :identifier LOCREF
-	   :open-body  (do-markup-locref-list-open  loccls new-depth)
-	   :elt-body   (do-markup-locref     LOCREF loccls new-depth)
-	   :sep-body   (do-markup-locref-list-sep   loccls new-depth)
-	   :close-body (do-markup-locref-list-close loccls new-depth)))
+         (do-markup-list subrefs
+           :identifier LOCREF
+           :open-body  (do-markup-locref-list-open  loccls new-depth)
+           :elt-body   (do-markup-locref     LOCREF loccls new-depth)
+           :sep-body   (do-markup-locref-list-sep   loccls new-depth)
+           :close-body (do-markup-locref-list-close loccls new-depth)))
 
       ((= 0 depth)
-	 (do-markup-string (get-locref-string locref)))
+         (do-markup-string (get-locref-string locref)))
 
       (t (do-markup-list (get-layers locref)
-	   :identifier LAYER
-	   :counter    depth
-	   :open-body  (do-markup-locref-layer-list-open  loccls depth)
-	   :elt-body   (do-markup-locref-layer LAYER loccls (INCF COUNTER))
-	   :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
-	   :close-body (do-markup-locref-layer-list-close loccls depth))))
+           :identifier LAYER
+           :counter    depth
+           :open-body  (do-markup-locref-layer-list-open  loccls depth)
+           :elt-body   (do-markup-locref-layer LAYER loccls (INCF COUNTER))
+           :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
+           :close-body (do-markup-locref-layer-list-close loccls depth))))
 
     (do-markup-locref-close attr loccls depth)))
 @ %def do-markup-layered-locref
@@ -803,8 +770,8 @@ dispatching braches to the right methods.
                    `(locrefcls (EQL ,(cdr (lookup-locref-class
                                            *indexstyle* class))))
                    '(locrefcls layered-location-class))
-	      ,(if depth `(depth (EQL ,depth)) '(depth number)))
-	     :declare ((declare (ignore locrefcls depth)))
+              ,(if depth `(depth (EQL ,depth)) '(depth number)))
+             :declare ((declare (ignore locrefcls depth)))
              :open  ,(when open  `((do-markup-string ,open)))
              :close ,(when close `((do-markup-string ,close)))
              :sep   ,(when sep   `((do-markup-string ,sep)))))))
@@ -824,8 +791,8 @@ dispatching braches to the right methods.
 @ %def do-markup-locref
 
 <<Markup interface>>=
-(defmacro markup-locref (&key open close sep class attr depth)
-  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+(defmacro markup-locref (&key open close class attr depth)
+  (cond <<Check [[:open]] and [[:close]]>>
         <<Check [[:attr]]>>
         <<Check [[:depth]]>>
         <<Check [[:class]] for location-reference class>>
@@ -846,8 +813,8 @@ dispatching braches to the right methods.
 
 <<Location-reference markup>>=
 (defmethod do-markup-locref ((range location-range)
-			     (loccls layered-location-class)
-			     (depth number))
+                             (loccls layered-location-class)
+                             (depth number))
   (do-markup-range-open  loccls)
   (do-markup-locref (get-first range) loccls depth)
   (do-markup-range-sep   loccls)
@@ -998,51 +965,55 @@ Their elements are simple cross-references.
 <<*>>=
 ;; $Id$
 
-(in-package "MARKUP")
-(provide "MARKUP")
+(lisp:in-package "MARKUP")
+(lisp:provide "MARKUP")
 
-(use-package "CLOS")
-(use-package "XP")
-(require "base")
-(use-package "BASE")
-(require "locref")
-(use-package "LOCREF")
-(require "idxstyle")
-(use-package "IDXSTYLE")
-(require "index")
-(use-package "INDEX")
+(lisp:use-package "CLOS")
+(lisp:use-package "XP")
+(lisp:require "base")
+(lisp:use-package "BASE")
+(lisp:require "locref")
+(lisp:use-package "LOCREF")
+(lisp:require "idxstyle")
+(lisp:use-package "IDXSTYLE")
+(lisp:require "index")
+(lisp:use-package "INDEX")
 
 <<Submodule \module{markup}>>
 
-<<Pretty-printing>>
-
 (defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
+
+;; this should be the last of the module since it defines the
+;; additional package `xindy'.
+<<Submodule \module{startup}>>
 @
 
 \subsubsection{The submodule root}
 
 <<User-interface-definitions>>=
-(defparameter *markup-user-interface-definitions*
-  '(markup-crossref-layer
-    markup-crossref-layer-list
-    markup-crossref-list
-    markup-index
-    markup-letter-group
-    markup-letter-group-list
-    markup-indexentry
-    markup-indexentry-list
-    markup-keyword
-    markup-keyword-list
-    markup-locclass-list
-    markup-locref-class
-    markup-attribute-group-list
-    markup-attribute-group
-    markup-locref-list
-    markup-locref
-    markup-locref-layer-list
-    markup-locref-layer
-    markup-range
-    ))
+(eval-when (compile load eval)
+  (defparameter *markup-user-interface-definitions*
+    '(markup-crossref-layer
+      markup-crossref-layer-list
+      markup-crossref-list
+      markup-index
+      markup-letter-group
+      markup-letter-group-list
+      markup-indexentry
+      markup-indexentry-list
+      markup-keyword
+      markup-keyword-list
+      markup-locclass-list
+      markup-locref-class
+      markup-attribute-group-list
+      markup-attribute-group
+      markup-locref-list
+      markup-locref
+      markup-locref-layer-list
+      markup-locref-layer
+      markup-range
+      markup-trace
+      )))
 @ %def *markup-user-interface-definitions*
 
 <<Export-list of submodule \module{markup}>>=
@@ -1067,19 +1038,20 @@ Their elements are simple cross-references.
 
 <<User-interface-definitions>>
 <<Export-list of submodule \module{markup}>>
+@
 
 <<RCS-Identifier>>=
 ("markup" . "$Id$")
 @
 
-\subsubsection{Pretty-printing}
-
-<<Pretty-printing>>=
-@
-
 
 %% $Log$
-%% Revision 1.9  1996/06/03 10:01:53  kehr
+%% Revision 1.10  1996/06/24 09:13:17  kehr
+%% Several changes in all Lisp-modules due to the new startup-module and
+%% the implementation of the percentage bar appearing in the processing
+%% phases.
+%%
+%% Revision 1.9  1996/06/03  10:01:53  kehr
 %% Added support for treeing layered-location-references.
 %%
 %% Revision 1.8  1996/05/29  14:16:03  kehr

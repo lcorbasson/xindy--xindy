@@ -1,0 +1,139 @@
+%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module:    markup
+%% Submodule: startup
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Submodule \module{startup}}
+
+This submodule contains some startup-code.
+
+\subsubsection{Startup}
+
+The following constants help to identify the \xindy-version. Variable
+\texttt{*xindy-platform*} is a string indicating the platform on which
+xindy runs. Its value will be set when dumping xindy on a particular
+platform.
+
+<<Global definitions>>=
+(defparameter *xindy-version*  "`xindy' version 0.9 June 1996")
+(defparameter *xindy-platform* "unknown")
+@ %def *xindy-platform* *xindy-version*
+
+<<Startup functions>>=
+(defmacro error-exit ()
+  `(EXIT 1))
+
+(defun startup (&key idxstyle rawindex output show-version markup-trace)
+  (info "This is ~A (~A).~%" *xindy-version* *xindy-platform*)
+  (info "Copyright (C) 1996  Roger Kehr~%~%")
+  (when show-version (exit))
+  (when markup-trace
+    (setq *markup-verbose-mode* t))
+  (handler-case
+      (do-startup idxstyle rawindex output)
+    (error (condition)
+           (oops "~&FATAL ERROR: ~A~%" condition)
+           (error-exit))))
+@ %def startup
+
+<<Startup functions>>=
+(defun do-startup (idxstyle raw-index output)
+  (info "~&Reading indexstyle...~%")
+  (handler-case
+      (let ((*readtable* idxstyle:*indexstyle-readtable*))
+        (idxstyle:do-require idxstyle))
+    (error (condition)
+           (oops "~&ERROR: Reading indexstyle ~S failed!~%       ~A.~%"
+                 idxstyle condition)
+           (error-exit)))
+  (info "~&Finished reading indexstyle.")
+  (info "~&Finalizing indexstyle... ")
+  (idxstyle:make-ready idxstyle:*indexstyle*)
+  (info "(done)~%~%")
+
+  (info "~&Reading raw-index `~A'..." raw-index)
+  (handler-case
+      (load raw-index :verbose nil)
+    (error (condition)
+           (oops "~&ERROR: Reading raw-index ~S failed!~%       ~A.~%"
+                 raw-index condition)
+           (error-exit)))
+  (info "~&Finished reading raw-index.~%~%")
+
+  (handler-case
+      (setq *markup-output-stream*
+            (open output
+                  :direction :output
+                  :if-does-not-exist :create))
+    (error (condition)
+           (oops "~&ERROR: Opening file ~S failed!~%         ~A.~%"
+                 output condition)
+           (error-exit)))
+
+  (info "~&Processing index...")
+  (index:process-index index:*index*)
+  (info "~&Finished processing index.~%~%")
+
+  (info "~&Writing markup...")
+  (markup:do-markup-index index:*index*)
+  (info "~%Markup written into file `~A'.~%" output))
+@ %def do-startup
+
+<<Export-list of submodule \module{startup}>>=
+(export '(startup *xindy-version* *xindy-platform*))
+@
+
+
+\subsubsection{The submodule root}
+
+<<Submodule \module{startup}>>=
+;; $Id$
+
+(lisp:in-package  "XINDY")
+(lisp:use-package "BASE")
+(lisp:use-package "MARKUP")
+(lisp:import markup:*markup-user-interface-definitions*)
+
+<<Global definitions>>
+<<Startup functions>>
+
+<<Export-list of submodule \module{startup}>>
+@
+
+<<RCS-Identifier>>=
+("startup" . "$Id$")
+@
+
+
+%% $Log$
+%% Revision 1.1  1996/06/24 09:13:20  kehr
+%% Several changes in all Lisp-modules due to the new startup-module and
+%% the implementation of the percentage bar appearing in the processing
+%% phases.
+%%
+%% Revision 1.9  1996/06/03  10:01:53  kehr
+%%
+
+%% Local Variables:
+%% mode: lisp
+%% TeX-master: t
+%% End:)

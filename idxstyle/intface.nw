@@ -61,7 +61,9 @@ It can be imported by other packages by calling
 <<User-interface-definitions>>=
 (defparameter *idxstyle-user-interface-definitions*
   '(*indexstyle*
+    *indexstyle-readtable*
     *default-minimum-range-length*
+    *included-files*
     define-alphabet
     define-alphabet*
     define-enumeration
@@ -72,12 +74,16 @@ It can be imported by other packages by calling
     define-letter-group
     merge-rule
     sort-rule
+    searchpath
+    require
     ))
 @ %def *idxstyle-user-interface-definitions*
 
 <<Export-list of submodule \module{intface}>>=
-(export '*idxstyle-user-interface-definitions*)
-(export *idxstyle-user-interface-definitions*)
+(export '(*idxstyle-user-interface-definitions*
+          *indexstyle*
+          *indexstyle-readtable*
+          do-require))
 @
 
 \subsubsection{Helpers}
@@ -140,6 +146,66 @@ type or structure.
           make-well-formed-list map-to-strings))
 @ %def make-well-formed-list map-to-strings
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{A special reader syntax for quoted strings}
+
+The following reader function simulates the reading of strings like C
+does. Its quote-symbol is `\texttt{\bslash}' which quotes every
+character appearing next in the input stream. If the next character is
+`\texttt{n}' it is converted to a \texttt{Newline}-character. The
+macro-character \texttt{\#} recognizes a new kind of strings such that
+the string
+\begin{center}
+  \verb|#"this is a string\n with two newlines \n"|
+\end{center}
+will be correctly parsed and all occurences of `\texttt{\bslash{}n}'
+converted to a \texttt{Newline}-character.
+
+Additionally this reader-function knows the correct values of the
+special characters `\texttt{\bslash{}b}' and `\texttt{\bslash{}e}'.
+The encoding of these special characters declares
+`\texttt{\bslash{}b}' to be the character no.~1, and
+`\texttt{\bslash{}e}' to be character no.~255 in the
+ISO-Latin-alphabet. We can't choose character no.~0 for
+`\texttt{\bslash{}b}' since the sort-key generation is performed via
+the C-library \module{ORDRULES} in which character no.~0 is used as
+the string-termination character.
+
+<<String reader function>>=
+(defun c-string-reader (stream char)
+  (declare (ignore char))
+  (let ((ch nil)
+        (str (make-array 10
+                         :element-type 'string-char
+                         :adjustable t
+                         :fill-pointer 0)))
+    (loop
+      (setq ch (read-char stream t #\Newline t))
+      (case ch
+        (#\" (return str))              ;; "
+        (#\\ (setq ch (read-char stream t #\Newline t))
+             (case ch
+               (#\n (vector-push-extend #\Newline str))
+               (#\b (vector-push-extend (character   1) str))
+               (#\e (vector-push-extend (character 255) str))
+               (t   (vector-push-extend ch str))))
+        (t (vector-push-extend ch str))))))
+
+(set-macro-character #\" #'c-string-reader nil *indexstyle-readtable*)
+
+#|
+(let ((x #\Null))
+  (loop for i from 1 to 255
+        do (progn (print (character i))
+                  (when (char>= x (character i))
+                    (print "Whee!"))
+                  (setq x (character i)))))
+|#
+@ %def c-string-reader
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Alphabets}
 
@@ -435,6 +501,77 @@ For more information see the description of the [[ordrules]]-package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsubsection{Loading more files}
+\label{sec:intface:require}
+
+<<Including files>>=
+;;; we remove the inherited symbol and establish a new one
+(eval-when (compile load eval)
+  (shadow 'require))
+
+(defmacro require (&rest args)
+  (cond ((null args)
+           (error "missing argument <filename> !"))
+        ((not (stringp (car args)))
+           (error "(require ~A): expected <filename> !" (car args)))
+        (t `(LET ((FILENAME (STRINGIFY ',(car args))))
+             (DO-REQUIRE FILENAME)))))
+
+(defun do-require (filename)
+  (unless (member filename *included-files* :test #'equalp)
+    (push filename *included-files*)
+    (info "~&Loading module `~A'..." filename)
+    (load filename :verbose nil)
+    (info "~&Finished loading module `~A'.~%" filename)))
+@ %def require do-require
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Setting the searchpath}
+\label{sec:intface:searchpath}
+
+The following chunks implement the searchpath.
+
+<<Setting the searchpath>>=
+(defmacro searchpath (&rest args)
+  (cond ((null args)
+           (error "missing argument <pathlist> !"))
+        ((stringp (car args))
+           `(SET-SEARCHPATH (STRING-TO-SEARCHLIST ,(car args))))
+        ((listp args)
+           `(SET-SEARCHPATH ',(car args)))))
+
+(defun string-to-searchlist (str)
+  (let ((paths '())
+        pos)
+    (nreverse
+     (loop (when (equalp str "")
+             (return (push :default paths)))
+           (setq pos (position #\: str))
+           (if pos
+               (progn
+                 (push (subseq str 0 pos) paths)
+                 (setq str (subseq str (1+ pos))))
+               (return (push str paths)))))))
+
+(defun set-searchpath (path-list)
+  (setq *load-paths*
+        (apply #'nconc
+               (mapcar
+                #'(lambda (elt)
+                    (cond ((stringp elt)
+                             (list (pathname elt)))
+                          ((eq elt :default)
+                             *default-load-paths*)
+                          ((eq elt :last)
+                             *load-paths*)
+                          (t (oops "~&searchpath: invalid argument `~A' ! (ignored)~%"
+                                   elt))))
+                path-list))))
+@ %def searchpath
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{Destructuring-switch-bind --- from Gabor Herr}
 
 The following code was borrowed from Gabor Herr which he used in his
@@ -566,12 +703,14 @@ NIL in cases where no switch keyword was found in EXPR.
 
 <<Destructuring-switch-bind macro>>
 <<Helpers>>
+<<String reader function>>
 <<Defining alphabets>>
 <<Defining enumerations>>
 <<Defining location-classes>>
 <<Defining attributes>>
 <<Defining keyword rules>>
 <<Defining letter groups>>
+<<Including files>>
 
 <<User-interface-definitions>>
 
@@ -584,7 +723,12 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.13  1996/06/03 10:01:15  kehr
+%% Revision 1.14  1996/06/24 09:12:29  kehr
+%% Several changes in all Lisp-modules due to the new startup-module and
+%% the implementation of the percentage bar appearing in the processing
+%% phases.
+%%
+%% Revision 1.13  1996/06/03  10:01:15  kehr
 %% Added support for treeing layered-location-references.
 %%
 %% Revision 1.12  1996/05/29  14:15:29  kehr
