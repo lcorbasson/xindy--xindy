@@ -970,10 +970,8 @@ dispatching braches to the right methods.
 		    ,(if length
 			 `(length (EQL ,length))
 			 '(length number)))
-		 ;; :declare ((declare (ignore locrefcls length)))
-		 :body    ((format *error-output* "~&locrefcls: ~S, length ~S, ~S~%"
-				   locrefcls length ,(not ignore-end))
-			   ,(not ignore-end))))))))
+		 :declare ((declare (ignore locrefcls length)))
+		 :body    (,(not ignore-end))))))))
 @ %def markup-locref
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1181,6 +1179,9 @@ Their elements are simple cross-references.
 
 
 %% $Log$
+%% Revision 1.19  1997/01/23 15:10:41  kehr
+%% Removed forgotten debug-output.
+%%
 %% Revision 1.18  1997/01/23 15:04:42  kehr
 %% Added (markup-range :ignore-end).
 %%
