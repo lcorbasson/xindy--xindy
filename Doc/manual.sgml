@@ -14,15 +14,18 @@
 
 <subtitle>A Flexible Indexing System
 
-<author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
+<author>Roger Kehr, Computer Science Department, Darmstadt University
+of Technology
 
-<date>Manual, Edition March 1997 for xindy version 1.1
-
+<date>Manual, Edition February 1998 for xindy version 2.0
 <abstract>
 <em>This is the manual of the indexing system <sf/xindy/. <sf/xindy/
 is a powerful and flexible framework for generating indexes for many
-kinds of documents. This is Edition January 1997 and describes the
-features of <sf/xindy/ version 1.1.
+kinds of documents. This is Edition February 1998 and describes the
+features of <sf/xindy/ version 2.0. The most up-to-date version of
+this document can be obtained from the <sf/xindy/ homepage at
+http://www.iti.informatik.tu-darmstadt.de/xindy/.
+
 </em>
 </abstract>
 
@@ -617,7 +620,75 @@ the output may behave unexpectedly, so one should always enumerate all
 used location classes when using this command.
 
 
-<!-- ================================================================= -->
+<!-- =================================================================-->
+
+<label id="define-rule-set">
+<cmddesc>
+(define-rule-set name
+        [ :inherit-from ("rule-set" "rule-set-2") ]
+        :rules (<rule>...) )
+</cmddesc>
+
+A complete specification of a multi-phase sorting process for a
+language requires that some rules have to appear in several subsequent
+sorting phases. Rule sets can be used to define a set of rules that
+can be instantiated in an arbitrary sorting phase. Basically, they
+offer means to separate the definition of sorting rules from their
+instantiation, hence, acting as a wrapper for calls to <tt/sort-rule/.
+They do not add new functionality that is not already present with
+<tt/sort-rule/.
+
+A rule can be of the form:
+
+<verb>
+  <rule> ::= ("pattern" "replacement"
+              [:string|:bregexp|:egegexp] [:again])
+</verb>
+
+The following incomplete example defines a new rule set of name
+<tt/isolatin1-tolower/ that inherits definitions from rule set
+<tt/latin-tolower/, overriding or adding the sort rules in the list of
+<tt/:rules/.
+
+<verb>
+   (define-rule-set "isolatin1-tolower"
+
+     :inherit-from ("latin-tolower")
+
+     :rules (("À" "à" :string :again)
+             ("Á" "á" :string :again)
+             ("Â" "â" :string :again)
+             ("Ã" "ã" :string :again)
+             ("Ä" "ä" :string :again)
+             ("Å" "å" :string :again)
+             ("Æ" "æ" :string :again)
+          ...
+            )
+   ...)
+</verb>
+
+Rule sets can be instantiated with the command <tt/use-rule-set/. For
+further descriptions on the sorting model refer to the command
+<tt/sort-rule/.
+
+<!-- =================================================================-->
+
+<label id="define-sort-rule-orientations">
+<cmddesc>
+(define-sort-rule-orientations (orientations...))
+</cmddesc>
+
+Defines the order for the different sorting phases. The currently
+implemented <em/orientations/ are <tt/forward/ and <tt/backward/. This
+command must precede all <tt/sort-rule/ commands in an index style. It
+defines the orientations and implicitly sets the maximum number of
+sorting phases performed.
+
+For further descriptions on the sorting model refer to the command
+<tt/sort-rule/.
+
+
+<!-- =================================================================-->
 
 <label id="merge-rule">
 <cmddesc>
@@ -805,14 +876,54 @@ the first version.
 
 <label id="sort-rule">
 <cmddesc>
-(sort-rule pattern replacement [:again])
+(sort-rule pattern replacement [:run level] [:again])
 </cmddesc>
 
 Defines a keyword mapping rule that can be used to generate the
 <em/sort key/ of an index entry from the <em/merge key/. This key is
 used to sort the index entries lexicographically after they have been
-merged using the merge key. See command <tt>merge-rule</tt> for more
-information about keyword rules.
+merged using the merge key.
+
+The argument <tt>:run</tt> indicates that this rule is only in effect
+a the specified <em/level/ (default is level 0). For a detailed
+discussion on the definition of sort rules for different layers refer
+to the documentation about the new sorting scheme
+(<tt/new-sort-rules/) that comes with this distribution.
+
+See command <tt>merge-rule</tt> for more information about keyword
+rules.
+
+
+<!-- ================================================================= -->
+
+<label id="use-rule-set">
+<cmddesc>
+(use-rule-set [:run phase]
+              [:rule-set ( <rule-set>... ))
+</cmddesc>
+
+This command instantiates the gives rule sets to be in effect at
+sorting phase <tt/phase/. The order of the rule sets given with
+argument <tt/:rule-set/ is significant. Rule set entries of rule set
+appearing at the beginning of the list override entries in rule sets
+at the end of the list.
+
+The following example declares that in phase 0 the rule sets
+<tt/din5007/ and <tt/isolatin1-tolower/ should be active, whereas in
+phase 2 the other rule sets have to be applied.
+
+<verb>
+  (use-rule-set :run 0
+                :rule-set ("din5007" "isolatin1-tolower"))
+
+  (use-rule-set :run 1
+                :rule-set ("resolve-umlauts"
+                           "resolve-sharp-s"
+                           "isolatin1-tolower"
+                           ))
+</verb>
+
+For a discussion on rule sets refer to command <tt/define-rule-set/.
 
 
 <!-- ================================================================= -->
@@ -1733,7 +1844,9 @@ format of the emitted tags can be defined with the command
 
 <tag/<tt/-f// Run <tt/filterprog/ on <tt/raw-index/ before reading.
 The program must act as a filter reading from stdin and writing to
-stdout.
+stdout. The most obvious use of this option in conjunction with &TeX;
+is to run <tt/-f tex2xindy/ on the index file prior to reading the
+entries into <sf/xindy/.
 
 
 <tag/<tt/-v// Shows the version number of <sf/xindy/.
@@ -1777,6 +1890,10 @@ searchpath is added to the entire searchpath. See the command
 <ref id="define-location-class" name="<tt>define-location-class</tt>">
 <newline>
 <ref id="define-location-class-order" name="<tt>define-location-class-order</tt>">
+<newline>
+<ref id="define-rule-set" name="<tt>define-rule-set</tt>">
+<newline>
+<ref id="define-sort-rule-orientations" name="<tt>define-sort-rule-orientations</tt>">
 <newline>
 <ref id="indexentry" name="<tt>indexentry</tt>">
 <newline>
@@ -1829,6 +1946,8 @@ searchpath is added to the entire searchpath. See the command
 <ref id="searchpath" name="<tt>searchpath</tt>">
 <newline>
 <ref id="sort-rule" name="<tt>sort-rule</tt>">
+<newline>
+<ref id="use-rule-set" name="<tt>use-rule-set</tt>">
 
 @end-html
 
@@ -1855,6 +1974,14 @@ Studienarbeit FB Informatik, TH-Darmstadt, November 1995.
 
 <item> Joachim Schrod and Gabor Herr, <em/MakeIndex Version 3.0/,
 Technical University Darmstadt, 1991
+
+<item> Roger Kehr, <sf/xindy/ -- <em/A Flexible Indexing System/,
+Technical Report No. 11/1997, Computer Science Department, Darmstadt
+University of Technology, 1997. Also accessible from the &xindy;
+homepage.
+
+<item> Roger Kehr, <sf/xindy/ -- <em/A Flexible Indexing System/,
+Proceedings of the Euro&TeX;'98, St. Malo, France, March 1998
 
 </enum>
 
