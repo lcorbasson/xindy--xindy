@@ -31,18 +31,17 @@ location. A location is the composition of of basetypes and
 separators. A basetype consists either of an alphabet or an
 enumeration.
 
-An \term{alphabet} is a sequence of symbols with a limited limited
-size. Since \clisp uses ISO-Latin1 as its document alphabet, the
-\term{symbols} denotes words composed of letters of the
-ISO-Latin-alphabet. The \term{total order} of an alphabet is given by
-the position of the symbols in the sequence, therefore symbols that
-come later in the sequence have higher order numbern. The
+An \term{alphabet} is a finite sequence of symbols.  Since \clisp uses
+ISO-Latin1 as its document alphabet, a symbol is a \emph{word} over
+the ISO-Latin-alphabet. The \term{total order} of an alphabet is given
+by the position of the symbols in the sequence, therefore symbols that
+come later in the sequence have higher ordinal numbers. The
 \term{successor} of a symbol is by default defined as the next symbol
 in the sequence. The last symbol in the sequence has no successor. The
 \term{base alphabet} of an alphabet is the minimal set of characters
 that one needs to compose all symbols of the alphabet.
 
-An \term{enumeration} is a unlimited sequence of symbols. The arabic
+An \term{enumeration} is a infinite sequence of symbols. The arabic
 numbers are an example for enumerations. Their base alphabet is the
 set of digits $\{$0,\ldots,9$\}$. The mapping of a symbol to the set
 of natural numbers is given by a function that maps a sequence of
@@ -162,15 +161,12 @@ initialize [[base-alphabet]] with the result of function
 
 <<Class \class{alphabet}>>=
 (defun calculate-base-alphabet (list-of-strings)
-  (let ((base-alphabet '()))
-    (dolist (str list-of-strings)
-      (setq base-alphabet
-            (append base-alphabet (coerce str 'list))))
-    (sort (mapcon #'(lambda (x)
-                      (unless (member (car x) (cdr x))
-                        (list (car x))))
-                  base-alphabet)
-          #'char<)))
+  (sort (remove-duplicates
+         (apply #'nconc
+                (mapcar #'(lambda (str)
+                            (coerce str 'list))
+                        list-of-strings)))
+        #'char<))
 @ %def calculate-base-alphabet
 
 \no This functionis only used by [[make-alphabet]] so we don't export
@@ -207,10 +203,7 @@ list of strings. See \secref{def:prefix-match} for more details.
           (setq matched-string
                 (subseq (car string-list) 0 len-curr-match)))))
     (values matched-string rest-string ordnum-of-max-match)))
-
-(defun string-to-list (string)
-  (map 'list #'string string))
-@ %def prefix-match prefix-match-stringlist string-to-list
+@ %def prefix-match prefix-match-stringlist
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -272,6 +265,9 @@ Here is the root chunk of this submodule.
 %%======================================================================
 %%
 %% $Log$
+%% Revision 1.15  1997/03/10 15:51:53  kehr
+%% Added support for (merge-to :drop) which was inadvertently left out.
+%%
 %% Revision 1.14  1997/01/17 16:42:48  kehr
 %% Several changes for new version 1.1.
 %%

@@ -31,11 +31,11 @@ These objects are named \term{location}. Examples of locations are
 pages, chapters, sections, paragraphs, glossaries, verses \etc{}
 
 An index is structured into indexentries which usually own a list of
-location-references. This part implements location-references and is
+location-references. This module implements location-references and is
 responsible for their construction and management.
 
 Since the structure of a location-reference must match a
-location-class description their structure is somehow comparable.  A
+location-class description their structure is somehow comparable. A
 location-reference consists of subparts called \term{layers}. Each
 layer corresponds to a basetype.
 
@@ -55,16 +55,16 @@ the following diagram.
 <<Class \class{location-reference}>>=
 (defclass location-reference ()
     ((locclass  :initarg :locclass)
-     (attribute :reader get-attribute :writer set-attribute
-                :initarg :attribute)))
+     (attribute :initarg :attribute)))
 
-(defmacro get-locclass (locref)
-  `(SLOT-VALUE ,locref 'LOCCLASS))
+(defmacro get-locclass  (locref)  `(SLOT-VALUE ,locref 'LOCCLASS))
+(defmacro get-attribute (locref)  `(SLOT-VALUE ,locref 'ATTRIBUTE))
 @ %def location-reference get-locclass
 
 <<Export-list of submodule \module{locref}>>=
-(export '(location-reference get-locclass locclass
-          get-attribute set-attribute))
+(export '(location-reference
+          get-locclass locclass
+          get-attribute attribute))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -72,7 +72,12 @@ the following diagram.
 \subsubsection{Class \class{layered-location-reference}}
 
 We start with class \class{layered-location-reference}. The implementation is
-directly derived from its abstract description.
+directly derived from its abstract description. The macros are a
+result of the profiling phase. I figured out that most of the time was
+spent in the dispatching of the class-accessor functions. I replaced
+the by direct [[slot-value]] accessors. If performance must be
+improved further we should think about replacing the classes with
+structures.
 
 <<Class \class{layered-location-reference}>>=
 (defclass layered-location-reference (location-reference)
@@ -85,25 +90,21 @@ directly derived from its abstract description.
      (origin    :reader get-origin :writer set-origin :initform 'nil)
      (subrefs                      :type list         :initform '())))
 
-(defmacro get-layers (locref)         `(SLOT-VALUE ,locref 'LAYERS))
-(defmacro set-layers (layers locref)
-  `(SETF (SLOT-VALUE ,locref 'LAYERS) ,layers))
+(defmacro get-layers (locref)          `(SLOT-VALUE ,locref 'LAYERS))
+(defmacro set-layers (layers locref)   `(SETF (SLOT-VALUE ,locref 'LAYERS) ,layers))
 
-(defmacro get-ordnums (locref)        `(SLOT-VALUE ,locref 'ORDNUMS))
-(defmacro set-ordnums (ordnums locref)
-  `(SETF (SLOT-VALUE ,locref 'ORDNUMS) ,ordnums))
+(defmacro get-ordnums (locref)         `(SLOT-VALUE ,locref 'ORDNUMS))
+(defmacro set-ordnums (ordnums locref) `(SETF (SLOT-VALUE ,locref 'ORDNUMS) ,ordnums))
 
-(defmacro get-locref-string (locref)  `(SLOT-VALUE ,locref 'STRING))
-(defmacro get-catattr (locref)        `(SLOT-VALUE ,locref 'CATATTR))
-(defmacro get-rangeattr (locref)      `(SLOT-VALUE ,locref 'RANGEATTR))
+(defmacro get-locref-string (locref)   `(SLOT-VALUE ,locref 'STRING))
+(defmacro get-catattr (locref)         `(SLOT-VALUE ,locref 'CATATTR))
+(defmacro get-rangeattr (locref)       `(SLOT-VALUE ,locref 'RANGEATTR))
 
-(defmacro get-state   (locref)        `(SLOT-VALUE ,locref 'STATE))
-(defmacro set-state   (state locref)
-  `(SETF (SLOT-VALUE ,locref 'STATE) ,state))
+(defmacro get-state   (locref)         `(SLOT-VALUE ,locref 'STATE))
+(defmacro set-state   (state locref)   `(SETF (SLOT-VALUE ,locref 'STATE) ,state))
 
-(defmacro get-subrefs (locref)        `(SLOT-VALUE ,locref 'SUBREFS))
-(defmacro set-subrefs (subrefs locref)
-  `(SETF (SLOT-VALUE ,locref 'SUBREFS) ,subrefs))
+(defmacro get-subrefs (locref)         `(SLOT-VALUE ,locref 'SUBREFS))
+(defmacro set-subrefs (subrefs locref) `(SETF (SLOT-VALUE ,locref 'SUBREFS) ,subrefs))
 @ %def layered-location-reference get-layers set-layers get-catattr get-ordnums get-rangeattr get-locref-string get-subrefs set-subrefs get-state set-state
 
 \no The constructor takes the additional keyword [[:virtual]] to
@@ -118,17 +119,41 @@ after creation.
   (make-instance 'layered-location-reference
                  :string    string
                  :layers    layers
-		 :ordnums  ordnums
+                 :ordnums   ordnums
                  :catattr   catattr
-		 :locclass locclass
+                 :locclass  locclass
                  :attribute attribute
-                 :state  (if virtual 'locref-state-virtual 'locref-state-normal)))
+                 :state (if virtual 'locref-state-virtual
+                                    'locref-state-normal)))
 @ %def make-layered-location-reference
 
 \no The states a layered-location-reference can be in are
 [['locref-state-normal]], [['locref-state-virtual]] and
 [['locref-state-deleted]]. They should be accessed only by the
 following mutators and predicates.
+
+<<Class \class{layered-location-reference}>>=
+(defmacro state-normal-p (locref)
+  `(EQL 'LOCREF-STATE-NORMAL  (SLOT-VALUE ,locref 'STATE)))
+
+(defmacro state-virtual-p (locref)
+  `(EQL 'LOCREF-STATE-VIRTUAL (SLOT-VALUE ,locref 'STATE)))
+
+(defmacro state-deleted-p (locref)
+  `(EQL 'LOCREF-STATE-DELETED (SLOT-VALUE ,locref 'STATE)))
+
+(defun set-state-normal (locref)
+  (set-state 'locref-state-normal locref)
+  locref)
+
+(defun set-state-virtual (locref)
+  (set-state 'locref-state-virtual locref)
+  locref)
+
+(defun set-state-deleted (locref)
+  (set-state 'locref-state-deleted locref)
+  locref)
+@ %def state-normal-p state-virtual-p state-deleted-p set-state-normal set-state-virtual set-state-deleted
 
 <<Class \class{layered-location-reference}>>=
 (defmacro rangeattr-open-p (attr)
@@ -144,29 +169,6 @@ following mutators and predicates.
   `(SETF (SLOT-VALUE ,locref 'RANGEATTR) :RANGEATTR-CLOSE))
 @ %def rangeattr-open-p rangeattr-close-p set-rangeattr-open set-rangeattr-close
 
-<<Class \class{layered-location-reference}>>=
-(defmethod state-normal-p ((locref layered-location-reference))
-  (eql 'locref-state-normal (get-state locref)))
-
-(defmacro state-virtual-p (locref)
-  `(EQL 'LOCREF-STATE-VIRTUAL (SLOT-VALUE ,locref 'STATE)))
-
-(defmacro state-deleted-p (locref)
-  `(EQL 'LOCREF-STATE-DELETED (SLOT-VALUE ,locref 'STATE)))
-
-(defmethod set-state-normal ((locref layered-location-reference))
-  (set-state 'locref-state-normal locref)
-  locref)
-
-(defmethod set-state-virtual ((locref layered-location-reference))
-  (set-state 'locref-state-virtual locref)
-  locref)
-
-(defmethod set-state-deleted ((locref layered-location-reference))
-  (set-state 'locref-state-deleted locref)
-  locref)
-@ %def state-normal-p state-virtual-p state-deleted-p set-state-normal set-state-virtual set-state-deleted
-
 <<Export-list of submodule \module{locref}>>=
 (export '(layered-location-reference
           make-layered-location-reference
@@ -177,6 +179,7 @@ following mutators and predicates.
           get-rangeattr    rangeattr
           get-locref-string  string
           get-origin       set-origin
+          state
           state-normal-p   state-virtual-p   state-deleted-p
           set-state-normal set-state-virtual set-state-deleted
           set-rangeattr-open set-rangeattr-close
@@ -204,10 +207,10 @@ following mutators and predicates.
 
 \subsubsection{How to build a location-reference}
 
-This section deals with the task to build location-references from a
+This section deals with the task of building location-references from a
 given string, a category-attribute and a location-class description.
 The signature of the function [[build-location-reference]] is
-described in the interface of this module. The implementatation is
+described in the interface of this module. The implementation is
 realised via methods bound to the location-classes, since the
 construction of a location-reference directly depends on the
 location-class.
@@ -258,18 +261,14 @@ Here we define the category-attribute-slots.
 (defclass category-attribute ()
     ((name               :reader get-name
                          :initarg :name)
-     (catattr-grp-ordnum :writer set-catattr-grp-ordnum
+     (catattr-grp-ordnum                               :writer set-catattr-grp-ordnum
                          :initarg :ordnum)
-     (sort-ordnum        :reader get-sort-ordnum
-                         :writer set-sort-ordnum
+     (sort-ordnum        :reader get-sort-ordnum       :writer set-sort-ordnum
                          :initform 0)
-     (processing-ordnum  :reader get-processing-ordnum
-                         :writer set-processing-ordnum
+     (processing-ordnum  :reader get-processing-ordnum :writer set-processing-ordnum
                          :initform 0)
-     (last-in-group      :reader get-last-in-group
-                         :writer set-last-in-group)
-     (type               :reader get-type
-                         :writer set-type
+     (last-in-group      :reader get-last-in-group     :writer set-last-in-group)
+     (type               :reader get-type              :writer set-type
                          :initarg :type)))
 
 (defmacro get-catattr-grp-ordnum (catattr)
@@ -298,18 +297,15 @@ by using [[set-ordnum]] and [[set-type]].
 
 \subsubsection{Sorting of location-references}
 
-We are now interested how to sort a list of location-references
-belonging to a indexentry. When building ranges and examine
+We are now interested how to sort a list of location references
+belonging to an index entry. When building ranges and examining
 successor-relationships we need three sorting criteria that are
 possible with location-references.
 %%
 \begin{enumerate}
-\item The order given by the location-class. It is defined via the
-  [[location-class<]]-relation (\look{sec:location-class}).
+\item The order given by the location-class.
 \item The order given by the location-ordnums. The ordnums are a list
-  of numbers. To compare two lists of ordnums, we successively compare
-  the order-numbers and stop, if we find one number being smaller than
-  the other.
+  of numbers which must be compared lexicographically.
 \item The order given by the category-attribute ([[catattr<]]).
 \end{enumerate}
 
@@ -350,10 +346,11 @@ relation.
 i really need it.
 
 <<Sorting location-references>>=
-(defun locref< (locref-1 locref-2)
-  (cond ((locref-class= locref-1 locref-2)
-           (locref-ordnum< locref-1 locref-2))
-        (t (locref-class< locref-1 locref-2))))
+;; FIXME
+;;(defun locref< (locref-1 locref-2)
+;;  (cond ((locref-class= locref-1 locref-2)
+;;           (locref-ordnum< locref-1 locref-2))
+;;        (t (locref-class< locref-1 locref-2))))
 
 (defmethod locref= ((locref-1 crossref-location-reference)
                     (locref-2 layered-location-reference))
@@ -379,7 +376,7 @@ i really need it.
 <<Export-list of submodule \module{locref}>>=
 (export '(locref-class<  locref-class=
           locref-ordnum< locref-ordnum=
-          locref<        locref=))
+          locref=))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -486,6 +483,9 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
+%% Revision 1.25  1997/03/10 15:51:59  kehr
+%% Added support for (merge-to :drop) which was inadvertently left out.
+%%
 %% Revision 1.24  1997/01/23 21:35:06  kehr
 %% Modified something in the pretty-print routines.
 %%

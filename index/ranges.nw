@@ -497,24 +497,28 @@ the [[same-ordnum-list]].
 
 %%The post-processing for a locref-list simply returns that list.
 
-%%<Building of location-reference-ranges old version>=
-%%(defmethod post-process ((locrange location-range) (drop-function function))
-%%  (let ((locref-list (apply #'nconc (get-inner locrange))))
-%%    (cond ((>= (get-length locrange)
-%%               (get-join-length (get-locclass locrange)))
-%%             (mapc #'(lambda (locref)
-%%                       (let ((origin (get-origin locref)))
-%%                         (when origin
-%%                           (funcall drop-function origin))))
-%%                   locref-list)
-%%             (set-inner '() locrange)
-%%             (list locrange))
-%%          (t locref-list))))
+<<Building of location-reference-ranges>>=
+(defmethod post-process ((locrange location-range) (drop-function function))
+  (let ((locref-list (apply #'nconc (get-inner locrange))))
+    (cond ((>= (get-length locrange)
+               (get-join-length (get-locclass locrange)))
+             (mapc #'(lambda (locref)
+                       (let ((origin (get-origin locref)))
+                         (when origin
+                           (funcall drop-function origin))))
+                   locref-list)
+             ;;(set-inner '() locrange)
+             locrange)
+          (t locref-list))))
 
-%%(defmethod post-process ((locref-list list) x)
-%%  (declare (ignore x))
-%%  locref-list)
-%%@ %def post-process
+;(defmethod post-process ((locref-list list) x)
+;  (declare (ignore x))
+;  locref-list)
+
+(defmethod post-process ((locref location-reference) x)
+  (declare (ignore x))
+  locref)
+@ %def post-process
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -641,6 +645,9 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
+%% Revision 1.9  1997/03/10 15:51:29  kehr
+%% Added support for (merge-to :drop) which was inadvertently left out.
+%%
 %% Revision 1.8  1997/01/23 19:04:46  kehr
 %% Minor changes.
 %%

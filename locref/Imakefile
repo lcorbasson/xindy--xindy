@@ -22,8 +22,8 @@ XCOMM $Id$
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
-      NW_HEADER  = noweb/header.tex
-      NW_TRAILER = noweb/trailer.tex
+      NW_HEADER  = $(TOPDIR)/xindy/noweb/header.tex
+      NW_TRAILER = $(TOPDIR)/xindy/noweb/trailer.tex
 
       ALL_NOWEB_SRC = basetype.nw locclass.nw locref.nw
       ALL_DOC_SRC   = module.nw $(ALL_NOWEB_SRC)
@@ -49,7 +49,10 @@ DejaGnuTarget(locref,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.10  1996/05/07 08:59:20  kehr
+ * Revision 1.11  1997/03/10 15:51:51  kehr
+ * Added support for (merge-to :drop) which was inadvertently left out.
+ *
+ * Revision 1.10  1996/05/07  08:59:20  kehr
  * Added CVS support for xfig-pictures.
  *
  * Revision 1.9  1996/01/17  16:55:54  kehr

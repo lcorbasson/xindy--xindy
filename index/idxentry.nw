@@ -405,9 +405,12 @@ Process the following steps for each subset $L_i$ separately.
   (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
 					    "After build-ranges:"))
   (remove-virtual-locrefs locref-cls-grp)
+  (gol t "~%FOO1")
   (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
 					    "After remove virtuals:"))
+  (gol t "~%FOO2")
   (separate-into-catattr-groups locref-cls-grp)
+  (gol t "~%FOO3")
   (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
 					    "After separate attr-groups:"))
   locref-cls-grp)
@@ -751,12 +754,33 @@ additional structure introduced by the mapping process.
                                    (< (get-processing-ordnum x)
                                       (get-processing-ordnum y))))))
     (set-members (mapcan #'(lambda (catattr-sublist)
-                             (build-ranges catattr-sublist
-                                           idxcls
-                                           (get-locclass
-                                            (car catattr-sublist))))
-                         locref-same-catattr-grps)
-                 locref-cls-grp)))
+			     (let ((processed-locrefs
+				    (build-ranges catattr-sublist
+						  idxcls
+						  (get-locclass
+						   (car catattr-sublist)))))
+			       (when *locref-trace*
+				 (let ((*print-pretty* t))
+				   (gol t "~&after build-ranges:")
+				   (pprint-newline :mandatory *logging-stream*)
+				   (pprint-newline :mandatory *logging-stream*)
+				   (write processed-locrefs
+					  :stream *logging-stream*)))
+			       (let ((s2 (mapcar
+					  #'(lambda (x)
+					      (post-process
+					       x
+					       #'set-state-deleted))
+					  processed-locrefs)))
+				 (when *locref-trace*
+				   (let ((*print-pretty* t))
+				     (gol t "~&after set-state-deleted:")
+				     (pprint-newline :mandatory *logging-stream*)
+				     (pprint-newline :mandatory *logging-stream*)
+				     (write s2 :stream *logging-stream*)))
+				 s2)))
+			 locref-same-catattr-grps)
+		 locref-cls-grp)))
 @ %def build-ranges-in-locref-class-group
 
 \no The implementation of [[build-ranges]] is continued in submodule
@@ -1198,6 +1222,9 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
+%% Revision 1.26  1997/03/10 15:51:25  kehr
+%% Added support for (merge-to :drop) which was inadvertently left out.
+%%
 %% Revision 1.25  1997/01/23 21:34:17  kehr
 %% Reincorporated (merge-to) rule into indexstyle.
 %% Found one bug in the creation of virtual attributes that made them be

@@ -19,7 +19,7 @@
 \RCS $Date$%
 %
 
-\chapter{Module \module{location-reference}}
+\chapter{Module \module{location reference}}
 
 \minitoc
 
@@ -27,19 +27,17 @@
 
 \section{Introduction}
 
-This module implements the \emph{location-reference}-handling. It
-manages the hangling of the data type \emph{location-reference}.  In
+This module implements the handling of \emph{location references}. In
 this module contained is the implementation of the classes
 \type{basetype}, \type{location-class}, \type{category-attribute} and
 \type{location-reference}.
 
-A location-class describes the structure how location-references may
-be composed from basetypes. Basetypes are the smallest entity in the
-location-reference universe. A location-class describes a
-\emph{pattern} that strings must match to belong to form a
-location-reference of a specific structure.
+A \emph{location class} describes the structure of location references
+and is composed of \emph{basetypes}. Basetypes are the smallest entity
+in the location reference universe. A location can be seen as a
+\emph{pattern} that location reference strings to be instances of this class.
 
-The module is separated into the following submodules:
+This module is separated into the following submodules:
 \begin{deflistsf}{XXXXXXX}
 \item [basetype] manages the declaration and management of so-called
   \emph{basetypes}. They are the smallest entity of a location-reference.
@@ -49,25 +47,7 @@ The module is separated into the following submodules:
   category-attributes. It uses the previous submodules for its
   operation
 \end{deflistsf}
-%%
 
-\begin{TODO}
-\item (locref:)\\
-  \begin{itemize}
-  \item Change declaration of the relation between location-classes
-    \texttt{locref<}
-  \item Sorting of the category-attributes via [[sort-ordnum]] with
-    respect of the [[sort-ordnum]] of catattr-group is still not
-    exactly solved.
-  \end{itemize}
-\item (locclass:)\\
-  \begin{itemize}
-  \item location-class \class{crossref} still unimplemented
-  \item Implement all \cmd{checked-make-xxx-location-class} functions.
-  \item Maybe we don't need any [[loccls-layer]]s and
-    [[loccls-separator]]s?
-  \end{itemize}
-\end{TODO}
 
 \section{Abstract Specification}
 
@@ -121,7 +101,7 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{make-alphabet}%%
-  {\tstring \x \tstrlist \res \type{alphabet}\uip} Constructor of the
+  {\tstring \x \tstrlist \res \type{alphabet}} Constructor of the
   \cmd{alphabet}-class. It takes a name and a list of strings and
   gives back an instance of type [[alphabet]].
 \end{defunc}
@@ -132,7 +112,7 @@ The following symbols are exported:
 \end{defvcls}
 
 \begin{defunc}{make-enumeration}%%
-  {\tclass \x \tstring \x \tcharlist \res \type{enumeration}\uip}
+  {\tclass \x \tstring \x \tcharlist \res \type{enumeration}}
   Constructor of \cmd{enumeration}-subclasses.
 \end{defunc}
 
@@ -147,13 +127,13 @@ The following symbols are exported:
   Abstract base-class of all location-classes.
 \end{defvcls}
 
-\begin{defmethod}{perform-match}{\tstring \x \type{location-class}\uip}%
+\begin{defmethod}{perform-match}{\tstring \x \type{location-class}}%
   Matches a string against a location-class. Returns the list of
   strings and a list of ordnums, if it succeeded
   (\look{sec:match.strings} for the details).
 \end{defmethod}
 
-\begin{defmethod}{set-ordnum}{\tint \x \type{location-class}\uip}%
+\begin{defmethod}{set-ordnum}{\tint \x \type{location-class}}%
   Sets the \emph{ordnum} of a location-class. This number is used as a
   sorting criteria for the final markup.
 \end{defmethod}
@@ -174,12 +154,12 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{checked-make-standard-location-class}
-  {\tstring \x \tstrlist \res \type{standard-location-class}\uip}%%
+  {\tstring \x \tstrlist \res \type{standard-location-class}}%%
   Constructor of \class{standard-location-class}.
 \end{defunc}
 
 \begin{defunc}{checked-make-var-location-class}
-  {\tstring \x \tstrlist \res \type{var-location-class}\uip}%%
+  {\tstring \x \tstrlist \res \type{var-location-class}}%%
   Constructor of \class{var-location-class}.
 \end{defunc}
 
@@ -188,7 +168,7 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{make-loccls-layer}
-  {\type{basetype} \res \type{loccls-layer}\uip}%%
+  {\type{basetype} \res \type{loccls-layer}}%%
   Constructor of \class{loccls-layer}.
 \end{defunc}
 
@@ -197,7 +177,7 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{make-loccls-separator}%%
-  {\tstring \res \type{loccls-separator}\uip}%%
+  {\tstring \res \type{loccls-separator}}%%
   Constructor of \class{loccls-separator}.
 \end{defunc}
 
@@ -210,7 +190,7 @@ The following symbols are exported:
 \end{defvcls}
 
 \begin{defunc}{make-verified-crossref-location-class}
-  {\tstring\uip}
+  {\tstring}
   Constructor of \class{verified-crossref-location-class}.
 \end{defunc}
 
@@ -219,7 +199,7 @@ The following symbols are exported:
 \end{defvcls}
 
 \begin{defunc}{make-unverified-crossref-location-class}
-  {\tstring\uip}
+  {\tstring}
   Constructor of \class{unverified-crossref-location-class}.
 \end{defunc}
 
@@ -255,12 +235,12 @@ The following symbols are exported:
   The class of category-attributes.
 \end{defcls}
 
-\begin{defunc}{make-category-attribute}{\emph{name}\uip}
+\begin{defunc}{make-category-attribute}{\emph{name}}
   Creates a new instance of class \class{category-attribute}.
 \end{defunc}
 
 \begin{defmethod}{set-catattr-grp-ordnum}{\tint \x
-    \type{category-attribute}\uip}%%
+    \type{category-attribute}}%%
   Defines the number of the category-attribute-group this
   category-attribute belongs to. If some category-attributes form a
   group all group members must have the same number and it must be
@@ -268,7 +248,7 @@ The following symbols are exported:
 \end{defmethod}
 
 \begin{defmethod}{set-sort-ordnum}{\tint \x
-    \type{category-attribute}\uip}%%
+    \type{category-attribute}}%%
   This number indicates the position of this category-attribute in the
   output sequence. (This has to re rethought!)
 \end{defmethod}
@@ -288,7 +268,10 @@ The following symbols are exported:
 
 
 %% $Log$
-%% Revision 1.11  1996/05/06 10:01:52  kehr
+%% Revision 1.12  1997/03/10 15:52:03  kehr
+%% Added support for (merge-to :drop) which was inadvertently left out.
+%%
+%% Revision 1.11  1996/05/06  10:01:52  kehr
 %% Minor changes in nearly all modules.
 %%
 %% Revision 1.10  1996/04/30  15:54:59  kehr

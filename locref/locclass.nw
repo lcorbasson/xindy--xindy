@@ -41,7 +41,6 @@ are supported:
 \term{Standard}- and \term{Var-classes} consist of \term{basetypes}
 and \term{separators}. A standard-class has a fixed structure whereas
 a var-class actually describes a family of standard-classes.
-
 A \term{Cross-reference} describes how cross references such as
 \textit{see}, \textit{see also under} \etc are represented.
 
@@ -82,33 +81,11 @@ name that is stored in the [[name]]-slot. Additionally every derived
 location-class must implement a method [[perform-match]]
 (\look{sec:match.strings}).
 
-<<Export-list of submodule \module{locclass}>>=
-(export '(location-class perform-match
-          get-name get-ordnum set-ordnum ordnum))
-@
-
-\no We define a relation between location-classes that is used to sort
-instances of location-references due to the order of their
-corresponding location-classes. We introduce the relations
-[[location-class<]] and [[location-class=]] that compare two
-location-classes [[loccls-1]] and [[loccls-2]] and returns [[t]] if
-the first one is \emph{smaller} than/\emph{equal} to the second one.
-
-<<Class \class{location-class}>>=
-(defgeneric location-class< (location-class-1 location-class-2))
-
-(defgeneric location-class= (location-class-1 location-class-2))
-@ %def location-class< location-class=
-
-\no It is implemented as a generic function to achieve a simple
-implementation that is extendable.
-
-The currently implemented behaviour defines this relation according to
-the order in which location-classes are defined.  We use a variable
-[[*curr-loccls-ordnum*]] to keep track of the current number with
-initial value 0 and increase it everytime we declare a new
-location-class by calling [[gen-next-loccls-ordnum]]. It is called in
-the [[:initform]] of the class-descriptions.
+We use a variable [[*curr-loccls-ordnum*]] to keep track of the
+current number of defined location classes with initial value 0 and
+increase it everytime we declare a new location class is created by
+calling [[gen-next-loccls-ordnum]]. It is called in the [[:initform]]
+of the class-descriptions.
 
 <<Class \class{location-class}>>=
 (defparameter *curr-loccls-ordnum* 0)
@@ -117,19 +94,10 @@ the [[:initform]] of the class-descriptions.
   (incf *curr-loccls-ordnum*))
 @ %def gen-next-loccls-ordnum
 
-\no The default implementation that needs to be modified later is as
-follows:
-
-<<Class \class{location-class}>>=
-(defmethod location-class< ((loccls-1 location-class)
-                            (loccls-2 location-class))
-  (< (get-ordnum loccls-1) (get-ordnum loccls-2)))
-
-(defmethod location-class= ((loccls-1 location-class)
-                            (loccls-2 location-class))
-  (= (get-ordnum loccls-1) (get-ordnum loccls-2)))
-@ %def location-class< location-class=
-
+<<Export-list of submodule \module{locclass}>>=
+(export '(location-class perform-match
+          get-name get-ordnum set-ordnum ordnum))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -153,8 +121,8 @@ because they share multiple similiarities.
 
 <<Export-list of submodule \module{locclass}>>=
 (export '(layered-location-class
-	  get-layers set-layers layers
-	  get-hierdepth set-hierdepth hierdepth))
+          get-layers set-layers layers
+          get-hierdepth set-hierdepth hierdepth))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -162,9 +130,9 @@ because they share multiple similiarities.
 \subsubsection{Class \class{standard-location-class}}
 
 Slot [[join-length]] contains the length of a range in the last layer
-of a location-reference of a standard-location-class. If
-[[join-length]] is [[nil]] then no range-building is allowed for this
-location-class.
+of a location-reference of a standard-location-class. A range can be
+built of its lenght is at least [[join-length]]. If [[join-length]] is
+[[nil]] then range-building is disallowed for this location-class.
 
 <<Class \class{standard-location-class}>>=
 (defclass standard-location-class (layered-location-class)
@@ -174,12 +142,12 @@ location-class.
 (defun make-standard-location-class (name layers join-length hierdepth)
   (make-instance 'standard-location-class
                  :name name :layers layers
-		 :join-length join-length :hierdepth hierdepth))
+                 :join-length join-length :hierdepth hierdepth))
 @ %def standard-location-class make-standard-location-class
 
 <<Class \class{standard-location-class}>>=
 (defmacro joining-allowed-p (loccls)
-  `(OR (SLOT-VALUE ,loccls 'JOIN-LENGTH)))
+  `(SLOT-VALUE ,loccls 'JOIN-LENGTH))
 @ %def joining-allowed-p
 
 \no We add a function for a checked creation of a location-class, that
@@ -188,7 +156,7 @@ normal instantiation without any validation.
 
 <<Class \class{standard-location-class}>>=
 (defun checked-make-standard-location-class (name layers join-layers
-						  &optional (hierdepth 0))
+                                                  &optional (hierdepth 0))
   (make-standard-location-class name layers join-layers hierdepth))
 @ %def checked-make-location-class
 
@@ -201,6 +169,9 @@ normal instantiation without any validation.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \class{var-location-class}}
+
+For var classes the building of ranges is not allowed. Thus, we nee no
+other information.
 
 <<Class \class{var-location-class}>>=
 (defclass var-location-class (layered-location-class)
@@ -226,8 +197,7 @@ normal instantiation without any validation.
 \label{sec:loccls-layer}
 
 A \term{location-class-layer} is based upon a basetype. We define this
-as an extra class to be free for future additions. (Later on... Great
-idea, because we now store the markup-information into the class, too.)
+as an extra class to be free for future additions.
 
 <<Class \class{loccls-layer}>>=
 (defclass loccls-layer ()
@@ -243,7 +213,7 @@ idea, because we now store the markup-information into the class, too.)
 @
 
 \no To perform matching of a string [[locstring]] against a layer
-[[layer]] we just forward the result to the basetype of thar
+[[layer]] we just forward the result to the basetype of that
 location-class layer.
 
 <<Class \class{loccls-layer}>>=
@@ -257,7 +227,7 @@ location-class layer.
 \subsubsection{Class \class{loccls-separator}}
 \label{sec:loccls-separator}
 
-A separators is simply a string. We define this as an extra class for
+A separator is simply a string. We define this as an extra class for
 future extensions.
 
 <<Class \class{loccls-separator}>>=
@@ -275,8 +245,8 @@ future extensions.
 
 \no To perform matching of a string [[locstring]] against a separator
 [[separator]] we must decide, if [[sepstr]] is a prefix of
-[[locstring]]. If this is true we return the matched string---which is
-then equal to [[locstring]]--the rest-string and the value [[t]] to
+[[locstring]]. If this is true we return the matched string, which is
+then equal to [[locstring]], the rest-string and the value [[t]] to
 indicate success or a multiple value [[(nil nil nil)]] otherwise.
 
 \begin{note}
@@ -292,9 +262,9 @@ indicate success or a multiple value [[(nil nil nil)]] otherwise.
   (let* ((sepstr (get-separator separator))
          (seplen (length sepstr))
          (match-len (string/= sepstr locstring)))
-    (cond ((or (null match-len) (eql seplen match-len))
-             (values locstring (subseq locstring seplen) t))
-          (t (values nil nil nil)))))
+    (if (or (null match-len) (eql seplen match-len))
+        (values locstring (subseq locstring seplen) t)
+        (values nil nil nil))))
 @ %def perform-match
 
 
@@ -333,6 +303,11 @@ consistency.
 
 For this reason slot [[target]] consists of a \tstrlist that holds the
 key (what key?) of the indexentry it points to.
+\begin{note}
+  The ``what key'' question is still unsolved. We will further
+  implement it if there is some more expericence with this problem.
+\end{note}
+
 
 <<Class \class{verified-crossref-location-class}>>=
 (defclass verified-crossref-location-class (crossref-location-class)
@@ -518,9 +493,10 @@ is not an error, because we do a prefix-matching.
 \subsubsection*{Matching strings with crossref-location-classes}
 
 <<Matching strings with location-classes>>=
-(defmethod perform-match ((locstring string)
-                          (loccls    crossref-location-class))
-  t)
+;; FIXME (do we need this)
+;;(defmethod perform-match ((locstring string)
+;;                          (loccls    crossref-location-class))
+;;  t)
 @ %def perform-match
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -593,7 +569,10 @@ is not an error, because we do a prefix-matching.
 
 
 %% $Log$
-%% Revision 1.18  1996/07/03 18:41:38  kehr
+%% Revision 1.19  1997/03/10 15:51:56  kehr
+%% Added support for (merge-to :drop) which was inadvertently left out.
+%%
+%% Revision 1.18  1996/07/03  18:41:38  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%
