@@ -1,0 +1,150 @@
+#!/usr/bin/perl
+# $Id$
+#------------------------------------------------------------
+# (history at end)
+
+=head1 NAME
+
+texindy  -  XXX
+
+=head1 SYNOPSIS
+
+XXX
+
+=head1 DESCRIPTION
+
+XXX
+
+=cut
+
+
+use strict;
+
+BEGIN {
+    use vars qw($Revision $VERSION);
+    q$Revision$ =~ /: (\d+)\.(\d+)/ ;	# q wg. Emacs indent!
+    my ($major, $minor) = ($1, $2);
+    $VERSION = "$major." . ($minor<10 ? '0' : '') . $minor;
+}
+
+
+# Some common variables.
+# Determine environment. Where is our library directory, and our modules?
+
+use File::Basename;
+our ($cmd_dir, $cmd);
+BEGIN {
+    $cmd_dir = dirname($0);
+    $cmd = basename($0);
+}
+
+
+# Used modules.
+
+use Getopt::Long qw(:config bundling);
+
+
+# Check arguments, store them in proper variables.
+
+sub usage ()
+{
+    print STDERR <<_EOT_
+usage: $cmd [-V?h] [-qv] [-iglr] [-d magic] [-o outfile.ind] [-t log] \\
+            [-L lang] [-C codepage] [-M module] [idx0 idx1 ...]
+
+GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
+
+ -V / --version
+ -? / -h / --help
+ -q / --quiet
+ -v / --verbose
+ -i / --stdin
+ -g / --german
+ -l / --letter-ordering
+ -r / --no-ranges
+ -d / --debug          (multiple times)
+ -o / --out-file
+ -t / --log-file
+ -L / --language
+ -C / --codepage
+ -M / --module         (multiple times)
+
+_EOT_
+  ;
+    exit 1;
+}
+
+our ($output_version, $quiet, $verbose, $stdin, @debug,
+     $outfile, $logfile, $language, $codepage, @modules);
+$language = 'general';
+$codepage = 'latin';
+
+parse_options();
+output_version()  if $output_version;	# will not return
+usage()  if ( ! $stdin && @ARGV == 0 );	# brain damaged, but like makeindex
+
+
+# Reconstruct xindy options, and eventually switch to it.
+
+unshift (@ARGV, '-q')  if $quiet;
+unshift (@ARGV, '-v')  if $verbose;
+unshift (@ARGV, map { ('-d', $_) } @debug)  if @debug;
+unshift (@ARGV, '-o', $outfile)  if $outfile;
+unshift (@ARGV, '-t', $logfile)  if $logfile;
+unshift (@ARGV, '-L', $language);
+unshift (@ARGV, '-C', $codepage)  if $codepage;
+unshift (@ARGV, map { ('-M', $_) } ("tex/inputenc/$codepage",
+				    $ENV{TEXINDY_AUTO_MODULE} || 'texindy',
+				    @modules));
+unshift (@ARGV, '-I', 'latex');
+
+print "Calling xindy as: $cmd_dir/xindy @ARGV\n"  if (grep /^script$/, @debug);
+
+exec "$cmd_dir/xindy", @ARGV;
+
+
+# ------------------------------------------------------------
+
+
+sub parse_options() {
+
+    my ($german, $letter_ordering, $no_ranges);
+    GetOptions(
+	       'version|V'          => \$output_version,
+	       'help|h|?'           => \&usage,
+	       'quiet|q'            => \$quiet,
+	       'verbose|v'          => \$verbose,
+	       'stdin|i'            => \$stdin,
+	       'german|g'           => \$german,
+	       'letter-ordering|l'  => \$letter_ordering,
+	       'no-ranges|r'        => \$no_ranges,
+	       'debug|d=s'          => \@debug,
+	       'out-file|o=s'       => \$outfile,
+	       'log-file|t=s'       => \$logfile,
+	       'language|L=s'       => \$language,
+	       'codepage|C=s'       => \$codepage,
+	       'module|M=s'         => \@modules,
+	      );
+
+    if ( $german ) {
+	unshift (@modules, 'german-sty');
+	if ( $language eq 'general' ) {
+	    $language = 'german-din';
+	} elsif ( $language !~ /^german/ ) {
+	    print STDERR "You cannot specify -g and -L at the same time.\n";
+	    #print STDERR "NOTE: -g is obsolete anyhow.\n";
+	    exit (1);
+	}
+    }
+    unshift (@modules, ($letter_ordering ? 'letter-order' : 'word-order'));
+    unshift (@modules, 'page-ranges')  unless $no_ranges;
+}
+
+
+
+#======================================================================
+#
+# $Log$
+# Revision 1.1  2004/05/24 19:47:13  jschrod
+#     Introduce new driver script, as part of the "Companion Release".
+#

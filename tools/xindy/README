@@ -1,15 +1,5 @@
 $Id$
 ------------------------------------------------------------
 
-This directory contains the shell wrapper for the xindy-system.
-
-The Makefile can be adjusted to set the default path for xindy. Typing
-`make' generates the shell-script `xindy' with the defined
-default-path which defaults to /usr/local/lib/xindy.
-
-Enjoy, Roger.
-
-=====================================================================
-Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
-Computer Science Department
-Technical University of Darmstadt, Germany
+This directory contains the old shell wrapper for the xindy system.
+It will be named xindy.v2 in distribution.

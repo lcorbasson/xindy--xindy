@@ -2,17 +2,14 @@
 #----------------------------------------------------------------------
 
 #
-# Makefile for generating the shell-wrapper
+# Makefile for generating the shell wrapper
 #
 
-XINDY_LIBDIR=/usr/local/lib/xindy
-
-xindy : xindy.in
-	-sed -e "s|@XINDY_LIBDIR@|$(XINDY_LIBDIR)|" \
-	     < xindy.in > xindy
-	-chmod a+x xindy
+xindy.v2 : xindy.in
+	cp xindy.in xindy.v2
+	-chmod a+x xindy.v2
 
 test : force
-	$(MAKE) XINDY_LIBDIR=$(CLISP_LIBDIR) xindy
+	$(MAKE) xindy.v2
 
 force:

@@ -2,7 +2,13 @@
 #
 # $Id$
 #
-# This is the perl-frontend to the xindy indexing system.
+# This is the old perl-frontend to the xindy indexing system.
+#
+# It is kept for compatibility reasons and is named xindy.v2 in
+# production. Most probably, you will not want to use it any more.
+#
+# This code is not supported. Don't report bugs, switch to the current
+# xindy script.
 #
 
 ($progname = $0) =~ s#.*/##;
@@ -126,33 +132,41 @@ if ( $numArgs eq 1 || $opt_v || $opt_i ) { # two arguments or -v,-i specified
 print "Idxsty = $Idxsty\n" if $debug;
 print "Rawidx = $Rawidx\n" if $debug;
 
-# Define the default xindy library directory It should be in a xindy
-# subdirectory of a sibling lib directory. Use /usr/local/lib/xindy if
-# such a directory does not exist. If /usr/local/lib/xindy does not
-# exist as well, the user must set XINDY_LIBDIR explicitely.
+# Define the default xindy library directory. It should be in a
+# sibling lib tree, maybe in a xindy subdirectory. Or the user may
+# set XINDY_LIBDIR explicitely.
 
-$XINDY_LIBDIR=$ENV{"XINDY_LIBDIR"};
-print "XINDY_LIBDIR (from Environment) = $XINDY_LIBDIR\n" if $debug;
+$0 =~ m:^(.*)/[^/]*$: ;
+$cmd_dir = $1 || '.';
 
-if ( "" eq "$XINDY_LIBDIR" ) {
-    ($LibDir = $0) =~ s#(.*)/[^/]*$#\1#;
-    if ( $LibDir eq "" ) {
-	$LibDir = ".";
-    }
-    $LibDir="$LibDir/../lib/xindy";
-    if ( ! -d $LibDir ) {
-	$LibDir="@XINDY_LIBDIR@";
-    }
-    $XINDY_LIBDIR=$LibDir;
+# library directory
+if ( $ENV{XINDY_LIBDIR} ) {
+    $LibDir = $ENV{XINDY_LIBDIR};
+    print "XINDY_LIBDIR (from Environment) = $LibDir\n" if $debug;
+} elsif ( -f "$cmd_dir/../lib/xindy.run" ) { # /opt style
+    $LibDir = "$cmd_dir/../lib";
+} elsif ( -d "$cmd_dir/../lib/xindy" ) { # /usr or /usr/local style
+    $LibDir = "$cmd_dir/../lib/xindy";
+} else {
+    die "Cannot locate xindy library directory";
 }
-
+$XINDY_LIBDIR=$LibDir;
 print "XINDY_LIBDIR = $XINDY_LIBDIR\n" if $debug;
+
+# modules directory
+if ( -d "$cmd_dir/../modules" ) {	# /opt style
+    $modules_dir = "$cmd_dir/../modules";
+} elsif ( -d "$LibDir/modules" ) {	# /usr or /usr/local style
+    $modules_dir = "$LibDir/modules";
+} else {
+    die "Cannot locate xindy modules directory";
+}
 
 $memfile="$XINDY_LIBDIR/xindy.mem";
 $runfile="$XINDY_LIBDIR/xindy.run";
 
 # Set initial searchpath
-$SEARCHPATH="(searchpath \".:@XINDY_MODULEDIR@\")";
+$SEARCHPATH="(searchpath \".:$modules_dir\")";
 
 # Add/replace (depends on the specification) the search path according
 # to the environment variable
@@ -254,6 +268,9 @@ if ( $try ) {
 
 #
 # $Log$
+# Revision 1.12  2004/05/24 19:47:13  jschrod
+#     Introduce new driver script, as part of the "Companion Release".
+#
 # Revision 1.11  1999/09/23 07:22:39  kehr
 # Fixed an exit code problem reported by Peter Meszaros
 # <pmeszaros@effice.hu>.
