@@ -1,0 +1,18 @@
+\setlength{\unitlength}{0.00087500in}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(2610,342)(46,12218)
+\thinlines
+\put(451,12284){\vector( 1, 0){630}}
+\put(1936,12284){\vector( 1, 0){630}}
+\put( 46,12239){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}key}}}
+\put(361,12464){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\rmdefault}{\mddefault}{\itdefault}merge mapping}}}
+\put(1846,12464){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\rmdefault}{\mddefault}{\itdefault}sort mapping}}}
+\put(1216,12239){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}merge key }}}
+\put(2656,12239){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}sort key}}}
+\end{picture}

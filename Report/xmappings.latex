@@ -1,0 +1,23 @@
+\setlength{\unitlength}{0.00087500in}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(2700,795)(46,11765)
+\thinlines
+\put(451,12104){\vector( 1, 0){630}}
+\put(1981,12149){\vector( 4, 1){540}}
+\put(1981,12104){\vector( 1, 0){540}}
+\put(1981,12059){\vector( 3,-1){540}}
+\put( 46,12059){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}key}}}
+\put(361,12284){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\rmdefault}{\mddefault}{\itdefault}merge mapping}}}
+\put(1216,12059){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}merge key }}}
+\put(1621,12464){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\rmdefault}{\mddefault}{\itdefault}sort mapping phases}}}
+\put(2656,12059){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}sort key (phase 2)}}}
+\put(2656,11789){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}sort key (phase $n$)}}}
+\put(2656,12239){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}sort key (phase 1)}}}
+\put(2746,11924){\makebox(0,0)[lb]{\smash{\SetFigFont{9}{10.8}{\sfdefault}{\mddefault}{\updefault}\ldots{}}}}
+\end{picture}
