@@ -1,0 +1,280 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module:    markup
+%% Submodule: markup
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Module \module{markup}}
+
+\subsection{Introduction}
+
+\subsection{Abstract Specification}
+
+The markup-tree can be specified with the following grammar: Round
+braces `\texttt{(}\ldots\texttt{)}' denote the closure of an
+index-object and angles `$\langle\ldots\rangle$' denote
+BNF-expressions.
+
+\medskip
+
+\newcommand{\isa}{\textsl{::=}}
+\newcommand{\LIST}[1]{{\normalfont\texttt{(}}#1{\normalfont\texttt{)}}}
+\newcommand{\Braces}[1]{{\normalfont$\langle$}#1{\normalfont$\rangle$}}
+
+{\slshape%%
+\begin{tabular}{lcl}
+  index &\isa& \LIST{indexentry}\\%%
+  indexentry &\isa& \LIST{ \LIST{keyword\texttt{+}}
+    \LIST{locclass-grp\texttt{*}}
+    \LIST{indexentry\texttt{*}} }\\%%
+  keyword &\isa& \LIST{\textsf{string}}\\%%
+  locclass-grp &\isa& \Braces{structured-loccls-grp $|$
+    crossref-grp}\texttt{+}\\%%
+  structured-loccls-grp &\isa& \LIST{catattr-grp\texttt{+}}\\%%
+  catattr-grp &\isa& \LIST{locref-list}\\%%
+  locref-list &\isa& \Braces{structured-locref $|$ range}\texttt{+}\\%%
+  range &::=& \LIST{ structured-locref\ \ structured-locref }\\%%
+  structured-locref &\isa& \LIST{ \LIST{layer\texttt{+}}
+    \LIST{structured-locref\texttt{*}} }\\%%
+  layer &\isa& \LIST{\textsf{string}}\\%%
+  crossref-grp &\isa& \LIST{crossref-locref\texttt{+}}\\%%
+  crossref-locref &\isa& \LIST{\textsf{string}}\\%%
+
+\end{tabular}
+}
+
+\subsubsection{Definition}
+
+
+\subsubsection{Operation}
+
+
+
+\subsection{Concrete Specification}
+
+\subsubsection{Class \class{markup-element}}
+
+This class is the abstract base-class of all markup-elements.
+
+<<Class \class{markup-element}>>=
+(defclass standard-markup-element ()
+    ())
+
+(defmethod make-markup-element (x)
+  x)
+
+(defmethod make-markup-element ((some-list list))
+  (mapcar #'make-markup-element some-list))
+@
+
+<<Class \class{markup-element}>>=
+(defclass list-markup-element (standard-markup-element)
+    ((sublist :reader get-sublist
+              :initarg :sublist
+              :initform '()
+              :type list)))
+
+(defclass string-markup-element (markup-element)
+    ((string  :reader get-string
+              :initarg :string
+              :initform ""
+              :type string)))
+@
+
+\subsubsection{Class \class{me-index}}
+
+<<Class \class{me-index}>>=
+(defclass me-index (list-markup-element)
+    ())
+
+(defmethod make-markup-element ((idx base-index))
+  (make-instance 'me-index
+                 :sublist (make-markup-element
+                           (mapcar #'(lambda (x)
+                                       (cdr x))
+                                   (get-entry-list idx)))))
+@
+
+\subsubsection{Class \class{me-indexentry}}
+
+<<Class \class{me-indexentry}>>=
+(defclass me-indexentry (list-markup-element)
+    ((keywords :reader get-keywords :initarg :keywords :type list)
+     (locrefs  :reader get-locrefs  :initarg :locrefs  :type list)
+     ))
+
+(defclass me-keyword (string-markup-element)
+    ())
+
+(defun make-me-keyword (keyword)
+  (declare (inline))
+  (make-instance 'me-keyword :string keyword))
+
+(defmethod make-markup-element ((idxentry indexentry))
+  (make-instance 'me-indexentry
+                 :keywords (mapcar #'(lambda (keyword)
+                                       (make-instance 'me-keyword
+                                                      :string keyword))
+                                   (get-print-key idxentry))
+                 :locrefs  (make-markup-element (get-locrefs idxentry))))
+@
+
+\subsubsection{Class \class{me-location-class-group}}
+
+A location-class-group is a list of category-attribute-groups.
+
+<<Class \class{me-location-class-group}>>=
+(defclass me-location-class-group (list-markup-element)
+    ())
+
+(defmethod make-markup-element ((catattr-grp catgory))
+  (make-instance 'me-location-class-group
+                 :sublist ))
+@
+
+\subsubsection{Class \class{me-catattr-group}}
+
+An instance of a \class{me-catattr-group} contains a sublist of
+location-reference-elements.
+
+<<Class \class{me-catattr-group}>>=
+(defclass me-catattr-group (list-markup-element)
+    ())
+
+(defmethod make-markup-element ((catattr-grp catattr-groups))
+  (make-instance 'me-catattr-group
+                 :sublist
+                 ))
+
+\subsubsection{Class \class{me-structured-locref}}
+
+<<Class \class{me-structured-locref}>>=
+(defclass me-structured-locref (list-markup-element)
+    ((layers  :reader get-layers  :initarg :layers :type list)
+     (catattr :reader get-catattr :initarg :catattr)))
+
+(defmethod make-markup-element ((slocref structured-locref))
+  (make-instance 'me-structured-locref
+                 :catattr (get-catattr slocref)
+                 :layers  (mapcar #'make-me-locref-layer
+                                  (get-layers  slocref))))
+@
+
+\subsubsection{Class \class{me-cross-reference-locref}}
+
+<<Class \class{me-cross-reference-locref}>>=
+(defclass me-cross-reference-locref (markup-element)
+    )
+
+(defmethod make-markup-element ((cref crossref-location-reference))
+  (make-instance 'me-cross-reference-locref
+                 :catattr (get-catattr slocref)
+                 :layers  (mapcar #'make-me-locref-layer
+                                  (get-layers  slocref))))
+@
+
+
+\subsubsection{Class \class{me-locref-layer}}
+
+<<Class \class{me-locref-layer}>>=
+(defclass me-locref-layer (string-markup-element)
+    ())
+
+(defun make-me-locref-layer (layer)
+  (declare (inline))
+  (make-instance 'me-locref-layer :string layer))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The module root}
+
+<<*>>=
+;; $Id$
+
+(in-package "MARKUP")
+(provide "MARKUP")
+
+(eval-when (eval compile load)
+  (use-package "CLOS")
+  (use-package "XP")
+  (require "index")
+  (use-package "INDEX"))
+
+<<Submodule \module{markup}>>
+
+<<Pretty-printing>>
+
+(defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
+@
+
+\subsubsection{The submodule root}
+
+<<Submodule \module{markup}>>=
+;; $Id$
+
+<<Class \class{markup-element}>>
+<<Class \class{me-index}>>
+<<Class \class{me-indexentry}>>
+@
+
+<<RCS-Identifier>>=
+("markup" . "$Id$")
+@
+
+\subsubsection{Pretty-printing}
+
+<<Pretty-printing>>=
+(set-pprint-dispatch 'markup-element
+                     #'(lambda (s me)
+                         (pprint-logical-block
+                          (s nil :suffix "}")
+                          (pprint-indent :block 2 s)
+                          (write-string "markup-element {" s)
+                          (pprint-newline :mandatory s)
+                          (pprint-linear s (get-sublist me)))
+                         (pprint-newline :mandatory s))
+                     )
+
+(set-pprint-dispatch 'me-indexentry
+                     #'(lambda (s me-ie)
+                         (pprint-logical-block
+                          (s nil :suffix "}")
+                          (pprint-indent :block 2 s)
+                          (write-string "me-indexentry {" s)
+                          (write (get-keywords me-ie) :stream s)
+                          (pprint-newline :mandatory s)
+                          (pprint-linear s (get-sublist me-ie)))
+                         (pprint-newline :mandatory s))
+                     )
+@
+
+
+%% $Log$
+%% Revision 1.1  1996/01/23 12:17:09  kehr
+%% First version of the module `markup'.
+%%
+%%
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
