@@ -45,12 +45,20 @@ TeXSpreadTarget(latex,cb-markup, cb-markup.tex STY BIB)
 CVSAdd(SRC EPS STY BIB Imakefile techrep.tex cb-markup.tex)
 CVSCommentLeader("%% ", SRC STY)
 
+cb-markup.ps: cb-markup.dvi
+	dvips -o cb-markup.ps cb-markup.dvi
+techrep.ps: techrep.dvi
+	dvips -o techrep.ps techrep.dvi
+
 clean::
-	$(RM) xindy.ps techrep.ps
+	$(RM) xindy.ps cb-markup.ps techrep.ps
 
 /* ============================================================
 
 $Log$
+Revision 1.8  1997/05/05 15:22:06  kehr
+Some more corrections after the last proof reading of Prof. Waldschmidt.
+
 Revision 1.7  1997/02/19 18:41:42  kehr
 Check in after Klaus' corrections.
 

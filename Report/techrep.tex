@@ -106,13 +106,15 @@
 
 \begin{document}
 
-\date{\today}
-\title{\XINDY{}\\[1ex]%%
+\date{May 1997}
+\title{\mbox{}\\[0.5ex]%%
+  \XINDY{}\\[1ex]%%
   Definition of an Indexing Model\\and its Implementation\\[2ex]
-  \Huge\sffamily DRAFT VERSION}%%
+  %%\Huge\sffamily DRAFT VERSION
+  }
 \author{Roger Kehr}
 
-\iti{Bericht TI-XXX/97}
+\iti{Bericht TI-11/97}
 
 \maketitle
 
@@ -237,13 +239,14 @@ it is necessary that the indexer has sufficient knowledge of the
 problem area to make appropriate indexing decisions.  Unfortunately,
 the index is very often the most neglected part of a
 book.\footnote{Especially as it can be used to express feelings (as
-  shown by the quotation of \textsc{D. E. Knuth} shows), as well as
-  humour (see under \emph{kludges} in~\cite{Steele:common-lisp-2}).}
+  shown by the quotation of \textsc{D. E. Knuth}), as well as humour
+  (see index entry for \emph{kludges}
+  in~\cite{Steele:common-lisp-2}).}
 
 Most of nowadays word processors are still weak in supporting the
-production of high-quality indexes, this might be one reason for the
-deficiencies in many textbooks. Our work is an approach to give a
-model of what an index is and how a good indexing system should
+production of high-quality indexes, which might be one reason for the
+deficiencies found in many textbooks. Our work is an approach to give
+a model of what an index is and how a good indexing system should
 operate. Based on this model we present \xindy, our implementation of
 this indexing model.
 
@@ -276,7 +279,7 @@ formatters~\cite{nroff}, and (b) direct manipulation word processors
 typically operating under some windowing system. One of the most
 widespread used index processor in the first group is
 \mkidx~\cite{Chen:UCB-TR-87-347,Chen:SPE-19-9-897}. The indexing
-capabilities of the latter group are application dependent and and not
+capabilities of the latter group are less powerful than \mkidx and not
 controllable from outside. Therefore, we have concentrated on indexing
 functionalities in the first group. Figure~\ref{fig:data-flow}
 describes the typical data flow in this group of systems.
@@ -318,7 +321,7 @@ Figure~\ref{fig:homomorphism} illustrates this view.
 
 {\vertspace=-1ex
 \begin{mfigure}
-  {Index processing as an homomorphism}
+  {Index processing as a homomorphism}
   {fig:homomorphism}
   \begin{center}
     \hspace*{-2.5cm}\input{homomorphism.latex}
@@ -421,29 +424,30 @@ Along the \term{horizontal dimension} we identify the list of
 serves as a reference to some location within the document. We can
 observe different types of locations in documents such as page
 numbers, section numbers, parts of the appendix, cross references,
-etc.\ Most indexes contain only references to pages but there is a
-wide application area in which pages are of less concern.
+etc.\ Most indexes contain only references to pages but there are many
+application areas in which pages are of less concern or don't even
+exist.
 
 
 \subsection{Index Entries}
 
 An index entry consists of a keyword which is a list of strings and a
 list of location references.  Most indexes have a recursive structure
-since an index entry can possibly be composed of other index entries.
-Thus index entries may form a recursive structure.
+since an index entry can possibly be composed of other (sub-)index
+entries. Thus index entries may form a recursive structure.
 
 A keyword consists of a list of \term{strings}. Strings are
 \term{character sequences} over the underlying \term{alphabet} that is
 used in the document preparation system such as ASCII or the ISO~Latin
 family. Strings are denoted using the quote characters ``\ldots''. An
 example keyword consisting of two strings might be (``search''
-``sequential'').\footnote{We use parenthesis to denote list-based
-  structures.} A keyword can be interpreted as the \term{path} in the
-tree structure to the corresponding location references. This view
-raises two basic questions: (a) how do we recognise that two keywords
-and therefore strings are equal, and (b) how do we order them?
+``sequential''). We use parenthesis to denote list-based structures. A
+keyword can be interpreted as the \term{path} in the tree structure to
+the corresponding location references. This view raises two basic
+questions: (a) how do we recognise that two keywords and therefore
+strings are equal, and (b) how do we order them?
 
-We first discuss the ordering process. Strings are usually ordered
+We first discuss the ordering problem. Strings are usually ordered
 according to the lexicographic order of the sequence of characters.
 The order of characters in the underlying \dps often does not
 correctly represent the language specific lexicographic order, being a
@@ -478,9 +482,9 @@ The problem of \term{letter groups} has been solved in \imkidx, too.
 Letter groups usually appear as separate groups in the tagged index,
 and thus must be identified correctly. Letter groups are identified
 using a comparison of a prefix of a sort key with a list of all letter
-groups declared in the index style.\footnote{This model assumes that
-  letter groups are built using a prefix of the sort key, since we
-  know of no other grouping mechanism, yet.}
+groups declared in the index style. This model assumes that letter
+groups are built using a prefix of the sort key. Other models are not
+supported.
 
 Though keyword mappings can be used to describe (a) language dependent
 sorting orders, (b) language dependent letter groups, and (c) to
@@ -489,9 +493,14 @@ the keywords itself, it is still weak from the users perspective.
 Complex sorting schemes such as the French sorting rules described in
 the ISO~14651 standard \emph{International String
   Ordering}~\cite{ISO14651} are hard to express in the current model.
-The ISO standard describes a different method for sorting strings that
-is based on a table-lookup specification of sorting rules which in
-some cases simplifies the specification of sorting rules.
+The \imkidx model is essentially a \term{string rewriting system}
+implemented with string and regular expression substitutions. The most
+important weakness with such a system is that it operates at the
+character level and does not work for more abstract objects, which
+might simplify the specification of sort rules. The ISO standard
+describes a different method for sorting strings that is based on a
+table-lookup specification of sorting rules which in some cases
+simplifies the specification of sorting rules.
 
 We have incorporated the keyword mapping scheme from \imkidx
 with minor extensions into \xindy. A new scheme is under development
@@ -518,8 +527,6 @@ these logical structures:
       \advance\leftmargin\labelsep}
   \item Chapter-based pages of the form ([arabic]--[arabic]): \emph{2--8},
     \emph{2--12}, \emph{4--7}, \emph{4--9}.
-  \item Bible verses: \emph{Genesis 1, 31}; \emph{Exodus 1, 7};
-    \emph{Leviticus 2, 3}.
   \item Texts of Law: \textbf{1} \S436, \S446; \textbf{2} \S546.
   \item URLs:
     {\small\texttt{http://www.iti.informatik.th-darmstadt.de/xindy/}}.
@@ -539,8 +546,11 @@ these logical structures:
     old ones. This preserves the overall structure by inserting, for
     instance, page \emph{11a} between page \emph{11} and \emph{12}.
 
+  \item Bible verses: \emph{Genesis 1, 31}; \emph{Exodus 1, 7};
+    \emph{Leviticus 2, 3}; \emph{Psalm 47}.
+
   \item Hierarchical Sections of the form
-    ([arabic].[arabic].[\ldots]): \emph{1.1}, \emph{1.2.1},
+    ([arabic]\{.[arabic].[\ldots]\}): \emph{1.1}, \emph{1.2.1},
     \emph{2.1}.
   \end{list}
 \end{description}
@@ -574,9 +584,9 @@ of elements of \term{finite length}, e.g.\ the letters \{`A',
 `\emph{Leviticus}'\}. A sequence of finite length can be declared by
 simply listing all of its elements, thus $\alpha_i=\{l_0, l_1, \ldots,
 l_k\}$ with $l_j$ being the letters of the alphabet. The sorting order
-inside an alphabet is simply derived from the definition order
+inside an alphabet is simply derived from the order of its letters
 ($l_i<l_j \Leftrightarrow i<j$). An alphabet consisting of only one
-letter defines a \emph{separator}, i.e.\ a string that is used to
+letter defines a \term{separator}, i.e.\ a string that is used to
 separate several components of a location reference. Typical examples
 are dashes, dots, and blanks (`--', `.', `\verb*| |').
 
@@ -593,13 +603,12 @@ enumerable sequences.
 
 A location reference $L=s_1\ldots{}s_n$ \term{matches} a location
 class $C$ iff $\forall i.s_i\in \alpha_i$. Using alphabets to declare
-the structure of a location class makes it possible to directly derive
-an ordinal number for each $s_i$ separately. A location reference can
-then be represented by the sequence of ordinal numbers of all
-$\alpha_i$. This sequence is called the \term{sort key} of a location
-reference. This enables one to define a natural sorting order on a
-location class based on the \term{lexicographic order} of the sort
-key.
+the structure of a location class allows to directly derive an ordinal
+number for each $s_i$ separately. A location reference can then be
+represented by the sequence of ordinal numbers of all $\alpha_i$. This
+sequence is called the \term{sort key} of a location reference. This
+enables one to define a natural sorting order on a location class
+based on the \term{lexicographic order} of the sort key.
 
 %\newpage
 
@@ -622,7 +631,7 @@ of ordinal numbers (2\ts3\ts12).\footnote{Assuming the first element
 based on sort keys is now a trivial task. Since some of the identified
 location structures have optional parts, such as the irregular
 structures presented above, our model allows the definition of
-optional postfixes as well. These location classes are named
+optional suffixes as well. These location classes are named
 \term{variable location classes}. The example of the manual with
 inserted pages is one instance of this type of location classes.
 
@@ -634,7 +643,7 @@ $\{c,i,l,m,v,x\}$ and the set of the lowercase Latin letters
 $\{a,\ldots,z\}$ are not disjoint.  We argue that this situation is
 unlikely to occur in practice since the reader would be confused by
 such location references, making this a rather pathological
-case.\footnote{I hope so, since I actually found no meaningful
+case.\footnote{We hope so, since we actually found no meaningful
   counter-example.}
 
 Location classes like index entries can have a recursive structure,
@@ -809,7 +818,7 @@ of), if the virtual one helps building a range. There are two ways to
 describe the relations among the attributes: (a) the so-called
 \term{merge-to} relation $M$ between a source attribute and a target
 attribute, and additionally (b) a \term{drop-if-merged} relation $D$,
-for which must hold: $D\subseteq M$. Table~\ref{tab:virtuals} gives
+for which $D\subseteq M$ must hold. Table~\ref{tab:virtuals} gives
 examples of possible combinations for some specific relations.
 
 {\vertspace=-2ex%%
@@ -967,10 +976,10 @@ processing tools such as \texttt{awk} to write a tailored index
 processor for each application. They emphasise the functional
 decomposition of each member of the pipeline and compare it with
 \mkidx. In fact, the indexes they processed with their tools are
-simple compared to the model we present here. We believe that
-developing an index processor with the capabilities of our indexing
-model will not be possible by using pipelines. Additionally, we wanted
-to implement a system that is usable by many people, not only by
+simple compared to the model we presented. We believe that developing
+an index processor with the capabilities of our indexing model will
+not be possible by using pipelines. Additionally, we wanted to
+implement a system that is usable by many people, not only by
 experienced \textsc{Unix}-programmers.
 
 
@@ -1035,7 +1044,7 @@ groups. We have implemented the superseding relation as the transitive
 hull over the successor relation of the list defining an attribute
 group. For example, the attribute group $(a_1, a_2, a_3)$ implicitly
 defines the relation $\{ (a_1, a_2), (a_1, a_3), (a_2, a_3)\}$. This
-is in our opinion a useful simplification of the model covering almost
+is in our opinion an useful simplification of the model covering almost
 all practical needs. Building ranges is only allowed on the last
 hierarchy layer of a location reference. For variable location classes
 it is not supported due to the lack of experience with useful
@@ -1295,6 +1304,9 @@ project in his working group with financial support.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % $Log$
+% Revision 1.5  1997/05/05 15:22:08  kehr
+% Some more corrections after the last proof reading of Prof. Waldschmidt.
+%
 % Revision 1.4  1997/04/24 15:44:52  kehr
 % Modifications after Waldschmidts annotations.
 %
