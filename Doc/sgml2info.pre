@@ -1,4 +1,4 @@
 #!/usr/bin/awk -f
-/<htmlincl>/,/<\/htmlincl>/ { next; }
-
+/<htmlincl>/,  /<\/htmlincl>/ { next; }
+/^@begin-html/,/^@end-html/   { next; }
 { print }

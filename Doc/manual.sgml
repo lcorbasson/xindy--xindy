@@ -95,7 +95,7 @@ In contrast, the output of the <sf/xindy/ system is highly
 configurable and can produce a variety of different markups.
 Additionally, the way <sf/xindy/ processes the index data can be
 parametrized and controlled in many ways and gives the user a powerful
-framework for describing complex indices. The user can tell <sf/xindy/
+framework for describing complex indexes. The user can tell <sf/xindy/
 how it should produce an output according to his wishes or simply use
 some of the predefined styles that come with the distribution.
 
@@ -180,7 +180,7 @@ forming a recursive data structure.
 
 <tag/keyword/ The keyword is the identifier of an index entry. It
 consists of a list of strings being the <em/key/ if the index entry. In
-our model the keyword constists of a list of strings, since indices
+our model the keyword constists of a list of strings, since indexes
 are often organized hierarchically with different layers. In the
 example
 
@@ -641,7 +641,7 @@ replaces each occurrence of the uppercase letter `<tt/A/' with its
 lowercase counterpart.
 
 <verb>
-(merge-rule "\\\"([AEOUaeou])" "\\1")
+(merge-rule "\\"([AEOUaeou])" "\1")
 </verb>
 transforms the &TeX; umlaut-letters into their stripped counterparts,
 such that `<vb>\"A</vb>' is treated as an `<tt/A/' afterwards.
@@ -649,18 +649,18 @@ such that `<vb>\"A</vb>' is treated as an `<tt/A/' afterwards.
 Backslash is used as an escape symbol for the specification of rules.
 The following sequences have a special meaning:
 
-`<vb>\n</vb>' : End of line symbol (<em/linefeed/).
+`<vb>~n</vb>' : End of line symbol (<em/linefeed/).
 
-`<vb>\b</vb>' : The ISO-Latin character with the least ordinal number.
+`<vb>~b</vb>' : The ISO-Latin character with the least ordinal number.
 
-`<vb>\e</vb>' : The ISO-Latin character with the highest ordinal
+`<vb>~e</vb>' : The ISO-Latin character with the highest ordinal
 number.
 
 Backslashes and double quotes have to be quoted themselves with a
-backslash. The special characters `<vb>\b</vb>' and `<vb>\e</vb>'
+backslash. The special characters `<vb>~b</vb>' and `<vb>~e</vb>'
 allow the definition of arbitrary sorting orders by rules. In
 connection with an additional character every position in the alphabet
-can be described. E.g. `<vb>m\e</vb>' is lexicographically placed
+can be described. E.g. `<vb>m~e</vb>' is lexicographically placed
 between `<tt/m/' and `<tt/n/'.
 
 Due to efficiency, rules that just exchange characters or substitute
@@ -697,7 +697,7 @@ using this rule the transformation process shall restart at the same
 place. E.g. the rule
 
 <verb>
-  (merge-rule "\\$(.*)\\$" "\\1" :again)
+  (merge-rule "\$(.*)\$" "\1" :again)
 </verb>
 
 deletes <em/all/ surrounding `<vb>$</vb>' symbols from the input.
@@ -902,11 +902,11 @@ A suitable markup for a cross reference class <tt/see/ within &LaTeX;2e
 could look like that:
 
 <tscreen><verb>
-(markup-crossref-list :class "see" :open "\\emph{see} "
+(markup-crossref-list :class "see" :open "\emph{see} "
                         	   :sep  "; ")
 (markup-crossref-layer-list :class "see" :sep ",")
 (markup-crossref-layer :class "see"
-		       :open "\\textbf{" :close "}")
+		       :open "\textbf{" :close "}")
 </verb></tscreen>
 
 An example output could look like
@@ -927,8 +927,8 @@ Defines the markup tags that enclose the whole index via the
 <tt/:open/ and <tt/:close/ parameters. Examples:
 
 <tscreen><verb>
-(markup-index :open  "Here comes the index\n"
-              :close "That's all folks!\n")
+(markup-index :open  "Here comes the index~n"
+              :close "That's all folks!~n")
 </verb></tscreen>
 
 defines that the <tt/:open/ string is printed before the rest of the
@@ -995,18 +995,18 @@ markup can be specialized on the depth if the index is hierarchically
 organized. The command
 
 <tscreen><verb>
-(markup-indexentry-list :open  "\\begin{IdxentList}"
-			:close "\\end{IdxentList}"
-			:sep   "\n")
+(markup-indexentry-list :open  "\begin{IdxentList}"
+			:close "\end{IdxentList}"
+			:sep   "~n")
 </verb></tscreen>
 
 defines that the index entries of all layers are wrapped into the
 given markup tags. If additionally
 
 <tscreen><verb>
-(markup-indexentry-list :open  "\\begin{IdxentListII}"
-			:close "\\end{IdxentListII}"
-			:sep   "\n"
+(markup-indexentry-list :open  "\begin{IdxentListII}"
+			:close "\end{IdxentListII}"
+			:sep   "~n"
 			:depth 2)
 </verb></tscreen>
 
@@ -1023,16 +1023,16 @@ for all possible depths is defined. The top-most index entries have
 depth 0.
 
 <tscreen><verb>
-(markup-indexentry :open  "\\begin{Indexentry}"
-		   :close "\\end{Indexentry}")
+(markup-indexentry :open  "\begin{Indexentry}"
+		   :close "\end{Indexentry}")
 </verb></tscreen>
 
 defines that the index entries of all layers are wrapped into the
 given markup tags. If additionally
 
 <tscreen><verb>
-(markup-indexentry :open  "\\begin{IndexentryII}"
-		   :close "\\end{IndexentryII}"
+(markup-indexentry :open  "\begin{IndexentryII}"
+		   :close "\end{IndexentryII}"
 		   :depth 2)
 </verb></tscreen>
 
@@ -1290,7 +1290,7 @@ environment that is neutral to the document preparation system, such
 as a comment. For &TeX; this could be
 
 <tscreen><verb>
-(markup-trace :open "%%" :close "\n")
+(markup-trace :open "%%" :close "~n")
 </verb></tscreen>
 
 or a definition in the &TeX; document like
@@ -1302,7 +1302,7 @@ or a definition in the &TeX; document like
 combined with the command
 
 <tscreen><verb>
-(markup-trace :open "\\ignore{" :close "}")
+(markup-trace :open "\ignore{" :close "}")
 </verb></tscreen>
 
 

@@ -120,7 +120,7 @@ completely been separated from the core <sf/xindy/ system. <sf/xindy/
 understands a well-defined specification language for the raw index
 that is completely different from <tt/makeindex/, but in our opinion
 more maintainable than the <tt/makeindex/ format. This requires a
-separate filter that transforms arbitrary indices to the <sf/xindy/
+separate filter that transforms arbitrary indexes to the <sf/xindy/
 format. An example filter is the program <tt/tex2xindy/ that comes
 with this distribution.
 
@@ -134,7 +134,7 @@ structures. This also characterizes <sf/xindy/ more as a framework
 instead of a end-user-tailored product.
 
 
-<sect1><tt/makeindex4/ and <tt/tex2xindy/: using <sf/xindy/ as a
+<sect1><tt/makeindex4/ and <tt/tex2xindy/ --- using <sf/xindy/ as a
 plug-in
 <p>
 Despite the inherent problems of making <sf/xindy/ behave equal as

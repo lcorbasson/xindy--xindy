@@ -100,13 +100,19 @@ INFOFILE=`basename $SGMLFILE .sgml`.info
 
 $DEBUG cp $SGMLFILE sgml2info.tmp
 
+if [ -x ./sgml2info.pre ]; then
+   CAT="./sgml2info.pre $SGMLFILE"
+else
+   CAT="cat $SGMLFILE"
+fi
+
 echo "Making $INFOFILE from $SGMLFILE."
 # format
 case $CHAR in
-        latin1) sed 's/\@/\@\@/g' $SGMLDECL $SGMLFILE | sed -f \
+        latin1) $CAT | sed 's/\@/\@\@/g' $SGMLDECL | sed -f \
                 $LINUXDOCLIB/latin1.sed | $LINUXDOCBIN/sgmls $DASHI \
                 > /tmp/sgml2info$$tmp;;
-        *)      sed 's/\@/\@\@/g' $SGMLDECL $SGMLFILE | $LINUXDOCBIN/sgmls \
+        *)      $CAT | sed 's/\@/\@\@/g' $SGMLDECL | $LINUXDOCBIN/sgmls \
                 $DASHI > /tmp/sgml2info$$tmp;;
 esac
 if [ $? = 1 ]

@@ -23,7 +23,7 @@
 &lsqb;5&rsqb;. <sf/xindy/ is a general purpose index processor that
 can be configured for a variety of document preparation systems. We
 will demonstrate step by step the incremental specification of a
-complete index style. The examples are based on indices that are
+complete index style. The examples are based on indexes that are
 delivered with the system so one can get acquainted with it
 practically.
 </em>
@@ -39,7 +39,7 @@ practically.
 <sect>About <sf/xindy/
 <p>
 <sf/xindy/ means fle<bf/x/ible <bf/ind/exing s<bf/y/stem. It is an
-indexing system that can be used to generate book-like indices for
+indexing system that can be used to generate book-like indexes for
 arbitrary document preparation systems. This term includes systems
 such as &TeX; &lsqb;1&rsqb; and &LaTeX; &lsqb;2&rsqb, the Nroff-family
 or SGML-based systems (e.g. HTML) that process some kind of text and
@@ -48,18 +48,18 @@ but can be configured for a wide variety of purposes.
 
 Authors sometimes wish to include an index into their document, but
 very often their document preparation systems aren't able to produce
-indices on their own, or the capabilities of the built-in indexers are
+indexes on their own, or the capabilities of the built-in indexers are
 insufficient and produce ugly looking results. More often they use
 separate specialized tools for this purpose, sometimes called
 <em/index processors/.
 
 In comparison to other index processors <sf/xindy/ has several
 powerful features that make it an ideal framework for describing and
-generating complex indices. Its most interesting features are
+generating complex indexes. Its most interesting features are
 
 <descrip>
 
-<tag/Internationality/ <sf/xindy/ can be configured to process indices
+<tag/Internationality/ <sf/xindy/ can be configured to process indexes
 for many languages with different letter sets and different sorting
 rules. For example, many roman languages such as Italian, French,
 Portuguese or Spanish contain accentuated letters such as &Agrave;,
@@ -77,7 +77,7 @@ be
 
 defining that a word containing the umlaut-a will be sorted as if it
 contained the letters <tt/ae/ instead. This is one form of how the
-umlaut-a ("ä") is sorted into german indices. With an appropriate set
+umlaut-a ("ä") is sorted into german indexes. With an appropriate set
 of rules on can express the complete rules of a specific language.
 
 <tag/User Definable Location Types/ Locations are the entities an
@@ -91,7 +91,7 @@ numbers of the form <em/1-13, 2-15, 2-20/, etc. This type of locations
 can often be found in computer manuals. A more complex structure is
 represented by the locations <em/Psalm 46, 1-8/ and <em/Genesis 1,
 31/. Even the structure of bible verses can be described allowing
-<sf/xindy/ to correctly sort and process indices for documents with a
+<sf/xindy/ to correctly sort and process indexes for documents with a
 completely different structure.
 
 <tag/Highly Configurable Markup/ Since a index processor is only one
@@ -113,7 +113,7 @@ though extremly powerful way.
 <p>
 This section incrementally introduces the most important aspects of
 the system. After reading this chapter you should be able to specify
-about 80% of the commonly used indices. The examples are demonstrated
+about 80% of the commonly used indexes. The examples are demonstrated
 with a &TeX; markup so one can easily typeset the results <sf/xindy/
 produces. You need &LaTeX;2e and the ISO-Latin enhancements that come
 with the <tt/inputenc/ package to run the following examples. Also the
@@ -355,7 +355,7 @@ and consequently we need a mechanism to identify them as equal.
 section it is really difficult and error-prone to specify the sort key
 for each keyword explicitly. Sometimes the sort order is even
 different for the type of the document, as it happens in German, where
-two different types of sortings exist, one for everyday indices and
+two different types of sortings exist, one for everyday indexes and
 one for dictionaries. The sort order actually defines the position of
 arbitrary language-specific letters inside of an index.
 
@@ -428,7 +428,7 @@ this letter group. If no match was possible the index entry is put into
 group <tt/default/.
 
 The result now looks much better than before. You have now learned the
-basic features that you need to specify everyday indices. In the next
+basic features that you need to specify everyday indexes. In the next
 chapter we'll continue to make you an expert in indexing.
 
 
@@ -438,7 +438,7 @@ In the following sections you'll learn more about the features of
 <sf/xindy/. We'll show you how you can define your own
 location classes, specify the letter groups in more detail and bring
 you close to more specfic markup features. After reading this chapter
-you should be able to master about 95% of the commonly used indices.
+you should be able to master about 95% of the commonly used indexes.
 
 
 <sect1>Location Classes
@@ -606,7 +606,7 @@ system.
 <sect1>More about Letter Groups
 <p>
 More problems arise when using languages with different letter
-schemes. Hungarian is an example. In Hungarian indices the words
+schemes. Hungarian is an example. In Hungarian indexes the words
 beginning with the letters <em/Cs, Ly, Ny/ and more are printed in a
 separate block. The words beginning with <em/Ly/, for example, appear
 behind the words beginning with an <em/L/. <sf/xindy/ allows to define
