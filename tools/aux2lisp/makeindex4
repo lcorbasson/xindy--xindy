@@ -129,7 +129,7 @@ while( <STA> ) {
 	$XrefAttrNames .= "\"$attr\" ";
 	$XrefAttrs .= "(define-crossref-class \"$attr\")\n";
 	$XrefMarkup .= "(markup-crossref-list :open \"\\$attr" .
-	    "{\" :close \"}{}\")";
+	    "{\" :close \"}{}\")\n";
     }
 }
 
@@ -168,8 +168,7 @@ $XrefMarkup
 
 ;; Now load the rest of the makeindex-module...
 
-(setq *defined* t)
-(require "makeidx.xdy")
+(require "tex/makeidx4.xdy")
 
 ;; End
 EOSTY
@@ -183,6 +182,9 @@ exec($CmdLine);
 
 #
 # $Log$
+# Revision 1.4  1997/02/13 13:57:54  kehr
+# makeindex4 now uses the module `makeidx4.xdy'.
+#
 # Revision 1.3  1997/01/21 16:44:33  kehr
 # Bugfix: State <print> was not changed back to <key> if {LEVEL} was found.
 #
