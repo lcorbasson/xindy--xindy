@@ -1,0 +1,72 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Imakefile for source of the xindy-Project
+ *
+ * (history at end)
+ */
+
+XCOMM ------------------------------------------------------------
+XCOMM continue in Imakefile
+
+/* Make the packages */
+
+MAJOR	   = 0.9
+BINMINOR   =
+SRCMINOR   =
+BINVERSION = $(MAJOR)$(BINMINOR)
+SRCVERSION = $(MAJOR)$(SRCMINOR)
+XINDYDIR = ./xindy-$(MAJOR)
+BINDIR   = $(XINDYDIR)/binaries
+TESTDIR  = $(XINDYDIR)/tests
+GTAR     = gtar -czv --dereference -f
+
+#define Package(version,platform)					@@\
+all:: xindy-version-platform.tar.gz					@@\
+packages:: xindy-version-platform.tar.gz				@@\
+build-clean::								@@\
+	(cd ../$(BINDIR)/platform; make clean)				@@\
+xindy-version-platform.tar.gz:	   					@@\
+	(cd $(TOPDIR); $(GTAR) ./packages/xindy-version-platform.tar.gz $(BINDIR)/platform)
+
+Package($(BINVERSION),rs6000-aix)
+Package($(BINVERSION),hppa-hpux)
+Package($(BINVERSION),sun4-solaris)
+Package($(BINVERSION),i386-linux-elf)
+
+SRCPACKDIRS = ./xindy-$(SRCVERSION)/[I-Z]* ./xindy-$(SRCVERSION)/Doc ./xindy-$(SRCVERSION)/bin ./xindy-$(SRCVERSION)/modules ./xindy-$(SRCVERSION)/src ./xindy-$(SRCVERSION)/tests
+
+all:: xindy-$(SRCVERSION).tar.gz
+xindy-$(SRCVERSION).tar.gz:
+	(cd $(TOPDIR); $(GTAR) ./packages/xindy-$(SRCVERSION).tar.gz $(SRCPACKDIRS))
+
+clean::
+	$(RM) xindy-*.tar.gz
+
+DISTRIB = ../distrib
+
+distrib : force
+	@ for subdir in $(TOPDIR)/Doc $(TOPDIR)/tools;\
+          do\
+           (echo; echo "changing to $$subdir"; cd $$subdir; make Distrib);\
+          done
+
+build-clean::
+	(cd ../$(TESTDIR); make clean)
+
+force:
+
+/* ============================================================
+ *
+ * $Log$
+ * Revision 1.1  1996/07/18 15:38:39  kehr
+ * The managing of packages is now in a separate subdirectory.
+ *
+ *
+
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */
