@@ -1,0 +1,18 @@
+#
+# this tests just if clisp responds correctly
+#
+
+set timeout 10
+
+set test "test for nil"
+send "nil\n"
+expect_NIL
+
+set test "(use-package 'clos)"
+send "(use-package 'clos)\n"
+expect_T
+
+set test "(use-package 'xp)"
+send "(use-package 'xp)\n"
+expect_T
+

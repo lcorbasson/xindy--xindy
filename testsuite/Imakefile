@@ -9,13 +9,17 @@
  */
 #include <Project.imk>
 
+CVSAdd(Imakefile)
 CVSAdd(config site.exp)
-CVSAdd(base)
+CVSAdd(base locref)
 
 /*======================================================================
  *
  * $Log$
- * Revision 1.1  1995/11/21 14:59:59  kehr
+ * Revision 1.2  1995/11/22 16:45:46  kehr
+ * Added testsuite-support for module `locref'.
+ *
+ * Revision 1.1  1995/11/21  14:59:59  kehr
  * Initial checkin.
  *
  */
