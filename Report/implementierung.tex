@@ -16,11 +16,11 @@ eingegangen. Allgemeine Anforderungen an das System waren:
 %
 \begin{enumerate}
 \item Das System sollte möglichst portabel sein. Die bestehenden
-  Indexsysteme werden besonders intensiv im Zusammenhang mit dem
-  \TeX-\cite{texbook} \bzw{} \LaTeX-System~\cite{latex} genutzt. Es
-  sollte möglich sein, das zu entwickelnde System weiterhin in diesem
-  Bereich einzusetzen, wenngleich das System auf andere
-  Anwendungssysteme hin konfigurierbar ist.
+  Indexsysteme werden besonders intensiv im Zusammenhang mit dem \TeX-
+  \bzw{} \LaTeX-System genutzt. Es sollte möglich sein, das zu
+  entwickelnde System weiterhin in diesem Bereich einzusetzen,
+  wenngleich das System auf andere Anwendungssysteme hin
+  konfigurierbar ist.
 \item Das System sollte eine einfache und schnelle Umsetzung des
   entworfenen Datenmodells in eine Programmiersprache ermöglichen und
   leicht erweiterbar sein.
@@ -71,7 +71,7 @@ gemacht.
 %\smallskip
 
 Um außerdem Erfahrung mit \emph{Literate Programming} zu sammeln,
-wurde das System mit Hilfe des LPS-Systems\footnote{LPS bedeutet
+wurde das System mit Hilfe des LP-Systems\footnote{LPS bedeutet
   Literate Programming System. Man versteht darunter die parallele
   Beschreibung von Programm und Dokumentation in gemischter Form
   innerhalb eines Dokumentes.} \texttt{noweb}~\cite{Ramsey:LPT93}
@@ -235,7 +235,7 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 
 \begin{describeMethods}
   \begin{defgen}{prefix-match}{\farg{string} \farg{basetype}}
-    Das Argument \farg{string} ist dieZeichenkette, \farg{basetype}
+    Das Argument \farg{string} ist eine Zeichenkette, \farg{basetype}
     ist eine Instanz eines Komponententyps. Die Funktion versucht,
     einen Präfix der Zeichenkette dem angegebenen Komponententyp
     zuzuordnen. Die Methoden müssen für alle abgeleiteten Klassen von
@@ -323,7 +323,7 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 
 \begin{describeComponents}
 \item[layers] hierin finden sich die einzelnen Ebenen der
-  Lokationsreferenz. Eine Ebene ist ein Objekt von Klasse
+  Lokationsreferenz. Eine Ebene ist ein Objekt der Klasse
   \texttt{locref-layer}.
 \item[ordnums] Die Ordnungszahlen der Ebenen werden hier abgelegt.
   Ursprünglich wurde in jeder Ebene die zugeordnete Ordnungszahl
@@ -511,7 +511,10 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 
 %%
 %% $Log$
-%% Revision 1.3  1995/11/08 16:16:56  kehr
+%% Revision 1.4  1995/11/14 16:05:56  kehr
+%% Made two more corrections on the report.
+%%
+%% Revision 1.3  1995/11/08  16:16:56  kehr
 %% New correction.
 %%
 %% Revision 1.2  1995/10/20  11:57:34  kehr

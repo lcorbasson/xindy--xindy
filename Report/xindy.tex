@@ -18,9 +18,40 @@
 \tableofcontents
 
 \newpage
-\listoffigures
-\listoftables
 
+%% Hier habe ich die folgenden Zeilen herausgenommen
+%%   \listoffigures
+%%   \listoftables
+%% weil die beiden Verzeichnisse je eine ganze Seite belegt haben, was
+%% ziemlich übertrieben ist. Ich habe im LaTeX-Source nachgeschaut,
+%% wie diese beiden Macros definiert sind und habe sie einfach
+%% abgekupfert und mit zwei Überschriften von Hand eingefügt.
+%%
+\markright{Abbildungs- und Tabellenverzeichnisse}
+
+\vspace*{\stretch{2}}
+{\noindent\huge\textbf{Abbildungsverzeichnis}}
+
+\vskip 20pt
+
+\makeatletter
+\@starttoc{lof}
+\makeatother
+
+\vspace*{\stretch{1}}
+{\noindent\huge\textbf{Tabellenverzeichnis}}
+
+\vskip 20pt
+
+\makeatletter
+\@starttoc{lot}
+\makeatother
+
+\vspace*{\stretch{2}}
+
+%%
+%% Hier ist das Ende dieser Seite.
+%%
 
 \newpage
 \pagenumbering{arabic}
@@ -54,7 +85,10 @@
 
 %%
 %% $Log$
-%% Revision 1.3  1995/11/08 16:17:13  kehr
+%% Revision 1.4  1995/11/14 16:06:00  kehr
+%% Made two more corrections on the report.
+%%
+%% Revision 1.3  1995/11/08  16:17:13  kehr
 %% New correction.
 %%
 %% Revision 1.2  1995/10/26  16:05:38  kehr

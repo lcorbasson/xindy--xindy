@@ -11,7 +11,7 @@
 \label{sec:modellentwurf}
 
 Nach der Analyse bestehender Systeme, ihrer Vor- und Nachteile und
-eigenen Überlegungen kommen wir nun zur Definition des Indexmodells.
+eigenen Überlegungen kommen wir nun zur Beschreibung des Indexmodells.
 Nach der Definition der grundlegenden Begrif"|fe, auf denen das Modell
 aufbauen soll, wird das eigentliche Datenmodell definiert, welches aus
 den \oa\ Überlegungen herausgearbeitet wurde. Im Anschluß an das
@@ -56,7 +56,7 @@ Zeit noch speziell verwiesen.
 \newcommand{\demph}[1]{\textbf{#1}}
 
 \begin{Def}
-  Ein \demph{Index} \emph{i} ist eine Liste von Indexeinträgen.
+  Ein \demph{Index} \textit{i} ist eine Liste von Indexeinträgen.
   %Die Listeneinträge werden während des Indexierungsprozesses mit Hilfe
   %einer Ordnungsfunktion \mbox{\emph{sortIndex}$()$} geordnet.
   %\newcommand{\IdxEntListBox}[1]{\framebox[1.2\width]{%
@@ -125,15 +125,13 @@ Zeit noch speziell verwiesen.
     \mbox{\ient.\keyS{} $\equiv$ \keyS{}} sowie
     \mbox{\ient.\locrefSet{} $\equiv$ \locrefSet{}} und
     \mbox{\ient.\idxclsSet{} $\equiv$ \idxclsSet{}} .
-
+  \end{quote}
     Diese Abkürzungsform soll im weiteren auch für alle anderen
     Referenzierungen auf Komponenten von Tupeln verwendet werden.
-  \end{quote}
-  \smallskip
 \end{Def}
 
 \begin{Def}
-  Die \demph{Lokationsmenge} \locrefSet{} ist eine Menge \bzw Liste
+  Eine \demph{Lokationsmenge} \locrefSet{} ist eine Menge \bzw Liste
   von Lokationen.
 \end{Def}
 
@@ -272,16 +270,16 @@ soll.
   \label{def:lokationsverarbeitungsregel}
   Eine \textbf{Lokationsverarbeitungsregel} ist ein Tupel
   \begin{center}
-    \islocrefrule $=$ $($ \optattrSet , \loccls, \hierSet , \rulename ,
+    \islocrefrule $=$ $($ \rulename , \optattrSet , \loccls, \hierSet,
     \targetattr , \targethierSet , \rulearg $)$
   \end{center}
   mit den Komponenten
   \begin{deflistcolon}{\rulename}
     \raggedright
+  \item[\rulename]      \textbf{Regelname}.
   \item[\optattrSet]    \textbf{Kategorieattribute}.
   \item[\loccls]        \textbf{Lokationsklasse}.
   \item[\hierSet]       Menge der \textbf{Hierarchiebereiche}.
-  \item[\rulename]      \textbf{Regelname}.
   \item[\targetattr]    \textbf{Zielattribut}.
   \item[\targethierSet] Menge der \textbf{Zielhierarchiebereiche}.
   \item[\ruleargSet]    Menge der \textbf{Zusatzargumente}.
@@ -348,9 +346,9 @@ ist.
   Der optionale Parameter \numberarg gibt die untere Grenze an, ab
   wievielen Zähleinheiten aufeinanderfolgende Lokationen zu einem
   Bereich zusammengefaßt werden können. Bei Fehlen dieses Parameters
-  wird der Defaultwert angenommen.
+  wird ein Defaultwert angenommen.
 
-  Syntax: \textsf{join} \ \loccls \ \rhier\opt{\numberarg{}}
+  Syntax: \textsf{join} \ \loccls \ \rhier\Opt{\numberarg{}}
 
   \begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
     \textsf{join} \ \texttt{section (1-2)} \hfill 3 & 1.1 1.2 1.3 & 1.1--1.3\\
@@ -358,8 +356,6 @@ ist.
     \textsf{join} \ \texttt{section (1)} \hfill 3 & 1 2 3\, 1.1 1.2 1.3 &
     1--3\, 1.1 1.2 1.3
   \end{tabular}
-
-  \smallskip
 
 
 %\item[join-range] \mbox{}\\
@@ -519,7 +515,7 @@ zeigen.
 Wir haben in diesem Abschnitt die Spezifikation von Regeln geleistet,
 die das Mischen und Sortieren von Lokationsreferenzen steuern sollen.
 Bei eingehender Untersuchung sind mit Sicherheit noch weitere solcher
-Regeln auf"|findbar.  Wir haben uns dabei bewußt auf die potentiellen
+Regeln auf"|findbar.  Wir haben uns hier bewußt auf die potentiellen
 Bedürfnisse der Anwender konzentriert und versucht eine zu komplexe
 Beschreibungsform zu vermeiden.
 %%Allerdings wird der Bedarf nach solchen Regeln normalerweise nicht
@@ -897,7 +893,7 @@ Beschreibungsform zu vermeiden.
 Als Gegenstück zum Einlesen der Rohindexdaten muß nun die Ausgabe des
 fertig generierten Indexes in den Ausgabestrom modelliert werden. Hier
 ist eine hohe Konfigurierbarkeit wünschenswert, da sich die in der
-Literatur gefunden Ausgabeformen verschiedener Indextypen erheblich
+Literatur gefundenen Ausgabeformen verschiedener Indextypen erheblich
 voneinander unterscheiden. Wir können folgende Punkte als grundlegende
 Voraussetzungen an die Indexausgabe festhalten, um deren Grenzen zu
 umreißen:
@@ -918,13 +914,13 @@ umreißen:
   Greifen wir dieses Beispiel auf, so erkennen wir die Klassenstruktur
   \Strukzwei{\texttt{num}} {$\sqcup$}{\texttt{num}}. Allerdings wurden
   bei der Ausgabe die Lokationsreferenzen zerlegt aufgelistet, so daß
-  wir als kleinste Darstellungseinheit die Lokationshierarchien
-  beachten müssen.
+  wir als kleinste Darstellungseinheit die Strukturebenen betrachten
+  müssen.
 
 \item In Textsystemen werden Formatierungsanweisungen üblicherweise
   durch \emph{Umgebungen} ausgedrückt. Ein Textfragment wird mit
   geeigneten Zeichenfolgen umklammert, um damit besondere Attribute
-  wie Zeichensatz oder Schriftgrößen zu verändern. Wir sollten also in
+  wie Zeichensatz oder Schriftgröße zu verändern. Wir sollten also in
   der Lage sein, Ausgabeeinheiten mit Umgebungen zu versehen.
 
 \end{enumerate}
@@ -1068,15 +1064,15 @@ worden:
   Hier wird das Tilde-Zeichen als Wiederholungssymbol für das
   Stichwort der ersten Ebene verwendet. Üblicherweise wird das
   Wiederholungszeichen an jedem Seiten- oder Spaltenanfang nicht
-  verwendet, um den Leser eine leichtere Orientierung zu ermöglichen.
+  verwendet, um dem Leser eine leichtere Orientierung zu ermöglichen.
   Das Erkennen des Seitenanfangs oder anderer Positionen im Dokument
   kann jedoch nur durch das Textsatzsystem geleistet werden.  Dieses
   Wiederholungssymbol bezeichnen wir mit \textsf{repetition-symbol}.
 
 \item Wir ordnen jedem Knoten die Eigenschaft \emph{aktiv} oder
-  \emph{passiv} zu. Ein aktiver Knoten erzwingt bei der Ausgabe eine
+  \emph{passiv} zu. Ein aktiver Knoten erzwingt bei der Ausgabe seine
   Einreihung in den momentanen Ausgabestrom. Ein passiver Knoten
-  überläßt die Entscheidung über die Einreihung der
+  überläßt die Entscheidung über seine Einreihung der
   Formatierungsroutine, die mittels Kontextvergleich die passende
   Einordnungsstrategie ermittelt.
 
@@ -1159,12 +1155,12 @@ Strukturkomponente, so werden die Formatierungsanweisungen für das Öffnen
 von Umgebungen in den Ausgabestrom hineingeschrieben.
 
 Die Formatierungsanweisungen zum Schließen der jeweiligen Umgebungen
-werden auf einen Stapel\remark{Umgebungs\-stapel} abgelegt, da ihre
+werden auf einem Stapel\remark{Umgebungs\-stapel} abgelegt, da ihre
 Ausgabe verzögert werden muß, bis die Unterstrukturen abgearbeitet
 sind. Da sich die Stichwörter und Lokationsreferenzen an bestimmten
 Stellen in den Ausgabeprozeß einreihen, muß bei der Einreihung dafür
 gesorgt werden, daß der Stapel mit den Umgebungen immer geeignet
-geleert und die Anweisungen in den Ausgabestrom eingefügt werden.
+geleert wird und die Anweisungen in den Ausgabestrom eingefügt werden.
 
 
 %%Hierbei gibt ein passives Element seine Repräsentation an seine Kinder
@@ -1299,9 +1295,9 @@ zugeordnet wird. Wir beschreiben die Ausgabeinformationen in einer
 Liste $G$ von Stichwortgruppen mit $G = \{g_1,\ldots{},g_n\}$ mit $g_i
 = (\{l_1,\ldots{},\l_m\}, \markup)$.  Die Elemente $g_i$ sind also
 Obergruppen, denen als Gesamtheit ein Markup zugeordnet ist, während
-die $l_i$ eine Stichwortgruppen der üblichen Form sind. Ein Markup
-besteht in der einfachsten Form aus einem Paar von Strings, welche die
-entsprechenden Tagging-Umgebungen einleiten und schließen.
+die $l_i$ Stichwortgruppen der üblichen Form sind. Ein Markup besteht
+in der einfachsten Form aus einem Paar von Strings, welche die
+entsprechenden Formatierungs-Umgebungen einleiten und abschließen.
 
 Diese Definition erscheint uns im Moment ausreichend genug, um auch
 komplexere Indexe geeignet auszugeben.
@@ -1512,7 +1508,10 @@ Indexklasse werden jedoch von Definitionen in den jeweiligen Klassen
 
 %%
 %% $Log$
-%% Revision 1.3  1995/11/08 16:17:01  kehr
+%% Revision 1.4  1995/11/14 16:05:57  kehr
+%% Made two more corrections on the report.
+%%
+%% Revision 1.3  1995/11/08  16:17:01  kehr
 %% New correction.
 %%
 %% Revision 1.2  1995/10/20  11:57:35  kehr

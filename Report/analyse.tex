@@ -13,7 +13,7 @@ der Indexverarbeitung zusammengefaßt und die Funktionsweisen
 verschiedener Systeme untersucht. Um einen leichteren Einstieg in die
 generelle Problematik der Indexverarbeitung zu erreichen, nehmen wir
 als Beispiel einen Index, anhand dessen wir die prinzipiellen
-Grundgedanken der Indexverarbeitung vermitteln wollen.
+Grundgedanken vermitteln wollen.
 
 
 \section{Stichwort}
@@ -87,14 +87,14 @@ im einzelnen unterscheiden müssen.\footnote{Trotzdem benutzen wir den
   Begriff \emph{Lokation} eher dann, wenn die reale Lokation --- also
   die Seite oder der Abschnitt --- gemeint ist.}
 
-Lokationsreferenzen wie \sym{\ldots\emph{siehe}\ldots} oder
-\sym{\ldots\emph{siehe auch}\ldots} bilden einen speziellen Typ von
-Referenzen. Diesen Referenztyp bezeichnen wir mit
-\emph{Verweisreferenz}. \remark{Verweisreferenz} Eine Verweisreferenz
-besteht aus einem Typ (\emph{siehe}, \emph{siehe
-  unter}, \emph{siehe auch} \etc) und dem verwiesenen Stichwort,
-welches wir mit \emph{Verweisstichwort} \remark{Verweisstichwort}
-bezeichnen. Wir notieren Verweisreferenzen in der Form
+Lokationsreferenzen wie \sym{\emph{siehe}\ldots} oder \sym{\emph{siehe
+    auch}\ldots} bilden einen speziellen Typ von Referenzen. Diesen
+Referenztyp bezeichnen wir mit
+\emph{Verweisreferenz}\remark{Verweisreferenz}. Eine Verweisreferenz
+besteht aus einem Typ (\emph{siehe}, \emph{siehe unter}, \emph{siehe
+  auch} \etc) und dem verwiesenen Stichwort, welches wir mit
+\emph{Verweisstichwort}\remark{Verweisstichwort} bezeichnen. Wir
+notieren Verweisreferenzen in der Form
 \begin{center}
   \VwRef{\Arg{Verweisart}}{\Arg{Verweisstichwort}}.
 \end{center}
@@ -102,7 +102,7 @@ Im Beispiel ist also bei \VwRef{\emph{siehe}}{Priority Queues}
 \sym{\emph{siehe}} der Verweisreferenztyp und \sym{Priority Queues}
 das zugeordnete Verweisstichwort.
 
-\remark{Attributierte Lokationsreferenz}%
+
 Die Referenz \sym{41\emph{f.}} aus unserem Beispiel bildet noch einen
 weiteren Referenztyp. Hierbei handelt es sich um eine Lokation, der
 noch ein zusätzliches Attribut zugeordnet ist. Die Schreibweise
@@ -111,8 +111,9 @@ einen Verweis auf die angegebene und die ihr folgenden Seiten \bzw
 Lokationen. Die beigefügte Markierung \sym{\emph{f.}} stellt damit
 eine zusätzliche Eigenschaft einer Referenz dar. Da es sich um ein der
 Lokation zugeordnetes Attribut handelt, bezeichnen wir diesen
-Lokationstyp im folgenden als \emph{Attributierte Lokationsreferenz}.
-Wir werden später noch weitere solcher Attribute einführen. Zunächst
+Lokationstyp im folgenden als \emph{Attributierte
+  Lokationsreferenz}.\remark{Attributierte Lokationsreferenz} Wir
+werden später noch weitere solcher Attribute einführen. Zunächst
 jedoch definieren wir auch hier eine eigene Notation der Form
 \begin{center}
   \AttrStruk{\Arg{Lokationsreferenz}}{\Arg{Attribut}}
@@ -182,7 +183,7 @@ sind eher die Ausnahme als die Regel. Es ist aber nicht immer so, daß
 die Untergliederung auch in einer entsprechenden optischen
 Form sichtbar wird, wie in unserem Beispiel.\remark{Ausgabestile von
   Indexeinträgen} So definiert das \emph{Chicago Manual of
-  Style}~\cite{chicago}%\textsl{Kap.\,18.18}%
+  Style}~\cite{chicago} %\textsl{Kap.\,18.18}%
 \ua{} den Stil \emph{flush-and-hang style}, welcher unserem Beispiel
 entspricht, und \emph{run-in indended style}, welcher Substrukturen
 nicht explizit optisch hervorhebt, um dadurch eine Platzersparnis zu
@@ -193,7 +194,7 @@ Prinzipiell ändert sich aber nur die Art der Ausgabe des fertigen
 Indexes. Dieser Vorgang wird üblicherweise als
 \emph{Ausgabeformatierung} bezeichnet und meint das Anheften von
 Formatierungsinformationen an den generierten Index, aus welchem dann
-das Satz-, Text- oder Informationssystem ein formatiertes Dokument
+das Textsatz- oder Informationssystem ein formatiertes Dokument
 erzeugt.
 
 
@@ -201,7 +202,7 @@ erzeugt.
 \label{sec:ana:StwSortierung}
 
 Als grundsätzliches Problem stellt sich nun die Frage nach der
-Sortierung der Stichwörter. In \cite{chicago}%\textsl{Kap.\,18.98}%
+Sortierung der Stichwörter. In \cite{chicago} %\textsl{Kap.\,18.98}%
 und \cite{Lamb:EPODD-6-1-23} wird auf die Alphabete eines Indexes und
 damit auf die Ordnungsrelationen zwischen Stichwörtern eingegangen.
 Die Sortierungsfrage wird dort durch das Beispiel von englischen \bzw
@@ -215,24 +216,24 @@ Sortierregeln für das Spanische und Vietnamesische analysiert.
 Grundsätzlich läßt sich also festhalten, daß die Sortierung der
 Stichwörter von Sprachen und deren orthographischen Regeln abhängt.
 
-Im \Makeindex-System%~\cite{Chen:SPE-19-9-897}%
-wird das Problem teilweise gelöst, indem zum Sortierschlüssel
-\emph{sort key} ein weiterer Druckschlüssel\remark{Druckschlüssel}
-\emph{actual key} eingeführt wird, welcher beim der abschließenden
-Ausgabeformatierung den Sortierschlüssel substituiert. Dieses
-Verfahren umgeht die \quasi{St.\ Louis}-Problematik, indem man in
-einem solchen Fall die Substitution separat angibt, ist aber
-prinzipiell sehr unbequem zu handhaben.  Man bedenke, daß in der Regel
-viele spezielle nationale Zeichensätze\remark{nationale Alphabete} mit
-Umlauten nicht innerhalb des lateinischen Alphabets sortierbar sind.
-Nach deutschen Orthographieregeln wird der Buchstabe \quasi{ä} je nach
-Fall wie \quasi{ae} oder auch wie \quasi{a} einsortiert. Es gibt also
-noch nicht einmal einheitliche Standardregeln, nach denen ein
+Im \Makeindex-System wird das Problem teilweise gelöst, indem zum
+Sortierschlüssel \emph{sort key} ein weiterer
+Druckschlüssel\remark{Druckschlüssel} \emph{actual key} eingeführt
+wird, welcher beim der abschließenden Ausgabeformatierung den
+Sortierschlüssel substituiert. Dieses Verfahren umgeht die \quasi{St.\
+  Louis}-Problematik, indem man in einem solchen Fall die Substitution
+explizit angibt, ist aber prinzipiell sehr unbequem zu handhaben.  Man
+bedenke, daß in der Regel viele spezielle nationale
+Zeichensätze\remark{nationale Alphabete} mit Umlauten nicht innerhalb
+des lateinischen Alphabets sortierbar sind.  Nach deutschen
+Orthographieregeln wird der Buchstabe \quasi{ä} je nach Fall wie
+\quasi{ae} oder auch wie \quasi{a} einsortiert. Es gibt also noch
+nicht einmal einheitliche Standardregeln, nach denen ein
 Indexierungssystem sortieren könnte. Für alle diese Stichwörter immer
 separat den Druckschlüssel angeben zu müssen, ist für den Benutzer
 eine unakzeptable Lösung.
 
-In \emph{International MakeIndex}~\cite{Schrod:CG-10-81} wird die
+Im \emph{International MakeIndex}~\cite{Schrod:CG-10-81} wird die
 Problematik durch ein regelbasiertes Substitutionsschema angegangen.
 Innerhalb dieses Substitutionsschemas können Sortierregeln für
 beliebige Alphabete angegeben werden. Dort kann der Benutzer Regeln
@@ -268,7 +269,7 @@ sind in \cite{Bentley:EPODD-1-1-3} implementiert, gelingen jedoch
 teilweise lediglich deshalb, weil die englische Sprache eine
 Permutation \zB von \quasi{\textsl{sorting a book index; a book index,
     sorting; book index, sorting a; index, sorting a book\/}} erlaubt,
-diese jedoch nicht ohne weiteres auf die deutsche oder andere Sprachen
+dies jedoch nicht ohne weiteres auf die deutsche oder andere Sprachen
 übertragbar ist.
 
 
@@ -294,16 +295,21 @@ unterscheiden attributierte Lokationsreferenzen und Verweisreferenzen.
 \label{sec:ana:Lokationsreferenzen}
 \label{sec:ana:RefOrdnung}
 
+Nach der Grundanalyse der Stichwörter werden wir nun eine vertiefte
+Analyse der Lokationsreferenzen vornehmen. Sie bilden das Kernstück
+der Studienarbeit und wir werden insbesondere ihre Struktur und
+mögliche Operationen darauf präsentieren. Wir beginnen mit einer
+strukturellen Analyse und wenden uns später dem Sortieren und Mischen
+von Lokationsreferenzen zu.
+
 \section{Strukturelle Analyse}
 
 \subsection{Klassen von Lokationsreferenzen}
 \label{sec:klassenlokationsreferenzen}
 
-Nachdem wir uns einen Überlick über die Stichwörter verschafft haben,
-gehen wir nun dazu über, die Lokationen in vertiefter Weise zu
-untersuchen. Hierzu greifen wir unseren Index aus
-Abbildung~\ref{fig:indEinleitung} auf und erweitern ihn mit neuen
-Lokationsreferenzen, anhand derer wir den Lokationsbegriff neu
+Zur struktuellen Analyse von Lokationsreferenzen greifen wir unseren
+Index aus Abbildung~\ref{fig:indEinleitung} auf und erweitern ihn mit
+neuen Lokationsreferenzen, anhand derer wir den Lokationsbegriff neu
 klassifizieren. Um den Blick auf das Wesentliche zu lenken, sind die
 Seitennummern des vorigen Indexes größtenteils entfernt worden. Der so
 veränderte Index ist in Abbildung~\ref{fig:indErweitert} dargestellt.
@@ -348,15 +354,17 @@ Dokument nach Seiten einteilen, was eine
 \emph{externe}\remark{externe} --- also nicht dem Dokument
 innewohnende --- Strukturierung darstellt. Im Gegensatz dazu bilden
 Gliederungen eine \emph{interne}\remark{interne Dokument\-struktur},
-das Dokument betreffende Strukturierung. Auf welche Weise nun auf ein
-Dokument verwiesen werden soll, ist insbesondere eine Frage, ob auf
-die interne oder externe Struktur oder beides verwiesen werden soll.
+das Dokument betref"|fende Strukturierung. Auf welche Weise nun auf
+ein Dokument verwiesen werden soll, ist insbesondere eine Frage, ob
+auf die interne oder externe Struktur oder beides verwiesen werden
+soll.
 
 Die Verschiedenheit von Lokationen wird in den untersuchten Systemen
 \cite{Chen:UCB-TR-87-347,starwriter,winword,Bentley:EPODD-1-1-3,Lamb:EPODD-6-1-23}
 nicht beachtet. Diese Systeme sind nur in der Lage, Seitennummern und
 Verweisreferenzen %%wie \VwRef{Fibonacci Queues}{Priority Queues}%%
-zu verwalten. Hierzu finden sich weitere Lokationstypen:
+zu verwalten. Zu diesem Aspekt finden sich weitere untersuchenswerte
+Lokationstypen.
 
 Beispielsweise werden im \emph{System Management
   Guide}~\cite{AIXmanual} die Seitennummern kapitelweise gezählt, so
@@ -370,7 +378,7 @@ bilden.
 Des weiteren ist die Referenz auf Seite \quasi{11a} des Stichworts
 \Hierzwei{Suche}{binäre} auch eine hierarchisch strukturierte
 Lokationsreferenz. Häufig werden Manuals durch Hinzunahme von Seiten
-wie \quasi{11a} erweitert, um bei nachträglichen Korrekturen die
+wie \quasi{11a} erweitert, um bei nachträglich eingefügten Seiten die
 ursprüngiche Seitenfolge nicht zu stören. Dabei sollen bei
 verschiedenen Versionen eines Manuals möglichst alle Numerierungen
 gleichbleibend sein.
@@ -380,13 +388,13 @@ Im juristischen Umfeld gibt es häufig Bücher, die nach Gesetzbüchern
 und Paragraphen strukturiert sind \cite{BGB}. Dort wird nach den
 Stichwörtern die Nummer des Gesetzbuches angegeben und anschließend
 werden die zugehörigen Paragraphen aufgezählt. Als Beispiel soll der
-folgende Auszug dienen.\footnote{Fette Nummern bezeichnen hier die
-  Nummer des Gesetzbuches, während die normalen Nummern auf die
-  zugehörigen Paragraphen hinweisen.}
+folgende Auszug dienen.
   \label{bsp:BGB}
 \begin{center}
   \textbf{Lasten} beim Kauf \textbf{1} \S436, \S446; auf der Mietsache
-  \textbf{1} \S546; \ldots
+  \textbf{1} \S546; \ldots\footnote{Fette Nummern bezeichnen hier die
+    Nummer des Gesetzbuches, während die normalen Nummern auf die
+    zugehörigen Paragraphen hinweisen.}
 \end{center}
 
 \noindent Grundsätzlich können wir also nach diesen Betrachtungen sagen, daß
@@ -405,13 +413,13 @@ können. Wir definieren also die Notation
         {\textsl{Ebene$_{n}$}} ,
 \end{center}
 um eine Hierarchie von Lokationen zu beschreiben. In dieser Notation
-wird die Lokation \textsf{1.2.2} als
+wird die Lokation \quasi{\textsf{1.2.2}} als
 \textsf{\Strukdrei{1}{.}{2}{.}{2}} geschrieben. Im folgenden
 bezeichnen wir diesen Typ von Lokationsreferenz mit
 \emph{Strukturreferenz}\remark{Strukturreferenz}. Eine
 Strukturreferenz besteht aus allen Hierarchieebenen inklusive der
-Trennzeichen. Des weiteren bezeichen wir eine Ebene einer
-Strukturreferenz mit \emph{Strukturebene}.
+Trennzeichen. Des weiteren bezeichnen wir die Ebenen einer
+Strukturreferenz mit \emph{Strukturebenen}.\remark{Strukturebene}
 
 
 \subsection{Alphabete}
@@ -433,10 +441,8 @@ Indexsystems.\footnote{Üblicherweise wird dort das ASCII-Alphabet, die
   finden.} Die Rohindexdaten und damit auch die Lokationsreferenzen
 liegen also im Format dieses Dokumentalphabets vor, und das
 Indexsystem muß daraus die Lokationsreferenzen in ihre Struktur
-zerlegen.
-
-Wir unterscheiden die einzelnen Strukturkomponenten einer Lokationsreferenz
-in zwei Kategorien:
+zerlegen. Wir unterscheiden die einzelnen Strukturkomponenten einer
+Lokationsreferenz in zwei Kategorien:
 %
 \begin{enumerate}
 \item \emph{Aufzählbare Typen} wie \zB Seiten-, Abschnitts-  oder
@@ -447,7 +453,7 @@ in zwei Kategorien:
   Alphabet der Großbuchstaben.
 \end{enumerate}
 %
-Wir definieren also zusammenfassend:
+Wir definieren zusammenfassend:
 
 \begin{Def}
   Ein \emph{Dokumentalphabet} ist eine endliche Menge von Zeichen.%
@@ -463,15 +469,15 @@ Wir definieren also zusammenfassend:
   Eine \emph{Aufzählung} ${\cal I}$ ist eine unendliche linear
   geordnete Menge von Symbolen. Insbesondere existiert eine bijektive
   Abbildung\ \mbox{$\psi: {\cal I} \rightarrow $ \mathZ{}} des
-  Alphabets auf die Menge \mathZ{} der Ganzen Zahlen oder der Menge
+  Alphabets auf die Menge \mathZ{} der Ganzen Zahlen oder die Menge
   \mathN{} der Natürlichen Zahlen.%
   \label{def:aufzaehlung}%
 \end{Def}
 
 \begin{Def}
   Ein \emph{Alphabet} ${\cal A}$ ist eine endliche Aufzählung von
-  Symbolen. Insbesondere existiert eine bijektive Abbildung $\phi :
-  {\cal A} \rightarrow $ \mathN{} des Alphabets auf ein endliches
+  Symbolen. Insbesondere existiert eine bijektive Abbildung
+  $\phi:{\cal A}\rightarrow$ \mathN{} des Alphabets auf ein endliches
   Intervall
   der Natürlichen Zahlen.%
   \label{def:alphabet}%
@@ -520,12 +526,12 @@ Seitennummern) sein kann.
   Auf jedem Sortierungsalphabet \Salpha{}{} ist gemäß der
   Definitionen~\ref{def:aufzaehlung} und \ref{def:alphabet} eine
   bijektive Abbildung
-  $\TotOrd{\SalphaSymbol}\,:~\SalphaSymbol\,\rightarrow\,\mathZ$
-  definiert. Diese Abbildung stellt eine \emph{lineare Ordnung}
+  $\TotOrd{\SalphaSymbol}:\SalphaSymbol\rightarrow\mathZ$ definiert.
+  Diese Abbildung stellt eine \emph{linere Ordnung}
   \TotOrdSortAlphabet bezüglich paarweiser Elemente
   $s_1,s_2\in\Salpha{}{}$ auf dem Sortierungsalphabet dar.  Die
   Ordnungsrelation $s_1\,\TotOrdSortAlphabet\,s_2$ gilt genau dann,
-  wenn $\TotOrd{\SalphaSymbol}(s_1)\,<\,\TotOrd{\SalphaSymbol}(s_2)$.
+  wenn $\TotOrd{\SalphaSymbol}(s_1)<\TotOrd{\SalphaSymbol}(s_2)$.
   %%Die Menge \Salpha{}{} bildet mit dieser Ordnung einen
   %%\emph{vollständigen Verband} \mbox{$(\SalphaSymbol,
   %%\TotOrdSortAlphabet)$}.
@@ -552,6 +558,10 @@ zweiten Ebene haben wir das Sortierungsalphabet
 dem Basisalphabet
 \Dalpha{\SalphaSymbol{}^2}$\,=\{\mq{0},\ldots{},\mq{9}\}$.
 
+\smallskip
+
+\noindent Mit diesen Definitionen sind wir nun für weitere
+Untersuchungen gerüstet.
 
 \subsection{Komponententypen}
 \label{sec:basistypen}
@@ -610,7 +620,8 @@ geeignete Weise.
     griechisch (klein) & $\alpha, \beta, \gamma, \delta,\ldots,
     \omega$ & $\{\alpha,\ldots,\omega\}$ & \\
 
-    & {\small Kapitel, Anhang} & {\small $\{$a,A,e,g,h,i,K,l,n,p,t$\}$} &\\
+    \hfil --- & {\small Kapitel, Anhang} & {\small
+      $\{$a,A,e,g,h,i,K,l,n,p,t$\}$} &\\
     \hline%
   \end{tabular}%
 \end{ttable}
@@ -622,7 +633,7 @@ sortieren kann. Aus den Definitionen \ref{def:aufzaehlung} und
 von der Symbolmenge auf eine Zahlenmenge definiert sein müssen. Für
 arabische und römische Zif"|fernfolgen ist diese Abbildung bereits
 durch das üblicherweise benutzte Zahlensystem gegeben.\footnote{Man
-  beachte, daß die \oa \quasi{Zahlen} zunächt einmal nur Zeichenfolgen
+  beachte, daß die \oa \glqq{}Zahlen\grqq{} zunächt einmal nur Zeichenfolgen
   (also Worte über dem Dokumentalphabet) darstellen, deren Abbildung
   in das Zahlensystem zuerst definiert werden muß.} Die hier
 aufgeführten Komponententypen decken bereits einen Großteil aller
@@ -634,20 +645,20 @@ auch wenn deren Verwendung nur in Spezialfällen nötig sein wird.
 Wesentlich häufiger dagegen ist die Verwendung von festgelegten Worten
 wie \quasi{Kapitel}, \quasi{Anhang}, \quasi{Glossar} \usw als
 Symbolalphabet, welche in unserer Hierarchieebene ebenfalls eine Ebene
-belegen können. Hierbei muß dann ebenfalls eine geeignete
-Ordnungsrelation definiert werden. Dies könnte durch eine einfache
-Aufzählung der Symbole geschehen wie in der letzten Zeile der Tabelle
-dargestellt. Dort sind die Worte \quasi{Kapitel} und \quasi{Anhang}
-Symbole des Symbolalphabets, denen aufgrund der Aufzählungsreihenfolge
-eine Ordnungsrelation zugewiesen wurde.\footnote{Insbesondere kann man
-  auch Trennzeichen als Alphabete ansehen, die nur aus einem einzigen
-  Symbol bestehen.}
+belegen können.\footnote{Insbesondere kann man auch Trennzeichen als
+  Alphabete ansehen, die nur aus einem einzigen Symbol bestehen.}
+Hierbei muß dann ebenfalls eine geeignete Ordnungsrelation definiert
+werden. Dies könnte durch eine einfache Aufzählung der Symbole
+geschehen wie in der letzten Zeile der Tabelle dargestellt. Dort sind
+die Worte \quasi{Kapitel} und \quasi{Anhang} Symbole des
+Symbolalphabets, denen aufgrund der Aufzählungsreihenfolge eine
+Ordnungsrelation zugewiesen wurde.
 
 
 \subsection{Komposition}
 
 
-Aus den Komponententypen bilden wir nun durch Komposition die
+Aus den Komponententypen bilden wir nun durch \emph{Komposition} die
 Lokationsklassen. \remark{Lokationsklassen}Mit ihnen beschreiben wir
 dem System die Struktur der vorkommenden Lokationsreferenzen und
 können die Erkennung und Zuordnung von Zeichenströmen zu
@@ -665,9 +676,9 @@ können wir grundsätzlich die folgenden beiden Klassen unterscheiden:
   \Braces{\Strukebene{\texttt{num}}\texttt{.}\Strukebene{\texttt{num}}\texttt{.}\Strukebene{\texttt{num}}\ldots}.
   Beispielsweise gehören die Lokationsreferenzen \Strukeins{2},
   \Strukzwei{2}{.}{1} und \Strukdrei{2}{.}{1}{.}{4} der gleichen
-  Gliederungsstruktur an. Man kann hier auch argumentieren, daß jede
-  der vorkommenden Strukturen eine eigene Lokationsklasse bildet.
-  Prinzipiell bilden diese Varklassen jedoch eine Menge von
+  logischen Gliederungsstruktur an. Man kann hier auch argumentieren,
+  daß jede der vorkommenden Strukturen eine eigene Lokationsklasse
+  bildet. Prinzipiell bildet eine Varklasse jedoch eine Menge von
   Lokationsklassen, denen wir in den folgenden Abschnitten noch
   weitere gemeinsame Eigenschaften zuordnen können.
 \end{enumerate}
@@ -749,8 +760,8 @@ Beispiele sollen in die Problemstellung einführen:
   Die Sortierung erfolgt demnach streng von der obersten
   Hierarchiestufe bis zur untersten. Insbesondere ist das Trennzeichen
   \quasi{\textbf{.}} unbedingt erforderlich, da sonst nicht zwischen
-  den Zählebenen unterschieden werden kann (12 kann sein 1.2 oder
-  \textsl{zwölf\/}).
+  den Zählebenen unterschieden werden kann (12 kann sein \glqq eins
+  zwei\grqq{} oder \glqq zwölf\grqq).
 
 \item \Strukzwei{\texttt{num}}{}{\texttt{roman}}
 
@@ -780,9 +791,9 @@ Beispiele sollen in die Problemstellung einführen:
 \noindent Aus diesen Überlegungen können wir also folgern:
 
 \begin{Lem} Zwei Sortierungsalphabete ${\cal A}$ und ${\cal B}$ sind
-  grundsätzlich miteinander \emph{verträglich}, wenn für deren
-  Basisalphabete \Dalpha{A} und \Dalpha{B} gilt:
-  \Dalpha{A}~$\cap$~\Dalpha{B} $=~\emptyset$.
+  grundsätzlich miteinander \emph{verträglich}, wenn für die
+  zugehörigen Basisalphabete \Dalpha{A} und \Dalpha{B} gilt:
+  $\Dalpha{A}\cap\Dalpha{B}=\emptyset$.
 \end{Lem}
 
 \noindent Verwenden wir geeignete Trennzeichen, die mit den Basisalphabeten
@@ -797,11 +808,11 @@ Festlegungen spezifiziert werden.
 
 Um einen Zeichenstrom anhand der Beschreibungen der Komponententypen und
 Lokationsklassen genau einer Lokationsklasse zuzuordnen, müssen wir
-geeignete Zuordnungsstrategieen entwerfen.
+geeignete Zuordnungsstrategien entwerfen.
 
 Standard-Lokationsklassen sind duch ihre gleichbleibende Struktur
 definiert. Wir verlangen daher, daß ein Zeichenstrom auf alle
-Komponententypen und Trennzeichen einer Lokationsklasse passen muß, um
+Komponententypen und Trennzeichen einer Standardklasse passen muß, um
 akzeptiert zu werden. Wir nennen diese Erkennungsstrategie
 \emph{Exaktes Zuordnen}\remark{Exaktes Zuordnen}.
 
@@ -823,7 +834,7 @@ Lokationsklassen in der allgemeinen Gestalt
 ausdrücken, so können wir noch präzisere Erkennungsstrategien für
 bestimmte Lokationsklassen gewinnen. Jeweils einer der beiden
 Hierarchieanteile ist dabei optional. Verwenden wir die
-Zuordnungsstrategie Exaktes Zuordnen für den Präfix-Anteil und die
+Zuordnungsstrategie Exaktes Zuordnen für den Standard-Anteil und die
 Präfixzuordnung für den Var-Anteil, so erhalten wir noch einen
 dritten, kombinierten Lokationsklassentyp, der aus einer Mischung von
 Standard- und Varklassen besteht.
@@ -834,7 +845,7 @@ jedoch grundsätzlich aus und wir werden sie nicht weiter in die
 Untersuchungen mit einbeziehen.
 
 
-\subsection{Zuordnung zu Lokationsklassen}
+\subsection*{Zuordnung zu Lokationsklassen}
 
 Verwenden wir Lokationsklassen, die nicht miteinander verträglich
 sind, so müssen wir heuristische Verfahren untersuchen, um trotzdem
@@ -859,7 +870,9 @@ Lokationsklassen zu der folgenden Referenzmenge enthält
     2a & 1, 2, 1c, 1i\\%%
     \Metaclass{\Strukzwei{\texttt{num}}{}{\texttt{roman}}} & 1ii,
     1iii, 1iv & 1, 2, 1c, 1i\\%%
-    \hline \hline%%
+    \hline
+    \multicolumn{3}{l}{}\\%%
+    \hline
     \multicolumn{3}{|c|}{Beispiel 2\medrule}\\ \hline%
     \smallrule \textsl{Lokationsklasse} & \textsl{eindeutig} &
     \textsl{mehrdeutig}\\%%
@@ -896,14 +909,14 @@ Klasse zugeordnet werden.
 %%Lokationsreferenzen, die mehr als einer Klasse präfixambig zuordbar
 %%sind, werden entfernt.
 
-Da der Leser die korrekte Zuordnung verstehen muß, treten solche Fälle
-in der Praxis normalerweise nicht auf. Sie sollten deshalb von Autoren
-auch nicht zur Dokumentstrukturierung verwendet werden. Man muß in
-diesem Fall davon ausgehen, daß die Angabe der Lokationsklassen
-unvollständig ist und der Benutzer korrigierend eingreifen sollte.
-Eine Korrektur kann darin bestehen, bestimmte Klassen noch mit
-geeigneten Dummy-Präfixen zu versehen. Für die Lokationsklassen
-\Strukzwei{\texttt{num}}{}{\texttt{num}} und
+Da der Leser die korrekte Zuordnung ebenso verstehen muß, treten
+solche Fälle in der Praxis normalerweise nicht auf. Sie sollten
+deshalb von Autoren auch nicht zur Dokumentstrukturierung verwendet
+werden. Man muß in diesem Fall davon ausgehen, daß die Angabe der
+Lokationsklassen unvollständig ist und der Benutzer korrigierend
+eingreifen sollte.  Eine Korrektur kann darin bestehen, bestimmte
+Klassen noch mit geeigneten Hilfs-Präfixen zu versehen. Für die
+Lokationsklassen \Strukzwei{\texttt{num}}{}{\texttt{num}} und
 \Strukzwei{\texttt{num}}{}{\texttt{alpha}} könnte man letztere \zB in
 \Strukdrei{Seite}{:}{\texttt{num}}{}{\texttt{alpha}} abwandeln und bei
 der Ausgabeformatierung mit geeigneten Markups versehen, die den
@@ -949,7 +962,7 @@ Ergebnissen geführt:
   einem bestimmten Lokationstyp des Dokuments wie \zB Seite, Kapitel,
   Abschnitt, Unterabschnitt.
 \item Strukturreferenzen werden durch Kompositionen von
-  Komponententypen gebildet. Die verwendenten Komponententypen sind
+  Komponententypen gebildet. Die verwendeten Komponententypen sind
   \uU nicht miteinander verträglich, was besondere Zuordnungsstrategien
   erforderlich macht. Wir müssen einen Zeichenstrom einer
   Lokationsklasse zuordnen können und daraus eine konkrete
@@ -959,9 +972,8 @@ Ergebnissen geführt:
   definieren können.
 \end{circleitemize}
 
-Nach der Analyse der grundlegenden Strukturen kommen wir nun zu den
-Prozessen der Indexverarbeitung.
-
+\noindent Nach der Analyse der grundlegenden Strukturen kommen wir nun
+zu den Prozessen der Indexverarbeitung.
 
 
 \section{Sortieren und Mischen von Lokationsreferenzen}
@@ -973,8 +985,11 @@ schrittweise in das Thema einzuführen und die einzelnen Verfahren und
 Überlegungen zunächst getrennt zu erklären, um sie dann später im
 Modellentwurf zusammenzuführen.
 
-Das Problem des Sortierens und Mischens von Lokationsreferenzen beruht
-auf den folgenden Anforderungen an ein Indexierungssystem:
+\smallskip
+
+\noindent Das Problem des Sortierens und Mischens von
+Lokationsreferenzen beruht auf den folgenden Anforderungen an ein
+Indexierungssystem:
 %
 \begin{enumerate}
 \item Wir möchten die zu einem Stichwort gehörenden
@@ -998,14 +1013,14 @@ Betrachten wir die folgenden unsortierten Lokationsreferenzen
   1.1, 1.2, Anhang--B, 1.3, Anhang--A, 1e, 1c,
 \end{center}
 %
-so müssen wir in der Lage sein, eine Sortierreihenfolge festzulegen.
-Intuitiv ordnen wir die Referenzen gruppenweise an, wobei sich eine
-Gruppe direkt aus einer Lokationsklasse bildet. In unserem Beispiel
-sind die Lokationsklassen
+so müssen wir in der Lage sein, ihnen eine Sortierreihenfolge
+zuzuordnen.  Intuitiv ordnen wir die Referenzen gruppenweise an, wobei
+sich eine Gruppe direkt aus einer Lokationsklasse bildet. In unserem
+Beispiel sind die Lokationsklassen
 \Strukzwei{\texttt{num}}{\texttt{.}}{\texttt{num}},
 \Strukzwei{Anhang}{--}{\texttt{Alpha}} und
 \Strukzwei{\texttt{num}}{}{\texttt{alpha}} gegeben. Mit dieser
-Reihenfolge gelangen wir zur sortierten Ausgabefolge
+Reihenfolge gelangen wir beispielsweise zur sortierten Ausgabefolge
 %
 \begin{center}
   1.1, 1.2, 1.3, Anhang--A, Anhang--B, 1c, 1e.
@@ -1014,7 +1029,7 @@ Reihenfolge gelangen wir zur sortierten Ausgabefolge
 Zuerst bestimmen wir also die Reihenfolge der Lokationsklassen. Die
 \emph{Totale Ordnung} innerhalb einer Klasse ist bereits implizit
 durch die Klassenstruktur\remark{Implizite Totale Ordnung} definiert.
-Wir benutzen deshalb die Definition der Totalen Ordnung auf einem
+Wir benutzen deshalb die Definition der linearen Ordnung auf einem
 Symbolalphabet in Definition~\ref{def:sortierungsalphabet:ordnung} für
 die Definition der Totalen Ordnung auf einer Lokationsklasse und
 formulieren analog:
@@ -1027,11 +1042,11 @@ formulieren analog:
   \mbox{$=_{\mbox{\scriptsize\textit{loc}}}$}\xspace}%
 
 \begin{Def}
-  Eine \emph{Totale Ordnung} \TotOrdLokRefLe auf einer Lokationsklasse
-  $L$ mit der Struktur $S = ([s_1]\ldots{}[s_n])$ mit $s_k$
-  Sortieralphabet ist für paarweise Lokationsreferenzen $l^1,l^2\in L$
-  mit der Struktur $([l_1]\ldots{}[l_n])$ definiert als eine Relation
-  \TotOrdLokRefLe für die gilt:
+  Eine \emph{Totale Ordnung} auf einer Lokationsklasse $L$ mit der
+  Struktur $S = ([s_1]\ldots{}[s_n])$ mit $s_k$ Sortieralphabet ist
+  für paarweise Lokationsreferenzen $l^1,l^2\in L$ mit der Struktur
+  $([l_1]\ldots{}[l_n])$ definiert als eine Relation \TotOrdLokRefLe
+  für die gilt:
   %
   \[l^1 \ \TotOrdLokRefLe \ l^2 \ \equiv \ \exists i : \ (
   l^1_j = l^2_j \ \ \forall j : 1,\ldots{},i-1 ) \quad \wedge \quad (
@@ -1041,7 +1056,7 @@ formulieren analog:
 \noindent Diese Definition besagt, daß die Strukturen zweier
 Lokationsreferenzen bis zu einer bestimmten Strukturkomponente $i-1$
 gleich sind und die Strukturkomponente $i$ beide Referenzen
-unterscheidet. Die Totale Ordnung der Strukturkomponente $j$ bestimmt
+unterscheidet. Die Totale Ordnung der Strukturkomponente $i$ bestimmt
 dann die Totale Ordnung der Lokationsreferenzen. Wir verwenden das
 Relationssymbol \ \TotOrdLokRefEq, um Gleichheit zweier
 Lokationsreferenzen zu notieren.
@@ -1107,6 +1122,9 @@ Nachfolgerfestlegungen. Des weiteren definieren wir das Prädikat
 implizite oder explizite Weise \Succ$(l_1,l_2)$ und nicht
 \NotSucc$(l_1,l_2)$ definiert wurde.
 
+Wir bezeichnen im folgenden für eine Lokation $l$ das zugehörige
+Kategorieattribut mit $\textit{catattr\/}(l)$ und die zugehörige
+Strukturreferenz mit $\textit{strucref\/}(l)$.
 
 \subsection{Bereichsbildung}
 \label{sec:bereichsbildung}
@@ -1116,7 +1134,7 @@ formale Beschreibung der \emph{Bereichsbildung} hinzufügen.
 
 \begin{Def}
   Seien $l_1,\ldots,l_n$ Lokationsreferenzen gleicher Lokationsklasse
-  mit \Succp({$l_i$}) = $l_{i+1}$ mit $i=0,\ldots,n-1$;
+  mit \Succp({$l_i$}) = $l_{i+1}$ für $i=0,\ldots,n-1$;
   \textit{catattr\/}($l_i$)=\textit{catattr\/}($l_j$), $\forall
   i,j=0,\ldots,n$; so ist \Range{$l_1$}{$l_n$} ein \emph{Bereich}.
 \end{Def}
@@ -1127,20 +1145,20 @@ Bereichsgrenze ist.
 
 
 \newcommand{\joinrange}[1]{\mbox{\textit{join-range\/}(\mbox{#1})}}
+\newcommand{\joinablep}[1]{\mbox{\textit{joinable-p\/}(\mbox{#1})}}
 
 \begin{Def}
-  Eine Operation \joinrange{} für die Bereichsbildung ist
-  folgendermaßen definiert. Seien $L = \Range{$l_l$}{$l_r$}$, $K =
-  \Range{$k_l$}{$k_r$}$ Bereiche mit gleichem Kategorieattribut, so
-  gilt:
+  Ein Prädikat \joinablep{}, ob zwei Bereiche zu einem Bereich
+  zusammengefaßt werden können, ist folgendermaßen definiert: Seien $L
+  = \Range{$l_l$}{$l_r$}$, $K = \Range{$k_l$}{$k_r$}$ Bereiche mit
+  gleichem Kategorieattribut, so gilt:
 
   \newcommand{\tleq}[1]{\TotOrdLokRefLeq{#1}}
 
   \[
-  \joinrange{L,K} = \left\{
+  \joinablep{L,K} = \left\{
     \begin{array}{ll}
-      \Range{\textit{min}($l_l,k_l$)\,}{\,\textit{max}($l_r,k_r$)} &
-      {\normalfont\textrm{falls}} \quad \left\{
+      \textit{wahr}& \textrm{falls} \quad \left\{
       \begin{array}{l}
         l_l\ \tleq\ k_l\ \tleq\ l_r \ \hfill \vee\\
         l_l\ \tleq\ k_r\ \tleq\ l_r \ \hfill \vee\\
@@ -1149,9 +1167,22 @@ Bereichsgrenze ist.
         \Succp(l_r) = k_l \hfill \vee\\
         \Succp(k_r) = l_l
       \end{array} \right.\\
-    \textit{undefiniert} & {\normalfont\textrm{sonst}}.
+    \textit{falsch}\quad & {\normalfont\textrm{sonst}}.
     \end{array}
   \right.\]
+
+  \noindent Eine Funktion \joinrange{} für die Bereichsbildung ist
+  folgendermaßen definiert:
+
+  \[
+  \joinrange{$L,K$} = \left\{
+    \begin{array}{ll}
+      \Range{\textit{min}($l_l,k_l$)\,}{\,\textit{max}($l_r,k_r$)} &
+      \textrm{falls} \ \joinablep{$L,K$} = \textit{wahr}\\%%
+      \perp & {\normalfont\textrm{sonst}}.
+    \end{array}
+  \right.\]
+
 \end{Def}
 
 %\begin{Def}
@@ -1200,9 +1231,9 @@ zuwenden. Folgende Probleme sind zu lösen:
 \end{enumerate}
 %
 Wir beginnen zuerst mit der Untersuchung der Sortier- und
-Mischvorgänge innerhalb einer Lokationsklasse fester Struktur.
-Anschließend erläutern wir die Modifikationsmöglichkeiten bezüglich
-der Totalen Ordnug von Varklassen.
+Mischvorgänge innerhalb von Standardklassen.  Anschließend erläutern
+wir die Modifikationsmöglichkeiten bezüglich der Nachfolgerbehandlung
+von Varklassen.
 
 
 \subsubsection{Sortieren und Mischen mit Attributen}
@@ -1219,10 +1250,7 @@ einer Lokationsreferenzliste kategorisiert worden. Wir unterscheiden
 prinzipiell 8 verschiedene Kategorien, die durch die Markierungen in
 den jeweiligen Spalten unterschieden werden.
 
-Wir bezeichnen im folgenden für eine Lokation $l$ das zugehörige
-Kategorieattribut mit $\textit{catattr\/}(l)$ und die zugehörige
-Strukturreferenz mit $\textit{strucref\/}(l)$. Folgende
-Strukturkategorien existieren.
+Folgende Darstellungskategorien sind unterscheidbar:
 
 \begin{description}
 \item[separate-sorting]\mbox{}\\ Wir separieren in der Ausgabe alle
@@ -1230,7 +1258,7 @@ Strukturkategorien existieren.
   Ausgabereihenfolge \bzgl der Kategorieattribute die jeweiligen
   Lokationsreferenzen ausgegeben.
 
-  Wir notieren eine solche Reihenfolge mit einer Aufzählung der
+  Wir notieren eine solche Reihenfolge durch eine Aufzählung der
   Kategorieattibute in Listenform wie \zB: \texttt{(default bold
     italic}\ldots\texttt{)}
 
@@ -1260,30 +1288,16 @@ Strukturkategorien existieren.
   \end{center}
 
 \item[mixed-sorting]\mbox{}\\ Wir fassen alle Vertreter bestimmter
-  Kategorieattribute zu einem virtuellen
-  Kategorieattribut\remark{virtuelle Kategorie\-attribute} zusammen
+  Kategorieattribute zu einem \emph{virtuellen
+    Kategorieattribut}\remark{virtuelle Kategorie\-attribute} zusammen
   und definieren innerhalb dieses virtuellen Attributs eine gemischte
   Anordnung der unterschiedlichen Attribute. Ein solches virtuelles
   Attribut kann selbst wieder in einer
-  \textsf{separate-sorting}-Aufzählung enthalten sein. Des weiteren
-  definieren wir innerhalb einer solchen Aufzählung eine Rangordnung,
-  die die Wichtigkeit der Attribute festlegt. Wir notieren solche
-  virtuellen Attribute, indem wir in der Aufzählung der
-  Ausgabereihenfolge die entsprechenden Attribute einklammern.
-
-  Beispiel: \texttt{( (bold default) italic )}
-
-  Innerhalb des virtuellen Attributs \texttt{(bold default)}
-  (\emph{siehe} Kategorien~5--8) definieren wir eine Abnahme des
-  Vorrangs, die sich in der semantischen Bedeutung des
-  \emph{Verdrängens} widerspiegelt. In unserem Beispiel wird in
-  Kategorie~5 die Lokationsreferenz 15 durch die Referenz \textbf{15}
-  ersetzt, wenn die Alternative die Ausgabe beider Lokationsreferenzen
-  ist.
+  \textsf{separate-sorting}-Aufzählung enthalten sein.
 
   Für die Totale Ordnung der Lokationsreferenzen eines virtuellen
   Attributes bedeutet dies, daß
-  %%
+
   \[
   \begin{array}{r}
     \forall x,y : \textit{catattr\/}(x) \not= \textit{catattr\/}(y)\\
@@ -1291,7 +1305,21 @@ Strukturkategorien existieren.
   \end{array}
   \quad\Rightarrow \quad x\ \TotOrdLokRefEq \ y .
   \]
-  %%
+
+  Des weiteren definieren wir innerhalb einer solchen Aufzählung eine
+  Rangordnung, die die Wichtigkeit der Attribute festlegt. Wir
+  notieren solche virtuellen Attribute, indem wir in der Aufzählung
+  der Ausgabereihenfolge die entsprechenden Attribute einklammern.
+
+  Beispiel: \texttt{( (bold default) italic )}
+
+  Innerhalb des virtuellen Attributs \texttt{(bold default)} (siehe
+  Kategorien~5--8) definieren wir eine Abnahme des Vorrangs, die sich
+  in der semantischen Bedeutung des \emph{Verdrängens} widerspiegelt.
+  In unserem Beispiel wird in Kategorie~5 die Lokationsreferenz 15
+  durch die Referenz \textbf{15} ersetzt, wenn die Alternative eine
+  Ausgabe beider Lokationsreferenzen ist.
+
 \end{description}
 %
 Wir fordern zur Einschränkung, daß gemischte Attribute nicht weiter
@@ -1329,14 +1357,14 @@ auftreten.
   \end{tabular}%
 \end{ttable}
 
-Ohne Bereichsbildung\remark{Bereichsbildung} (Kategorien~1 und 5)
-erhalten wir einen listenförmige Ausgabe. In allen Fällen können die
-in Klammern dargestellten Lokationsreferenzen auf Wunsch auch
-unterdrückt werden, da sie doppelt in der Referenzliste auftreten.
-Dazu besteht die Möglichkeit einer weiteren Wahlmöglichkeit, die wir
-mit \textsf{substitute-if-double} bezeichnen wollen. In Kategorie~5
-ersetzt \quasi{\textbf{15}} die Referenz \quasi{15} durch die
-implizite Vorrangregelung des \textsf{mixed-sorting}.
+Ohne Bereichsbildung (Kategorien~1 und 5) erhalten wir eine
+listenförmige Ausgabe. In allen Fällen können die in Klammern
+dargestellten Lokationsreferenzen auf Wunsch auch unterdrückt werden,
+da sie doppelt in der Referenzliste auftreten. Dazu besteht eine
+weitere Wahlmöglichkeit, die wir mit \textsf{substitute-if-double}
+bezeichnen wollen. In Kategorie~5 ersetzt \quasi{\textbf{15}} die
+Referenz \quasi{15} durch die implizite Vorrangregelung des
+\textsf{mixed-sorting}.
 
 Mit einer \emph{einfachen} Bereichsbildung werden aufeinanderfolgende
 Lokationsreferenzen eines Kategorieattributs zu einem Bereich
@@ -1368,7 +1396,7 @@ Lokationsreferenz initial zugeordnet wurde, noch weitere
 \emph{sekundäre Attribute}\remark{Sekundär\-attribute} zugeordnet
 werden können. Wir erzeugen dann \zB aus der Lokationsreferenz
 \Braces{\textbf{15};\texttt{bold}} eine Referenz
-\Braces{15;\texttt{default};$\{$\texttt{bold}$\}$} mit einem
+\Braces{15;\texttt{default},$\{$\texttt{bold}$\}$} mit einem
 Sekundärattribut \texttt{bold}. Die Totale Ordnung bleibt unverändert.
 Die Nachfolgerbestimmung wird dann auf die Menge der Sekundärattribute
 erweitert. Bei der Ausgabe müssen diese Lokationsreferenzen einfach
@@ -1382,8 +1410,8 @@ erfolgreich gemischt werden konnten, bei der Ausgabe in der Kategorie
 des Primärattributs unterdrückt. Man erkennt dies am Vergleich der
 Kategorien~7 und~8. In Kategorie~8 sind die Lokationsreferenzen
 \textbf{12} und~\textbf{15} weggefallen, weil die virtuellen
-Referenzen \Braces{12;\texttt{default};$\{$\texttt{bold}$\}$} und
-\Braces{15;\texttt{default};$\{$\texttt{bold}$\}$} in den Bereich
+Referenzen \Braces{12;\texttt{default},$\{$\texttt{bold}$\}$} und
+\Braces{15;\texttt{default},$\{$\texttt{bold}$\}$} in den Bereich
 11--15 eingemischt werden konnten.
 
 Nach dieser grundsätzlichen Klassifizierung werden wir im
@@ -1483,7 +1511,7 @@ Als Beispiel betrachten wir die Lokationen
   1, 2, 3, 2.1, 2.2, 2.3, 2.2.1\ \ der Varklasse \ \
   \Metaclass{\Strukdrei{\texttt{num}}{\texttt{.}}{\texttt{num}}{\texttt{.}}{\texttt{num}}} .
 \end{center}
-eines Artikels. Wir haben nun folgende Möglichkeiten zur Auswahl:
+Wir haben nun folgende Möglichkeiten zur Auswahl:
 %
 \begin{denseenumerate}
 
@@ -1556,10 +1584,8 @@ Allgemein läßt sich sagen:
 
 \noindent Wir definieren also für Lokationsklassen nur eine implizite
 Nachfolgerfunktion für Elemente der untersten Ebene.\footnote{Also
-  \Succ$(3.1.2,3.1.3)$; aber nicht \Succ$(3.1,3.2)$.} Für Varklassen
-mit variabler Länge der Lokationsstruktur kann somit keine implizite
-Nachfolgerbestimmung durchgeführt werden. Dies entspricht der
-intuitiven Vorstellung eines Nachfolgers, denn wir können ohne
+  \Succ$(3.1.2,3.1.3)$; aber nicht \Succ$(3.1,3.2)$.} Dies entspricht
+der intuitiven Vorstellung eines Nachfolgers, denn wir können ohne
 Dokumentwissen nichts über Nachfolger auf den oberen Ebenen aussagen.
 Wir können nun bestimmte Ebenen einer Lokationsklasse zusätzlich
 explizit mit der Nachfolgerfunktion belegen (Fall~1). Des weiteren
@@ -1576,7 +1602,7 @@ unterdrückt werden soll. Mit dieser Matrix läßt sich das gewünschte
 Verhalten einfach spezifizieren.
 
 
-\subsubsection*{Zusammenfassung}
+\section*{Zusammenfassung}
 
 Die geführten Überlegungen haben die grundsätzliche Komplexität der
 Lokationsverarbeitung aufgezeigt. Sinnvolle Konventionen mußten
@@ -1586,9 +1612,9 @@ Ausnahmesituation dar. Die Ambiguität der Zuordnung von
 Lokationsreferenzen zu Lokationsklassen bringt auch den Leser eines
 Indexes in Verständnisprobleme, die bei einer gut strukturierten
 Dokumentgliederung nicht auftreten sollten. Es ging hier um die
-Definition eines sinnvollen Standard-Verhaltens in diesem
-Ausnahmefall. Die hier eingeführte Lokationsmatrix bietet eine
-einfachere Sichtweise des Zuordnungsproblems.
+Definition eines sinnvollen Standardverhaltens in diesem Ausnahmefall.
+Die hier eingeführte Lokationsmatrix bietet eine einfachere Sichtweise
+des Zuordnungsproblems.
 
 Die Klassifizierung von Kategorieattributen mit Hilfe von virtuellen
 Attributen liefert uns ein einfaches und sinnvolles Modell für die
@@ -1704,7 +1730,10 @@ in Abschnitt~\ref{sec:lokationsverarbeitung:regeln} durchgeführt wird.
 
 %%
 %% $Log$
-%% Revision 1.5  1995/11/08 16:16:38  kehr
+%% Revision 1.6  1995/11/14 16:05:53  kehr
+%% Made two more corrections on the report.
+%%
+%% Revision 1.5  1995/11/08  16:16:38  kehr
 %% New correction.
 %%
 %% Revision 1.4  1995/11/03  15:53:16  kehr

@@ -6,6 +6,61 @@
 
 \chapter{Vorwort}
 
+\begin{zitat}
+Suchet, so werdet ihr finden.
+
+\smallskip
+
+\textrm{Sprichwort aus der Bibel}
+
+\bigskip
+
+Was man sucht, es läßt sich finden, was man unbeachtet läßt,
+entflieht.
+
+\smallskip
+
+\textsc{Sophokles}, \textrm{König Ödipus}
+
+\bigskip
+
+Sometimes it is desirable to index words that don't actually appear on
+the page.  \ldots For example, Appendix I lists page 1 under `beauty',
+even though page 1 only contains the word `beautiful'. (The author
+felt that it was important to index `beauty' because he had already
+indexed `truth'.)
+
+\smallskip
+
+\textsc{Donald E. Knuth}, \textrm{The \TeX{}book}
+{\normalfont\textrm{(1984)}}
+
+\bigskip
+
+The compiling of an index is interesting work, though some authors are
+apt to find it tedious and delegate the work to others. The
+proofreader who undertakes it will find that it is splendid mental
+exercise and brings out his latent editorial capability.
+
+\smallskip
+
+\textsc{Albert H. Highton}, \textrm{Practical Proofreading}
+{\normalfont\textrm{(1926)}}
+
+\end{zitat}
+
+\vspace{4ex}
+
+\noindent Glücklicherweise ist die Erstellung eines
+Stichwortverzeichnisses heutzutage weniger eine manuelle Tätigkeit als
+im Jahre 1926, wo Albert H.  Highton wohl noch mit Indexkärtchen
+Stichwörter und Seitennummern aus einem Buch herausschreiben mußte, um
+sie anschließend zu sortieren und für den Textsatz zusammenzustellen.
+Heutzutage ist der Computer ein adäquates Werkzeug, um einen Index zu
+generieren, aber die Tätigkeit des Proofreaders und die Auswahl der
+Stichwörter durch den Autor sind auch heute noch genauso wichtig wie
+seinerzeit.
+
 \remark{Index als Bestandteil von Literatur}%
 Die Qualität von guten Lehr- und Sachbüchern ist in erster Linie eine
 Frage der methodischen und didaktischen Vermittlung von Wissen.
@@ -75,9 +130,9 @@ soll den \oa Ansprüchen in möglichst vielen Bereichen gerecht werden.
 Neue erweiterte Mechanismen zur Generierung eines Indexes werden
 vorgestellt und entsprechende Algorithmen eingeführt.
 
-Basierend auf diesem Modell wird dann eine Implementierung der
-grundlegenden Verfahren des Modells vorgenommen, um die
-grundsätzlichen Mechanismen in der Praxis zu verifizieren.
+Basierend auf diesem Modell wird eine Implementierung der
+grundlegenden Verfahren des Modells vorgestellt, die zur Verifizierung
+der grundsätzlichen Mechanismen in der Praxis dienen sollte.
 
 
 \chapter{Einführung}
@@ -96,25 +151,26 @@ Es folgt ein Überblick über die Verarbeitungsvorgänge innerhalb des
 Modells in Abschnitt~\ref{sec:indexverarbeitung}. In
 Abschnitt~\ref{sec:implementierung} finden sich Informationen über die
 erfolgte Implementierung des Systems. Den Abschluß bilden die
-Zusammenfassung in Abschnitt~\ref{sec:zusammenfassung} und ein Glossar
-in Abschnitt~\ref{sec:glossar}.
+Zusammenfassung mit einem Ausblick auf weiterführende Arbeiten in
+Abschnitt~\ref{sec:zusammenfassung} und ein Glossar in
+Abschnitt~\ref{sec:glossar}.
 
 
 \section*{Datenfluß in einem Indexierungssystem}
 
-Der Datenfluß, an welchem ein Indexierungssystem beteiligt ist, ist in
-Abbildung~\ref{fig:datenfluss} dargestellt. Das Textsatzsystem liefert
-die Rohdaten der Indexeinträge in einem festgelegten Format. Das
-Indexsystem liest zunächst sämtliche für den Verarbeitungsprozeß
+In Abbildung~\ref{fig:datenfluss} ist der Datenfluß dargestellt, an
+welchem ein Indexierungssystem beteiligt ist. Das Textsatzsystem
+liefert die Rohdaten der Indexeinträge in einem festgelegten Format.
+Das Indexsystem liest zunächst sämtliche für den Verarbeitungsprozeß
 benötigten Informationen aus der Indexstyle-Datei\remark{Indexstyle}
-ein. Anschließend werden die Rohdaten des Indexes eingelesen. Die
-Indexeinträge werden daraufhin gemischt und sortiert. Dieser Proze"s
-besteht aus der Verarbeitung der Stichw"orter und den dazugeh"origen
-Verweisen auf das Dokument. Diese Verweise werden mit
-\emph{Lokationsreferenz} bezeichnet. Die entsprechenden Misch- und
-Sortierregeln sind im Indexstyle angegeben. Zuletzt wird der komplette
-Index mit einem Markup versehen und dem Textsatzsystem zur
-Weiterverarbeitung zugeführt.
+und anschließend die Rohdaten des Indexes ein. Die Indexeinträge
+werden daraufhin gemischt und sortiert. Dieser Proze"s besteht aus der
+Verarbeitung der Stichw"orter und den dazugeh"origen Verweisen auf das
+Dokument. Diese Verweise werden mit \emph{Lokationsreferenz}
+bezeichnet. Die entsprechenden Misch- und Sortierregeln sind im
+Indexstyle angegeben. Zuletzt wird der komplette Index mit einem
+Markup versehen und dem Textsatzsystem zur Weiterverarbeitung
+zugeführt.
 
 Besondere Wichtigkeit liegt dabei auf der benutzerdefinierbaren
 Konfiguration \remark{Benutzer\-definierbare Konfiguration}des
@@ -148,12 +204,15 @@ und das System später auf expliziten Befehl hin Indexe erstellt.
 
 %% Local Variables:
 %% mode: latex
-%% TeX-master: "makeindex4.tex"
+%% TeX-master: "xindy.tex"
 %% End:
 
 %%
 %% $Log$
-%% Revision 1.4  1995/11/08 16:16:45  kehr
+%% Revision 1.5  1995/11/14 16:05:54  kehr
+%% Made two more corrections on the report.
+%%
+%% Revision 1.4  1995/11/08  16:16:45  kehr
 %% New correction.
 %%
 %% evision 1.3  1995/10/26  16:05:37  kehr
@@ -237,3 +296,7 @@ und das System später auf expliziten Befehl hin Indexe erstellt.
 %% Erstes Setup der Studienarbeit des Makeindex4-Projektes
 %%
 
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
