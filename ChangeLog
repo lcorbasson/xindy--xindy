@@ -1,3 +1,16 @@
+Mon Jun  3 11:50:48 1996  Roger Kehr  <kehr@spock>
+
+	* I nearly finished the treeing of the location-references.
+	  Markups like
+
+	  	  Chapter 1 25, 37, 38; Chapter 2 13, 19, 22-25
+
+	  are now possible. For these cases the markup is really difficult
+	  to explain and should be interactively explored. Additionally I
+	  started to write down the documentation in SGML using the
+	  LinuxDoc-SGML environment. Already modified some tags for LaTeX
+	  and fixed minor bugs in conjunction with the GNUInfo backend.
+
 Mon May 27 20:58:17 1996    <kehr@eliade.hrz.th-darmstadt.de>
 
 	* Some weeks of hard work are finished. The markup is completely
