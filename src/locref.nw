@@ -1,0 +1,353 @@
+%%
+%% This file is part of the `makeindex4'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: location-reference
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Module \sans{location-reference}}
+
+\subsection{Introduction}
+
+A location-reference holds a single location-reference and is
+responsible for its overall management. Similiary to a location-class
+we have a list of detected and separated strings which compose the
+entire location. We store the optical attribute an the name of the
+location-class the location belongs to. We don't save the
+separator-strings explicitly because the are already stored in the
+definition of the corresponding location-class.
+
+\subsection{Abstract Specification}
+
+\subsubsection{Definition}
+
+A location-reference is a set $\{$ \emph{layers, ordnums, optattr,
+  locclass} $\}$. Layers is a list of [[locref-layer]]. Ordnums is a
+list of integer numbers. Optattr is a [[optical-attribute]]. Locclass
+is a [[location-class]].
+
+\subsubsection{Operation}
+
+
+\subsection{Concrete Specification}
+
+\subsubsection{Class \sans{location-reference}}
+
+Here is the class definition as already described above.
+
+<<class location-reference>>=
+(defclass location-reference ()
+    ((layers    :reader get-layers   :initarg :layers)
+     (ordnums   :reader get-ordnums  :initarg :ordnums)
+     (optattr   :reader get-optattr  :initarg :optattr)
+     (locclass  :reader get-locclass :initarg :locclass)))
+@
+
+Here we define [[&allow-other-keys]] to just allow other unneccessary
+keys to be given. We gain a much easier code when this function is
+called from outside (\emph{see} function [[gen-indexentries]] and
+[[forall-location-classes]] for more details).
+
+<<class location-reference>>=
+(defun make-location-reference (&key (layers '()) (ordnums '())
+                                     (optattr "") (locclass nil)
+                                     &allow-other-keys)
+  (make-instance 'location-reference
+                 :layers  layers   :ordnums  ordnums
+                 :optattr optattr  :locclass locclass))
+@ %def location-reference make-location-reference
+
+<<pretty-print>>=
+(defun pprint-location-reference (s locref)
+  (pprint-logical-block
+   (s nil :prefix "<" :suffix ">")
+   (pprint-indent :block 2 s)
+   (pprint-newline :linear s)
+   (write (get-layers locref) :stream s)
+   (pprint-newline :linear s)
+   (write-string "=" s)
+   (pprint-newline :linear s)
+   (write (get-ordnums locref) :stream s)
+   (write-string ";" s)
+   (write (get-locclass locref) :stream s)
+   (write-string ";" s)
+   (pprint-newline :linear s)
+   (write-string (get-optattr locref) s)
+   (when (typep locref 'virtual-locref)
+     (write-string " + " s)
+     (write-string (get-secondary-attr locref) s))
+   ))
+
+(set-pprint-dispatch 'location-reference #'pprint-location-reference)
+@
+
+Markup of a location-reference ist currently implemented as a simple
+printing of all layers and separators.
+
+<<markup methods>>=
+(defmethod markup-object ((locref location-reference)
+                          (dummmy-markup-list  list)
+                          (context-list list)
+                          (dummmy-env-stack    list))
+  (dolist (context-string context-list)
+    (mprint context-string))
+  (let ((layers (get-layers locref)))
+    (dolist (loccls-layer (get-layers
+                           (find-location-class
+                            (get-locclass locref))))
+      (typecase loccls-layer
+        (loccls-layer
+           (markup-object (pop layers) '() '() '()))
+        (loccls-separator
+           (markup-object loccls-layer '() '() '()))))))
+@
+
+\subsubsection{Class \sans{virtual-locref}}
+
+This class is used as a helpful construct during the processing of
+location-references. A \emph{virtual} location-reference is created by
+applying a \textsf{merge-to}--rule. It additionally contains the slot
+[[secondary-attr]] which holds the name of the original attribute. E.g
+[[bold]] \textsf{merge-to} [[default]] creates a virtual
+location-reference with the [[optattr]] set to [[default]] and
+[[secondary-attr]] set to [[bold]].
+
+It means that a virtual location-reference is based upon a existing
+location-reference and a secondary attribute.
+
+<<class vitual-locref>>=
+(defclass virtual-locref (location-reference)
+    ((secondary-attr :accessor get-secondary-attr :initarg :secondary-attr)))
+
+(defun make-virtual-locref (locref optattr secondary-attrib)
+  (make-instance 'virtual-locref
+                 :layers         (get-layers  locref)
+                 :ordnums        (get-ordnums locref)
+                 :optattr        optattr
+                 :locclass       (get-locclass locref)
+                 :secondary-attr secondary-attrib))
+@ %def virtual-locref make-virtual-locref
+
+We don't need to markup any virtual location-references.
+
+<<markup methods>>=
+(defmethod markup-object ((vlocref virtual-locref)
+                          (dummmy-markup-list  list)
+                          (dummmy-context-list list)
+                          (dummmy-env-stack    list))
+  )
+@
+
+\subsubsection{Class \sans{locref-layer}}
+
+A location-reference layer is a string. Slot [[layer]] of a object
+keeps this string.
+
+<<class locref-layer>>=
+(defclass locref-layer ()
+    ((layer  :reader get-layer  :initarg :layer)))
+
+(defun make-locref-layer (layer)
+  (make-instance 'locref-layer :layer layer))
+@ %def locref-layer make-locref-layer
+
+<<pretty-print>>=
+(defun pprint-locref-layer (s layer)
+  (write (get-layer layer) :stream s))
+
+(set-pprint-dispatch 'locref-layer #'pprint-locref-layer)
+@
+
+Markup of a location-layer ist currently implemented as a simple
+printing of the layer-string.
+
+<<markup methods>>=
+(defmethod markup-object ((layer locref-layer)
+                          (dummmy-markup-list  list)
+                          (dummmy-context-list list)
+                          (dummmy-env-stack    list))
+  (mprint (get-layer layer)))
+@
+
+
+\subsubsection{Matching strings with location-classes}
+
+This function tries to match the given string [[locstring]] on the
+given location-class [[loccls]]. This is achieved by succesively
+matching all layers and separators on the string. It returns a
+multiple-value of the form [[(layer-separator-list ordnum-list)]].  It
+is split into several functions, that can only be used in conjunction
+because we use [[special]] bindings to make some variables visible for
+all functions. I didn't want to have a large function, so I split it
+into three small pieces. I could also make use of noweb's abilities to
+insert chunks into code, but this prevents me from testing the whole
+function in the [[emacs]]-editor.
+
+<<method match-locclass-by-string>>=
+(defmethod match-locclass-by-string ((locstring string)
+                                     (loccls    location-class))
+  (declare (special locstring loccls))
+  (let ((layer-list  '())
+        (ordnum-list '())
+        (finished nil))
+    (declare (special layer-list ordnum-list finished))
+    (do ((layers (get-layers loccls) (cdr layers)))
+        ((or finished (endp layers) (= 0 (length locstring))))
+      (declare (special layers))
+      (let ((curr-layer (car layers))
+            (locstring-len (length locstring)))
+        (declare (special curr-layer locstring-len))
+        (cond ((typep curr-layer 'loccls-layer)
+                 (match-loccls-layer))
+              ((typep curr-layer 'loccls-separator)
+                 (match-loccls-separator))
+              (t (error "match-locclass-by-string: wrong element in list")))))
+    (if (= 0 (length locstring))
+        (values layer-list ordnum-list)
+        (values nil nil))))
+@
+
+<<method match-locclass-by-string>>=
+(defun match-loccls-layer ()
+  (multiple-value-bind (matched-string rest-string ordnum)
+      (prefix-match locstring (get-basetype curr-layer))
+    (if (null ordnum)
+        (setq finished t)
+      (progn
+        (setq locstring rest-string)
+        (setq layer-list
+              (append layer-list
+                      (list (make-locref-layer matched-string))))
+        (setq ordnum-list
+              (append ordnum-list (list ordnum)))))))
+@
+
+<<method match-locclass-by-string>>=
+(defun match-loccls-separator ()
+  (let* ((sepstr    (get-separator curr-layer))
+         (seplen    (length sepstr))
+         (match-len (string/= sepstr locstring)))
+    (when (or (null match-len) (eql seplen match-len))
+      (setq locstring (subseq locstring seplen)))))
+@
+
+\subsubsection{Sorting of location-references}
+
+To compare two location-references in order we first determine the
+order of their corresponding location-classes. If those are equal we
+compare the list of ordnums. We succesively compare the order-numbers
+and stop, if we find one number being smaller than the other.  Now
+sorting the location-references is a simple thing. We just do a
+[[sort]] on the references with [[locref<]] as the sort-function.
+
+<<location-reference-sorting>>=
+(defun locref< (locref-1 locref-2)
+  (let ((ordnum-1 (get-ordnum (find-location-class (get-locclass locref-1))))
+        (ordnum-2 (get-ordnum (find-location-class (get-locclass locref-2)))))
+  (cond ((= ordnum-1 ordnum-2)
+           (numberlist< (get-ordnums locref-1) (get-ordnums locref-2)))
+        (t (< ordnum-1 ordnum-2)))))
+
+(defun numberlist< (numlist-1 numlist-2)
+  (do ((rest-1 numlist-1 (cdr rest-1))
+       (rest-2 numlist-2 (cdr rest-2)))
+      ((or (endp rest-1) (endp rest-2) (/= (first rest-1) (first rest-2)))
+         (cond ((endp rest-1) t)
+               ((endp rest-2) nil)
+               (t (< (first rest-1) (first rest-2)))))))
+@ %def locref< numberlist<
+
+<<*>>=
+(provide 'locref)
+(use-package 'clos)
+
+(eval-when (compile)
+  (load 'basetype)
+  (load 'locclass))
+
+<<class location-reference>>
+<<class vitual-locref>>
+<<class locref-layer>>
+<<method match-locclass-by-string>>
+<<location-reference-sorting>>
+<<pretty-print>>
+<<markup methods>>
+@
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 19:23:08  kehr
+%% Initial source checkin.
+%%
+%% Revision 1.12  1995/07/28  10:41:18  kehr
+%% Added simple markup for location-references and ranges. Currently
+%% exists no support for differen layer-markup. A location-reference is
+%% always printed as a whole.
+%%
+%% Revision 1.11  1995/07/27  23:59:04  kehr
+%% Added support for keword-markup.
+%%
+%% Revision 1.10  1995/07/27  14:36:44  kehr
+%% Added support for joining of locref-separated-groups.
+%%
+%% Revision 1.9  1995/07/26  16:19:54  kehr
+%% Added support for the pretty-printer module. Output of data-structures
+%% now looks more readable.
+%%
+%% Revision 1.8  1995/07/23  20:48:35  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%% Revision 1.7  1995/07/23  14:14:09  kehr
+%% Added support for merge-to--rule. Now works and creates
+%% virtual-attributes as expected.
+%%
+%% Revision 1.6  1995/07/15  20:50:24  kehr
+%% Added markup-support for location-references, sorting of indexentries
+%% and separation of location-reference-lists into location-class
+%% subgroups.
+%%
+%% Revision 1.5  1995/07/11  23:33:09  kehr
+%% Added indexclass-structure as assoc-list. Completed
+%% indexentry-inserting with merge-insert-feature. Now we are nearlx
+%% finished with the data-setup and can start to handle the
+%% location-references.
+%%
+%% Revision 1.4  1995/07/11  15:14:16  kehr
+%% Today I finished the definition of indexentries. They now will be
+%% inserted into the index when a appropriate location-class was finished.
+%%
+%% Revision 1.3  1995/07/10  23:26:59  kehr
+%% Corrected bugs that caused location-class-matching to fail. Also
+%% discovered some bugs in matching under certain circumstances, I hadn't
+%% tested so far.
+%%
+%% Revision 1.2  1995/07/10  19:08:17  kehr
+%% Now corrected setup of location-classes. The was a bug in the
+%% add-indexclass methods and some wrong reader-functions.
+%%
+%% Revision 1.1  1995/07/10  00:58:18  kehr
+%% Completed noweb-support. Current version must be debugged to correct
+%% some minor errors.
+%%

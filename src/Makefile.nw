@@ -1,0 +1,123 @@
+#
+# $Id$
+#
+
+#
+# This is a Makefile for noweb-support on LISP-files
+#
+
+     NOWEAVE = noweave
+    NOTANGLE = notangle
+  NOUNTANGLE = nountangle
+
+      CLISPC = clisp -q -c
+
+#
+#  noweb-section
+#
+.SUFFIXES: .nw .lsp .mxs .fas
+#
+#  preserve intermediate tex-files in nw->dvi chains
+#
+.PRECIOUS: %.tex
+#
+#  extract tex-files
+#
+.nw.tex:
+	$(NOWEAVE) $(NOWEAVEOPT) $*.nw |\
+		$(NOWEBWRAPPER) > $*.tex
+#
+#  extract LISP-files
+#
+.nw.lsp:
+	$(NOTANGLE) $(NOTANGLEOPT) $*.nw > $*.lsp
+.nw.mxs:
+	$(NOTANGLE) $(NOTANGLEOPT) $*.nw > $*.mxs
+
+.lsp.fas:
+	$(CLISPC) $*.lsp
+.mxs.fas:
+	$(CLISPC) $*.mxs
+
+#
+#  project dependent rules
+#
+
+NOWEAVEOPT    = -n #-index # -delay
+NOTANGLEOPT   = -L';; line %L "%F"%N'
+NOUNTANGLEOPT =
+
+NOWEBDIR     = $(TOPDIR)/noweb
+NOWEBHEADER  = $(NOWEBDIR)/header.tex
+NOWEBTRAILER = $(NOWEBDIR)/trailer.tex
+NOWEBWRAPPER = cat $(NOWEBHEADER) - $(NOWEBTRAILER)
+
+WEBS = base.nw  basetype.nw  idxclass.nw  idxentry.nw  idxstyle.nw\
+       locclass.nw  locref.nw  mkindex4.nw  index.nw  style.nw  markup.nw\
+       idxrule.nw  ranges.nw  intface.nw
+
+DVIS = \
+	mkindex4.dvi\
+	base.dvi\
+	basetype.dvi\
+	markup.dvi\
+	locclass.dvi\
+	locref.dvi\
+	ranges.dvi\
+	idxrule.dvi\
+	idxclass.dvi\
+	idxentry.dvi\
+	index.dvi\
+	intface.dvi\
+	idxstyle.dvi\
+	style.dvi\
+
+TEXS = base.tex basetype.tex idxclass.tex idxentry.tex idxstyle.tex\
+       locclass.tex locref.tex mkindex4.tex index.tex style.tex markup.tex\
+       idxrule.tex ranges.tex intface.tex
+
+LISPS= base.lsp basetype.lsp idxclass.lsp idxentry.lsp idxstyle.lsp\
+       locclass.lsp locref.lsp mkindex4.lsp index.lsp  markup.lsp\
+       idxrule.lsp ranges.lsp intface.lsp
+
+CLFAS= base.fas basetype.fas idxclass.fas idxentry.fas idxstyle.fas\
+       locclass.fas locref.fas mkindex4.fas index.fas  markup.fas\
+       idxrule.fas ranges.fas intface.fas
+
+
+base.fas	: base.lsp
+basetype.fas	: basetype.lsp base.lsp
+locclass.fas 	: locclass.lsp base.lsp markup.lsp
+locref.fas 	: locref.lsp base.lsp basetype.lsp locclass.lsp
+markup.fas	: markup.lsp
+index.fas	: index.lsp idxentry.lsp locclass.lsp base.lsp
+idxclass.fas	: idxclass.lsp index.lsp
+idxentry.fas	: idxentry.lsp
+style.fas	: style.mxs
+idxrule.fas	: idxrule.lsp
+intface.fas	: intface.lsp
+
+STYS = style.mxs
+
+OTHERS = $(NOWEBHEADER) $(NOWEBTRAILER) mkindex4.sty
+
+BASEFILES = defwords.tex
+
+dvi:	$(DVIS)
+tex:	$(TEXS)
+lisp:   $(LISPS)
+sty:    $(STYS)
+
+$(TEXS): $(OTHERS) $(BASEFILES)
+
+fas:	$(CLFAS)
+
+distclean ::
+	$(RM) modules.tex
+	$(RM) $(CLFAS)
+modules.tex : $(WEBS)
+	$(NOWEAVE) $(NOWEAVEOPT) $(WEBS) | $(NOWEBWRAPPER) > modules.tex
+modules.dvi : modules.tex $(WEB)
+	-$(LATEX) modules.tex
+	-$(LATEX) modules.tex
+

@@ -1,0 +1,265 @@
+%%
+%% This file is part of the `makeindex4'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: idxentry
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+\section{Module {\normalfont\textsf{Basetype}}}
+
+\subsection{Introduction}
+
+This module is responsible for defining all kinds of \emph{basetypes}.
+Basetypes and \emph{separators} are smallest structural part of a
+location. A location (and therefore the composition of a
+location-class) is a sequence of baseypes and separators. A basetype
+consists either of an alphabet or an enumeration.
+
+An \emph{alphabet} is a sequence of symbols. The sequence is of
+limited size. Since \CL uses Iso-Latin as document alphabet, the
+\emph{symbols} are words composed of letters of the
+Iso-Latin-alphabet. The \emph{total order} of an alphabet is given by
+the position of the symbols in the sequence, therefore symbols that
+come later in the sequence have higher order number. The
+\emph{successor} of a symbol is by default defined as the next symbol
+in the sequence. The last symbol in the sequence has no successor. The
+\emph{base alphabet} of an alphabet is the minimal set of characters
+that one needs to compose all symbols of the alphabet.
+
+An \emph{enumeration} is a unlimited sequence of symbols. The arabic
+numbers are an example for enumerations. Their base alphabet is the
+set of digits 0\ldots9. The mapping of a symbol to the set of natural
+numbers is given by a function that maps a sequence of digits to the
+corresponding number.\footnote{It is neccessary to keep in mind that a
+  sequence of characters needs to be mapped to a number. A number is
+  represented by a internal object of type \texttt{integer}.}
+
+The system predefines some types of alphabets and enumerations and the
+user is free to define new ones. The description of user-defined
+enumeration needs the explicit definition of a matching and mapping
+function, that recognizes a sequence of characters and calculates
+their corresponding order number.
+
+
+\subsection{Abstract Specification}
+
+\subsubsection{Definition}
+
+A basetype defined by a set $\{$\emph{name, base-alphabet, recognize-
+  and map-function}$\}$. Name is a string.  Base-alphabet is a list of
+characters. The map-function takes a string as an argument and tries
+to match symbols of the alphabet with the prefix of the given string.
+The longest possible match and the order number of the matched symbol
+are returned.
+
+
+\subsubsection{Operation}
+
+We need a constructor to create an instance of a basetype and reader-
+and accessor-methods to give access to its elements.
+
+
+\subsection{Concrete Specification}
+
+\subsubsection{Class {\normalfont\textsf{basetype}}}
+
+Class [[basetype]] is the virtual base-class of all alphabets and
+enumerations. It therefore describes all neccessary slots and defines
+accessor-functions. We decided to implement the recognize- and
+map-function by the definition of a generic function [[prefix-match]]
+which is bound to a string and a basetype.
+
+A basetype is named because we want to be able to recognize them by
+name. The base-alphabet is used to make the user be aware cof
+conflicts when composing location-classes. Slot [[base-alphabet]] is
+a list of characters.
+
+<<class basetype>>=
+(defclass basetype ()
+    ((name          :reader get-name          :initarg :name)
+     (base-alphabet :reader get-base-alphabet :initarg :base-alphabet)))
+
+(defgeneric prefix-match (str object))
+@ %def basetype prefix-match
+
+
+\subsubsection{Class \normalfont\textsf{alphabet}}
+
+An alphabet is a subclass of [[basetype]]. It additionally keeps track
+of all the defined symbols. Slot [[symbols]] is a list of strings.
+
+<<class alphabet>>=
+(defclass alphabet (basetype)
+    ((symbols  :reader get-symbols  :initarg :symbols)))
+
+(defun make-alphabet (name symbols)
+  (make-instance 'alphabet :name name :symbols symbols
+                 :base-alphabet (calculate-base-alphabet symbols)))
+
+(defmethod show ((alph alphabet))
+  (format t "[Alph `~A' "
+          (get-name alph))
+  (show (get-symbols alph))
+  (write-string "]")
+  (values))
+@ %def alphabet make-alphabet
+
+Here we declare the method that should be used to match alphabets. It
+uses the global function [[prefix-match-stringlist]] which is a
+general-purpose function to implement prefix-matching on a list of
+strings.
+
+<<class alphabet>>=
+(defmethod prefix-match ((str string) (alph alphabet))
+  (multiple-value-bind (matched-string rest-string order-num)
+      (prefix-match-stringlist str (get-symbols alph))
+    (values matched-string rest-string order-num)))
+
+(defun prefix-match-stringlist (pattern list-of-str)
+  (let* ((matched-string nil)
+         (rest-string nil)
+         (ordnum-of-max-match nil)
+         (len-max-match 0)
+         (strlen (length pattern)))
+    (do ((ordnum 0 (1+ ordnum))
+         (string-list list-of-str (cdr string-list)))
+        ((endp string-list))
+      (let ((len-curr-match (string/= pattern (car string-list))))
+        (when (null len-curr-match) (setq len-curr-match strlen))
+        (when (> len-curr-match len-max-match)
+          (setq ordnum-of-max-match ordnum)
+          (setq len-max-match len-curr-match)
+          (setq rest-string (subseq pattern len-curr-match))
+          (setq matched-string
+                (subseq (car string-list) 0 len-curr-match)))))
+    (values matched-string rest-string ordnum-of-max-match)))
+@ %def prefix-match prefix-match-stringlist
+
+
+\subsubsection{Class \normalfont\textsf{enumeration}}
+
+An enumeration is a subclass of [[basetype]]. Because we can't keep
+the whole symbols (the set of arabic numbers has infinite members) we
+don't need more slots here. This class itself is a base-class for all
+enumerations that we want to implement. Each of them must implement
+its own method for [[prefix-match]].
+
+Our constuctor is therefore defined as a general-purpose-constructor.
+We give it a class as an argument. Additionally and in distinction to
+alphabets we need to give the base-alphabet as argument to the
+constructor.
+
+<<class enumeration>>=
+(defclass enumeration (basetype)
+    ())
+
+(defun make-enumeration (enum-class name base-alphabet)
+  (make-instance enum-class
+                 :name          name
+                 :base-alphabet base-alphabet))
+
+(defmethod show ((enum enumeration))
+  (format t "[Enum `~A' "
+          (get-name enum))
+  (write-string "]")
+  (values))
+@ %def enumeration make-enumeration
+
+
+Some help functions:
+
+<<help functions>>=
+(defun calculate-base-alphabet (list-of-strings)
+  (let ((base-alphabet '()))
+    (dolist (str list-of-strings)
+      (setq base-alphabet
+            (append base-alphabet (coerce str 'list))))
+    (sort (mapcon #'(lambda (x)
+                      (unless (member (car x) (cdr x))
+                        (list (car x))))
+                  base-alphabet)
+          #'char<)))
+
+(defun string-to-list (string)
+  (map 'list #'string string))
+
+(defun base-alphabet-intersection (base-1 base-2)
+  (intersection base-1 base-2))
+@
+
+<<*>>=
+(provide 'basetype)
+(use-package 'clos)
+
+<<class basetype>>
+<<class alphabet>>
+<<class enumeration>>
+<<help functions>>
+@
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+
+%%======================================================================
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 19:23:05  kehr
+%% Initial source checkin.
+%%
+%% Revision 1.9  1995/07/27  23:59:02  kehr
+%% Added support for keword-markup.
+%%
+%% Revision 1.8  1995/07/23  20:48:32  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%% Revision 1.7  1995/07/23  14:14:08  kehr
+%% Added support for merge-to--rule. Now works and creates
+%% virtual-attributes as expected.
+%%
+%% Revision 1.6  1995/07/11  23:33:06  kehr
+%% Added indexclass-structure as assoc-list. Completed
+%% indexentry-inserting with merge-insert-feature. Now we are nearlx
+%% finished with the data-setup and can start to handle the
+%% location-references.
+%%
+%% Revision 1.5  1995/07/11  00:47:42  kehr
+%% Now starting to work on a full index. Detection of indexclasses is
+%% nearly finished an we can start to define indexentries to make that
+%% thing work.
+%%
+%% Revision 1.4  1995/07/10  23:26:58  kehr
+%% Corrected bugs that caused location-class-matching to fail. Also
+%% discovered some bugs in matching under certain circumstances, I hadn't
+%% tested so far.
+%%
+%% Revision 1.3  1995/07/10  19:08:16  kehr
+%% Now corrected setup of location-classes. The was a bug in the
+%% add-indexclass methods and some wrong reader-functions.
+%%
+%% Revision 1.2  1995/07/10  00:58:15  kehr
+%% Completed noweb-support. Current version must be debugged to correct
+%% some minor errors.
+%%
+%% Revision 1.1  1995/07/09  18:14:27  kehr
+%% Initial checkin.
+%%

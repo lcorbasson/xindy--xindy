@@ -1,0 +1,226 @@
+%%
+%% This file is part of the `makeindex4'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: idxrule
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Module \sans{rules}}
+
+\subsection{Introduction}
+
+Rules are neccessary to parametrize some stages of the indexing
+process when arranging and processing location-references. For
+example, we want to set the interval that ist neccessary to built up
+ranges of location-references to three successors, we need an
+appropriate description for this. We call these kind of information
+\emph{index-rule}. This module introduces rules that may be used in
+the index-style with specific parameters. Different types of rules
+need different parameters an are invoked during different steps of the
+index processing. We describe definitions that handle the whole
+process. All rules are bound to an indexclass.
+
+
+
+\subsection{Abstract Specification}
+
+
+\subsubsection{Definition}
+
+
+\subsubsection{Operation}
+
+
+\subsection{Concrete Specification}
+
+\subsubsection{Class \sans{index-rule}}
+
+This class is intended as a virtual base-class that contains all
+neccessary information on rules. Other types of rules are subclasses
+of class [[index-rule]].
+
+<<class index-rule>>=
+(defclass index-rule () ())
+@
+
+
+\subsubsection{\sans{merge-to} - rule}
+
+The \textsf{merge-to}-rule is neccessary to define that
+location-references owning a certain optical attribute may be used to
+build up ranges in another optical attribute. Therefore we need two
+slots [[source-attr]] and [[target-attr]] to describe the relationship
+between them.
+
+<<class rule-merge-to>>=
+(defclass rule-merge-to (index-rule)
+    ((source-attr :reader get-source-attr :initarg :source-attr)
+     (target-attr :reader get-target-attr :initarg :target-attr)))
+
+(defun make-rule-merge-to (source-attr target-attr)
+  (make-instance 'rule-merge-to
+                 :source-attr source-attr
+                 :target-attr target-attr))
+
+(defmethod show ((rule rule-merge-to))
+  (format t "{`~A' merge-to `~A'}"
+          (get-source-attr rule) (get-target-attr rule)))
+@
+
+To apply a \textsf{merge-to}--rule on a location-reference we look if
+the [[source-attr]] of the rule is equivalent to the [[optattr]] of
+the location-class. In this case we build up a new virtual
+location-reference based upon the original location-reference, with
+its optical attribute turned into the secondary attribute of the
+virtual attribute and its optical attribute taken from [[target-attr]]
+of the rule.
+
+<<class rule-merge-to>>=
+(defun apply-merge-to-rule-on-locref (merge-to-rule locref)
+  (let ((original-attr (get-optattr locref)))
+    (if (equal original-attr (get-source-attr merge-to-rule))
+        (make-virtual-locref locref
+                             (get-target-attr merge-to-rule)
+                             original-attr)
+      'nil)))
+@
+
+
+\subsubsection{\sans{Separated- / Mixed-Sorting} - rule}
+
+This rule is intended to subgroup a list of location-references into
+groups of separated or mixed attributes. The rule is specified by a list
+possibly containing sublists whose elements are strings of
+attribute-names. For example we could specifiy [[(("bold" "default")
+"italic")]] to group [[bold]] and [[default]] as a mixed attribute
+separated from the normal attribute [[italic]].  The nesting-level
+mustn't be more than one, sublists in sublists aren't allowed.
+Additionaly no attribute should occour more than once in the whole
+list.
+
+When we instantiate the rule we calculate equvalence-classes of the
+attributes according to the specified attribute-list. This is done in
+[[make-rule-separated-mixed]].
+
+<<class rule-separated-mixed>>=
+(defclass rule-separated-mixed (index-rule)
+    ((attribute-list  :reader   get-attribute-list  :initarg :attribute-list)
+     (attribute-table :accessor get-attribute-table
+                      :initform (make-hash-table :test #'equal))))
+@
+
+The process is as follows. We create a hash-table that holds as its
+key the optical attribute and as its element a cons-cell (\emph{group
+  number}, \emph{type}) with \emph{type} $\in
+\{$\textsf{separated},\textsf{mixed}$\}$. We scan the attribute-list
+and increment [[ord-counter]] every time we encounter a new element.
+If we encounter a list we need to iterate over all its elements and
+add their values to the hash-table. If we encounter a list we also add
+it to the hash-table with an element distinct from all others.
+
+Function [[get-sepmix-ordnum]] delivers the number of the
+equivalence-class of [[optattr]] in [[rule]]. Function
+[[sepmix-type-mixed-p]] returns [[t]] if the group type is
+\textsf{mixed}, otherwise it returns [[nil]].
+
+<<class rule-separated-mixed>>=
+(defun make-rule-separated-mixed (attribute-list)
+  (let* ((ord-counter 0)
+         (rule (make-instance 'rule-separated-mixed
+                              :attribute-list attribute-list))
+         (attribute-table (get-attribute-table rule)))
+    (mapcar #'(lambda (x)
+                (incf ord-counter)
+                (cond ((listp x)
+                         (mapcar #'(lambda (optattr)
+                                     (setf (gethash optattr attribute-table)
+                                           (cons ord-counter 't)))
+                                 x))
+                      (t (setf (gethash x attribute-table)
+                               (cons ord-counter 'nil)))))
+            attribute-list)
+    (setf (get-attribute-table rule) attribute-table)
+    rule))
+
+(defmethod show ((rule rule-separated-mixed))
+  (format t "{separated-mixed~%    ")
+  (show (get-attribute-list rule))
+  (format t "~%    ")
+  (maphash #'(lambda (key element)
+               (format t "(~A : ~A . ~A) "
+                       key (car element)
+                       (if (cdr element) "mixed" "separated")))
+           (get-attribute-table rule))
+  (format t "~%}")
+  (values))
+
+(defun get-sepmix-ordnum (optattr &optional (rule (get-separate-mixed-rule)))
+  (car (gethash optattr (get-attribute-table rule))))
+
+(defun sepmix-type-mixed-p (optattr &optional (rule (get-separate-mixed-rule)))
+  (cdr (gethash optattr (get-attribute-table rule))))
+@
+
+To apply the rule on a list of location-references use
+
+<<class rule-separated-mixed>>=
+(defun apply-separated-mixed-rule (locref-list)
+  (split-list #'(lambda (locref)
+                  (get-sepmix-ordnum (get-optattr locref)))
+              #'<
+              locref-list))
+@
+
+<<*>>=
+(provide 'idxrule)
+(require 'base)
+(use-package 'clos)
+
+<<class index-rule>>
+<<class rule-merge-to>>
+<<class rule-separated-mixed>>
+@
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 19:23:06  kehr
+%% Initial source checkin.
+%%
+%% Revision 1.4  1995/07/27  23:59:03  kehr
+%% Added support for keword-markup.
+%%
+%% Revision 1.3  1995/07/25  11:03:19  kehr
+%% Added separation of location-references into seprated/mixed-groups.
+%% Modified debug-output of locref-groups to reflect the real class-type
+%% of the groups. Verified the process of generating these groups.
+%%
+%% Revision 1.2  1995/07/24  16:33:44  kehr
+%% Added subgrouping of location-references with the same ordnum. Now
+%% I'll start to join ranges.
+%%
+%% Revision 1.1  1995/07/23  20:48:34  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%%

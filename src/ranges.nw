@@ -1,0 +1,345 @@
+%%
+%% This file is part of the `makeindex4'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: ranges
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Module \sans{ranges}}
+
+\subsection{Introduction}
+
+\subsection{Abstract Specification}
+
+
+\subsubsection{Definition}
+
+
+\subsubsection{Operation}
+
+
+
+\subsection{Concrete Specification}
+
+
+\subsubsection{Class \sans{location-range}}
+
+Class \textsf{location-range} contains the following slots. Slot
+[[length]] specifies the length of the current range. [[optattr]]
+holds the main optical attribute which will be used for
+markup-purposes. [[lbounds]] and [[rbounds]] are lists of
+location-references. Because we operate on sorted equivalence-classes of
+location-references we can declare [[lbounds]] as a [[:reader]]-slot.
+
+The initial value of the range-length is set to [[2]] because we
+assume that a range is only created with two [[same-ordnum-group]]s of
+that are joinable and therefore successors. In this case the
+range-length is exactly 2.
+
+<<class location-range>>=
+(defclass location-range ()
+    ((length   :accessor get-length   :initform 2)
+     (lbounds  :reader   get-lbounds  :initarg :lbounds)
+     (rbounds  :accessor get-rbounds  :initarg :rbounds)
+     (optattr  :reader   get-optattr  :initarg :optattr :initform "")))
+
+(defun make-location-range (lbounds rbounds)
+  (make-instance 'location-range :lbounds lbounds :rbounds rbounds))
+
+(defun increment-range-length (locrange)
+  (incf (get-length locrange)))
+@
+
+<<markup methods>>=
+(defmethod markup-object ((range        location-range)
+                          (markup-list  list)
+                          (context-list list)
+                          (env-stack    list))
+  (markup-object (get-lbounds range) markup-list context-list env-stack)
+  (mprint "-")
+  (markup-object (get-rbounds range) markup-list '() env-stack))
+@
+
+<<pretty print>>=
+(defun pprint-location-range (s range)
+  (pprint-logical-block
+   (s nil :prefix "[" :suffix "]")
+   (pprint-indent :block 2 s)
+   (format s "range - length: ~D" (get-length range))
+   (pprint-newline :mandatory s)
+   (pprint-logical-block
+    (s nil :prefix "<" :suffix ">")
+    (write-string "lbounds" s)
+    (pprint-newline :mandatory s)
+    (write (get-lbounds range) :stream s)
+    (pprint-indent :block -1 s)
+    (pprint-newline :mandatory s))
+   (pprint-newline :mandatory s)
+   (pprint-logical-block
+    (s nil :prefix "<" :suffix ">")
+    (write-string "rbounds" s)
+    (pprint-newline :mandatory s)
+    (write (get-rbounds range) :stream s)
+    (pprint-indent :block -1 s)
+    (pprint-newline :mandatory s))
+   (pprint-indent :block -1 s)
+   (pprint-newline :mandatory s)))
+
+(set-pprint-dispatch 'location-range #'pprint-location-range)
+@
+
+
+\subsection{Successor-handling}
+
+The predicate \emph{successor-p}$(l_1,l_2)$ with $l_1,l_2$
+location-references, defines if $l_2$ is a \emph{successor} of $l_1$
+and they therfore are joinable to a range. The following rules are
+neccessary to fulfill the predicate.
+\begin{enumerate}
+\item $l_1$ and $l_2$ belong to the same location-class.
+\item \emph{ordnum}$(l_1)$ $<$ \emph{ordnum}$(l_2)$.
+\item The optical attribute of $l_1$ is equal to the optical attribute
+  of $l_2$.
+\item They are not marked explicitely in the \emph{not-successor-table}.
+\end{enumerate}
+Additionally one of the following rules must be true.
+\begin{enumerate}
+\item They are explicitely marked in the successor-table as
+  successors.
+\item All of the following rules match.
+  \begin{enumerate}
+  \item The layer-depth $d$ of both references is equal.
+  \item $n_1\ldots n_{d-1}$ of both ordnums are equal, the ordnum of
+    layer $d$ of $l_2$ is successor of layer $d$ of $l_1$.
+  \end{enumerate}
+\end{enumerate}
+%%
+If \emph{successor-p}$(l_1,l_2)$ is true and for layer $d$ exists a
+join-rule-definition in the location-class description, then we call
+$l_1$ and $l_2$ \emph{joinable}. While processing the
+location-references we create groups for the separated- and
+mixed-attributes which theirselves include groups of
+location-references with the same ordnum. At this moment the
+location-references we need to process already belong to the same
+location-class. Also the location-references are sorted based on the
+total order.
+
+We define a predicate [[successor-p]] that returns [[t]] if
+location-reference [[locref-2]] is successor of [[locref-1]]. The
+above mentioned constraint (1) that both location-references are
+belonging to the same location-class must be fulfilled. It is
+fulfilled, when called from inside the range-processing, otherwise the
+result will be unpredictable.
+
+For the moment we ignore the successor-tables, but this can be
+implemented quite easily.
+
+<<function successor-p>>=
+(defun successor-p (locref-1 locref-2)
+  (and (equal (get-optattr locref-1)
+              (get-optattr locref-1))
+       (ordnum-successor-p locref-1 locref-2)))
+@
+
+We define a function that scans the ordnum-lists of two
+location-references. If the ordnums match for all higher levels
+excluding the last one and the last level fulfills the
+successor-predicate on numbers we look up the location-class
+description if this layer is defined as a valid joining-level. If this
+is true, we define the predicate as true, otherwise it is false. So
+this predicate also tests for joinability of two location-references.
+
+<<function ordnum-successor-p>>=
+(defun ordnum-successor-p (locref-1 locref-2)
+  (let* ((ordnums-1 (get-ordnums locref-1))
+         (ordnums-2 (get-ordnums locref-2))
+         (length-1 (length ordnums-1))
+         (length-2 (length ordnums-2)))
+    (and (= length-1 length-2)
+         (equal (butlast ordnums-1) (butlast ordnums-2))
+         (equal (1+ (car (last ordnums-1)))
+                (car (last ordnums-2)))
+         (joinable-on-layer-x-p (get-locclass locref-1) length-1))))
+@
+
+<<successor-handling>>=
+<<function successor-p>>
+<<function ordnum-successor-p>>
+@
+
+\subsection{Building of ranges}
+
+We describe the process of building ranges as follows.
+Given is a object of type [[locref-separated-group]] or
+[[locref-mixed-group]]. We define a generic function [[build-ranges]]
+and define methods for both object-types.
+
+<<build ranges>>=
+(defgeneric build-ranges (locref-group))
+@
+
+A [[locref-separated-group]] consists of objects of type
+[[locref-same-ordnum-group]] which contain location-references and
+virtual location-references. All of those references have the same
+optical attribute. The process is as follows. We iterate over the list
+and compare pairwise elements $i$ and $i+1$ if they are successors of
+each other and if they are joinable. To test if they are joinable we
+define a generic function [[joinable-p]] and bind methods for
+[[location-range]] and [[locref-same-ordnum-group]] as first argument
+and [[locref-same-ordnum-group]] as second argument.
+
+This function must return a object of type [[location-range]] if a
+join was successful, otherwise [[nil]].
+
+<<build ranges>>=
+(defgeneric joinable-p (left-bound right-element))
+@
+
+If such a pair is joinable, we create a [[location-range]] and store
+element $i$ into slot [[lbounds]] and element $i+1$ into [[rbounds]].
+We continue to test the [[rbounds]] with the next element in our list
+and try increase the right bound of the range until we reach an
+element that is not joinable with the range.
+
+Next step is to test whether the size of the range, stored and
+increased in [[length]], is greater or equal to the minimum value. We
+get the minimum value by calling [[get-minimum-range-length]].
+
+We use a simple kludge to manage the special handling for the end of
+the list. By adding the element [[t]] to the end and defining one more
+method for the generic function [[joinable-p]] that matches object
+[[t]] we handle the end of the list as if it were an unjoinable
+element by returning [[nil]].
+
+<<build ranges>>=
+(defmethod joinable-p ((x t) (y t))
+  'nil)
+@
+
+The method for building ranges looks like that.
+
+<<build ranges>>=
+(defmethod build-ranges ((locref-sep-grp locref-separated-group))
+  (let ((lbound        nil)
+        (saved-ordnums '())
+        (return-list   '())
+        (curr-locref   nil)
+        (min-range-len (get-minimum-range-length
+                        (get-locclass
+                         (car (get-members
+                               (car (get-members locref-sep-grp)))))))
+        )
+    (do ((same-ordnum-list (append (get-members locref-sep-grp) (list t))
+                           (cdr same-ordnum-list)))
+        ((endp same-ordnum-list))
+      (let ((curr-locref-grp (car same-ordnum-list)))
+        (if lbound
+            (let ((join-range (joinable-p lbound curr-locref-grp)))
+              (if join-range
+                  (progn
+                    (setq saved-ordnums (append saved-ordnums
+                                                (list curr-locref-grp)))
+                    (setq lbound join-range))
+                (progn
+                  (if (and (typep lbound 'location-range)
+                           (>= (get-length lbound) min-range-len))
+                      (setq return-list (append return-list
+                                                (list lbound)))
+                    (setq return-list (append return-list
+                                              saved-ordnums)))
+                  (setq lbound curr-locref-grp)
+                  (setq saved-ordnums (list curr-locref-grp)))))
+          (progn
+            (setq lbound curr-locref-grp)
+            (setq saved-ordnums (list curr-locref-grp))))))
+    (setf (get-members locref-sep-grp) return-list)
+    locref-sep-grp))
+@
+
+<<build ranges>>=
+(defmethod joinable-p ((range location-range)
+                       (same-ordnum-grp locref-same-ordnum-group))
+  (if (successor-p (car (get-members (get-rbounds range)))
+                   (car (get-members same-ordnum-grp)))
+      (progn
+        (increment-range-length range)
+        (setf (get-rbounds range) same-ordnum-grp)
+        range)
+    'nil))
+@
+
+<<build ranges>>=
+(defmethod joinable-p ((same-ordnum-grp-1 locref-same-ordnum-group)
+                       (same-ordnum-grp-2 locref-same-ordnum-group))
+  (if (successor-p
+       (car (get-members same-ordnum-grp-1))
+       (car (get-members same-ordnum-grp-2)))
+      (make-location-range same-ordnum-grp-1 same-ordnum-grp-2)
+    'nil))
+@
+
+<<build ranges>>=
+(defmethod build-ranges ((locref-mix-grp locref-mixed-group))
+  locref-mix-grp)
+@
+
+
+<<*>>=
+(provide 'ranges)
+(use-package 'clos)
+
+<<class location-range>>
+<<successor-handling>>
+<<build ranges>>
+<<pretty print>>
+<<markup methods>>
+@
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 19:23:10  kehr
+%% Initial source checkin.
+%%
+%% Revision 1.5  1995/07/28  10:41:19  kehr
+%% Added simple markup for location-references and ranges. Currently
+%% exists no support for differen layer-markup. A location-reference is
+%% always printed as a whole.
+%%
+%% Revision 1.4  1995/07/27  14:36:45  kehr
+%% Added support for joining of locref-separated-groups.
+%%
+%% Revision 1.3  1995/07/26  16:19:56  kehr
+%% Added support for the pretty-printer module. Output of data-structures
+%% now looks more readable.
+%%
+%% Revision 1.2  1995/07/25  11:03:19  kehr
+%% Added separation of location-references into seprated/mixed-groups.
+%% Modified debug-output of locref-groups to reflect the real class-type
+%% of the groups. Verified the process of generating these groups.
+%%
+%% Revision 1.1  1995/07/23  20:48:36  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%%

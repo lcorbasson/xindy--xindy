@@ -1,0 +1,176 @@
+%%
+%% This file is part of the `makeindex4'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: user-interface
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Module \sans{user-interface}}
+
+\subsection{Introduction}
+
+This module contains all functions that are available in the user
+interface.
+
+
+\subsection{Abstract Specification}
+
+
+\subsubsection{Definition}
+
+
+\subsubsection{Operation}
+
+
+
+\subsection{Concrete Specification}
+
+
+\subsubsection{Definition of alphabets and enumerations}
+
+This method adds a new basetype to the list of defined basetypes.
+
+<<user-interface>>=
+(defmethod basetype (name symbols &key (idxcls-name *active-idxcls-name*))
+  (add-indexclass idxcls-name (make-alphabet name symbols)))
+@
+
+This is a convenience-method to allow defining one-letter-alphabets by
+just giving on string whose characters define a symbol.
+
+<<user-interface>>=
+(defmethod basetype-by-string (name string
+                               &key (idxcls-name *active-idxcls-name*))
+  (basetype name (string-to-list string) :idxcls-name idxcls-name))
+@
+
+Now comes the general function to create enumeration-classes. Because
+class [[enumeration]] serves as a base-class we give the name of the
+class we like to make an instatiation of as a symbol. Have a look at
+the instantiations made in file [[idxstyle]] to see an example.
+
+<<user-interface>>=
+(defun enumeration (enum-class enum-name
+                    &optional (base-alphabet "")
+                    &key (idxcls-name *active-idxcls-name*))
+  (add-indexclass idxcls-name
+                  (make-enumeration enum-class enum-name base-alphabet)))
+@
+
+\subsubsection{Composition of location-classes}
+
+The user-interface allows the user to compose a description of a
+location-class. We will hide this in future versions by an additonal
+layer of abstraction. Therefore we use the prefix [[compose-]] for all
+those functions that we nedd to compose a location-class.
+
+If no joining-layers are specified it defaults to the last layer of
+the compose location-class. We use function [[num-of-basetypes]] to
+calculate the number of basetypes defined in the structure.
+
+<<user-interface>>=
+(defun compose-location-class (name
+                               layers
+                               &key
+                               (join-layers (num-of-basetypes layers))
+                               (indexclass *active-idxcls-name*))
+  (add-indexclass indexclass
+                  (checked-make-location-class name layers
+                                               join-layers)))
+@
+
+\paragraph{Basetypes and separators}
+
+<<user-interface>>=
+(defun compose-basetype (name &optional
+			      (markup (make-locref-layer-markup)))
+  (let ((base (find-basetype name)))
+    (if (null base)
+        (format t "compose-basetype: unknown basetype `~A' !~%" name)
+      (make-loccls-layer base markup))))
+
+(defun compose-separator (separator &optional
+				    (markup (make-locref-layer-markup)))
+  (make-loccls-separator separator markup))
+@
+
+
+\subsubsection{Markup}
+
+<<user-interface>>=
+(defun keyword-markup (&rest arguments
+                       &key (indexclass *active-idxcls-name*)
+		       &allow-other-keys)
+  (add-indexclass indexclass
+                  (apply #'make-keyword-layer-markup arguments)))
+@
+
+\subsubsection{Indexentries}
+
+<<user-interface>>=
+(defun idxent (locref key &optional (optattr "default"))
+  (gen-indexentries :locref-str locref
+                    :merge-key key
+                    :sort-key  key
+                    :print-key key
+                    :optattr optattr))
+@
+
+\subsubsection{Index-rules}
+
+The function [[merge-to]] is used as the external interface to add a
+rule to the active indexclass.
+
+<<user-interface>>=
+(defun merge-to (source-attr target-attr)
+  (add-indexclass *active-idxcls-name*
+                  (make-rule-merge-to source-attr target-attr))
+  (values))
+@
+
+To specify a \textsf{separated/mixed}-rule and add it to the currently
+active index use the following function.
+
+<<user-interface>>=
+(defun separated-mixed (attribute-list)
+  (set-indexclass *active-idxcls-name*
+                  (make-rule-separated-mixed attribute-list)))
+@
+
+
+
+
+<<*>>=
+(provide 'intface)
+(use-package 'clos)
+(require 'idxclass)
+
+<<user-interface>>
+@
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 19:23:08  kehr
+%% Initial source checkin.
+%%
+%%

@@ -21,4 +21,127 @@ Fri Oct 13 17:58:06 1995  Roger Kehr  (kehr@spelunke)
 	  TeX-source that is spread over multiple files. The modified
 	  version now is part of the config-directory.
 
+===========================================================================
+
+Mon Oct 16 17:49:43 1995  Roger Kehr  (kehr@spelunke)
+
+It was used when I developed at home on my small Linux-box. After end of
+July and mid of October I spend some days for holidays in Portugal and had
+to learn afterwards for my "Operating System" exam. Today I presented the
+Theoretical work and now its time to continue implementing....
+
+Here follows the old ChangeLog (its in german).
+
+===========================================================================
+
+Fri Jul 28 00:53:27 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Ich habe noch ein einfaches Markup für die Lokationsreferenzen
+	  hinzugefügt. die Markup-Einträge bei der
+	  Lokationsklassenspezifikation werden aber noch nicht verarbeitet.
+
+	* Das Markup für die Stichworte der Indexeinträge ist
+	  fertiggestelt. Das Verfahren läßt sich wohl prinzipiell auch für
+	  die Lokationsreferenzen übertragen.
+
+Thu Jul 27 15:28:48 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Das Ermitteln von Bereichen ist fast fertig. Ich habe mich fürs
+	  erste auf die separated-Gruppen beschränkt, da mir im Moment
+	  noch nicht ganz klar ist, wie es dort funktioniert. Die Theorie
+	  dafür muß nochmal überarbeitet werden.
+
+	  Mir ist aufgefallen, das die locref-separated-groups im Prinzip
+	  nichts anderes sind als eine virtuelle Lokationsreferenz, die
+	  mehr als ein sekundäres optisches Attribut enthalten kann. Sie
+	  stellt eine Zusammenfassung mehrerer (virtueller)
+	  Lokationsreferenzen zu einer Meta-virtuellen-Lokationsreferenz
+	  dar. Ich glaube, daß man dort eine Umstrukturierung vornehmen
+	  kann, die ganze Sache zu vereinfachen.
+
+Wed Jul 26 17:16:58 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Ich habe gestern und heute mit dem XP-pretty-printer rumgespielt
+	  und mich dabei übel verzettelt, weil ich mit dem dispatching
+	  einige Probleme hatte. Ich habe allerdings den wichtigsten Teil
+	  meiner Datenstrukturausgabe auf pretty-printing umgestellt. Ich
+	  muß mich jetzt mal wieder an die Bereichszusammenfassung
+	  dranmachen.
+
+Sun Jul 23 15:10:40 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Die Lokationsverarbeitung wurde um das Gruppenkonzept erweitert.
+	  Dabei macht sich zwar der CLOS-Overhead bemerkbar, aber die
+	  Strukturierung gestaltet sich wesentlich einfacher. Des weiteren
+	  ist die Unterteilung in die Separate/Mixed-Gruppen hinzugenommen
+	  worden und es muß jetzt die Unterteilung in Gruppen mit gleicher
+	  Ordnungszahl implementiert werden, um endlich zur
+	  Bereichsbildung zu kommen.
+
+	* Habe gerade die merge-to-Regel implementiert und werde danach
+	  die Sortierung der Lokationsreferenzen mit den virtuellen
+	  Attributen bearbeiten.
+
+Sat Jul 15 21:37:06 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Die Sortierung der indexeinträge eines Indexes (Sortierung des
+	  Indexschlüssels) ist fertiggestellt. Des weiteren (seit eben
+	  weiß ich, daß man es auseinander schreibt) Funktioniert das
+	  Gruppieren in die einzelnen Lokationsklassen.
+
+Wed Jul 12 00:25:49 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Hui, also ich habe die Indexklassen umstrukturiert. Momentan
+	  werden sie als einfache assoc-Liste in einer globalen Variaben
+	  verwaltet und Zugriff erfolgt nur noch über ihren Namen. Damit
+	  ist die Datenstruktur komplett aufgebaut.
+	  Der Index ist jetzt als slot in der zugehörigen Indexklasses
+	  realisiert. Ich habe das Einfügen der Indexeinträge in die
+	  entsprechenden Indexe realisiert und soeben das Merged-Insert
+	  für die Indexeinträge fertiggestellt. Also: Das Aufbauen der
+	  Datenstrukturen ist fertig !
+
+Tue Jul 11 01:47:54 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Die Fehler, die noch durch die Umstelung kamen sind alle
+	  ausgebügelt und ich kann jetzt anfangen das Einlesen aller
+	  Informationen inkl. der Indexeinträge zu beenden.
+
+Mon Jul 10 01:54:50 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Ich habe heute das ganze System auf noweb umgestellt. Weiterhin
+	  habe ich einige Änderungen am Source vorgenommen und muß das
+	  ganze jetzt neu debuggen.
+
+Sat Jul  8 14:21:54 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Das Zuordnen einer Lokationsklasse zu einem String ist jetzt
+	  fertig. Es muß jetzt noch die Iteration über alle gegebenen
+	  Klassen hinzugefügt werden. Die Funktion
+	  `match-locclass-by-string' muß wenn möglich gesplittet werden,
+	  weil sie zu groß ist.
+
+	  Desweiteren habe ich Probleme mit der Namensvergabe, weil die
+	  reader-functions teilweise gleich mit meinen Methoden und
+	  sonstigen Funktionen heißen. Ich werde mir dafür noch mal
+	  Konventionen einfallen lassen und das ganze erst mal umstellen.
+
+	* Die grundlegenden Definitionen zu Alphabeten und Aufzählungen
+	  sind implementiert.
+
+	  Einfache Alphabete sind vom Benutzer konfigurierbar. Der
+	  Aufzählungstyp "Arabische Zahlen" ist fertiggestellt.
+
+	  Lokationsklassen können aus Basistypen und Trennzeichen
+	  zusammengestellt werden. Hierbei fehlt noch die Überprüfung auf
+	  die Verträglicheit der Basisalphabete. Metaklassen sind noch
+	  nicht definierbar.
+
+	  Als nächstes muß das Zuordnen von Lokationsreferenzen zu
+	  Lokationsklassen implementiert werden. Daraufhin sind
+	  Indexeinträge zu generieren. Die Vorarbeit bzgl. Des Index muß
+	  jetzt hinzugenommen werden.
+
+	  Alles in allem läuft es relativ flott. Hier und da gibts noch
+	  Stockungen, weil ich LISP halt noch nicht so gut kenne.
 
