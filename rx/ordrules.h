@@ -10,7 +10,6 @@
 #define _ORDRULES_H
 
 #include <stdio.h>
-#include <rc/portable.h>
 #include "mkind.h"
 #undef debug
 #include "debug.h"
@@ -111,7 +110,7 @@ int get_group PROTO(( char *sortkey ));
 char *get_heading PROTO(( int group ));
 
 int  add_rule PROTO(( RULE_TABLE table, char *left, char *right,
-		      int isreject, int ruletype ));
+		      int isreject, int ruletype, int run ));
 void apply_rules PROTO(( RULE_TABLE table, char *source, char *dest, size_t buflen ));
 void add_group PROTO(( GROUP_LIST *list, int group, char *letter ));
 
@@ -125,6 +124,9 @@ char* gen_mergekey  PROTO((char *key));
 
 /*
  * $Log$
+ * Revision 1.6  1999/07/30 08:37:38  kehr
+ * Intermediate checkin.
+ *
  * Revision 1.5  1997/10/20 11:23:14  kehr
  * New version of sorting rules. Sorting of more complex indexes (i.e.
  * French) is now possible.

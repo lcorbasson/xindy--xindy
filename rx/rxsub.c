@@ -7,7 +7,6 @@
 
  */
 
-#include <rc/portable.h>
 #include "rxsub.h"
 
 /*

@@ -14,7 +14,7 @@
 #ifndef RXSUB_H
 #define RXSUB_H
 
-#include <rc/portable.h>
+#include "mkind.h"
 #include <rx/rxposix.h>
 
 /* The error codes used by the rxsub-library */
@@ -88,7 +88,10 @@ PROTO( (char *substpat,
 
 /*
   $Log$
-  Revision 1.1  1996/03/26 17:31:04  kehr
+  Revision 1.2  1999/07/30 08:37:09  kehr
+  Intermediate checkin.
+
+  Revision 1.1  1996/03/26  17:31:04  kehr
   First check-in of the rx-support for clisp.
 
 
