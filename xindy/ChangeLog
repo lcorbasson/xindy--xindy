@@ -1,0 +1,502 @@
+Wed Jul 24 14:18:03 1996  Roger Kehr  <kehr@spock>
+
+	* Added support for IRIX-machines.
+	* Wrote a tutorial for xindy. Fixed some subtle bug when running
+	  the examples from the tutorial.
+	* Recompiled the binaries for Linux since the keyword-mappings did
+	  not always work correctly. Bug was caused due to an incorrect
+	  linking procedure which included parts of the GNU libc
+	  regexp-stuff.
+
+Thu Jul 18 18:08:39 1996  Roger Kehr  <kehr@spock>
+
+	* Some weeks later. The pre-release is finished. I don't want to
+	  talk too much, I'm only happy that it really happend!
+
+Mon Jun 24 11:01:51 1996  Roger Kehr  <kehr@spock>
+
+	* One more week and many new things are finished. The xindy
+	  wrapper shellscript is ready and works as expected. Additionally
+	  A new package `startup' was added to put some code for the
+	  startup of the whole system.
+	* In all modules minor changes were necessary to implement some
+	  processing output.
+	* Some handlers were added to catch errors appearing in the
+	  modules.
+	* A new directory-tree ./distrib was added. It reflects the
+	  structure of the distribution package. Makefile were written to
+	  allow automatic compilation of the Lisp-source and correct
+	  dumping of the system.
+
+Mon Jun 17 11:59:36 1996  Roger Kehr  <kehr@spock>
+
+	* Two weeks later. I have nearly written down the complete
+	  documentation. The linuxdoc-stuff is a hack, as its author
+	  tells, and I had to make several modifications. I also started
+	  to read something about SGML in general and I figured out the
+	  problems to write a document that should be mapped onto at least
+	  four different markups (LaTeX, HTML, GNU-Info, Plain-Text).
+	  Maybe I'll start a complete rewrite since the linuxdoc-stuff
+	  does not enough emphasise on structural markup. But it is a
+	  really good introduction to learn SGML by modification. Thanx!
+
+	  I just made clisp-1996-05-30 run under Solaris 2.4 and it passed
+	  some checks running xindy. So the third platform is available.
+
+	  The location-reference markup is finished and I need some real
+	  test-cases. Still missing is the TeX-style that I need to make
+	  the system usable with (La)TeX.
+
+Mon Jun  3 11:50:48 1996  Roger Kehr  <kehr@spock>
+
+	* I nearly finished the treeing of the location-references.
+	  Markups like
+
+	  	  Chapter 1 25, 37, 38; Chapter 2 13, 19, 22-25
+
+	  are now possible. For these cases the markup is really difficult
+	  to explain and should be interactively explored. Additionally I
+	  started to write down the documentation in SGML using the
+	  LinuxDoc-SGML environment. Already modified some tags for LaTeX
+	  and fixed minor bugs in conjunction with the GNUInfo backend.
+
+Mon May 27 20:58:17 1996    <kehr@eliade.hrz.th-darmstadt.de>
+
+	* Some weeks of hard work are finished. The markup is completely
+	  finished. The cross-references are fully implemented. The letter
+	  groups, too. The sort- and merge-rules for keywords seem to
+	  word. It's great! The indexstyle is nearly complete. Still
+	  missing is a good startup-script and the TeX-frontend
+	  (Joachim promised to make it for me). The print-key is still not
+	  implemented. It is very simple but I most think about the
+	  correct policy. Still missing is the building of
+	  location-reference trees. Maybe it is comparable to the
+	  indexentry trees, we'll see.
+
+	  The complete markup-scheme suits me fine. I like the way to
+	  describe how the index should look like. With the debugging mode
+	  turned on, everybody sees exactly what markup-entities are
+	  called and one can successively replace them with your own
+	  markup-tags. Maybe this was one of my best ideas. Now users can
+	  master the markup in an autodidactic and interactive way. More
+	  experience and suggests are welcome.
+
+Thu May  2 18:40:42 1996    <kehr@eliade.hrz.th-darmstadt.de>
+
+	* Made changes in all modules. The thing starts to work! It now
+	  reads and processes and markups an index. Great!
+
+Sun Apr 28 21:31:44 1996    <kehr@eliade.hrz.th-darmstadt.de>
+
+	* Ok, I'm back again. The second exam now passed as well. The
+	  Semester started already, but I've got some time to continue
+	  working on it. During the week I fixed some errors in the
+	  testsuite. Today I worked on the `markup'-module and it works
+	  really fine. I included a debugging of the macros and made some
+	  manual tests so far.
+
+Wed Mar 27 21:29:27 1996  Roger Kehr  <kehr@spock>
+
+	* Long, long ago I wrote my last ChangeLog. I passed one exam some
+	  days ago---the next one comes soon....
+
+	  Ok, I spent most of the time with clisp, its compilation and the
+	  handling of the foreign function interface. After experimenting
+	  with the regexp library from the clisp distibution I decided to
+	  move to the newer GNU Rx library. I wrote a regsub function in
+	  Lisp (the function was built by the program and evaluated later)
+	  I took one more look into the old makeindex3-project and
+	  discovered, that it might be better to include some parts of the
+	  source (written in C) into my project. The reasons were simple.
+	  First these parts were well tested and only minor modifications
+	  (that's a lie) were necessary to get it running under the Rx
+	  library. Additionally I wrote a `rxsub' routine (now in C) that
+	  implements the desired features im a more efficient way (it's
+	  damn fast!). Now I have a bunch of C-modules that are directly
+	  reachable from clisp.
+
+Wed Jan 31 16:11:50 1996  Roger Kehr  <kehr@spock>
+
+	* Made minor modifications to some parts of the source. Wrote some
+	  simple parser for the .aux-files that generates Lisp-expressions
+	  to be read into the kernel system.
+
+Wed Jan 17 17:21:56 1996  Roger Kehr  <kehr@spock>
+
+	* Had some ideas how to manage the markup. Just discussed about it
+	  with Joachim and we modeled the markup-scheme. I'm now able to
+	  continue work.
+
+	* Continued to describe the external interface of the modules.
+
+Mon Jan 15 20:17:42 1996  Roger Kehr  <kehr@spock>
+
+	* Today I had a discussion with the others. I presented the whole
+	  work done yet. Explained my solutions to the
+	  location-reference-handling. Next week we will meet to discuss
+	  the user-interface. We also discussed the markup. The markup
+	  will then be based on the markup of Joachims `stil'-interpreter
+	  which is a SGML-tool for document restructuring and markup. Its
+	  features are great.
+	  (3 hrs)
+
+	* Friday I worked a lot on the markup-stuff. Had several
+	  theoretical problems.
+	  (5 hrs)
+
+Wed Jan 10 17:42:11 1996  Roger Kehr  <kehr@spock>
+
+	* Today I started testing of the keyword-markup. Write a script to
+	  generate a bigger index for testing. Have some problems with
+	  expect. I don't know how to fix them, yet.
+	  (4 hrs)
+
+Wed Jan 10 00:09:15 1996    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Re-implemented the submodule `markup'.
+	  (3 hrs)
+
+  	* Checked the sources into the repository. Corrected minor bugs
+	  that caused some trouble with the test-suites. Extended some
+	  Imakefile features and found an error in DejaGnu.imk.
+	  Tested the re-implementation of the `index'-submodule.
+	  (3 hrs)
+
+Tue Jan  9 01:26:22 1996    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Re-implemented the submodule `index'.
+	  (2 hrs)
+
+Thu Jan  4 21:53:12 1996    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Yesterday I discovered that my topsort-solution was only the
+	  half of the real solution. Actually, I need a second topsort for
+	  the category-attibute-groups. I'd never thought that there are
+	  so many difficult details to implement. It's somehow frustrating
+	  to come one step further just to see the next problem to solve.
+	  I worked intensively the last days and it seems that I made only
+	  small progress -- Argh !
+
+	* Today I finished the processing of location-references. Made
+	  several additions to category-attributes. Building of ranges was
+	  carefully implemented and intensively tested by hand. I have no
+	  idea how well the implementation is and how fast processing of
+	  large indexes will be but the implemented steps are absolutely
+	  necessary and there is actually a lot of things to do to process
+	  location-references with a lot of rules.
+	  (7 hrs)
+
+Wed Jan  3 03:42:14 1996    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Totally tired...
+
+	* Its now 12:00 and I slept quite well. Yesterday I finished the
+	  merge-rule stuff. It was or more complicated than I expected. My
+	  specification contained a small hole that could only be solved
+	  by topsorting the drop-if-merged-rules. Now the dropping of
+	  location-references in the meaning of removing should also work.
+	  (10 hrs)
+
+	  It is always those little details that cause a lot of trouble...
+
+Sun Dec 31 19:01:08 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Made good progress today. Nearly finished the application of
+	  substitution-rules. Introduced all new rules and their hooks in
+	  the indexclass. Most of the work was done in submodule
+	  `indexclass'. I'm really astonished that I've got to work there
+	  that much. Made some improvements in the submodule `locref'.
+
+Sat Dec 30 20:00:19 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Puh, I'm tired. Today I was really f***ed because that typeless
+	  LISP caused myself to make several buggies. I finished the whole
+	  setup for substitution-rules including their hooks. I had to
+	  modify the category-attributes and the catattr-groups because
+	  there were some logical mistakes inside. It took me quite a
+	  while and somtimes I think that I'm really slow. But I shouldn't
+	  forget: I set up several pretty-printers, and detected some
+	  problems during the compilation process.
+	  (6 hrs)
+
+Fri Dec 29 18:59:40 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Today I started implementing the indexentry-processing. Re-used
+	  a lot of code. Made minor modifications in several modules. Most
+	  work was done in submodule `idxentry' that will be my working
+	  module for the next days. Finished the separation of
+	  location-references into location-class-groups. Next will be the
+	  application of substitute-if-double-rules.
+	  (5 hrs)
+
+Mon Dec 18 22:08:19 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Finished some tests in submodules `idxclass' and `idxrule'.
+	  Corrected some minor bugs and extended some regression tests.
+	  (3 hrs)
+
+Sun Dec 17 21:56:54 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* This weekend I reorganized module `idxstyle'. This had also many
+	  consequences on module `locref'. The design looks clearer now
+	  and makes much more sense.
+	* Added class `category-attribute'.
+	  Rewrote whole parts of submodule `idxrule'.
+	* Tested some new ideas for interactive test generation.
+	* All in all I made important design decisions (hope it was good)
+	  but the next steps will be straightforward ;-)
+	  (11 hrs)
+
+Fri Dec 15 18:12:59 1995  Roger Kehr  <kehr@spock>
+
+	* Finished two days of hard work. Implemented the
+	  transitive-hull-stuff and some conversion functions.
+	* Restructured all modules due to problems with the
+	  compilation-process.
+	* Added new pretty-printing functions.
+	* Seems that I found some kind of a bug with expect. Don't have
+	  time for a closer look.
+	  (9 hrs)
+
+Wed Dec 13 17:44:41 1995  Roger Kehr  <kehr@spelunke>
+
+	* I just finished the semi-formal description. Also implemented a
+	  transitive-hull algorithm and specified a data representation
+	  for it. It seems to work quite well. It was a lot of work and I
+	  spent a while to precisely describe what is going on. But I
+	  think implementation is now just a matter of time and less
+	  intellectual effort.
+	  (5 hrs)
+
+Mon Dec 11 18:18:20 1995  Roger Kehr  <kehr@spock>
+
+	* Today I extended the semi-formal description of the
+	  location-reference handling. Had a short talk with Joachim about
+	  the transitive-hull-problem with substitute-if-double-rules.
+	  (2 hrs)
+
+
+Sun Dec 10 23:18:16 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* This weekend I worked on the the problem of processing the list
+	  of location-references belonging to an indexentry. I wrote down
+	  some ideas on paper and it seems to work (at least
+	  theoretically). Today I now added a semi-formal description of
+	  the process into submodule `idxentry'. The task is now to think
+	  about some implementation details and to code the whole stuff.
+	  All in all I feel comfortable with it.
+	  (5 hrs)
+
+Thu Dec  7 19:16:05 1995  Roger Kehr  (kehr@spock)
+
+	* I renamed the module `idxclass' to `idxstyle'. Restructured the
+	  whole module from scratch. Had a discussion with Joachim and
+	  Gabor about my problems to implement the location-reference
+	  handling. I nearly finished all work with submodule `idxclass'.
+	  (Damn headaches, the last beer yesterday was one too much!)
+ 	  (3 hrs)
+
+Tue Dec  5 19:37:04 1995  Roger Kehr  (kehr@spock)
+
+	* Set up the new modules `index' and `idxclass'. Got a first sight
+	  and restructured great parts of them. Added some description to
+	  the intro.nw by describing the regression tests. It is now time
+	  to restructure the whole system. We'll see.
+	  (5 hrs)
+
+Sat Dec  2 20:24:53 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Today I finished the complete restructuring of submodule
+	  `locclass'. I took parts from `locref' into `locclass' to define
+	  a clear submodule-hierarchy. Now standard- and var-classes are
+	  parsed correctly. The introduced dispatching scheme is much
+	  easier to understand than the previous version. I tried to be
+	  very careful with the code documentation an set up more than 50
+	  regression tests for this topic. Now its time to go to a
+	  friends' diploma party (yeah!)
+	  (5 hrs)
+
+Wed Nov 29 17:46:17 1995  Roger Kehr  (kehr@spelunke)
+
+	* Today I introduced a new class hierarchy in the submodule
+	  `locclass'. I wrote several regression tests due to this change.
+	  I cleared the location-class< predicate and it is now internally
+	  hidden in the module `locref'. Wrote regression tests, too.
+	  These regression tests work quite well and I'll continue with
+	  the submodule `locref'.
+	  (3 hrs)
+
+Wed Nov 22 17:37:23 1995  Roger Kehr  (kehr@spock)
+
+	* Today I set up a small testsuite for the locref-module. I had
+	  some timeout problems with `expect' because clisp took more than
+	  10 seconds to load some files which caused expect to timeout. I
+	  changed the timeout-value and with a simple switch-model. Now
+	  everything works as `expect'ed :-)
+	  (2 hrs)
+
+Sun Nov 19 19:30:22 1995  Roger Kehr  (kehr@spock)
+
+	* Today I started to define two packages (locref and base) and
+	  tried to figure out, how their interaction works. I compiled
+	  DejaGnu for rs6000-platform. I want to use it for intensive
+	  regression tests. The module structure seems to work well right
+	  now and I hope to make further progress in the next week.
+	  (6 hrs)
+
+Tue Oct 17 16:50:45 1995  Roger Kehr  (kehr@spock)
+
+	* Today I continued to set up the Imake-environment. I had to add
+	  some Imake-templates for correct interaction of noweb and clisp.
+	  This took me quite a while but now everything works fine for me.
+	  The sources are completely checked in an I can start to hack :-)
+	  (5 hrs)
+
+Mon Oct 16 17:49:43 1995  Roger Kehr  (kehr@spelunke)
+
+	* I'll check in the whole project into CVS. Sources will be added
+	  later.
+
+Fri Oct 13 17:58:06 1995  Roger Kehr  (kehr@spelunke)
+
+	* Today I started setting up a completely new imake-environment
+ 	  for the xindy-project. After finally choosing the project-name
+ 	  and just before the theoretical project-presentation some
+ 	  housekeeping was absolutely necessary to keep everything under
+ 	  control.
+
+	  The complete project will be checked into CVS next week and I'll
+	  continue implementing the LISP-kernel.
+
+	  There will be a special directory for the paper (Report) and for
+	  the presentation (Presentation).
+
+	  I also changed the TeX-imake-module to be capable of managing a
+	  TeX-source that is spread over multiple files. The modified
+	  version now is part of the config-directory.
+
+===========================================================================
+
+Mon Oct 16 17:49:43 1995  Roger Kehr  (kehr@spelunke)
+
+        * The following part was used when I developed at home on my small
+          Linux-box. After end of July and mid of October I spend some
+          days for holidays in Portugal and had to learn afterwards for my
+          "Operating Systems" exam. Today I presented the Theoretical work
+          at my institute and now its time to continue implementing....
+
+	  Here follows the old ChangeLog (its in german).
+
+===========================================================================
+
+Fri Jul 28 00:53:27 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Ich habe noch ein einfaches Markup für die Lokationsreferenzen
+	  hinzugefügt. die Markup-Einträge bei der
+	  Lokationsklassenspezifikation werden aber noch nicht verarbeitet.
+
+	* Das Markup für die Stichworte der Indexeinträge ist
+	  fertiggestelt. Das Verfahren läßt sich wohl prinzipiell auch für
+	  die Lokationsreferenzen übertragen.
+
+Thu Jul 27 15:28:48 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Das Ermitteln von Bereichen ist fast fertig. Ich habe mich fürs
+	  erste auf die separated-Gruppen beschränkt, da mir im Moment
+	  noch nicht ganz klar ist, wie es dort funktioniert. Die Theorie
+	  dafür muß nochmal überarbeitet werden.
+
+	  Mir ist aufgefallen, das die locref-separated-groups im Prinzip
+	  nichts anderes sind als eine virtuelle Lokationsreferenz, die
+	  mehr als ein sekundäres optisches Attribut enthalten kann. Sie
+	  stellt eine Zusammenfassung mehrerer (virtueller)
+	  Lokationsreferenzen zu einer Meta-virtuellen-Lokationsreferenz
+	  dar. Ich glaube, daß man dort eine Umstrukturierung vornehmen
+	  kann, die ganze Sache zu vereinfachen.
+
+Wed Jul 26 17:16:58 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Ich habe gestern und heute mit dem XP-pretty-printer rumgespielt
+	  und mich dabei übel verzettelt, weil ich mit dem dispatching
+	  einige Probleme hatte. Ich habe allerdings den wichtigsten Teil
+	  meiner Datenstrukturausgabe auf pretty-printing umgestellt. Ich
+	  muß mich jetzt mal wieder an die Bereichszusammenfassung
+	  dranmachen.
+
+Sun Jul 23 15:10:40 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Die Lokationsverarbeitung wurde um das Gruppenkonzept erweitert.
+	  Dabei macht sich zwar der CLOS-Overhead bemerkbar, aber die
+	  Strukturierung gestaltet sich wesentlich einfacher. Des weiteren
+	  ist die Unterteilung in die Separate/Mixed-Gruppen hinzugenommen
+	  worden und es muß jetzt die Unterteilung in Gruppen mit gleicher
+	  Ordnungszahl implementiert werden, um endlich zur
+	  Bereichsbildung zu kommen.
+
+	* Habe gerade die merge-to-Regel implementiert und werde danach
+	  die Sortierung der Lokationsreferenzen mit den virtuellen
+	  Attributen bearbeiten.
+
+Sat Jul 15 21:37:06 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Die Sortierung der indexeinträge eines Indexes (Sortierung des
+	  Indexschlüssels) ist fertiggestellt. Des weiteren (seit eben
+	  weiß ich, daß man es auseinander schreibt) Funktioniert das
+	  Gruppieren in die einzelnen Lokationsklassen.
+
+Wed Jul 12 00:25:49 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Hui, also ich habe die Indexklassen umstrukturiert. Momentan
+	  werden sie als einfache assoc-Liste in einer globalen Variaben
+	  verwaltet und Zugriff erfolgt nur noch über ihren Namen. Damit
+	  ist die Datenstruktur komplett aufgebaut.
+	  Der Index ist jetzt als slot in der zugehörigen Indexklasses
+	  realisiert. Ich habe das Einfügen der Indexeinträge in die
+	  entsprechenden Indexe realisiert und soeben das Merged-Insert
+	  für die Indexeinträge fertiggestellt. Also: Das Aufbauen der
+	  Datenstrukturen ist fertig !
+
+Tue Jul 11 01:47:54 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Die Fehler, die noch durch die Umstelung kamen sind alle
+	  ausgebügelt und ich kann jetzt anfangen das Einlesen aller
+	  Informationen inkl. der Indexeinträge zu beenden.
+
+Mon Jul 10 01:54:50 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Ich habe heute das ganze System auf noweb umgestellt. Weiterhin
+	  habe ich einige Änderungen am Source vorgenommen und muß das
+	  ganze jetzt neu debuggen.
+
+Sat Jul  8 14:21:54 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Das Zuordnen einer Lokationsklasse zu einem String ist jetzt
+	  fertig. Es muß jetzt noch die Iteration über alle gegebenen
+	  Klassen hinzugefügt werden. Die Funktion
+	  `match-locclass-by-string' muß wenn möglich gesplittet werden,
+	  weil sie zu groß ist.
+
+	  Desweiteren habe ich Probleme mit der Namensvergabe, weil die
+	  reader-functions teilweise gleich mit meinen Methoden und
+	  sonstigen Funktionen heißen. Ich werde mir dafür noch mal
+	  Konventionen einfallen lassen und das ganze erst mal umstellen.
+
+	* Die grundlegenden Definitionen zu Alphabeten und Aufzählungen
+	  sind implementiert.
+
+	  Einfache Alphabete sind vom Benutzer konfigurierbar. Der
+	  Aufzählungstyp "Arabische Zahlen" ist fertiggestellt.
+
+	  Lokationsklassen können aus Basistypen und Trennzeichen
+	  zusammengestellt werden. Hierbei fehlt noch die Überprüfung auf
+	  die Verträglicheit der Basisalphabete. Metaklassen sind noch
+	  nicht definierbar.
+
+	  Als nächstes muß das Zuordnen von Lokationsreferenzen zu
+	  Lokationsklassen implementiert werden. Daraufhin sind
+	  Indexeinträge zu generieren. Die Vorarbeit bzgl. Des Index muß
+	  jetzt hinzugenommen werden.
+
+	  Alles in allem läuft es relativ flott. Hier und da gibts noch
+	  Stockungen, weil ich LISP halt noch nicht so gut kenne.
+
