@@ -72,7 +72,7 @@ compare: force
 	  echo
 	-@for tst in $(TESTS); do \
 	     if [ -x $$tst.sh ] ; then \
-	        $$tst.sh ; \
+	        ./$$tst.sh ; \
 	     else \
 		cmp -s $$tst.ind $$tst.cmp ;\
 	     fi ;\
