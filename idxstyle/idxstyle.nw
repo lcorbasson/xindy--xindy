@@ -60,19 +60,17 @@ currently active indexclass-name which is stored in
 [[*active-idxcls-name*]].\footnote{This is currently unused.}
 
 <<Global indexstyle definitions>>=
-(defvar *indexstyle* '())
 (defvar *active-idxcls-name* nil)
 @
 
 <<The indexstyle>>=
 (defun create-indexclass (idxcls-name)
   (setq *active-idxcls-name* idxcls-name)
-  (setf *indexstyle* (make-indexclass idxcls-name)))
-@ %def *indexstyle* *active-idxcls-name* create-indexclass
+  (setq *indexstyle* (make-indexclass idxcls-name)))
+@ %def *active-idxcls-name* create-indexclass
 
 <<Export-list of submodule \module{idxstyle}>>=
-(export '(*indexstyle*
-          *active-idxcls-name*
+(export '(*active-idxcls-name*
           create-indexclass))
 @
 
@@ -157,13 +155,18 @@ basetype-characters. Quiet easy, isn't it ?
   (use-package "CLOS")
   (use-package "XP")
   (require "locref")
-  (use-package "LOCREF"))
+  (use-package "LOCREF")
+  <<Use regexp-package if available>> ;; see submodule idxrule
+  )
 
 <<Global indexstyle definitions>>
+
 <<Submodule \module{idxrule}>>
 <<Submodule \module{idxclass}>>
 <<Submodule \module{indexstyle}>>
 <<Submodule \module{intface}>>
+
+<<Global indexstyle initialisation>>
 
 <<Pretty-printing>>
 
@@ -182,13 +185,16 @@ basetype-characters. Quiet easy, isn't it ?
 ("idxstyle" . "$Id$")
 @
 
-%% Local Variables:
-%% mode: latex
-%% TeX-master: t
-%% End:
-%%
 %% $Log$
-%% Revision 1.5  1996/01/31 15:29:22  kehr
+%% Revision 1.6  1996/03/13 16:50:47  kehr
+%% Ok, here I am. Included support for regular expressions. Minor changes
+%% in all other parts of this module. Made some tests but had some
+%% problems with LISP stack overflow errors. Don't know where they came
+%% from. We'll see. The next step is to implement the string replacement
+%% mechanism and set up extensive tests. Maybe I can use the tests from
+%% Henry Spencer's regexp library.
+%%
+%% Revision 1.5  1996/01/31  15:29:22  kehr
 %% Made a lot of modifications to the whole module. Currently I'm working
 %% on the implementation of the indexstyle-interface.
 %%
@@ -232,4 +238,9 @@ basetype-characters. Quiet easy, isn't it ?
 %%
 %% Revision 1.1  1995/07/09  18:14:28  kehr
 %% Initial checkin.
-%%
+
+%% Local Variables:
+%% mode: lisp
+%% TeX-master: t
+%% End:
+

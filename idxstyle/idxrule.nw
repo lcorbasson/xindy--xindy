@@ -129,10 +129,11 @@ counterpart was successfully joined into a range.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Category-attribute-groups}
+\label{sec:catattr-grps}
 
 This rule is intended to subgroup a list of location-references into
 groups of separated or mixed attributes. Mathematically we can express
-this as a function $\phi:C\rightarrow G$ defined on the sec $C$ of
+this as a function $\phi:C\rightarrow G$ defined on the set $C$ of
 category-attributes into the set %%
 \newcommand{\mathN}{\mbox{\normalfont\sffamily I\kern-0.1em\mbox{N}}}%%
 $G\subset \mathN$. The rule is specified by a list possibly containing
@@ -149,7 +150,7 @@ separated from the attribute group [[italic]].
   once in the whole list.
 
   This rule must always be specified. It is absolutely necessary to
-  define a order on the category-attribute and all used cat-attrs must
+  define an order on the category-attribute and all used cat-attrs must
   appear in this rule. So we use this rule as the implicit declaration
   of all category-attributes known by an indexclass.
 \end{note}
@@ -177,11 +178,7 @@ of set $C$ as the hash-key.
 
 (defmethod lookup ((catattr-grp catattr-groups)
                    (catattr-name string))
-  (let ((catattr (gethash catattr-name
-                          (get-attribute-table catattr-grp))))
-    (unless catattr
-      (error "undeclared category-attribute `~A' in method `lookup'" catattr-name))
-    catattr))
+  (gethash catattr-name (get-attribute-table catattr-grp)))
 @ %def catattr-groups make-catattr-groups add lookup
 
 <<Export-list of submodule \module{idxrule}>>=
@@ -196,62 +193,53 @@ of set $C$ as the hash-key.
 
 \no When initializing a \type{catattr-group-rule} the process is as
 follows. First we store the given attribute-list into slot
-[[attribute-list]]. The hash-table [[attribute-table]] holds as its
-key the category-attribute and as its element a cons-cell (\emph{group
-  number}, \emph{type}) with \emph{type} $\in
-\{$\textsf{single},\textsf{mixed}$\}$. Then we scan the attribute-list
-and increment [[catattr-grp-counter]] every time we encounter a new
-element.  If we encounter a simple string, we take it as the name of a
-category-attribute and store it with the current [[ord-counter]] into
-the hash-table. If we encounter a list we need to iterate over all its
-elements and add them into the hash-table with the current value of
-[[catattr-grp-counter]].
+[[attribute-list]]. This list must be \emph{well-formed}
+(\look{sec:intface:attributes} for exact details) like the following list
+\begin{center}
+  \texttt{( ("a" "b" "c")\ldots("x") )} .
+\end{center}
+Then we scan the attribute-list and increment [[catattr-grp-counter]]
+every time we encounter a new element. We then need to iterate over
+all its elements and add them into the hash-table with the current
+value of [[catattr-grp-counter]].
 
 \newcommand{\substitutes}{\textsf{subst}}
 
 Additionally the definition of the category-attributes defines the
 implicit substition-rules among the category-attributes. For all
 $c_1,\ldots,c_n\in C_i$ with $C_i$ category-group $i$ holds: $\forall
-j\in 1\ldots n-1: c_j$ \substitutes $c_{j+1}$. So when parsind an
+j\in 1\ldots n-1: c_j$ \substitutes $c_{j+1}$. So when parsing an
 attribute-group we add each relation (defined by a pair
 ([[prev-]][[catattr]] , [[cattattr]]) into the implict
-substitution-rule [[impl-subst-rule]] given as parameter.
+substitution-rule [[impl-subst-rule]] of the current indexclass.
 
 <<Class \class{catattr-groups}>>=
-(defmethod initialize-category-attributes ((attribute-list  list)
-                                           (catattr-grps    catattr-groups)
-                                           (impl-subst-rule substitution-rule))
-  (set-attribute-list attribute-list catattr-grps)
-  (let ((catattr-grp-counter 0)
-        (sort-ordnum-counter 0))
-    (mapcar
-     #'(lambda (x)
-         (incf catattr-grp-counter)
-         (cond ((listp x)
-                  (let ((prev-catattr nil))
-                    (mapcar
-                     #'(lambda (catattr)
-                         (cond ((stringp catattr)
-                                  (let ((ca (lookup catattr-grps catattr)))
-                                    (incf sort-ordnum-counter)
-                                    (set-sort-ordnum sort-ordnum-counter ca)
-                                    (set-catattr-grp-ordnum catattr-grp-counter ca)
-                                    (set-type 'catattr-mixed ca))
-                                  (when prev-catattr
-                                    (rel-insert impl-subst-rule
-                                                (lookup catattr-grps prev-catattr)
-                                                (lookup catattr-grps catattr)))
-                                  (setq prev-catattr catattr))
-                               (t (error "expected a string"))))
-                     x)))
-               ((stringp x) (let ((ca (lookup catattr-grps x)))
-                              (incf sort-ordnum-counter)
-                              (set-sort-ordnum sort-ordnum-counter ca)
-                              (set-catattr-grp-ordnum catattr-grp-counter ca)
-                              (set-type 'catattr-simple ca)))
-               (t (error "expected a string"))))
-     attribute-list))
-  catattr-grps)
+(defun initialize-category-attributes (attribute-list idxcls)
+  (let ((catattr-grps    (get-cat-attrs idxcls))
+        (impl-subst-rule (get-implicit-subst-rules idxcls)))
+    (set-attribute-list attribute-list catattr-grps)
+    (let ((catattr-grp-counter 0)
+          (sort-ordnum-counter 0))
+      (mapcar
+       #'(lambda (sublists)
+           (incf catattr-grp-counter)
+           (let ((prev-catattr nil))
+             (mapcar
+              #'(lambda (catattr)
+                  (cond ((stringp catattr)
+                           (let ((ca (lookup catattr-grps catattr)))
+                             (incf sort-ordnum-counter)
+                             (set-sort-ordnum sort-ordnum-counter ca)
+                             (set-catattr-grp-ordnum catattr-grp-counter ca)
+                             (when prev-catattr
+                               (rel-insert impl-subst-rule
+                                           (lookup catattr-grps prev-catattr)
+                                           (lookup catattr-grps catattr)))
+                             (setq prev-catattr catattr)))
+                        (t (error "~A  is not a string" catattr))))
+              sublists)))
+       attribute-list))
+    catattr-grps))
 @ %def initialize-category-attributes
 
 <<Export-list of submodule \module{idxrule}>>=
@@ -531,6 +519,296 @@ method twice.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsubsection{Keyword sort- and merge-rules}
+
+We have two different forms of keyword rules which can be described by
+a pair (\term{pattern}, \term{replacement}). The first one is the
+so-called \term{string-substitution} and is expressed by a pair of
+strings. If the pattern string matches the substring is substituted by
+its replacement. The second form id defined by a regular expression
+and a replacement template. The regexp describes the pattern that
+should be replaced by the replacement if a valid match was found.
+
+
+\paragraph{Class \class{string-keyword-rule}}
+
+<<Class \class{string-keyword-rule}>>=
+(defclass string-keyword-rule ()
+    ((pattern-string       :accessor get-pattern-string
+                           :initarg  :pattern-string)
+     (replacement-string   :accessor get-replacement-string
+                           :initarg  :replacement-string)))
+
+(defun make-string-keyword-rule (pattern replacement)
+  (make-instance 'string-keyword-rule
+                 :pattern-string pattern
+                 :replacement-string replacement))
+@ %def string-keyword-rule make-string-keyword-rule
+
+
+\paragraph{Class \class{regexp-keyword-rule}}
+
+For the implementation of the latter We use the GNU
+regular-expression-library [[regexp]] for our implementation. The
+\Lisp-system must be extended by this library. The feature form
+[[#+REGEXP]] is used to include the regular expression support. Since
+the user-interface defined in the standard distribution allows no
+low-level access we need to explicitly import the neccessary functions
+ourselves. The following chunk is included in the root-chunk of module
+\module{idxstyle}.
+
+<<Use regexp-package if available>>=
+(when (member "REGEXP"
+              (mapcar #'package-name
+                      (list-all-packages))
+              :test #'equal)
+  (pushnew 'REGEXP *features*)
+  (export 'REGEXP)
+  (use-package "REGEXP")
+  (import '(REGEXP::MREGCOMP         REGEXP::MREGERROR
+            REGEXP::MREGFREE-FINALLY REGEXP::NUM-MATCHES
+            REGEXP::REGEXEC
+            REGEXP::REGMATCH_T-RM_SO REGEXP::REGMATCH_T-RM_EO)))
+@
+
+
+
+<<Class \class{regular-expression}>>=
+#+REGEXP
+(defclass regular-expression ()
+    ((pattern-string       :accessor get-pattern-string
+                           :initarg  :pattern-string)
+     (replacement-string   :accessor get-replacement-string
+                           :initarg  :replacement-string)
+     (compiled-pattern     :accessor get-compiled-pattern
+                           :initarg  :compiled-pattern)
+     (replacement-function :accessor get-replacement-function
+                           :initarg  :replacement-function)))
+
+<<Build the replacement function>>
+<<Create an instance of regular-expression>>
+<<Split string with replacement-symbols>>
+<<Melt split-list>>
+@ %def regular-expression
+
+\no Creating an instance of a keyword-rule requires several steps:
+\begin{enumerate}
+\item We need to compile the pattern-string into a \term{compiled
+    pattern}. Since we always scan the whole list of regexp's to find
+  a match with a given keyword, a lazy-evaluation of compiling
+  regexp's is senseless. Therefore we compile the pattern immediately.
+\item If a match was possible we must be able to replace the match
+  with the specified replacement. The replacement is defined by a
+  string that may contain subexpr-replacement directives like
+  \verb=\0=\ldots\verb=\9= and \verb=\&=. The replacement function is
+  something like a specially constructed [[regsub]]-function which is
+  no available in the regexp-package.
+\end{enumerate}
+
+<<Create an instance of regular-expression>>=
+#+REGEXP
+(defun make-regular-expression (pattern replacement &optional (cflags 0))
+  (multiple-value-bind (errcode compiled-pattern)
+      (mregcomp pattern cflags)
+    (finalize compiled-pattern #'mregfree-finally)
+    (if (not (zerop errcode))
+        (progn
+          (warn "regexp: error in regexp `~A' is ~A.~%Ignoring this regexp!"
+                pattern (mregerror errcode compiled-pattern))
+          nil)
+        (let ((repl-func (make-replacement-func replacement)))
+          (make-instance 'regular-expression
+                         :pattern-string       pattern
+                         :replacement-string   replacement
+                         :compiled-pattern     compiled-pattern
+                         :replacement-function repl-func)))))
+@ %def make-regular-expression
+
+\no Building the replacement function requires several steps:
+The replacement string must be analysed an split into the parts that
+define a replacement directive (such as [[\1]] or [[\9]]) and
+ordinary strings. For example, the replacement string
+\begin{center}
+  \verb*|Replaces the match \1 with FOO\1|
+\end{center}
+can be split in to the parts \verb*|Replaces the match | which is a
+string, \verb*|\1| the replacement directive for the first matched
+subexpr, \verb*| with FOO| (another string) and finally again the
+\verb*|\1| the replacement directive.
+
+<<Build the replacement function>>=
+#+REGEXP
+(defun make-replacement-func (replacement)
+  (unless (stringp replacement)
+    (error "`~A' is not a string!" replacement))
+  (let* ((repl-func-body-args
+          (melt-strings (split-replacement-string replacement)))
+         (repl-func-list
+          (list 'LAMBDA '(STRING PREFIX SUFFIX SUBEXPR-LIST)
+                ;; the following it must always expand to something or
+                ;; the compilation might fail
+                (if (some #'numberp repl-func-body-args)
+                    nil;; for testing '(DECLARE (COMPILE))
+                    '(DECLARE (COMPILE) (IGNORE SUBEXPR-LIST)))
+                (apply #'nconc
+                       '(CONCATENATE 'STRING PREFIX)
+                       (mapcar #'(lambda (elt)
+                                   (cond ((stringp elt) elt)
+                                         ((numberp elt)
+                                            (list 'MATCH-STRING 'STRING
+                                                  (list 'AREF 'SUBEXPR-LIST elt)))))
+                               repl-func-body-args)
+                       '(SUFFIX) nil ;; nil is neccessary for the nconc/apply
+                       ))))
+    (coerce repl-func-list 'function)))
+
+;;(defmacro make-replacement-func (replacement)
+;;  (unless (stringp replacement)
+;;    (error "`~A' is not a string!" replacement))
+;;  (list #'(LAMBDA (SUBEXPR-LIST)
+;;       (CONCATENATE
+;;        ,@(mapcar #'(lambda (elt)
+;;                      (cond ((stringp elt) `,elt)
+;;                            ((numberp elt) `(MATCH-STRING
+;;                                             (AREF SUBEXPR-LIST ,elt)))))
+;;                  (melt-strings (split-replacement-string replacement))))
+;;       ))
+@ %def make-replacement-func
+
+\no Function [[split-replacement-string]] subdivides the replacement
+string into a list of subparts where each string represents itself and
+a number in the range of 0\ldots9 represents the $n$th subexpr. The
+above example yields
+\begin{center}
+  \verb*|("Replaces the match "|\verb| 1 |\verb*|" with FOO"|\verb| 1)|.
+\end{center}
+
+<<Split string with replacement-symbols>>=
+#+REGEXP
+(defun split-replacement-string (str)
+  (let ((slist '()))
+    (loop
+      (let ((pos (search "\\" str))
+            (len (length str)))
+        (when (= 0 (length str))
+          (return))
+        (if pos
+            (let ((subexpr (if (> (+ 2 pos) len) nil (elt str (1+ pos)))))
+              (cond
+                ((null subexpr)
+                   (setq slist (cons (subseq str 0 (1+ pos)) slist))
+                   (setq str (subseq str (+ pos 1))))
+                ((eql #\& subexpr)
+                   (setq slist (cons 0 (cons (subseq str 0 pos) slist)))
+                   (setq str (subseq str (+ pos 2))))
+                ((eql #\\ subexpr)
+                   (setq slist (cons "\\" (cons (subseq str 0 pos) slist)))
+                   (setq str (subseq str (+ pos 2))))
+                ((digit-char-p subexpr)
+                   (setq slist (cons (digit-char-p subexpr)
+                                     (cons (subseq str 0 pos) slist)))
+                   (setq str (subseq str (+ pos 2))))
+                (t (setq slist (cons (subseq str 0 (1+ pos)) slist))
+                   (setq str (subseq str (+ pos 1))))))
+            (progn
+              (setq slist (cons str slist))
+              (return)))))
+    (nreverse slist)))
+@ %def split-replacement-string
+
+\no Since the split algorithm in some cases yields a list with several
+unconcatenated strings follow each other function [[melt-strings]]
+tries to melt srings together where possible. Its a kludge, I know but
+I don't have time to combine both functions into one.
+
+<<Melt split-list>>=
+#+REGEXP
+(defun melt-strings (slist)
+  (if (null slist)
+      '()
+      (let ((res-list '())
+            (last-elt (car slist)))
+        (loop
+          (setq slist (cdr slist))
+          (cond
+            ((endp slist)
+               (push last-elt res-list)
+               (return))
+            ((and (stringp last-elt) (stringp (car slist)))
+               (setq last-elt (concatenate 'string last-elt (car slist))))
+            (t (push last-elt res-list)
+               (setq last-elt (car slist)))))
+        (nreverse res-list))))
+@ %def melt-strings
+
+\no So we now have a perfect regular expression and its time to
+implement some methods to use it. We introduce the methods
+[[regexp-match]] and [[regexp-substitute]].
+
+<<Class \class{regular-expression}>>=
+(defmethod regexp-match ((regexp regular-expression)
+                         (str    string))
+  (regexec (get-compiled-pattern regexp)
+           str
+           #.num-matches
+           0))
+@ %def regexp-match
+
+\no The following method takes a regular expression and a string and
+tries to find a match. If a match was found, the substitution defined
+by the replacement function is used to return a multiple value of the
+form
+\begin{center}
+  (\emph{result-string} \emph{original-string} \emph{start-of-subst}
+  \emph{end-of-subst})
+
+  or [[nil]] if no substitution was performed.
+\end{center}
+
+
+<<Class \class{regular-expression}>>=
+(defmethod regexp-match+substitute ((regexp regular-expression)
+                                    (str    string))
+  (multiple-value-bind (errcode matches)
+      (regexp-match regexp str)
+    (if (zerop errcode)
+        (let* ((match (aref matches 0))
+               (prefix (extract-string str 0 (regmatch_t-rm_so match)))
+               (suffix (extract-string str (regmatch_t-rm_eo match))))
+          (funcall (get-replacement-function regexp)
+                   str
+                   prefix suffix
+                   matches))
+        nil)))
+
+(defun extract-string (string start &optional (end (length string)))
+  (declare (inline))
+  (make-array (- end start)
+              :element-type 'string-char
+              :displaced-to string
+              :displaced-index-offset start))
+@ %def regexp-match+substitute extract-string
+
+
+
+<<Export-list of submodule \module{idxrule}>>=
+#+REGEXP
+(export '(regular-expression make-regular-expression
+          regexp-match regexp-match+substitute))
+@
+
+<<test>>=
+(load 'idxstyle)
+(use-package 'idxstyle)
+
+(setq rx (make-regular-expression "X\\(.*\\)X" "Y\\1Y"))
+(describe rx)
+(regexp-match+substitute rx "abcXxxxxXaXxXbd")
+(step (regexp-match+substitute rx "abcXxxxxXabd"))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{The submodule root}
 
 <<Submodule \module{idxrule}>>=
@@ -543,6 +821,8 @@ method twice.
 <<Class \class{substitution-rule}>>
 <<Class \class{catattr-groups}>>
 
+<<Class \class{string-keyword-rule}>>
+<<Class \class{regular-expression}>>
 <<Export-list of submodule \module{idxrule}>>
 @
 
@@ -598,7 +878,15 @@ method twice.
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1996/01/09 14:26:12  kehr
+%% Revision 1.2  1996/03/13 16:50:44  kehr
+%% Ok, here I am. Included support for regular expressions. Minor changes
+%% in all other parts of this module. Made some tests but had some
+%% problems with LISP stack overflow errors. Don't know where they came
+%% from. We'll see. The next step is to implement the string replacement
+%% mechanism and set up extensive tests. Maybe I can use the tests from
+%% Henry Spencer's regexp library.
+%%
+%% Revision 1.1  1996/01/09  14:26:12  kehr
 %% Major modifications.
 %%
 %% Revision 1.4  1995/12/07  13:21:29  kehr

@@ -138,14 +138,6 @@ var-classes) and cross-reference classes.
 
 \subsection{Location-attributes}
 
-%Attributes are involved in the markup and processing of
-%location-references. The indexstyle \emph{must} define a
-%\emph{default}-attribute.
-
-%\begin{istui}{define-location-attribute}{\emph{attr-name}}
-%  Introduces a new attribute.
-%\end{istui}
-
 Location-attributes are defined by the explicit definition of the
 \term{location-attribute groups}. A group is a sequence $A$ of
   attributes for that holds:
@@ -168,6 +160,21 @@ holds:
 \forall g_i,g_j\in G, a_i\in g_i, a_j\in g_j: i<j \Rightarrow
 \wedge~\func{sort-ordnum($a_i$)} < \func{sort-ordnum($a_j$)}
 \]
+
+\noindent The user interface is as follows:
+
+\begin{istui}{define-attributes}{\emph{list}}
+  Argument \emph{list} is a list of list of strings. The nesting level
+  mustn't be more than~2. So
+  \begin{center}
+    \texttt{(\ldots(\ldots)\ldots)}
+  \end{center}
+  is allowed, whereas
+  \begin{center}
+    \texttt{(\ldots( (\ldots)\ldots) )}
+  \end{center}
+  is not.
+\end{istui}
 
 
 \subsection{Keyword-rules}

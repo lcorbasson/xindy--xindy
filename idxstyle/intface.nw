@@ -165,11 +165,46 @@ NIL in cases where no switch keyword was found in EXPR.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Globals}
+\subsubsection{A specialized exporting mechanism}
 
-<<Global definitions>>=
-(defparameter *indexstyle* (create-indexclass "default"))
-@ %def *indexstyle*
+We need a mechanism for importing only interface-definitions from this
+package to other packages. Using [[export]] wouldn't be a good iead
+since it imports too many symbols to the package running the indexer.
+We define a symbol [[*user-interface-definitions*]] which is a
+importable list of symbols.
+
+It can be imported by other packages by calling
+\begin{center}
+  \texttt{(import idxstyle:*user-interface-definitions*)} .
+\end{center}
+
+<<User-interface-definitions>>=
+(defparameter *user-interface-definitions*
+  '(*indexstyle*
+    *default-minimum-range-length*
+    define-alphabet
+    define-location-class
+    define-attributes
+    ))
+@ %def *user-interface-definitions*
+
+<<Export-list of submodule \module{intface}>>=
+(export '*user-interface-definitions*)
+(export *user-interface-definitions*)
+@
+
+\subsubsection{Global definitions}
+
+The indexstyle itself will be initialised later after all functions are known.
+
+<<Global indexstyle definitions>>=
+(defparameter *indexstyle* nil)
+(defparameter *default-minimum-range-length* 3)
+@ %def *indexstyle* *default-minimum-range-length*
+
+<<Global indexstyle initialisation>>=
+(setq *indexstyle* (create-indexclass "default"))
+@
 
 \subsubsection{Helpers}
 
@@ -177,13 +212,16 @@ NIL in cases where no switch keyword was found in EXPR.
 (defun stringify (name)
   (etypecase name
     (symbol (symbol-name name))
-    (string name)))
+    (string name)
+    (number (write-to-string name))))
 @ %def stringify
 
 <<Check functions>>=
 (defun list-of-strings-p (x)
   (cond ((not (listp x)) nil)
-        ((every #'stringp x))))
+        ((every #'(lambda (elt)
+                    (or (stringp elt) (symbolp elt) (numberp elt)))
+                x))))
 @ %def list-of-strings-p
 
 \subsubsection{Alphabets}
@@ -198,17 +236,13 @@ NIL in cases where no switch keyword was found in EXPR.
            (error "missing argument <string-list> !"))
         ((not (list-of-strings-p string-list))
            (error "~A is not a list of strings" string-list))
-        (t (let ((name (stringify name)))
-             (when (lookup-basetype *indexstyle* name)
-               (warn "redefining alphabet `~A'" name))
-             (add *indexstyle*
-		  (make-alphabet name string-list)))))
-  nil)
+        (t `(LET ((NAME (STRINGIFY ',name)))
+             (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
+               (WARN "redefining alphabet `~A'" NAME))
+             (ADD *indexstyle*
+              (MAKE-ALPHABET NAME ',string-list))))))
 @ %def define-alphabet
 
-<<Export-list of submodule \module{intface}>>=
-(export 'define-alphabet)
-@
 
 \subsubsection{Location-classes}
 
@@ -224,33 +258,82 @@ NIL in cases where no switch keyword was found in EXPR.
              (error "missing argument <name> !"))
           ((null layer-list)
              (error "missing argument <layer-list> !"))
-	  ((null list-of-strings-p layer-list)
-	     (error "~A is not a list of strings" layer-list))
-	  (t (let ((name (stringify name))
-		   (layers (mapcar #'(lambda (x)
-				       (let* ((layer (stringify x))
-					      (basetype (lookup-basetype *indexstyle*
-									 layer)))
-					 (if basetype
-					     (make-loccls-layer basetype)
-					     (make-loccls-separator layer))))
-				   layer-list))
-		   )
-	       (when (lookup-location-class *indexstyle* name)
-		 (warn "redefining location-class `~A'" name))
-	       (add *indexstyle*
-		    (if var
-			(checked-make-var-location-class      name layers
-							      min-range-length)
-			(checked-make-standard-location-class name layers
-							      min-range-length)))
-	       )))))
+          ((not (list-of-strings-p layer-list))
+             (error "~A is not a list of strings" layer-list))
+          (t `(LET ((NAME (STRINGIFY ',name))
+                    (LAYERS (MAPCAR #'(LAMBDA (X)
+                                        (LET* ((LAYER (STRINGIFY X))
+                                               (BASETYPE
+                                                (LOOKUP-BASETYPE *indexstyle*
+                                                                 LAYER)))
+                                          (IF BASETYPE
+                                              (MAKE-LOCCLS-LAYER BASETYPE)
+                                              (MAKE-LOCCLS-SEPARATOR LAYER))))
+                                    ',layer-list)))
+               (WHEN (LOOKUP-LOCATION-CLASS *indexstyle* NAME)
+                 (WARN "redefining location-class `~A'" NAME))
+               (ADD *indexstyle*
+                ,(if var
+                     `(CHECKED-MAKE-VAR-LOCATION-CLASS NAME LAYERS
+                       ,min-range-length)
+                     `(CHECKED-MAKE-STANDARD-LOCATION-CLASS NAME LAYERS
+                       ,min-range-length)))
+               )))))
 @ %def define-location-class
 
+\subsubsection{Attributes}
+\label{sec:intface:attributes}
 
-<<Export-list of submodule \module{intface}>>=
-(export 'define-location-class)
-@
+<<Defining attributes>>=
+(defmacro define-attributes (&optional attr-list)
+  (cond ((null attr-list)
+           (error "missing argument <attribute-list> !"))
+        (t (let* ((wf-attr-list (make-well-formed-list attr-list))
+                  (plain-list (apply #'concatenate 'list wf-attr-list))
+                  )
+             `(PROGN
+               (MAPCAR #'(LAMBDA (CATATTR)
+                           (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
+                               (WARN "ignoring redefinition of attribute `~A' !"
+                                     CATATTR)
+                               (ADD *indexstyle*
+                                    (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
+                ',plain-list)
+               (INITIALIZE-CATEGORY-ATTRIBUTES ',wf-attr-list *indexstyle*))
+             ))))
+@ %def define-attributes
+
+\no Here we introduce a well-formed-list. In this term a well-formed
+list is a list containing only non-empty lists as elements. All
+elements of the latter lists must be strings. The input list must be a
+list containing symbols, strings, numbers and lists. The latter lists
+may only consist of symbols, strings and numbers. Function
+[[make-well-formed-list]] transforms ist argument into a well-formed
+list if possible and signals an error, if its argument is of wrong
+type or structure.
+
+<<Helpers>>=
+(defun make-well-formed-list (attr-list)
+  (mapcar #'(lambda (x)
+              (cond ((null x)
+                       (error "empty lists are not allowed !"))
+                    ((or (symbolp x) (stringp x) (numberp x))
+                       (list (stringify x)))
+                    ((listp x)
+                       (map-to-strings x))))
+          attr-list))
+
+(defun map-to-strings (slist)
+  (mapcar #'(lambda (x)
+              (cond ((null x)
+                       (error "empty lists are not allowed !"))
+                    ((or (symbolp x) (stringp x) (numberp x))
+                       (stringify x))
+                    ((listp  x)
+                       (error "nesting level too deep !"))
+                    (t (error "~A is not a string !" x))))
+          slist))
+@ %def make-well-formed-list map-to-strings
 
 
 \subsubsection{The submodule root}
@@ -258,12 +341,14 @@ NIL in cases where no switch keyword was found in EXPR.
 <<Submodule \module{intface}>>=
 ;; $Id$
 
-<<Global definitions>>
 <<Destructuring-switch-bind macro>>
 <<Defining alphabets>>
 <<Defining location-classes>>
+<<Defining attributes>>
 <<Helpers>>
 <<Check functions>>
+
+<<User-interface-definitions>>
 
 <<Export-list of submodule \module{intface}>>
 @
@@ -274,7 +359,15 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.5  1996/02/06 15:43:35  kehr
+%% Revision 1.6  1996/03/13 16:50:49  kehr
+%% Ok, here I am. Included support for regular expressions. Minor changes
+%% in all other parts of this module. Made some tests but had some
+%% problems with LISP stack overflow errors. Don't know where they came
+%% from. We'll see. The next step is to implement the string replacement
+%% mechanism and set up extensive tests. Maybe I can use the tests from
+%% Henry Spencer's regexp library.
+%%
+%% Revision 1.5  1996/02/06  15:43:35  kehr
 %% Added some code for define-alphabet. This code is buggy and must be
 %% rewritten due to macro failures.
 %%
@@ -289,11 +382,12 @@ NIL in cases where no switch keyword was found in EXPR.
 %% Rewrote module compilation with noweb and clisp.
 %%
 %% Revision 1.1  1995/12/07  18:14:26  kehr
-%% Renamed module `idxclass' to 'idxstyle'. Resturcturing module from scratch.
+%% Renamed module `idxclass' to 'idxstyle'. Resturcturing module from
+%% scratch.
 %%
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:
 

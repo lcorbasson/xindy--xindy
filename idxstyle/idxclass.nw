@@ -86,6 +86,10 @@ incrementally filled with more information.
                            :initform (make-catattr-groups))
      (locclasses           :accessor get-locclasses
                            :initform '())
+     (keyword-merge-rules  :accessor get-keyword-merge-rules
+                           :initform '())
+     (keyword-sort-rules   :accessor get-keyword-sort-rules
+                           :initform '())
      (succ-table           :accessor get-succ-table
                            :initform (make-hash-table))
 ;     (keyword-markup       :reader get-keyword-markup
@@ -99,11 +103,12 @@ incrementally filled with more information.
 @ %def indexclass make-indexclass
 
 <<Export-list of submodule \module{idxclass}>>=
-(export '(indexclass      make-indexclass
-          get-name        get-basetypes
-          get-cat-attrs   get-locclasses
+(export '(indexclass              make-indexclass
+          get-name                get-basetypes
+          get-cat-attrs           get-locclasses
+	  get-keyword-merge-rules get-keyword-sort-rules
           get-succ-table
-;          get-keyword-markup set-keyword-markup
+;          get-keyword-markup      set-keyword-markup
           <<Export-list for indexing rules>>
           ))
 @
@@ -553,7 +558,15 @@ hash-table representation via calling [[make-ready]].
 @
 
 %% $Log$
-%% Revision 1.8  1996/01/31 15:29:20  kehr
+%% Revision 1.9  1996/03/13 16:50:41  kehr
+%% Ok, here I am. Included support for regular expressions. Minor changes
+%% in all other parts of this module. Made some tests but had some
+%% problems with LISP stack overflow errors. Don't know where they came
+%% from. We'll see. The next step is to implement the string replacement
+%% mechanism and set up extensive tests. Maybe I can use the tests from
+%% Henry Spencer's regexp library.
+%%
+%% Revision 1.8  1996/01/31  15:29:20  kehr
 %% Made a lot of modifications to the whole module. Currently I'm working
 %% on the implementation of the indexstyle-interface.
 %%
