@@ -373,7 +373,6 @@ supporting cross-references is implemented in a separate function.
                          (gen-keyword-mergekey str))
                      list-of-strings)))
     (flush-ordrules-message-buffer)
-    ;;(gol t "~&merge-mapping: ~S -> ~S~%" list-of-strings res)
     res))
 
 #+:ORDRULES
@@ -384,7 +383,6 @@ supporting cross-references is implemented in a separate function.
                          (gen-keyword-sortkey str))
                      list-of-strings)))
     (flush-ordrules-message-buffer)
-    ;;(gol t "~&sort-mapping: ~S -> ~S~%" list-of-strings res)
     res))
 @ %def gen-keyword-mergekey-list gen-keyword-sortkey-list
 
@@ -813,6 +811,11 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
+%% Revision 1.28  1997/01/23 21:34:21  kehr
+%% Reincorporated (merge-to) rule into indexstyle.
+%% Found one bug in the creation of virtual attributes that made them be
+%% printed falsely. Now (merge-to) is back in the system.
+%%
 %% Revision 1.27  1997/01/23 19:04:40  kehr
 %% Minor changes.
 %%

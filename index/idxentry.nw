@@ -396,10 +396,20 @@ Process the following steps for each subset $L_i$ separately.
 <<Processing location-reference-groups>>=
 (defmethod process-group ((locref-cls-grp locref-class-group)
                           (idxcls indexclass))
+  (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
+					    "Inital location-refrence group:"))
   (apply-substitution-and-merge-rules locref-cls-grp idxcls)
+  (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
+					    "After subst- and merge-to-rules:"))
   (build-ranges-in-locref-class-group locref-cls-grp idxcls)
+  (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
+					    "After build-ranges:"))
   (remove-virtual-locrefs locref-cls-grp)
+  (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
+					    "After remove virtuals:"))
   (separate-into-catattr-groups locref-cls-grp)
+  (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
+					    "After separate attr-groups:"))
   locref-cls-grp)
 
 <<Apply substitution- and merge-rules>>
@@ -659,10 +669,13 @@ not cause any problems (hopefully).
                                    (let ((new-locref
                                           (make-layered-location-reference
                                            :virtual  t
-                                           :catattr  catattr
-                                           :ordnums  (get-ordnums locref)
                                            :layers   (get-layers locref)
-                                           :locclass (get-locclass locref))))
+                                           :ordnums  (get-ordnums locref)
+                                           :catattr  catattr
+                                           :locclass (get-locclass locref)
+					   :attribute (get-attribute locref)
+					   :string   (get-locref-string locref)
+					   )))
                                      (when (relation-p drop-if-merged-rules
                                                        (get-catattr locref)
                                                        catattr)
@@ -1135,6 +1148,7 @@ pretty-printer.
 <<Pretty-printing>>=
 #+:XP
 (defun pprint-locref-group (s grp name)
+  (format s "~%")
   (pprint-logical-block
    (s nil :prefix "(" :suffix ")")
    (write-string name s)
@@ -1184,7 +1198,12 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.24  1996/08/02 14:11:27  kehr
+%% Revision 1.25  1997/01/23 21:34:17  kehr
+%% Reincorporated (merge-to) rule into indexstyle.
+%% Found one bug in the creation of virtual attributes that made them be
+%% printed falsely. Now (merge-to) is back in the system.
+%%
+%% Revision 1.24  1996/08/02  14:11:27  kehr
 %% Corrected bug when printing the percentage-list.
 %%
 %% Revision 1.23  1996/07/24  13:49:26  kehr
