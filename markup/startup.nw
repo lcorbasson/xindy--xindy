@@ -55,9 +55,8 @@ platform.
   (handler-case
       (do-startup idxstyle rawindex output logfile)
     (error (condition)
-	   (oops "~&~%FATAL ERROR:~%")
-	   (apply-oops (simple-condition-format-string    condition)
-		       (simple-condition-format-arguments condition))
+	   (oops (simple-condition-format-string    condition)
+		 (simple-condition-format-arguments condition))
 	   (error-exit)))
   #-:HANDLER
   (do-startup idxstyle rawindex output logfile))
@@ -73,7 +72,7 @@ platform.
 				     :direction :output
 				     :if-does-not-exist :create))
       (error ()
-	     (oops "~&ERROR: Opening logfile ~S failed!~% ~S.~%" logfile)
+	     (oops "Opening logfile ~S failed!" logfile)
 	     (error-exit)))
     (info "(done)~%")
     (setq *logging-on* t)
@@ -104,7 +103,7 @@ platform.
                   :direction :output
                   :if-does-not-exist :create))
     (error ()
-           (oops "~&ERROR: Opening file ~S failed!~%" output)
+           (oops "Opening file ~S failed!" output)
            (error-exit)))
 
   (info "~&Processing index...")
@@ -151,7 +150,11 @@ platform.
 
 
 %% $Log$
-%% Revision 1.5  1996/07/18 15:54:31  kehr
+%% Revision 1.6  1996/07/22 15:55:29  kehr
+%% Replaced some of the oops-macros by nraw-macros. Removed apply-oops
+%% macros.
+%%
+%% Revision 1.5  1996/07/18  15:54:31  kehr
 %% Checkin after all changes that resulted from the define-letter-group
 %% modification were finished.
 %%

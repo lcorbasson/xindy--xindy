@@ -372,7 +372,7 @@ the markup of the list of all indexentries.
 		      `(SET-HIERDEPTH MOST-POSITIVE-FIXNUM *INDEX*)))
 	  (hierdepth
 	     (when (not (numberp hierdepth))
-	       (xerror "~S is not a number in ~S~%" whole))
+	       (error "~S is not a number in ~S~%" whole))
 	     (setq hierdepth-cmd
 		   `(SET-HIERDEPTH ,hierdepth *INDEX*))))
 	`(LET ()
@@ -1149,7 +1149,11 @@ Their elements are simple cross-references.
 
 
 %% $Log$
-%% Revision 1.13  1996/07/18 15:54:28  kehr
+%% Revision 1.14  1996/07/22 15:55:27  kehr
+%% Replaced some of the oops-macros by nraw-macros. Removed apply-oops
+%% macros.
+%%
+%% Revision 1.13  1996/07/18  15:54:28  kehr
 %% Checkin after all changes that resulted from the define-letter-group
 %% modification were finished.
 %%
