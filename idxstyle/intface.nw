@@ -302,14 +302,20 @@ experienced user.
       args
     (cond
       ((null name)
-         (error "missing argument <name> !"))
+         (error "missing argument <name> in~%~S" whole))
       ((null layer-list)
-         (error "missing argument <layer-list> !"))
+         (error "missing argument <layer-list> in~%~S" whole))
       ((not (list-of-strings-p layer-list))
-         (error "~S is not a list of strings!" layer-list))
+         (error "~S is not a list of strings in~%~S" layer-list whole))
       ((not (numberp hierdepth))
          (error "~S is not a number! in~%~S" hierdepth whole))
-      (t `(LET ((NAME (STRINGIFY ',name))
+      ((not (or (numberp   min-range-length)
+		(eql 'none min-range-length)))
+         (error "~S must be a number or the keyword `none' in~%~S"
+		min-range-length whole))
+      (t (when (eql 'none min-range-length)
+	   (setq min-range-length 0))
+	 `(LET ((NAME (STRINGIFY ',name))
                 (LAYERS (MAPCAR #'(LAMBDA (X)
                                     (LET* ((LAYER (STRINGIFY X))
                                            (BASETYPE
@@ -845,7 +851,12 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.17  1996/07/16 14:05:54  kehr
+%% Revision 1.18  1996/07/22 11:43:31  kehr
+%% Argument `none' can now be specified as argument to the
+%% keyqword-argument :min-range-length of command `define-location-class'.
+%% ----------------------------------------------------------------------
+%%
+%% Revision 1.17  1996/07/16  14:05:54  kehr
 %% Checkin after all the changes to the `define-letter-group(s)' commands
 %% have been made.
 %%
