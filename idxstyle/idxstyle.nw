@@ -1,0 +1,253 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: index-style
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Module \module{index-style}}
+
+\subsection{Introduction}
+
+The indexstyle
+
+The indexclass [[default]] is predefined in
+module [[idxstyle]]. The user may or may not define additional
+classes. If a user wants to generate an index for a specific class the
+working-scope is defined as the union of indexclass [[default]] and
+the selected class. Userdefined indexclasses have precedence over the
+default indexclass. The global variable [[*active-idxcls-name*]]
+keeps track of the currently active indexclass.
+
+
+\subsection{Concrete Specification}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The Indexstyle}
+
+The \term{indexstyle} is organised by a hierarchy of indexclasses.
+Currently we only support a assoc-list of different indexclasses
+indexed by name.  Therefore the notion \term{scope} describes the
+environment that is defined by a given indexclass. The list of
+indexclasses is stored in the variable [[*indexstyle*]]. It is the
+root of all indexstyle descriptions. We also keep track of the
+currently active indexclass-name which is stored in
+[[*active-idxcls-name*]].
+
+<<The indexstyle>>=
+(defvar *indexstyle* '())
+(defvar *active-idxcls-name*)
+
+(defun create-indexclass (idxcls-name)
+  (unless (find-indexclass idxcls-name)
+    (setf *indexstyle*
+          (acons idxcls-name (make-indexclass idxcls-name) *indexstyle*))
+    (setq *active-idxcls-name* idxcls-name)))
+@ %def *indexstyle* *active-idxcls-name* create-indexclass
+
+\no To have read-access to the currently active scope of
+indexclasses we define functions that give back already stored
+information. These functions are prefixed with [[find-]] analogous to
+the \Lisp-function [[find]].
+
+When managing several different indexclasses that may be accessed
+by name we need a mechanism to find a name and return the found
+indexclass. The following function is looking for indexclass
+[[idxcls-name]] and returns it if was found or [[nil]] otherwise.
+
+<<The indexstyle>>=
+(defun find-indexclass (idxcls-name)
+  (cdr (assoc idxcls-name *indexstyle* :test #'equal)))
+@ %def find-indexclass
+
+\no When searching for a basetype or a location-class-definition we
+must scan the the indexstyle to find the appropriate
+indexclass and return the desired object from it. The following
+functions follow this scheme and search for the desired object. The
+implemented hierarchy currently supports the only indexclass [[default]].
+
+<<The indexstyle>>=
+(defun find-basetype (basetype-name)
+  (gethash basetype-name
+           (get-basetypes (find-indexclass *active-idxcls-name*))))
+
+(defun find-location-class (loccls-name)
+  (assoc loccls-name
+         (get-locclasses (find-indexclass *active-idxcls-name*))))
+@ %def find-basetype find-location-class
+
+\no The following function iterates over all location-classes in the
+current scope\footnote{currently it only supports the currently active
+  indexclass} and calls the given function [[apply-func]] for all
+existing location-classes. Function [[apply-func]] takes three
+arguments: the current indexclass, the current location-class and the
+[[&rest]] arguments given to [[forall-location-classes]].
+
+<<The indexstyle>>=
+(defun forall-location-classes (apply-func
+                                &rest arguments)
+  (let ((idxcls (find-indexclass *active-idxcls-name*)))
+    (maphash #'(lambda (key loccls)
+                 (declare (ignore key))
+                 (funcall apply-func idxcls loccls arguments))
+             (get-locclasses idxcls))))
+@
+
+\no The following function iterates over all \textsf{merge-to}--rules
+in the current indexclass-scope.
+
+<<The indexstyle>>=
+(defun forall-merge-to-rules  (apply-func
+                               &rest arguments)
+  (let ((idxcls (find-indexclass *active-idxcls-name*)))
+    (dolist (merge-to-rule (get-merge-to-rules idxcls))
+      (funcall apply-func idxcls merge-to-rule arguments))))
+@
+
+<<external interface>>=
+(defun get-separate-mixed-rule ()
+  (get-sep-mix-rule (find-indexclass *active-idxcls-name*)))
+@
+
+\begin{TODO}
+  \item Define the hierarchy of indexclasses and implement the
+  [[find-]]functions corresponding to the defined hierarchy.
+\item Implement the rest of the neccessary [[find-]]functions that are
+  still unimplemented yet.
+\end{TODO}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+These are the predefined alphabets for upper- and lowercase letters.
+<<alphabets>>=
+(basetype-by-string "ALPHA" "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+(basetype-by-string "alpha" "abcdefghijklmnopqrstuvwxyz")
+(basetype-by-string "digits" "0123456789")
+
+@
+
+Here follows a general-purpose function
+[[prefix-match-for-radix-numbers]] which is capable to recognize
+radix-based numbers with a radix ranging from 2\ldots36.
+
+<<help-functions>>=
+(defun prefix-match-for-radix-numbers (str radix)
+  (let* ((n nil)
+         (strlen (length str))
+         (len-match (do ((i 0 (1+ i)))
+                        ((or (>= i strlen)
+                             (not (digit-char-p (char str i) radix)))
+                           i)
+                      (setq n (+ (* (if n n 0) radix)
+                                 (digit-char-p (char str i) radix))))))
+    (values (subseq str 0 len-match)
+            (subseq str len-match)
+            n)))
+@
+
+Here follows the definition of a enumeration type for positive arabic
+numbers. First we define a new class that is subclass of
+[[enumeration]]. We then define the method [[prefix-match]] which is
+bound to our new class and calculation is forwarded by giving the
+help-function [[prefix-match-for-radix-numbers]] a radix of 10. We
+could implement enumeration types for binary, octal and hexadecimal
+numbers straightforward by defining new classes and binding them with
+the radixes 2, 8 and 16. Finally we make the new enumeration type
+known in the indexclass [[default]] by defining a new class of name
+[[enumeration-arabic-numbers]], a name and the string containing the
+basetype-characters. Quiet easy, isn't it ?
+
+<<enumerations>>=
+(defclass enumeration-arabic-numbers (enumeration) ())
+
+(defmethod prefix-match ((str string) (enum enumeration-arabic-numbers))
+  (prefix-match-for-radix-numbers str 10))
+
+(enumeration 'enumeration-arabic-numbers
+             "Arabic Numbers"
+             "01234567890")
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The root}
+
+<<*>>=
+;; $Id$
+;;
+
+(in-package 'idxclass)
+(provide 'idxstyle)
+
+(unless (find-package 'clos)
+  (use-package 'clos))
+(unless (find-package 'xp)
+  (use-package 'xp))
+
+(require 'idxclass)
+(require 'intface)
+
+
+<<The indexstyle>>
+
+<<help-functions>>
+<<alphabets>>
+<<enumerations>>
+@
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/12/07 18:14:24  kehr
+%% Renamed module `idxclass' to 'idxstyle'. Resturcturing module from scratch.
+%%
+%% Revision 1.4  1995/12/07  13:21:31  kehr
+%% Dies ist das Projekt zum Zeitpunkt der Abgabe.
+%%
+%% Revision 1.3  1995/11/21  14:55:16  kehr
+%% Added support for DejaGnu-Framework.
+%%
+%% Revision 1.2  1995/11/08  16:18:05  kehr
+%% Minor modifications.
+%%
+%% Revision 1.1  1995/10/16  19:23:07  kehr
+%% Initial source checkin.
+%%
+%% Revision 1.4  1995/07/23  20:48:34  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%% Revision 1.3  1995/07/10  23:26:58  kehr
+%% Corrected bugs that caused location-class-matching to fail. Also
+%% discovered some bugs in matching under certain circumstances, I hadn't
+%% tested so far.
+%%
+%% Revision 1.2  1995/07/10  00:58:17  kehr
+%% Completed noweb-support. Current version must be debugged to correct
+%% some minor errors.
+%%
+%% Revision 1.1  1995/07/09  18:14:28  kehr
+%% Initial checkin.
+%%

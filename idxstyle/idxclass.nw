@@ -27,15 +27,9 @@
 
 Indexclasses serve as a container for indexstyle-information. They
 hold information about configured basetypes, location-classes, rules,
-and the successor-tables. The indexclass [[default]] is predefined in
-module [[idxstyle]]. The user may or may not define additional
-classes. If a user wants to generate an index for a specific class the
-working-scope is defined as the union of indexclass [[default]] and
-the selected class. Userdefined indexclasses have precedence over the
-default indexclass.
+and the successor-tables. Their main task is to add objects to the
+indexclass and allow queries about objects stored in an indexclass.
 
-The global variable [[*active-idxcls-name*]] keeps track of the
-currently active indexclass.
 
 \subsection{Abstract Specification}
 
@@ -47,14 +41,15 @@ A indexclass is a set
     not-succ-table, keyword-markup} $\}$
 \end{center}
 with
-\begin{deflistit}{indexclass}
+\begin{deflistit}{not-succ-table}
 \item [name] is a \tstring containing the name of the indexclass.
 \item [basetypes] is a list of \type{basetype}.
 \item [locclasses] is a list of \type{locclass}.
 \item [rules] is a list of \type{rule}.
 \item [succ-table]
 \item [not-succ-table]
-\item [markup]
+\item [markup] Markup for the keywords.
+\item [keyword-groups] Describe domains and markup of keyword-groups.
 \end{deflistit}
 
 
@@ -70,6 +65,26 @@ The following symbols are exported:
 \begin{defcls}{indexclass}{}
   Decribes indexclasses.
 \end{defcls}
+
+\begin{defunc}{make-indexclass}{\tstring \x \res \type{indexclass}}
+  The constructor of an \type{indexclass}.
+\end{defunc}
+
+\begin{defgen}{add-indexclass}{\tstring \x object}
+  This generic function describes a set of methods that allows storing
+  of objects into the indexclass named by \tstring. The prefix
+  [[add-]] suggest that we can call this methods several time to add
+  more and more objects. These objects are added to some kind of a
+  pool inside the indexclass.
+\end{defgen}
+
+\begin{defgen}{set-indexclass}{\tstring \x object}
+  This generic function describes a set of methods that allows storing
+  of objects into the indexclass named by \tstring. The prefix
+  [[set-]] suggest that everytime we can call this method the old
+  object is discarded and replaced by the new one. The objects are
+  unique in the indexclass.
+\end{defgen}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,7 +104,7 @@ adequate functions to be free with further modifications.
 After instantiation the indexclass will be incrementally filled with
 information.
 
-<<class indexclass>>=
+<<class \class{indexclass}>>=
 (defclass indexclass ()
     ((name           :reader   get-name           :initarg :name)
      (basetypes      :accessor get-basetypes
@@ -110,7 +125,7 @@ information.
 (export '(indexclass make-indexclass))
 @
 
-<<class indexclass>>=
+<<class \class{indexclass}>>=
 (defmethod show ((idxcls indexclass))
   (format t "Indexclass `~A':" (get-name idxcls))
   (format t "~%Basetypes:  ")
@@ -121,8 +136,6 @@ information.
   (show (get-merge-to-rules idxcls))
   (format t "~%Sep-Mix-Rule: ")
   (show (get-sep-mix-rule idxcls))
-  (format t "~%Entries:      ")
-  (show (get-index idxcls))
   (format t "~%Markup:      ")
   (show (get-keyword-markup idxcls))
   (format t "~%")
@@ -159,110 +172,51 @@ with names and has no knowledge about real \Lisp-objects.
 (defmethod add-indexclass ((idxcls-name string)
                            (basetype basetype))
   (let ((idxcls (find-indexclass idxcls-name)))
-    (setf (gethash (get-name basetype) (get-basetypes idxcls)) basetype)))
+    (unless (null idxcls)
+      (setf (gethash (get-name basetype) (get-basetypes idxcls))
+            basetype))))
 
 (defmethod add-indexclass ((idxcls-name string)
                            (loccls location-class))
   (let ((idxcls (find-indexclass idxcls-name)))
-    (setf (get-locclasses idxcls)
-          (acons (get-name loccls) loccls (get-locclasses idxcls)))))
+    (unless (null idxcls)
+      (setf (get-locclasses idxcls)
+            (acons (get-name loccls) loccls (get-locclasses idxcls))))))
 
-(defmethod add-indexclass ((idxcls-name string)
-                           (keyword-markup markup))
-  (let ((idxcls (find-indexclass idxcls-name)))
-    (setf (get-keyword-markup idxcls)
-          (append (get-keyword-markup idxcls) (list keyword-markup)))))
+;(defmethod add-indexclass ((idxcls-name string)
+;                           (keyword-markup markup))
+;  (let ((idxcls (find-indexclass idxcls-name)))
+;    (unless (null idxcls)
+;      (setf (get-keyword-markup idxcls)
+;            (append (get-keyword-markup idxcls) (list keyword-markup))))))
 
-(defmethod add-indexclass ((idxcls-name string)
-                           (merge-to-rule rule-merge-to))
-  (let ((idxcls (find-indexclass idxcls-name)))
-    (setf (get-merge-to-rules idxcls)
-          (append (get-merge-to-rules idxcls) (list merge-to-rule)))))
+;(defmethod add-indexclass ((idxcls-name string)
+;                           (merge-to-rule rule-merge-to))
+;  (let ((idxcls (find-indexclass idxcls-name)))
+;    (unless (null idxcls)
+;      (setf (get-merge-to-rules idxcls)
+;            (append (get-merge-to-rules idxcls) (list merge-to-rule))))))
 
-(defmethod set-indexclass ((idxcls-name string)
-                           (sep-mix-rule rule-separated-mixed))
-  (let ((idxcls (find-indexclass idxcls-name)))
-    (setf (get-sep-mix-rule idxcls) sep-mix-rule)))
-@
+;(defmethod set-indexclass ((idxcls-name string)
+;                           (sep-mix-rule rule-separated-mixed))
+;  (let ((idxcls (find-indexclass idxcls-name)))
+;    (unless (null idxcls)
+;      (setf (get-sep-mix-rule idxcls) sep-mix-rule))))
+@ %def add-indexclass set-indexclass
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsubsection{The hierarchy of indexclasses}
-
-To have read-access to the currently active scope of indexclasses we
-define functions that give back already stored information. These
-functions are prefixed with [[find-]] analogous to the \Lisp-function
-[[find]].
-
-<<external interface>>=
-(defun find-basetype (basetype-name)
-  (gethash basetype-name
-           (get-basetypes (find-indexclass *active-idxcls-name*))))
-
-(defun find-location-class (loccls-name)
-  (assoc loccls-name
-         (get-locclasses (find-indexclass *active-idxcls-name*))))
-@ %def find-basetype find-location-class
-
-The following function iterates over all location-classes in the
-current scope\footnote{currently it only supports the currently active
-  indexclass} and calls the given function [[apply-func]] for all
-existing location-classes. Function [[apply-func]] takes three
-arguments: the current indexclass, the current location-class and the
-[[&rest]] arguments given to [[forall-location-classes]].
-
-<<external interface>>=
-(defun forall-location-classes (apply-func
-                                &rest arguments)
-  (let ((idxcls (find-indexclass *active-idxcls-name*)))
-    (maphash #'(lambda (key loccls)
-                 (declare (ignore key))
-                 (funcall apply-func idxcls loccls arguments))
-             (get-locclasses idxcls))))
-@
-
-The following function iterates over all \textsf{merge-to}--rules in
-the current indexclass-scope.
-
-<<external interface>>=
-(defun forall-merge-to-rules  (apply-func
-                               &rest arguments)
-  (let ((idxcls (find-indexclass *active-idxcls-name*)))
-    (dolist (merge-to-rule (get-merge-to-rules idxcls))
-      (funcall apply-func idxcls merge-to-rule arguments))))
-@
-
-<<external interface>>=
-(defun get-separate-mixed-rule ()
-  (get-sep-mix-rule (find-indexclass *active-idxcls-name*)))
-@
-
-<<external interface>>=
-(defun find-indexclass (idxcls-name)
-  (cdr (assoc idxcls-name *indexclasses* :test #'equal)))
-
-(defun create-indexclass (idxcls-name)
-  (unless (find-indexclass idxcls-name)
-    (setf *indexclasses*
-          (acons idxcls-name (make-indexclass idxcls-name) *indexclasses*)))
-  (setq *active-idxcls-name* idxcls-name))
-@
-
+\subsubsection{The root}
 
 <<*>>=
 ;; $Id$
 ;;
 
-(in-package 'idxclass)
-
-(use-package 'clos)
-(use-package 'xp)
-
-(require 'base)
-(use-package 'base)
-
-(require 'locref)
-(use-package 'locref)
+(eval-when (compile load)
+  (unless (find-package 'clos)
+    (use-package 'clos))
+  (unless (find-package 'locref)
+    (load 'locref)
+    (use-package 'locref))
+  )
 
 <<class \class{indexclass}>>
 <<Mutators for \class{indexclass}>>
@@ -275,7 +229,10 @@ the current indexclass-scope.
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/12/05 18:46:11  kehr
+%% Revision 1.2  1995/12/07 18:14:22  kehr
+%% Renamed module `idxclass' to 'idxstyle'. Resturcturing module from scratch.
+%%
+%% Revision 1.1  1995/12/05  18:46:11  kehr
 %% Added module `idxclass' and restructured some parts.
 %%
 %% Revision 1.9  1995/07/23  20:48:32  kehr

@@ -48,11 +48,13 @@ XCOMM continue in Imakefile
       NW_HEADER  = $(TOPDIR)/noweb/header.tex
       NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
 
-      ALL_LISP_SRC = idxclass.lsp
+      ALL_LISP_SRC = idxclass.lsp idxstyle.lsp intface.lsp
 
-      ALL_NOWEB_SRC= module.nw idxclass.nw
+      ALL_NOWEB_SRC= module.nw idxclass.nw intface.nw idxstyle.nw
 
 NowebFullLispTarget(idxclass)
+NowebFullLispTarget(intface)
+NowebFullLispTarget(idxstyle)
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_NOWEB_SRC))
 
@@ -72,7 +74,10 @@ DejaGnuTarget(idxclass,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.1  1995/12/05 18:46:09  kehr
+ * Revision 1.2  1995/12/07 18:14:20  kehr
+ * Renamed module `idxclass' to 'idxstyle'. Resturcturing module from scratch.
+ *
+ * Revision 1.1  1995/12/05  18:46:09  kehr
  * Added module `idxclass' and restructured some parts.
  *
  *
