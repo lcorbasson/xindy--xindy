@@ -139,6 +139,7 @@ ARGCLOSE \}
 		           BEGIN(skip2location);
 		         }
                        }
+<xref>{LEVEL}         { printf("\" \""); }
 <xref>.               { qc(*yytext); }
 
 <skip2location>[ \t]*{ARGOPEN} {
@@ -181,6 +182,9 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.10  1999/09/23 06:53:32  kehr
+  Fixed wrong raw index generation for cross-ref keywords.
+
   Revision 1.9  1999/04/27 09:01:17  kehr
   Defined a clean exit code as suggested by Klaus Guntermann
   <guntermann@iti.informatik.tu-darmstadt.de>.
