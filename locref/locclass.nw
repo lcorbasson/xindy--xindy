@@ -1,0 +1,231 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Part: location-class
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+
+\ModuleTitle{}
+
+\section{Part \module{locclass}}
+
+\subsection{Introduction}
+
+A \term{location-class} describes the structural composition of
+\term{basetypes} and \term{separators}. During creation of an instance
+of a location-class we check the base-alpabets and separators for
+compatibility an issue a warning if the may cause problems.
+
+
+\subsection{Abstract Specification}
+
+\subsubsection{Definition}
+
+A location-class is a list of layers and separators. A \emph{layer} is
+based on the basetypes and consists of a string and a order number. A
+\emph{separator} is a string.
+
+\subsubsection{Operation}
+
+
+\subsection{Concrete Specification}
+
+\subsubsection{Class \sans{location-class}}
+
+Here is the definition of a location-class. The order-number
+[[ordnum]] is set by calling the function [[get-next-ordnum]]. It
+returns the current value of counter [[*loccls-ordnum-counter*]] and
+increments it. This is a simple way to give location-classes a
+order-number.
+
+<<class location-class>>=
+(defclass location-class ()
+    ((name        :reader   get-name        :initarg :name)
+     (layers      :reader   get-layers      :initarg :layers)
+     (join-layers :reader   get-join-layers :initarg :join-layers)
+     (ordnum      :accessor get-ordnum      :initform (get-next-ordnum))))
+
+(defun make-location-class (name layers join-layers)
+  (make-instance 'location-class
+                 :name name :layers layers :join-layers join-layers))
+
+(defmethod show ((loccls location-class))
+  (format t "[LocCls `~A': (" (get-name loccls))
+  (show (get-layers loccls))
+  (show (get-join-layers loccls))
+  (write-string ")")
+  (values))
+@ %def location-class make-location-class
+
+We add a function for a checked creation of a location-class, that
+checks for compatibility. Currently we just forward it to the normal
+instantiation without any validation.
+
+<<class location-class>>=
+(defun checked-make-location-class (name layers join-layers)
+  (make-location-class name layers join-layers))
+@ %def checked-make-location-class
+
+This function counts the number of basetypes in a layer-list. It is
+used to initialize the [[join-layers]]-value of a location-class.
+
+<<class location-class>>=
+(defun num-of-basetypes (layers)
+  (list (count nil layers
+               :test #'(lambda (dummy layer)
+                         (declare (ignore dummy))
+                         (typep layer 'loccls-layer)))))
+@
+
+This function checks whether given level [[level-number]] appears in
+the list of valid layers of the location-class. Is its used to check
+if two location-references are successors that may be joined at at
+certain level.
+
+<<class location-class>>=
+(defun joinable-on-layer-x-p (loccls-name level-number)
+  (find level-number
+          (get-join-layers (find-location-class loccls-name))))
+@
+
+This function returns the minimum range-length for a given
+location-class. Only if a range is built whose length is greater or
+equal to this value a range is valid.
+
+We haven't implemented location-class specific values yet, so we just
+return the fixed constant [[3]] for now. The value this function
+returns must be at least greater that 1 because a range of length 1
+should never be valid.
+
+<<class location-class>>=
+(defun get-minimum-range-length (loccls-name)
+  (declare (ignore loccls-name))
+  3)
+@
+
+\subsubsection{Class \sans{loccls-layer}}
+
+A location-class-layer is based upon a basetype. We define this as an
+extra class to be free for future additions. Great idea, because we
+now store the markup-information into the class, too.
+
+<<class loccls-layer>>=
+(defclass loccls-layer ()
+    ((basetype :reader get-basetype :initarg :basetype)
+     (markup   :reader get-markup   :initarg :markup)))
+
+(defun make-loccls-layer (basetype markup)
+  (make-instance 'loccls-layer :basetype basetype :markup markup))
+
+(defmethod show ((layer loccls-layer))
+  (show (get-basetype layer))
+;  (show (get-markup   layer))
+  (values))
+@
+
+
+\subsubsection{Class \sans{loccls-separator}}
+
+The separators is simply a string. We define this as an extra class
+for future extensions.
+
+<<class loccls-separator>>=
+(defclass loccls-separator ()
+    ((separator  :reader get-separator  :initarg :separator)
+     (markup     :reader get-markup     :initarg :markup)))
+
+(defun make-loccls-separator (separator markup)
+  (make-instance 'loccls-separator :separator separator :markup markup))
+
+(defmethod show ((separator loccls-separator))
+  (write-string (get-separator separator))
+;;  (show (get-markup separator))
+  (values))
+@
+
+<<markup methods>>=
+(defmethod markup-object ((separator loccls-separator)
+                          (dummmy-markup-list  list)
+                          (dummmy-context-list list)
+                          (dummmy-env-stack    list))
+  (mprint (get-separator separator)))
+@
+
+<<*>>=
+(provide 'locclass)
+(use-package 'clos)
+
+<<class location-class>>
+<<class loccls-layer>>
+<<class loccls-separator>>
+<<markup methods>>
+@
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/11/08 16:13:22  kehr
+%% Initial checkin.
+%%
+%% Revision 1.10  1995/07/28  10:41:18  kehr
+%% Added simple markup for location-references and ranges. Currently
+%% exists no support for differen layer-markup. A location-reference is
+%% always printed as a whole.
+%%
+%% Revision 1.9  1995/07/27  23:59:04  kehr
+%% Added support for keword-markup.
+%%
+%% Revision 1.8  1995/07/27  14:36:44  kehr
+%% Added support for joining of locref-separated-groups.
+%%
+%% Revision 1.7  1995/07/23  20:48:35  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%% Revision 1.6  1995/07/15  20:50:23  kehr
+%% Added markup-support for location-references, sorting of indexentries
+%% and separation of location-reference-lists into location-class
+%% subgroups.
+%%
+%% Revision 1.5  1995/07/11  23:33:08  kehr
+%% Added indexclass-structure as assoc-list. Completed
+%% indexentry-inserting with merge-insert-feature. Now we are nearlx
+%% finished with the data-setup and can start to handle the
+%% location-references.
+%%
+%% Revision 1.4  1995/07/10  23:26:59  kehr
+%% Corrected bugs that caused location-class-matching to fail. Also
+%% discovered some bugs in matching under certain circumstances, I hadn't
+%% tested so far.
+%%
+%% Revision 1.3  1995/07/10  19:08:17  kehr
+%% Now corrected setup of location-classes. The was a bug in the
+%% add-indexclass methods and some wrong reader-functions.
+%%
+%% Revision 1.2  1995/07/10  00:58:17  kehr
+%% Completed noweb-support. Current version must be debugged to correct
+%% some minor errors.
+%%
+%% Revision 1.1  1995/07/09  18:14:28  kehr
+%% Initial checkin.
+%%
+%%

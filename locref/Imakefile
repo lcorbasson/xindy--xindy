@@ -1,0 +1,79 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Imakefile for Source of the xindy-Project
+ *
+ * (history at end)
+ */
+
+#define NotangleStandardOptions -L';; line %L "%F"%N'
+#define NoweaveStandardOptions -n -index # -delay
+
+/* needed modules */
+#include <Project.imk>
+#include <noweb-wrap.imk>
+
+#include <Lisp-mod.imk>
+/* This must be included after the redefinition of the above rule(s) */
+#include <Lisp.imk>
+
+/* Some convenience Macros */
+
+#ifndef NowebLispTarget
+#define NowebLispTarget(program)     	                                @@\
+NowebTarget(program,lsp,)
+#endif
+
+/* In conjunction with the modified LispModuleTarget()-macro, we
+   append the target `source' to all sources in the project (this is
+   somewhat stupid, but works for now). Now the sources will be
+   generated before clisp starts to compile anything.
+*/
+#ifndef NowebFullLispTarget
+#define NowebFullLispTarget(source) 	                                @@\
+source:: $(ALL_LISP_SRC)						@@\
+NowebLispTarget(source)							@@\
+LispModuleTarget(source)					       	@@\
+/*NowebLaTeXDocTargetWrap(source,$(NW_HEADER),$(NW_TRAILER))*/
+#endif
+
+
+XCOMM ------------------------------------------------------------
+XCOMM continue in Imakefile
+
+      NW_HEADER  = $(TOPDIR)/noweb/header.tex
+      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+
+      ALL_LISP_SRC = locclass.lsp basetype.lsp locref.lsp ranges.lsp
+
+      ALL_NOWEB_SRC= module.nw basetype.nw locclass.nw locref.nw ranges.nw
+
+NowebFullLispTarget(basetype)
+NowebFullLispTarget(locclass)
+NowebFullLispTarget(locref)
+NowebFullLispTarget(ranges)
+
+NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_NOWEB_SRC))
+
+CVSAdd(*.nw)
+CVSAdd(Imakefile)
+CVSCommentLeader("%% ", *.nw *.sty)
+CVSCommit()
+
+clean::
+	$(RM) modules.tex
+
+/* ============================================================
+ *
+ * $Log$
+ * Revision 1.1  1995/11/08 16:13:18  kehr
+ * Initial checkin.
+ *
+ *
+
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */

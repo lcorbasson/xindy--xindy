@@ -1,0 +1,59 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: location-reference
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+
+\chapter{Module \module{location-reference}}
+
+%\ModuleTitle{}
+
+\section{Introduction}
+
+This module implements the abstract data types \type{location-class}
+and \type{location-reference}. The first one describes the structure
+of a location-class, how it is composed of basetypes, what are the
+separators between the hierarchies (if there are). The second creates
+instances of location-references by matching a string against a
+location-class description. It further presents an interface to sort
+location-references by order. The last part of this module deals with
+the creation of so-called \term{ranges}, which combines a set of
+successive location-references into the pair of location-references
+that is composed of the left- and rightmost element. Additionally a
+general scheme for the markup of location-references and ranges is
+included.
+
+The module is separated into the following parts:
+\begin{deflist}{XXXXXXX}
+\item [locclass] is the part with most abstract level and is
+  introduced first. It describes the declaration of location-classes.
+\item [basetype] manages declaration of basetypes.
+\item [locref] manages all operation on location-references.
+\item [ranges] manages all operation on ranges.
+\end{deflist}
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/11/08 16:13:27  kehr
+%% Initial checkin.
+%%
+%%
