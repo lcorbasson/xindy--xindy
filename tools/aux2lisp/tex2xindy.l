@@ -29,8 +29,9 @@ static FILE* stat = NULL;
 static int lineno    = 1;
 static int braces    = 0;
 static int xref_mode = 0;
+static int errors    = 0;
 
-#define err( msg ) fprintf(stderr, "line %d: %s\n", lineno, msg)
+#define err( msg ) fprintf(stderr, "line %d: %s\n", lineno, msg); errors++;
 
 #define NO_RANGE     0
 #define OPEN_RANGE   1
@@ -171,10 +172,19 @@ main(int argc, char* argv[])
   }
   yylex();
   if (stat) { fclose(stat); }
+  if (errors > 0) {
+      exit( 1 );
+  } else {
+      exit( 0 );
+  }
 }
 
 /*
   $Log$
+  Revision 1.9  1999/04/27 09:01:17  kehr
+  Defined a clean exit code as suggested by Klaus Guntermann
+  <guntermann@iti.informatik.tu-darmstadt.de>.
+
   Revision 1.8  1999/04/27 08:57:48  kehr
   Added quoting patch sent by Thomas Henlich <thenlich@Rcs1.urz.tu-dresden.de>
 
