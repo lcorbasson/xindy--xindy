@@ -4,4 +4,4 @@
 # exactly three errors were reported.
 #
 
-cmp -s xref-1.out xref-1.cmp && [ 3 = `egrep "^ERROR:" xref-1.log | wc -l` ]
+cmp -s xref-1.ind xref-1.cmp &&  [ 3 = `egrep -c "^ERROR:" xref-1.xlg` ]

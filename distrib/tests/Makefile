@@ -9,13 +9,13 @@
 RM = /bin/rm -f
 
 XINDY_PLATFORM = test-arch
-ALLTESTS       = startup mappings infII xref-1
-TESTS 	       = ex1 ex2  # $(ALLTESTS)
+ALLTESTS       = startup mappings infII xref-1 ex1 ex2 deep
+TESTS 	       = $(ALLTESTS)
 XINDY_DIR      = ../binaries/$(XINDY_PLATFORM)
-LOGFILE	       = -l $$tst.log
-# LOGFILE	       =
+LOGFILE	       = -l $$tst.xlg
+TRACE	       = # -t
 
-testsuite: banner tests compare
+testsuite: banner clean tests compare
 
 banner: force
 	@echo
@@ -35,7 +35,7 @@ tests: force
 	     echo "Running test \"$$tst\".";\
 	     echo "------------------------------";\
 	     echo ;\
-             $(XINDY_DIR)/xindy $(LOGFILE) $$tst.xdy $$tst.raw ;\
+             $(XINDY_DIR)/xindy $(TRACE) $(LOGFILE) $$tst.xdy $$tst.raw ;\
 	  done
 
 compare: force
@@ -58,6 +58,6 @@ compare: force
 	@ if [ ! -f test.failed ] ; then echo "All tests passed !"; echo; fi
 
 clean: force
-	$(RM) *.ind *.log test.failed
+	$(RM) *.ind *.log *.xlg test.failed
 
 force:
