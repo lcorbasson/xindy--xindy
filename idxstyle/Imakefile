@@ -23,8 +23,8 @@ XCOMM $Id$
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
-      NW_HEADER  = $(TOPDIR)/noweb/header.tex
-      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+      NW_HEADER  = $(TOPDIR)/xindy/noweb/header.tex
+      NW_TRAILER = $(TOPDIR)/xindy/noweb/trailer.tex
 
       ALL_NOWEB_SRC = idxclass.nw idxstyle.nw intface.nw idxrule.nw
       ALL_DOC_SRC   = module.nw $(ALL_NOWEB_SRC)
@@ -48,7 +48,10 @@ DejaGnuTarget(idxstyle,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.5  1996/01/10 15:24:03  kehr
+ * Revision 1.6  1997/01/23 21:33:07  kehr
+ * Reincorporated (merge-to) rule into indexstyle.
+ *
+ * Revision 1.5  1996/01/10  15:24:03  kehr
  * Changed som parts of `idxclass' for handling markup.
  * Minor changes in the Imakefile.
  *

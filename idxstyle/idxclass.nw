@@ -491,8 +491,9 @@ first remove it. In all cases we add the new location-class.
   (rel-insert (get-merge-rules idxcls) catattr-1 catattr-2)
   idxcls)
 
-(defmethod add-drop-if-merged-rule ((idxcls indexclass) (catattr-1 category-attribute)
-                                                        (catattr-2 category-attribute))
+(defmethod add-drop-if-merged-rule ((idxcls indexclass)
+				    (catattr-1 category-attribute)
+				    (catattr-2 category-attribute))
   (rel-insert (get-merge-rules idxcls) catattr-1 catattr-2)
   (rel-insert (get-drop-if-merged-rules idxcls) catattr-1 catattr-2)
   idxcls)
@@ -903,6 +904,9 @@ delayed until the markup).
 @
 
 %% $Log$
+%% Revision 1.17  1997/01/23 21:33:09  kehr
+%% Reincorporated (merge-to) rule into indexstyle.
+%%
 %% Revision 1.16  1997/01/17 16:42:05  kehr
 %% Several changes for new version 1.1.
 %%

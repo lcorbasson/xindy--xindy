@@ -73,6 +73,7 @@ It can be imported by other packages by calling
     define-attributes
     define-letter-group
     define-letter-groups
+    merge-to
     merge-rule
     sort-rule
     searchpath
@@ -550,7 +551,7 @@ For more information see the description of the [[ordrules]]-package.
 
 (defun flush-ordrules-message-buffer ()
   #+:ORDRULES
-  (when (and *logging-on* ordrules::*message-logging*)
+  (when (and *mappings-trace* ordrules::*message-logging*)
     (gol t "~A" ordrules::*message-buffer*)
     (setq ordrules::*message-buffer-ptr* 0)))
 @ %def sort-rule
@@ -558,6 +559,27 @@ For more information see the description of the [[ordrules]]-package.
 <<Export-list of submodule \module{intface}>>=
 (export 'flush-ordrules-message-buffer)
 @
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Location Reference Rules}
+
+<<Defining locref rules>>=
+(defmacro merge-to (&whole whole &rest args)
+  (destructuring-switch-bind (from to &switch drop)
+      args
+    (let ((from-attr (lookup-catattr *indexstyle* from))
+	  (to-attr   (lookup-catattr *indexstyle* to)))
+      (cond ((not from-attr)
+	       (nraw "`~S' is not a known attribute in:~&~A" from whole))
+	    ((not to-attr)
+	       (nraw "`~S' is not a known attribute in:~&~A" to whole))
+	    (t (if drop
+		   `(ADD-DROP-IF-MERGE-RULE *INDEXSTYLE*
+		     ,from-attr ,to-attr)
+		   `(ADD-MERGE-RULE *INDEXSTYLE*
+		     ,from-attr ,to-attr)))))))
+@ %def merge-to
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1014,6 +1036,7 @@ NIL in cases where no switch keyword was found in EXPR.
 <<Defining attributes>>
 <<Defining keyword rules>>
 <<Defining letter groups>>
+<<Defining locref rules>>
 <<Including files>>
 <<Setting the searchpath>>
 
@@ -1028,6 +1051,9 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.23  1997/01/23 21:33:13  kehr
+%% Reincorporated (merge-to) rule into indexstyle.
+%%
 %% Revision 1.22  1997/01/22 16:44:47  kehr
 %% Replaced the (load ...) with the new (watched-load ...) that produces
 %% a better error information in case of a broken indexstyle file.
