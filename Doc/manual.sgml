@@ -11,7 +11,7 @@
 <!-- Title information -->
 
 <title>Manual of the <bf/xindy/ indexing system
-<author>Roger Kehr, <tt/kehr@iti.informatik.th-darmstadt.de/
+<author>Roger Kehr, email: <tt/kehr@iti.informatik.th-darmstadt.de/
 <date>$Date$
 <abstract>
 This document describes the indexing system <bf/xindy/.
@@ -22,10 +22,10 @@ This document describes the indexing system <bf/xindy/.
 
 <!-- Begin the document -->
 
+
 <sect>About <bf/xindy/
 
 <p>
-
 <bf/xindy/ means fle<bf/x/ible <bf/ind/exing s<bf/y/stem. It is an
 indexing system that can be used to generate book-like indexes for
 arbitrary text-formatting systems. This term includes systems such as
@@ -33,7 +33,6 @@ TeX and LaTeX, the roff-familiy or SGML-based systems that process
 some kind of text and generate a special output-file. It is not fixed
 to any specific system, but can be configured for a wide variety of
 purposes.
-<p>
 
 Those systems usually don't have the capability to build an index of
 their own, but use other tools to do these work. Such tools are often
@@ -47,45 +46,151 @@ into the text-formatting system.
 
 <sect>Introduction
 
+<p>
+
+This section should give you some general information about indexing.
+
 <sect1>A brief overview on indexing
+
+<p>
+The index of a book is sometimes as valuable as the contents of the
+book. A good index supports the readers work and guides him quickly to
+the desired information.
+
+<quote><em>
+The compiling of an index is interesting work, though some authors are
+apt to find it tedious and delegate the work to others. The
+proofreader who undertakes it will find that it is splendid mental
+exercise and brings out his latent editorial capability.
+</em></quote>
+
+<quote>
+Albert H. Highton, <em/Practical Proofreading/ (1926)
+</quote>
+
+Compiling an index can be separated into two different tasks. The
+first one is to figure out what terms should appear in the index. As
+D. E. Knuth tells us
+
+<quote><em>Sometimes it is desirable to index words that don't
+actually appear on the page. ... For example, Appendix I lists page 1
+under `beauty', even though page 1 only contains the word `beautiful'.
+(The author felt that it was important to index `beauty' because he
+had already indexed `truth'.) </em>
+</quote>
+
+<quote>
+Donald E. Knuth, <em/The TeXbook/ (1984)
+</quote>
+
+The second task to be mastered is to actually compile the index. This
+is a rather tediuos and error-prone process that should be entirely
+left to computers. Indexing systems such as xindy don't support the
+author in deciding which terms should appear in the index. They master
+the second task after one has written a specification how the
+indexentries should be sorted, merged and finally tagged with the
+appropriate markup.
+
 
 <sect1>History
 
+<p>
+In 1987 the <tt/makeindex/-system was developed by Pheong Chen and
+others that gave the large community of TeX/LaTeX users a tool to
+easily build indexes and include them into their own documents. In the
+following years it became a de facto standard in the TeX-community.
+Its markup is configurable and one build do a lot of pretty indexes
+with it.
+
+But some problems were discovered right soon after users in
+non-english speaking countries tried to use it for their own purposes.
+Since <tt/makeindex/ was not intended to be used for other languages
+with other underlying alphabets, many people wished an
+<em/international/ version of this system. In 1991 Joachim Schrod and
+Gabor Herr implemented the <em/International MakeIndex/. It was called
+<tt/makeindex-3/ since it was a rewrite of some parts of the older
+<tt/makeindex-2/ by Chen. Some of the general problems concerning this
+topic were solved and its major contribute was the fact that the
+system was able to manage arbitrary alphabets and sort them by
+user-definable rules.
+
+But there were still a lot of wishes and it turned out, that the old
+system was not extensible enough to allow major rewrites of the
+source. In 1994 I started a project to reimplement the old
+<tt/makeindex/-system and to introduce a bunch of new features. They
+are described in section <ref id="why xindy">. So xindy can be viewed
+as the third step in the tradition of <tt/makeindex/.
 
 
+<sect1>Basic concepts
 
-<sect>Basic concepts
+<p>
+This section contains some basic information about indexes and
+indexing systems. The experienced user may skip this section and
+continue with section <ref id="how works" name="&dquot;How the index
+processor works&dquot;">.
 
-<sect1>Text formatting systems
+Text formatting systems or document preparation systems often need to
+produce indexes of the documents they prepare. Very often these
+systems aren't able to produce indexes on their own but use separate
+specialsed tools for this purpose.
 
-<sect1>Indexing systems
+Usually the document systems produce some form data that describe the
+<em/indexentries/ and the <em/locations/ they point to. This data is
+called the <em/raw-index/ since it consists of a bunch of unformatted
+information about the entries of the index. This raw-index is fed into
+the indexer and processed accordingly to a specification called the
+<em/indexstyle/. This is a user-definable description how the index is
+to be processed, what sort-rules for the keywords should be used,
+which kind of locations may appear, and finally, how and which tag
+should be emitted when writing the index down to the output stream.
+The result is sometimes fed back into the document preparation system
+(as it is in the case of TeX) or used otherwise.
 
+The xindy system is oriented on book-like indexes in a form that is
+described later in detail. The format of the input data is fixed and a
+small tool that converts the raw-index in a form suitable for xindy
+shuld not be a hurdle at all. The user is normally not involved in the
+correct format suitable for xindy and some tools will make this work
+invisible to him. The exact specification is given in section
+<ref id="raw index" name="&dquot;Raw index&dquot;">
+
+In contrast, the output of the xindy system is highly configureable
+and can produce a variety of different markups for an index.
+Additionally, the way xindy processes the index data can be
+parametrised and controlled in many ways and gives the user a powerful
+framework for describing complex indexes. The user can learn to tell
+xindy how it should produce an output according to his wishes or
+simply use some of the predefined styles that com with the
+distribution.
 
 
 <sect>How the index processor works
+<label id="how works">
 
+<p>
 
-<sect>Specifying and indexstyle
+<sect1>The indexstyle
 
-<sect1>Overview
+<sect2>Overview
 
-<sect1>Location-classes
+<sect2>Location-classes
 
-<sect1>Attributes
+<sect2>Attributes
 
-<sect1>Cross-reference-classes
-
-
-
-<sect>The markup
-
-<sect1>Viewing the index as a tree
-
-<sect1>Specifying markup tags
+<sect2>Cross-reference-classes
 
 
 
-<sect>Raw-index interface
+<sect1>The markup
+
+<sect2>Viewing the index as a tree
+
+<sect2>Specifying markup tags
+
+
+
+<sect1>Raw-index interface
 
 
 <sect>Invoking xindy
@@ -93,6 +198,33 @@ into the text-formatting system.
 
 <sect>Installation
 
+
+<sect>Glossary
+
+<p>
+This glossary describes the most important terms that are used
+throughout the document.
+
+<p>
+<descrip>
+<tag/Raw index/ foo
+<tag/Indexentry/ foo
+<tag/Location/ foo
+<tag/Location reference/ foo
+<tag/Cross-reference/ foo
+</descrip>
+
+<sect>References and acknowledgements
+
+<p>
+<enum>
+<item> D. E. Knuth, <em/The TeXbook/, Addison-Wesley, 1984
+<item> Pehong Chen and Michael A. Harrison, <em/Automating Index
+Preparation/, TR-87/347, University of California Berkeley, 1987<label
+id="makeindex">
+<item> Joachim Schrod, <em/An International Version of MakeIndex/,
+Cahiers GUTenberg, 10, p81-90, 1991
+</enum>
 
 
 
