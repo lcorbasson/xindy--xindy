@@ -241,7 +241,7 @@ experienced user.
            (error "~S is not a list of strings" string-list))
         (t `(LET ((NAME (STRINGIFY ',name)))
              (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
-               (OOPS "redefining alphabet `~S'" NAME))
+               (NRAW "redefining alphabet `~S'" NAME))
              (ADD *indexstyle* (MAKE-ALPHABET NAME ',string-list))))))
 
 (defmacro define-alphabet* (&whole whole &optional name string-list)
@@ -255,7 +255,7 @@ experienced user.
                    (UNLESS (LIST-OF-STRINGS-P STRING-LIST)
                      (ERROR "~S is not a list of strings" STRING-LIST))
                    (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
-                     (OOPS "redefining alphabet `~S'" NAME))
+                     (NRAW "redefining alphabet `~S'" NAME))
                    (ADD *indexstyle* (MAKE-ALPHABET NAME STRING-LIST))))))))
 @ %def define-expand-alphabet define-expand-alphabet*
 
@@ -275,7 +275,7 @@ experienced user.
                            (concatenate 'string "ENUMERATION-" name))))
              `(LET () #| PROGN instead of LET () yields a runtime error !? |#
                (IF (LOOKUP-BASETYPE *indexstyle* ,name)
-                   (OOPS "redefining alphabet `~S'" ,name)
+                   (NRAW "redefining alphabet `~S'" ,name)
                    (PROGN
                      (DEFCLASS ,symbol (ENUMERATION) ())
                      (ADD *indexstyle*
@@ -329,7 +329,7 @@ experienced user.
                     (OOPS "replacing cross-reference-class `~S' is not allowed !"
                           NAME))
                  (t (WHEN (LOOKUP-LOCATION-CLASS *indexstyle* NAME)
-                      (OOPS "redefining location-reference-class `~S' !" NAME))
+                      (NRAW "redefining location-reference-class `~S' !" NAME))
                     (ADD *indexstyle*
                          ,(if var
                               `(CHECKED-MAKE-VAR-LOCATION-CLASS NAME LAYERS
@@ -355,7 +355,7 @@ experienced user.
                     (OOPS "replacing location-reference-class `~S' is not allowed !"
                           NAME))
                  (t (WHEN (LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
-                      (OOPS "redefining crossref-location-class `~S'" NAME))
+                      (NRAW "redefining crossref-location-class `~S'" NAME))
                     (ADD *indexstyle*
                          ,(if verified
                               `(MAKE-UNVERIFIED-CROSSREF-LOCATION-CLASS NAME)
@@ -391,19 +391,20 @@ experienced user.
 \label{sec:intface:attributes}
 
 <<Defining attributes>>=
-(defmacro define-attributes (&optional attr-list)
+(defmacro define-attributes (&whole whole &optional attr-list)
   (cond ((null attr-list)
-           (error "missing argument <attribute-list> !"))
+           (error "missing argument <attribute-list> in~&~S" whole))
         (t (let* ((wf-attr-list (make-well-formed-list attr-list))
                   (plain-list (apply #'concatenate 'list wf-attr-list))
                   )
              `(PROGN
-               (MAPCAR #'(LAMBDA (CATATTR)
-                           (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
-                               (OOPS "ignoring redefinition of attribute `~S' !"
-                                     CATATTR)
-                               (ADD *indexstyle*
-                                    (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
+               (MAPCAR
+		#'(LAMBDA (CATATTR)
+		    (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
+			(NRAW "ignoring redefinition of attribute ~S in~&~S"
+			      CATATTR ,whole)
+			(ADD *indexstyle*
+			     (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
                 ',plain-list)
                (INITIALIZE-CATEGORY-ATTRIBUTES ',wf-attr-list *indexstyle*))
              ))))
@@ -655,8 +656,8 @@ The following chunks implement the searchpath.
                              *default-load-paths*)
                           ((eq elt :last)
                              *load-paths*)
-                          (t (oops "~&searchpath: invalid argument `~S' ! (ignored)~%"
-                                   elt))))
+                          (t (oops "~&searchpath: invalid argument ~S in~%~S"
+                                   elt path-list))))
                 path-list))))
 @ %def searchpath
 
@@ -851,7 +852,10 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.18  1996/07/22 11:43:31  kehr
+%% Revision 1.19  1996/07/22 15:54:23  kehr
+%% Replaced some of the oops-macros by nraw-macros.
+%%
+%% Revision 1.18  1996/07/22  11:43:31  kehr
 %% Argument `none' can now be specified as argument to the
 %% keyqword-argument :min-range-length of command `define-location-class'.
 %% ----------------------------------------------------------------------
