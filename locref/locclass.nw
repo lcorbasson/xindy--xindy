@@ -140,14 +140,21 @@ because they share multiple similiarities.
 
 <<Class \class{layered-location-class}>>=
 (defclass layered-location-class (location-class)
-    ((layers #|:reader get-layers|# :initarg :layers)))
+    ((layers    :initarg  :layers)
+     (hierdepth :initarg  :hierdepth)))
 
 (defmacro get-layers (locref)
   `(SLOT-VALUE ,locref 'LAYERS))
-@ %def layered-location-class
+(defmacro get-hierdepth (locref)
+  `(SLOT-VALUE ,locref 'HIERDEPTH))
+(defmacro set-hierdepth (depth locref)
+  `(SETF (SLOT-VALUE ,locref 'HIERDEPTH) ,depth))
+@ %def layered-location-class get-layers set-layers get-hierdepth set-hierdepth
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(layered-location-class get-layers layers))
+(export '(layered-location-class
+	  get-layers set-layers layers
+	  get-hierdepth set-hierdepth hierdepth))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -164,9 +171,10 @@ location-class.
     ((join-length :reader get-join-length :writer set-join-length
                   :initarg :join-length)))
 
-(defun make-standard-location-class (name layers join-length)
+(defun make-standard-location-class (name layers join-length hierdepth)
   (make-instance 'standard-location-class
-                 :name name :layers layers :join-length join-length))
+                 :name name :layers layers
+		 :join-length join-length :hierdepth hierdepth))
 @ %def standard-location-class make-standard-location-class
 
 <<Class \class{standard-location-class}>>=
@@ -179,15 +187,15 @@ checks for correct arguments. Currently we just forward it to the
 normal instantiation without any validation.
 
 <<Class \class{standard-location-class}>>=
-(defun checked-make-standard-location-class (name layers join-layers)
-  (make-standard-location-class name layers join-layers))
+(defun checked-make-standard-location-class (name layers join-layers
+						  &optional (hierdepth 0))
+  (make-standard-location-class name layers join-layers hierdepth))
 @ %def checked-make-location-class
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(standard-location-class
+(export '(standard-location-class  checked-make-standard-location-class
           get-join-length set-join-length
-          joining-allowed-p join-length
-          checked-make-standard-location-class))
+          joining-allowed-p join-length))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -198,19 +206,18 @@ normal instantiation without any validation.
 (defclass var-location-class (layered-location-class)
     ())
 
-(defun make-var-location-class (name layers)
+(defun make-var-location-class (name layers hierdepth)
   (make-instance 'var-location-class
-                 :name name :layers layers))
+                 :name name :layers layers :hierdepth hierdepth))
 @ %def var-location-class make-var-location-class
 
 <<Class \class{var-location-class}>>=
-(defun checked-make-var-location-class (name layers)
-  (make-var-location-class name layers))
+(defun checked-make-var-location-class (name layers &optional (hierdepth 0))
+  (make-var-location-class name layers hierdepth))
 @ %def checked-make-var-location-class
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(var-location-class
-          checked-make-var-location-class))
+(export '(var-location-class checked-make-var-location-class))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -582,7 +589,10 @@ is not an error, because we do a prefix-matching.
 
 
 %% $Log$
-%% Revision 1.16  1996/05/29 14:15:55  kehr
+%% Revision 1.17  1996/06/03 10:01:44  kehr
+%% Added support for treeing layered-location-references.
+%%
+%% Revision 1.16  1996/05/29  14:15:55  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%

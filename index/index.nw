@@ -73,7 +73,7 @@ following slots:
      (entry-list  :reader get-entry-list :writer set-entry-list)
      (entries     :reader get-entries    :writer set-entries)
      (idxclass    :reader get-idxclass   :initarg  :idxclass)
-     (hierdepth   :reader get-hierdepth  :initform *index-hierdepth-default*)))
+     (hierdepth                          :initform *index-hierdepth-default*)))
 
 (defun make-base-index (idxclass)
   (make-instance 'base-index :idxclass idxclass ))
@@ -85,8 +85,8 @@ following slots:
 
 \subsubsection{Global index definitions}
 <<Global index definitions>>=
-(defparameter *index-hierdepth-default* 0) #| make all trees |#
-(defparameter *index-entry-table*     nil) #| faster access to the entry-table |#
+(defparameter *index-hierdepth-default* MOST-POSITIVE-FIXNUM) #|make all trees|#
+(defparameter *index-entry-table*       nil) #| faster access to the entry-table |#
 @
 
 \subsubsection{Index initialisation}
@@ -455,7 +455,7 @@ top-level indexentries into the appropriate letter-groups.
 <<Processing an index>>=
 (defmethod build-indexentry-tree ((index base-index))
   (let ((index-hierdepth (get-hierdepth index)))
-    (when (numberp index-hierdepth)
+    (when (> index-hierdepth 0)
       (set-entries (build-indexentry-tree-recursive (get-entry-list index)
                                                     index-hierdepth)
                    index)))
@@ -512,9 +512,9 @@ slots with the neccessary data.
 (defun build-indexentry-tree-recursive (idxent-list
                                         max-depth
                                         &optional (curr-depth 1))
-  (if (or (endp idxent-list)        #| nothing more to do |#
-          (<= curr-depth max-depth) #| something to do and not reached end |#
-          (= max-depth 0))          #| do all |#
+  (if (or (endp idxent-list)          #| nothing more to do |#
+          (> curr-depth max-depth))   #| we reached the end |#
+      idxent-list   #| this is the then case |#
       (let ((idxent-slist (split-list #'(lambda (idxent)
                                           (car (get-merge-key idxent)))
                                       #'string<
@@ -557,10 +557,8 @@ slots with the neccessary data.
                         (1+ curr-depth)))
                       new-idxent)
                      new-idxent))))
-         idxent-slist))
-      idxent-list #| this is the otherwise case |#
-      ))
-@ %def build-indexentry-tree-recursive
+         idxent-slist))))
+@ %def take-first build-indexentry-tree-recursive
 
 <<Processing an index>>=
 (defun remove-first-keywords (idxent-list)
@@ -573,7 +571,7 @@ slots with the neccessary data.
             )
         idxent-list)
   idxent-list)
-@ %def take-first remove-first-keywords
+@ %def remove-first-keywords
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -658,7 +656,10 @@ slots with the neccessary data.
 
 
 %% $Log$
-%% Revision 1.15  1996/05/29 14:15:43  kehr
+%% Revision 1.16  1996/06/03 10:01:36  kehr
+%% Added support for treeing layered-location-references.
+%%
+%% Revision 1.15  1996/05/29  14:15:43  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%

@@ -109,28 +109,33 @@ markup algorithm.
 verbose-mode is turned on.
 
 <<Markup primitives>>=
-(defun do-markup-default (str &optional arg1 arg2)
+(defun do-markup-default (str &optional arg1 arg2 arg3)
   (when *markup-verbose-mode*
     (loop for x from 1 to *markup-indent-level*
           do (write-string " "))
     (do-markup-string *markup-verbose-open*)
     (do-markup-string str)
-    (when arg1
-      (etypecase arg1
-        (string (do-markup-string " [")
-                (do-markup-string arg1)
-                (do-markup-string "]"))
-        (number (do-markup-string " [")
-                (write arg1 :stream *markup-output-stream*)
-                (do-markup-string "]"))))
-    (when arg2
-      (etypecase arg2
-        (string (do-markup-string " [")
-                (do-markup-string arg2)
-                (do-markup-string "]"))
-        (number (do-markup-string " [")
-                (write arg2 :stream *markup-output-stream*)
-                (do-markup-string "]"))))
+    (when arg1 (etypecase arg1
+                 (string (do-markup-string " [")
+                         (do-markup-string arg1)
+                         (do-markup-string "]"))
+                 (number (do-markup-string " [")
+                         (write arg1 :stream *markup-output-stream*)
+                         (do-markup-string "]"))))
+    (when arg2 (etypecase arg2
+                 (string (do-markup-string " [")
+                         (do-markup-string arg2)
+                         (do-markup-string "]"))
+                 (number (do-markup-string " [")
+                         (write arg2 :stream *markup-output-stream*)
+                         (do-markup-string "]"))))
+    (when arg3 (etypecase arg3
+                 (string (do-markup-string " [")
+                         (do-markup-string arg3)
+                         (do-markup-string "]"))
+                 (number (do-markup-string " [")
+                         (write arg3 :stream *markup-output-stream*)
+                         (do-markup-string "]"))))
     (do-markup-string *markup-verbose-close*)
     (terpri)
     ))
@@ -146,13 +151,16 @@ the second from the third, and so on until the $n$-1-th to the $n$-th.
 
 <<Markup primitives>>=
 (defmacro do-markup-list (some-list
-                       &key
-                       (identifier 'nil)
-                       (elt-body   'nil) (sep-body 'nil)
-                       (open-body 'nil)  (close-body 'nil))
+			  &key
+			  identifier counter
+			  elt-body   sep-body
+			  open-body  close-body)
   `(PROGN
     ,(when open-body `,open-body)
-    (LET ((LIST-END (CAR (LAST ,some-list))))
+    (LET ,(if counter
+	      `((LIST-END (CAR (LAST ,some-list)))
+		(COUNTER ,counter))
+	      `((LIST-END (CAR (LAST ,some-list)))))
       (DO ((SLIST ,some-list (CDR SLIST)))
           ((ENDP SLIST))
         (LET ((,identifier (CAR SLIST)))
@@ -396,7 +404,7 @@ the markup of the list of all indexentries.
     (do-markup-list (get-members letter-grp)
       :identifier IDXENT #| the identifier to use in the expansion |#
       :open-body  (do-markup-indexentry-list-open  0
-		    #|initial depth:=0|#)
+                    #|initial depth:=0|#)
       :elt-body   (do-markup-indexentry IDXENT     0)
       :sep-body   (do-markup-indexentry-list-sep   0)
       :close-body (do-markup-indexentry-list-close 0))
@@ -476,12 +484,13 @@ subtargets for an indexentry markup.
 
   (let ((subentries (get-subentries idxent)))
     (unless (endp subentries)
-      (do-markup-list subentries
-        :identifier IDXENT
-        :open-body  (do-markup-indexentry-list-open  (1+ depth))
-        :elt-body   (do-markup-indexentry IDXENT     (1+ depth))
-        :sep-body   (do-markup-indexentry-list-sep   (1+ depth))
-        :close-body (do-markup-indexentry-list-close (1+ depth)))))
+      (let ((new-depth (1+ depth)))
+        (do-markup-list subentries
+          :identifier IDXENT
+          :open-body  (do-markup-indexentry-list-open  new-depth)
+          :elt-body   (do-markup-indexentry IDXENT     new-depth)
+          :sep-body   (do-markup-indexentry-list-sep   new-depth)
+          :close-body (do-markup-indexentry-list-close new-depth)))))
 
   (do-markup-indexentry-close depth))
 @ %def do-markup-indexentry
@@ -600,7 +609,7 @@ dispatching braches to the right methods.
     (do-markup-list (get-members locref-cls-grp)
       :identifier ATTRIBUTE-GRP
       :open-body  (do-markup-attribute-group-list-open)
-      :elt-body   (do-markup-attribute-group ATTRIBUTE-GRP)
+      :elt-body   (do-markup-attribute-group ATTRIBUTE-GRP locclass)
       :sep-body   (do-markup-attribute-group-list-sep)
       :close-body (do-markup-attribute-group-list-close))
 
@@ -653,17 +662,17 @@ dispatching braches to the right methods.
 @ %def markup-attribute-group-list
 
 <<Attribute-group markup>>=
-(defmethod do-markup-attribute-group
-    ((attribute-group category-attribute-group))
+(defmethod do-markup-attribute-group ((attribute-group category-attribute-group)
+				      (loccls layered-location-class))
   (let ((ordnum (get-ordnum attribute-group)))
     (do-markup-attribute-group-open ordnum)
 
     (do-markup-list (get-members attribute-group)
       :identifier LOCREF
-      :open-body  (do-markup-locref-list-open)
-      :elt-body   (do-markup-locref LOCREF)
-      :sep-body   (do-markup-locref-list-sep)
-      :close-body (do-markup-locref-list-close))
+      :open-body  (do-markup-locref-list-open  loccls 0)
+      :elt-body   (do-markup-locref     LOCREF loccls 0)
+      :sep-body   (do-markup-locref-list-sep   loccls 0)
+      :close-body (do-markup-locref-list-close loccls 0))
 
     (do-markup-attribute-group-close ordnum)))
 
@@ -692,44 +701,133 @@ dispatching braches to the right methods.
 \subparagraph{Layered location-reference markup}
 
 <<Location-reference markup>>=
-(define-list-environment-methods do-markup-locref-list ()
-  :open  ((do-markup-default "LOCREF-LIST:OPEN")
+(define-list-environment-methods do-markup-locref-list
+    ((loccls layered-location-class) (depth number))
+  :open  ((do-markup-default "LOCREF-LIST:OPEN"  (get-name loccls) depth)
           (do-markup-indent))
   :close ((do-markup-outdent)
-          (do-markup-default "LOCREF-LIST:CLOSE"))
-  :sep   ((do-markup-default "LOCREF-LIST:SEP")))
+          (do-markup-default "LOCREF-LIST:CLOSE" (get-name loccls) depth))
+  :sep   ((do-markup-default "LOCREF-LIST:SEP"   (get-name loccls) depth)))
 @ %def do-markup-locref-list
 
 <<Markup interface>>=
-(defmacro markup-locref-list (&key open close sep)
+(defmacro markup-locref-list (&key open close sep class depth)
   (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
-        (t `(markup::define-list-environment-methods
-             DO-MARKUP-LOCREF-LIST ()
+        <<Check [[:depth]]>>
+        <<Check [[:class]] for location-reference class>>
+	(t `(markup::define-list-environment-methods
+             DO-MARKUP-LOCREF-LIST
+             (,(if class
+                   `(locrefcls (EQL ,(cdr (lookup-locref-class
+                                           *indexstyle* class))))
+                   '(locrefcls layered-location-class))
+	      ,(if depth `(depth (EQL ,depth)) '(depth number)))
+	     :declare ((declare (ignore locrefcls depth)))
              :open  ,(when open  `((do-markup-string ,open)))
              :close ,(when close `((do-markup-string ,close)))
              :sep   ,(when sep   `((do-markup-string ,sep)))))))
 @ %def markup-locref-list
 
-<<Location-reference markup>>=
-(defmethod do-markup-locref ((locref layered-location-reference))
-  (let ((loccls (get-locclass locref))
-        (attr   (get-catattr  locref)))
-    (do-markup-locref-open  attr loccls)
-    (do-markup-string (get-locref-string locref))
-    (do-markup-locref-close attr loccls)))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\paragraph{Attribute-group markup}
+
+<<Location-reference markup>>=
+(defmethod do-markup-locref ((locref location-reference)
+			     (loccls layered-location-class)
+			     (depth  number))
+  #+ASSERT! (assert! (and (typep locref 'layered-location-reference)
+			  (typep depth 'number)))
+  (let ((attr    (get-catattr  locref))
+        (subrefs (get-subrefs  locref))
+	(new-depth (1+ depth)))
+
+    (do-markup-locref-open attr loccls depth)
+
+    (cond
+      (subrefs
+	 (do-markup-list (get-layers locref)
+	   :identifier LAYER
+	   :counter    depth
+	   :open-body  (do-markup-locref-layer-list-open  loccls depth)
+	   :elt-body   (do-markup-locref-layer LAYER loccls (INCF COUNTER))
+	   :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
+	   :close-body (do-markup-locref-layer-list-close loccls depth))
+
+	 (do-markup-list subrefs
+	   :identifier LOCREF
+	   :open-body  (do-markup-locref-list-open  loccls new-depth)
+	   :elt-body   (do-markup-locref     LOCREF loccls new-depth)
+	   :sep-body   (do-markup-locref-list-sep   loccls new-depth)
+	   :close-body (do-markup-locref-list-close loccls new-depth)))
+
+      ((= 0 depth)
+	 (do-markup-string (get-locref-string locref)))
+
+      (t (do-markup-list (get-layers locref)
+	   :identifier LAYER
+	   :counter    depth
+	   :open-body  (do-markup-locref-layer-list-open  loccls depth)
+	   :elt-body   (do-markup-locref-layer LAYER loccls (INCF COUNTER))
+	   :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
+	   :close-body (do-markup-locref-layer-list-close loccls depth))))
+
+    (do-markup-locref-close attr loccls depth)))
+@ %def do-markup-layered-locref
+
+<<Location-reference markup>>=
+(define-list-environment-methods do-markup-locref-layer-list
+    ((loccls layered-location-class) (depth  number))
+  :open  ((do-markup-default "LOCREF-LAYER-LIST:OPEN"  (get-name loccls) depth)
+          (do-markup-indent))
+  :sep   ((do-markup-default "LOCREF-LAYER-LIST:SEP"   (get-name loccls) depth))
+  :close ((do-markup-outdent)
+          (do-markup-default "LOCREF-LAYER-LIST:CLOSE" (get-name loccls) depth)))
+
+(defun do-markup-locref-layer (layer loccls depth)
+  (declare (ignore loccls depth))
+  ;;(do-markup-locref-layer-open  loccls depth)
+  (do-markup-string layer)
+  ;;(do-markup-locref-layer-close loccls depth)
+  )
+@ %def do-markup-locref-layer-list
+
+<<Markup interface>>=
+(defmacro markup-locref-layer-list (&key open close sep class depth)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        <<Check [[:depth]]>>
+        <<Check [[:class]] for location-reference class>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-LOCREF-LAYER-LIST
+             (,(if class
+                   `(locrefcls (EQL ,(cdr (lookup-locref-class
+                                           *indexstyle* class))))
+                   '(locrefcls layered-location-class))
+	      ,(if depth `(depth (EQL ,depth)) '(depth number)))
+	     :declare ((declare (ignore locrefcls depth)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-locref-layer-list
+
+
+<<Location-reference markup>>=
 (define-environment-methods do-markup-locref ((attr   category-attribute)
-                                              (loccls layered-location-class))
-  :open  ((do-markup-default "LOCREF:OPEN"  (get-name attr) (get-name loccls))
+                                              (loccls layered-location-class)
+                                              (depth  number))
+  :open  ((do-markup-default "LOCREF:OPEN"
+            (get-name attr) (get-name loccls) depth)
           (do-markup-indent))
   :close ((do-markup-outdent)
-          (do-markup-default "LOCREF:CLOSE" (get-name attr) (get-name loccls))))
+          (do-markup-default "LOCREF:CLOSE"
+            (get-name attr) (get-name loccls) depth)))
 @ %def do-markup-locref
 
 <<Markup interface>>=
-(defmacro markup-locref (&key open close sep class attr)
+(defmacro markup-locref (&key open close sep class attr depth)
   (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
         <<Check [[:attr]]>>
+        <<Check [[:depth]]>>
         <<Check [[:class]] for location-reference class>>
         (t `(markup::define-environment-methods
              DO-MARKUP-LOCREF
@@ -739,20 +837,22 @@ dispatching braches to the right methods.
               ,(if class
                    `(locrefcls (EQL ,(cdr (lookup-locref-class
                                            *indexstyle* class))))
-                   '(locrefcls layered-location-class)))
-             :declare ((declare (ignore attr locrefcls)))
+                   '(locrefcls layered-location-class))
+              ,(if depth `(depth (EQL ,depth)) '(depth number)))
+             :declare ((declare (ignore attr locrefcls depth)))
              :open  ,(when open  `((do-markup-string ,open)))
              :close ,(when close `((do-markup-string ,close)))))))
 @ %def markup-locref
 
 <<Location-reference markup>>=
-(defmethod do-markup-locref ((range location-range))
-  (let ((loccls (get-locclass range)))
-    (do-markup-range-open  loccls)
-    (do-markup-locref      (get-first range))
-    (do-markup-range-sep   loccls)
-    (do-markup-locref      (get-last range))
-    (do-markup-range-close loccls)))
+(defmethod do-markup-locref ((range location-range)
+			     (loccls layered-location-class)
+			     (depth number))
+  (do-markup-range-open  loccls)
+  (do-markup-locref (get-first range) loccls depth)
+  (do-markup-range-sep   loccls)
+  (do-markup-locref (get-last range)  loccls depth)
+  (do-markup-range-close loccls))
 
 (define-list-environment-methods do-markup-range
     ((loccls layered-location-class))
@@ -939,6 +1039,8 @@ Their elements are simple cross-references.
     markup-attribute-group
     markup-locref-list
     markup-locref
+    markup-locref-layer-list
+    markup-locref-layer
     markup-range
     ))
 @ %def *markup-user-interface-definitions*
@@ -977,7 +1079,10 @@ Their elements are simple cross-references.
 
 
 %% $Log$
-%% Revision 1.8  1996/05/29 14:16:03  kehr
+%% Revision 1.9  1996/06/03 10:01:53  kehr
+%% Added support for treeing layered-location-references.
+%%
+%% Revision 1.8  1996/05/29  14:16:03  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%

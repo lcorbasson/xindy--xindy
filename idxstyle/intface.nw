@@ -161,7 +161,7 @@ experienced user.
            (error "~A is not a list of strings" string-list))
         (t `(LET ((NAME (STRINGIFY ',name)))
              (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
-               (WARN "redefining alphabet `~A'" NAME))
+               (OOPS "redefining alphabet `~A'" NAME))
              (ADD *indexstyle* (MAKE-ALPHABET NAME ',string-list))))))
 
 (defmacro define-alphabet* (&optional name string-list)
@@ -178,7 +178,7 @@ experienced user.
                    (UNLESS (LIST-OF-STRINGS-P STRING-LIST)
                      (ERROR "~A is not a list of strings" STRING-LIST))
                    (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
-                     (WARN "redefining alphabet `~A'" NAME))
+                     (OOPS "redefining alphabet `~A'" NAME))
                    (ADD *indexstyle* (MAKE-ALPHABET NAME STRING-LIST))))))))
 @ %def define-expand-alphabet define-expand-alphabet*
 
@@ -198,7 +198,7 @@ experienced user.
                            (concatenate 'string "ENUMERATION-" name))))
              `(LET () #| PROGN instead of LET () yields a runtime error !? |#
                (IF (LOOKUP-BASETYPE *indexstyle* ,name)
-                   (WARN "redefining alphabet `~A'" ,name)
+                   (OOPS "redefining alphabet `~A'" ,name)
                    (PROGN
                      (DEFCLASS ,symbol (ENUMERATION) ())
                      (ADD *indexstyle*
@@ -214,42 +214,46 @@ experienced user.
 \paragraph{Structured location-classes}
 
 <<Defining location-classes>>=
-(defmacro define-location-class (&rest args)
+(defmacro define-location-class (&whole whole &rest args)
   (destructuring-switch-bind (name
                               layer-list
-                              &key (min-range-length
-                                    *default-minimum-range-length*)
-                              &switch (var :var))
+                              &key
+                              (min-range-length *default-minimum-range-length*)
+                              (hierdepth 0) ;no hierarchies are to be formed
+                              &switch
+                              (var :var))
       args
     (cond
       ((null name)
-	 (error "missing argument <name> !"))
+         (error "missing argument <name> !"))
       ((null layer-list)
-	 (error "missing argument <layer-list> !"))
+         (error "missing argument <layer-list> !"))
       ((not (list-of-strings-p layer-list))
-	 (error "~A is not a list of strings" layer-list))
+         (error "~A is not a list of strings!" layer-list))
+      ((not (numberp hierdepth))
+         (error "~A is not a number! in~%~A" hierdepth whole))
       (t `(LET ((NAME (STRINGIFY ',name))
-		(LAYERS (MAPCAR #'(LAMBDA (X)
-				    (LET* ((LAYER (STRINGIFY X))
-					   (BASETYPE
-					    (LOOKUP-BASETYPE *indexstyle*
-							     LAYER)))
-				      (IF BASETYPE
-					  (MAKE-LOCCLS-LAYER BASETYPE)
-					  (MAKE-LOCCLS-SEPARATOR LAYER))))
-				',layer-list)))
-	   (COND ((LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
-		    (WARN "replacing cross-reference-class `~A' is not allowed !"
-			  NAME))
-		 (t (WHEN (LOOKUP-LOCATION-CLASS *indexstyle* NAME)
-		      (WARN "redefining location-reference-class `~A' !" NAME))
-		    (ADD *indexstyle*
-			 ,(if var
-			      `(CHECKED-MAKE-VAR-LOCATION-CLASS NAME LAYERS
-				,min-range-length)
-			      `(CHECKED-MAKE-STANDARD-LOCATION-CLASS NAME LAYERS
-				,min-range-length))))
-		 ))))))
+                (LAYERS (MAPCAR #'(LAMBDA (X)
+                                    (LET* ((LAYER (STRINGIFY X))
+                                           (BASETYPE
+                                            (LOOKUP-BASETYPE *indexstyle*
+                                                             LAYER)))
+                                      (IF BASETYPE
+                                          (MAKE-LOCCLS-LAYER BASETYPE)
+                                          (MAKE-LOCCLS-SEPARATOR LAYER))))
+                                ',layer-list)))
+           (COND ((LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
+                    (OOPS "replacing cross-reference-class `~A' is not allowed !"
+                          NAME))
+                 (t (WHEN (LOOKUP-LOCATION-CLASS *indexstyle* NAME)
+                      (OOPS "redefining location-reference-class `~A' !" NAME))
+                    (ADD *indexstyle*
+                         ,(if var
+                              `(CHECKED-MAKE-VAR-LOCATION-CLASS NAME LAYERS
+                                ,min-range-length ,hierdepth)
+                              `(CHECKED-MAKE-STANDARD-LOCATION-CLASS NAME LAYERS
+                                ,min-range-length ,hierdepth))))
+                 ))))))
 @ %def define-location-class
 
 
@@ -262,17 +266,17 @@ experienced user.
       args
     (cond
       ((null name)
-	 (error "missing argument <name> !"))
+         (error "missing argument <name> !"))
       (t `(LET ((NAME (STRINGIFY ',name)))
-	   (cond ((LOOKUP-LOCATION-CLASS *indexstyle* NAME)
-		    (WARN "replacing location-reference-class `~A' is not allowed !"
-			  NAME))
-		 (t (WHEN (LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
-		      (WARN "redefining crossref-location-class `~A'" NAME))
-		    (ADD *indexstyle*
-			 ,(if verified
-			      `(MAKE-UNVERIFIED-CROSSREF-LOCATION-CLASS NAME)
-			      `(MAKE-VERIFIED-CROSSREF-LOCATION-CLASS NAME))))))))))
+           (cond ((LOOKUP-LOCATION-CLASS *indexstyle* NAME)
+                    (OOPS "replacing location-reference-class `~A' is not allowed !"
+                          NAME))
+                 (t (WHEN (LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
+                      (OOPS "redefining crossref-location-class `~A'" NAME))
+                    (ADD *indexstyle*
+                         ,(if verified
+                              `(MAKE-UNVERIFIED-CROSSREF-LOCATION-CLASS NAME)
+                              `(MAKE-VERIFIED-CROSSREF-LOCATION-CLASS NAME))))))))))
 @ %def define-crossref-class
 
 
@@ -284,17 +288,17 @@ experienced user.
            (error "missing argument <list> !"))
         ((not (list-of-strings-p olist))
            (error "~A is not a list of strings" olist))
-	(t `(LET ((CTR 1))
-	     (MAPC #'(LAMBDA (NAME)
-		       (LET* ((NEW-NAME (STRINGIFY NAME))
-			      (LOCCLS
-			       (CDR (LOOKUP-LOCATION-CLASS *indexstyle*
-							   NEW-NAME))))
-			 (INCF CTR)
-			 (COND (LOCCLS (SET-ORDNUM CTR LOCCLS))
-			       (t (WARN "unknown location-class `~A'"
-					NEW-NAME)))))
-	      ',olist)))))
+        (t `(LET ((CTR 1))
+             (MAPC #'(LAMBDA (NAME)
+                       (LET* ((NEW-NAME (STRINGIFY NAME))
+                              (LOCCLS
+                               (CDR (LOOKUP-LOCATION-CLASS *indexstyle*
+                                                           NEW-NAME))))
+                         (INCF CTR)
+                         (COND (LOCCLS (SET-ORDNUM CTR LOCCLS))
+                               (t (OOPS "unknown location-class `~A'"
+                                        NEW-NAME)))))
+              ',olist)))))
 @ %def define-location-class-order
 
 
@@ -313,7 +317,7 @@ experienced user.
              `(PROGN
                (MAPCAR #'(LAMBDA (CATATTR)
                            (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
-                               (WARN "ignoring redefinition of attribute `~A' !"
+                               (OOPS "ignoring redefinition of attribute `~A' !"
                                      CATATTR)
                                (ADD *indexstyle*
                                     (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
@@ -387,7 +391,7 @@ For more information see the description of the [[ordrules]]-package.
 #-:ORDRULES
 (defmacro merge-rule (&rest args)
   (declare (ignore args))
-  (warn "merge-rule not supported! ignoring definition"))
+  (oops "merge-rule not supported! ignoring definition"))
 @ %def merge-rule
 
 <<Defining keyword rules>>=
@@ -407,7 +411,7 @@ For more information see the description of the [[ordrules]]-package.
 #-:ORDRULES
 (defmacro sort-rule (&rest args)
   (declare (ignore args))
-  (warn "sort-rule not supported! ignoring definition"))
+  (oops "sort-rule not supported! ignoring definition"))
 @ %def sort-rule
 
 
@@ -419,14 +423,14 @@ For more information see the description of the [[ordrules]]-package.
 (defmacro define-letter-group (letter group)
   (cond ((null letter)
            (error "missing argument <letter> !"))
-	((null group)
+        ((null group)
            (error "missing argument <group> !"))
-	((not (stringp letter))
+        ((not (stringp letter))
            (error "argument <letter> must be a string !"))
-	((not (integerp group))
+        ((not (integerp group))
            (error "argument <group> must be a integer number !"))
-	(t `(LET ()
-	     (ADD-LETTER-GROUP *INDEXSTYLE* ,letter ,group)))))
+        (t `(LET ()
+             (ADD-LETTER-GROUP *INDEXSTYLE* ,letter ,group)))))
 @ %def define-letter-group
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -580,7 +584,10 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.12  1996/05/29 14:15:29  kehr
+%% Revision 1.13  1996/06/03 10:01:15  kehr
+%% Added support for treeing layered-location-references.
+%%
+%% Revision 1.12  1996/05/29  14:15:29  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%

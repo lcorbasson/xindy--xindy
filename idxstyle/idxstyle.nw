@@ -77,7 +77,8 @@ The indexstyle itself will be initialised later after all functions are known.
 <<Global indexstyle definitions>>=
 (defparameter *indexstyle* nil)
 (defparameter *default-minimum-range-length* 2)
-@ %def *indexstyle* *default-minimum-range-length*
+(defparameter *default-locref-hierdepth*     0)
+@ %def *indexstyle* *default-minimum-range-length* *default-locref-hierdepth*
 
 <<Global indexstyle initialisation>>=
 <<Initialize indexclass [[default]]>>
@@ -310,7 +311,10 @@ above form and define two instances to the enumerations for both
 @
 
 %% $Log$
-%% Revision 1.11  1996/05/29 15:42:35  kehr
+%% Revision 1.12  1996/06/03 10:01:13  kehr
+%% Added support for treeing layered-location-references.
+%%
+%% Revision 1.11  1996/05/29  15:42:35  kehr
 %% Added the enumerations for roman numbers.
 %%
 %% Revision 1.10  1996/05/29  14:15:26  kehr

@@ -63,7 +63,8 @@ the following diagram.
 @ %def location-reference get-locclass
 
 <<Export-list of submodule \module{locref}>>=
-(export '(location-reference get-locclass locclass))
+(export '(location-reference get-locclass locclass
+          get-attribute set-attribute))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,13 +81,20 @@ directly derived from its abstract description.
      (ordnums   :initarg :ordnums)
      (catattr   :initarg :catattr)
      (state     :initarg :state)
-     (rangeattr                                  :initform 'nil)
+     (rangeattr                                       :initform 'nil)
      (origin    :reader get-origin :writer set-origin :initform 'nil)
-     (subrefs                      :type list    :initform '())))
+     (subrefs                      :type list         :initform '())))
+
+(defmacro get-layers (locref)         `(SLOT-VALUE ,locref 'LAYERS))
+(defmacro set-layers (layers locref)
+  `(SETF (SLOT-VALUE ,locref 'LAYERS) ,layers))
+
+(defmacro get-ordnums (locref)        `(SLOT-VALUE ,locref 'ORDNUMS))
+(defmacro set-ordnums (ordnums locref)
+  `(SETF (SLOT-VALUE ,locref 'ORDNUMS) ,ordnums))
 
 (defmacro get-locref-string (locref)  `(SLOT-VALUE ,locref 'STRING))
 (defmacro get-catattr (locref)        `(SLOT-VALUE ,locref 'CATATTR))
-(defmacro get-ordnums (locref)        `(SLOT-VALUE ,locref 'ORDNUMS))
 (defmacro get-rangeattr (locref)      `(SLOT-VALUE ,locref 'RANGEATTR))
 
 (defmacro get-state   (locref)        `(SLOT-VALUE ,locref 'STATE))
@@ -96,7 +104,7 @@ directly derived from its abstract description.
 (defmacro get-subrefs (locref)        `(SLOT-VALUE ,locref 'SUBREFS))
 (defmacro set-subrefs (subrefs locref)
   `(SETF (SLOT-VALUE ,locref 'SUBREFS) ,subrefs))
-@ %def layered-location-reference get-catattr get-ordnums get-rangeattr get-locref-string get-subrefs set-subrefs get-state set-state
+@ %def layered-location-reference get-layers set-layers get-catattr get-ordnums get-rangeattr get-locref-string get-subrefs set-subrefs get-state set-state
 
 \no The constructor takes the additional keyword [[:virtual]] to
 distinguish between the two states a location-reference can be in
@@ -160,13 +168,16 @@ following mutators and predicates.
 <<Export-list of submodule \module{locref}>>=
 (export '(layered-location-reference
           make-layered-location-reference
-          get-layers       get-ordnums       get-catattr
-          get-rangeattr    rangeattr         get-locref-string  string
-          get-origin       set-origin        catattr ordnums
+          get-layers     set-layers    layers
+          get-ordnums    set-ordnums   ordnums
+          get-subrefs    set-subrefs   subrefs
+          get-catattr    catattr
+          get-rangeattr    rangeattr
+          get-locref-string  string
+          get-origin       set-origin
           state-normal-p   state-virtual-p   state-deleted-p
           set-state-normal set-state-virtual set-state-deleted
           set-rangeattr-open set-rangeattr-close
-          get-subrefs      set-subrefs  subrefs
           rangeattr-open-p rangeattr-close-p))
 @
 
@@ -253,6 +264,8 @@ Here we define the category-attribute-slots.
      (processing-ordnum  :reader get-processing-ordnum
                          :writer set-processing-ordnum
                          :initform 0)
+     (last-in-group      :reader get-last-in-group
+                         :writer set-last-in-group)
      (type               :reader get-type
                          :writer set-type
                          :initarg :type)))
@@ -274,6 +287,7 @@ by using [[set-ordnum]] and [[set-type]].
           get-catattr-grp-ordnum set-catattr-grp-ordnum
           get-sort-ordnum        set-sort-ordnum
           get-processing-ordnum  set-processing-ordnum
+          get-last-in-group      set-last-in-group
           get-type   set-type
           get-markup set-markup))
 @
@@ -397,6 +411,7 @@ i really need it.
 <<Class \class{crossref-location-reference}>>
 <<Building a location-reference>>
 <<Sorting location-references>>
+
 <<Export-list of submodule \module{locref}>>
 @
 
@@ -463,7 +478,10 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.20  1996/05/29 14:15:58  kehr
+%% Revision 1.21  1996/06/03 10:01:48  kehr
+%% Added support for treeing layered-location-references.
+%%
+%% Revision 1.20  1996/05/29  14:15:58  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%

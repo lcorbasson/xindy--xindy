@@ -260,70 +260,9 @@ The resulting code is now:
 <<Class \class{locref-class-group}>>
 <<Class \class{crossref-class-group}>>
 <<Separating the location-references by using [[split-list]] and [[convert-sublists-to-group-objects]]>>
+<<Treeing location-references>>
 @
 
-
-\paragraph{Splitting into sublists}
-
-This is a function that operates on lists. It takes a list and groups
-its elements into new subgroups. The given function [[split-function]]
-must return the same value for all elements that belong to the same
-group. These values are compared with the [[#'equal]]-predicate. Its
-meaning is to create \emph{equivalence-classes} of elements. The
-resulting sublists are sorted by function [[sort-function]] which must
-define a \emph{less-than}-predicate of the values [[split-function]]
-delivers. The result is a list containing the sorted sublists.
-
-<<Splitting lists into sublists --- [[split-list]]>>=
-(defun split-list (split-function sort-function list)
-  (let ((list-len (length list)))
-    (if (= 1 list-len)
-        (list list)
-        (let ((split-table (make-hash-table :test #'equal
-                                            :size (round (* 1.2 list-len))))
-              (key-list '()))
-          (mapc #'(lambda (elt)
-                    (let ((key (funcall split-function elt)))
-                      (setf (gethash key split-table)
-                            (cons elt (gethash key split-table)))))
-                list)
-          (maphash #'(lambda (key element)
-                       (declare (ignore element))
-                       (push key key-list))
-                   split-table)
-          (maplist #'(lambda (rest-list)
-                       (rplaca rest-list (gethash (car rest-list)
-                                                  split-table)))
-                   (sort key-list sort-function))
-          key-list))))
-
-#|
-This version seems to be a little bit slower than the above one,
-despite the fact that we use a temporary array with a fill-pointer.
-
-(defun split-list (split-function sort-function list)
-  (let ((list-len (length list)))
-    (if (= 1 list-len)
-        (list list)
-        (let ((split-table (make-hash-table :test #'equal
-                                            :size (round (* 1.5 list-len)))))
-          (mapc #'(lambda (elt)
-                    (let ((key (funcall split-function elt)))
-                      (setf (gethash key split-table)
-                            (cons elt (gethash key split-table)))))
-                list)
-          (let ((sort-array (make-array (hash-table-count split-table)
-                                        :fill-pointer 0)))
-            (maphash #'(lambda (key element)
-                         (declare (ignore element))
-                         (vector-push key sort-array))
-                     split-table)
-            (map 'list
-                 #'(lambda (key)
-                     (gethash key split-table))
-                 (sort sort-array sort-function)))))))
-|#
-@ %def split-list
 
 \paragraph{Converting sublists into group-objects}
 
@@ -841,6 +780,34 @@ don't need it at all).
                          (get-catattr (car (get-members catattr-grp))))
                         catattr-grp)
             (set-members
+             (sort (tree-location-references (get-members catattr-grp)
+					     (get-hierdepth
+					      (get-locclass locref-cls-grp)))
+                   #'(lambda (object-1 object-2)
+                       (let ((ordnum-1 (get-ordnums object-1))
+                             (ordnum-2 (get-ordnums object-2)))
+                         (or (locref-ordnum< ordnum-1 ordnum-2)
+                             (and (locref-ordnum= ordnum-1 ordnum-2)
+                                  (< (get-sort-ordnum (get-catattr object-1))
+                                     (get-sort-ordnum (get-catattr object-2))))))))
+             catattr-grp))
+        (get-members locref-cls-grp))
+  locref-cls-grp)
+
+#|
+(defun separate-into-catattr-groups-old-version (locref-cls-grp)
+  (set-members (convert-sublists-to-group-objects
+                (split-list #'(lambda (object)
+                                (get-catattr-grp-ordnum (get-catattr object)))
+                            #'<
+                            (get-members locref-cls-grp))
+                'category-attribute-group)
+               locref-cls-grp)
+  (mapc #'(lambda (catattr-grp)
+            (set-ordnum (get-catattr-grp-ordnum
+                         (get-catattr (car (get-members catattr-grp))))
+                        catattr-grp)
+            (set-members
              (sort (get-members catattr-grp)
                    #'(lambda (object-1 object-2)
                        (let ((ordnum-1 (get-ordnums object-1))
@@ -852,10 +819,200 @@ don't need it at all).
              catattr-grp))
         (get-members locref-cls-grp))
   locref-cls-grp)
+|#
 @ %def category-attribute-group separate-into-catattr-groups
 
 <<Export-list of submodule \module{idxentry}>>=
 (export '(category-attribute-group))
+@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Building location-reference trees}
+
+Sometimes it is desirable to form location-references into a
+hierarchy. For example the following sequence of location-references
+\begin{center}
+1--2, 1--3, 1--4, 1--7
+\end{center}
+may also be written as
+\begin{center}
+  1\quad{}2, 3, 4, 7 .
+\end{center}
+We call this type of conversion \term{treeing} of a list of
+location-references. To tree a list of location-references some
+preconditions must be fulfilled:
+\begin{enumerate}
+\item They must be members of a \class{layered-location-class}.
+\item All location-references must be of the same class.
+\end{enumerate}
+A more subtle problem arises, when we use location-references that
+own different category-attributes. Imagine the following list
+\begin{center}
+\textbf{1--2}, 1--3, \textbf{1--4}, 1--7
+\end{center}
+what should the result look like? The most obvious solution might be
+\begin{center}
+  1\quad{}\textbf{2}, 3, \textbf{4}, 7 .
+\end{center}
+but there are other possibilities as well. Since this situation can
+only occur in a single category-attribute-group, we choose the least
+specific category-attribute of the group as the catattr of the
+\emph{root}-reference (in this example the `1') and the
+sub-location-references keep their attribute. So for the group
+\begin{center}
+  \texttt{(bold italic default)}
+\end{center}
+we use \emph{always} \texttt{default} as the category-attribute of the
+root-reference (see [[get-last-in-group]]). We hope this is the most
+intuitive solution for the moment.
+
+<<Treeing location-references>>=
+(defmacro take-first (list)
+  `(AND ,list  (LIST (CAR ,list))))
+
+(defun tree-location-references (locref-list
+                                 max-depth
+                                 &optional (curr-depth 1))
+  (if (or (endp locref-list)        #| nothing more to do |#
+	  (> curr-depth max-depth)) #| we reached the end |#
+      locref-list  #| this is the THEN case |#
+      (let ((locref-slist (split-list #'(lambda (locref)
+					  (car (get-layers locref)))
+				      #'string<
+				      locref-list)))
+	(mapcar
+	 #'(lambda (sublist)
+	     (let* ((locref (car sublist))
+		    (layers (get-layers locref)))
+	       (if (= 1 (length layers))
+		   (progn #| length = 1 |#
+		     (set-subrefs
+		      (sort-locrefs
+		       (tree-location-references (remove-first-layers
+						  (cdr sublist))
+						 max-depth
+						 (1+ curr-depth)))
+		      locref)
+		     locref)
+		   (let #| length > 1 |#
+		       ((new-locref
+			 (make-layered-location-reference
+			  :layers   (take-first (get-layers locref))
+			  :ordnums  (take-first (get-ordnums locref))
+			  :locclass (get-locclass locref)
+			  :catattr  (get-last-in-group (get-catattr locref))
+			  )))
+		     (set-subrefs
+		      (sort-locrefs
+		       (tree-location-references (remove-first-layers sublist)
+						 max-depth
+						 (1+ curr-depth)))
+		      new-locref)
+		     new-locref))))
+	 locref-slist))))
+@ %def take-first tree-location-references
+
+<<Treeing location-references>>=
+(defun remove-first-layers (locref-list)
+  (declare (inline))
+  (mapc #'(lambda (locref)
+	    (typecase locref
+	      (layered-location-reference
+		 (set-ordnums (cdr (get-ordnums locref)) locref)
+		 (set-layers  (cdr (get-layers  locref)) locref))
+	      (location-range
+		 (let ((first (get-first locref))
+		       (last (get-last locref)))
+		   (set-layers  (cdr (get-layers  first)) first)
+		   (set-ordnums (cdr (get-ordnums first)) first)
+		   (set-layers  (cdr (get-layers  last))  last)
+		   (set-ordnums (cdr (get-ordnums last))  last)
+		   ))))
+	locref-list)
+  locref-list)
+@ %def remove-first-layers
+
+<<Export-list of submodule \module{locref}>>=
+(export '(tree-location-references))
+@
+
+<<Treeing location-references>>=
+(defun sort-locrefs (locref-list)
+  #+:ASSERT! (assert! (listp locref-list))
+  (sort locref-list
+        #'(lambda (locref-1 locref-2)
+            (locref-ordnum< (get-ordnums locref-1)
+			    (get-ordnums locref-2)))))
+@ %def sort-locrefs
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Splitting into sublists}
+
+This is a function that operates on lists. It takes a list and groups
+its elements into new subgroups. The given function [[split-function]]
+must return the same value for all elements that belong to the same
+group. These values are compared with the [[#'equal]]-predicate. Its
+meaning is to create \emph{equivalence-classes} of elements. The
+resulting sublists are sorted by function [[sort-function]] which must
+define a \emph{less-than}-predicate of the values [[split-function]]
+delivers. The result is a list containing the sorted sublists.
+
+<<Splitting lists into sublists --- [[split-list]]>>=
+(defun split-list (split-function sort-function list)
+  (let ((list-len (length list)))
+    (if (= 1 list-len)
+        (list list)
+        (let ((split-table (make-hash-table :test #'equal
+                                            :size (round (* 1.2 list-len))))
+              (key-list '()))
+          (mapc #'(lambda (elt)
+                    (let ((key (funcall split-function elt)))
+                      (setf (gethash key split-table)
+                            (cons elt (gethash key split-table)))))
+                list)
+          (maphash #'(lambda (key element)
+                       (declare (ignore element))
+                       (push key key-list))
+                   split-table)
+          (maplist #'(lambda (rest-list)
+                       (rplaca rest-list (gethash (car rest-list)
+                                                  split-table)))
+                   (sort key-list sort-function))
+          key-list))))
+
+#|
+This version seems to be a little bit slower than the above one,
+despite the fact that we use a temporary array with a fill-pointer.
+
+(defun split-list (split-function sort-function list)
+  (let ((list-len (length list)))
+    (if (= 1 list-len)
+        (list list)
+        (let ((split-table (make-hash-table :test #'equal
+                                            :size (round (* 1.5 list-len)))))
+          (mapc #'(lambda (elt)
+                    (let ((key (funcall split-function elt)))
+                      (setf (gethash key split-table)
+                            (cons elt (gethash key split-table)))))
+                list)
+          (let ((sort-array (make-array (hash-table-count split-table)
+                                        :fill-pointer 0)))
+            (maphash #'(lambda (key element)
+                         (declare (ignore element))
+                         (vector-push key sort-array))
+                     split-table)
+            (map 'list
+                 #'(lambda (key)
+                     (gethash key split-table))
+                 (sort sort-array sort-function)))))))
+|#
+@ %def split-list
+
+<<Export-list of submodule \module{locref}>>=
+(export '(split-list))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -966,7 +1123,10 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.16  1996/05/29 14:15:38  kehr
+%% Revision 1.17  1996/06/03 10:01:33  kehr
+%% Added support for treeing layered-location-references.
+%%
+%% Revision 1.16  1996/05/29  14:15:38  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%

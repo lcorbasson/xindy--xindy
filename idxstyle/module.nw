@@ -137,7 +137,7 @@ var-classes) and cross-reference classes.
 
 \subsubsection{Cross-reference location-classes}
 
-\begin{istui}{define-loccl}{\emph{loccls-name}
+\begin{istui}{define-crossref-class}{\emph{loccls-name}
     \opt{\sw{:unverified}}}%%
   Defines a cross-reference location-class with name
   \emph{loccls-name}. Since we distuingish between \emph{verified} and

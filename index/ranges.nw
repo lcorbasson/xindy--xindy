@@ -69,12 +69,12 @@ Class \textsf{location-range} contains the following slots.
     ((length   :reader get-length                     :initarg :length)
      (first    :reader get-first                      :initarg :first)
      (last     :reader get-last    :writer set-last   :initarg :last)
-     (inner    :reader get-inner   :writer set-inner  :initarg :inner)
+     (layers                                          :initarg :layers)
      (ordnums                                         :initarg :ordnums)
+     (inner    :reader get-inner   :writer set-inner  :initarg :inner)
      (locclass                                        :initarg :locclass)
-     (catattr                                         :initarg :catattr)))
-
-#|:reader(s) get-catattr/get-locclass/get-ordnums are already optimized macros|#
+     (catattr                                         :initarg :catattr)
+     (subrefs  :initform '())))
 
 (defun make-location-range (&key length first last first-ordnum inner locclass)
   (make-instance 'location-range
@@ -83,6 +83,7 @@ Class \textsf{location-range} contains the following slots.
                  :last     last
                  :inner    inner
                  :ordnums  first-ordnum
+		 :layers   (get-layers first)
                  :locclass locclass
                  :catattr  (get-catattr first)))
 @ %def location-range make-location-range
@@ -637,7 +638,10 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
-%% Revision 1.4  1996/05/29 14:15:46  kehr
+%% Revision 1.5  1996/06/03 10:01:39  kehr
+%% Added support for treeing layered-location-references.
+%%
+%% Revision 1.4  1996/05/29  14:15:46  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%
