@@ -1,19 +1,35 @@
-#!/bin/sh
+#!/usr/local/bin/perl
 #
 # $Id$
 #
-# This is a shell-skript containing the wrapper for the `xindy'
-# indexing system.
+# This is the perl-frontend to the xindy indexing system.
+# interface.
 #
 
-#
-# Some functions.
-#
+($progname = $0) =~ s#.*/##;
 
-usage() {
-	echo -e "
-`basename $0`\t[-t] [-v] [-o output] [-l logfile] [-f filtprg] [-L n]
-\tindexstyle raw-index
+$Date = `date`;
+
+require "getopts.pl";
+
+# $debug = 1;
+
+$numArgs = $#ARGV;          # save number of Commandline-Arguments
+
+# parse for command-line options
+&Getopts( "dtvio:l:f:L:" );
+
+$debug = $opt_d;
+
+# some debug-output
+print STDERR "progname:  $progname\n"  if $debug;
+print STDERR "\@ARGV:  @ARGV\n"  if $debug;
+print STDERR "\$#ARGV: $#ARGV\n" if $debug;
+
+sub usage {
+   print STDERR "\n$progname\t[-t] [-v] [-o output] [-l logfile] [-f filtprg] [-L n]
+\tindexstyle raw-index\n";
+   print STDERR <<EOMSG;
 
 options:
 
@@ -26,181 +42,190 @@ options:
   -l file  Logfile into which xindy writes useful information.
   -L n     Enter logging level \`n' = {1,2,3}.
 
-"
-	exit 2
+EOMSG
+   exit(2);
 }
 
-check_bin() {
-   if [ ! -f $runfile ]
-   then
-     echo "can't find \`$runfile' !"
-     exit 3
-   fi
-   if [ ! -x $runfile ]
-   then
-     echo "\`$runfile' not executable !"
-     exit 4
-   fi
+sub check_bin {
+    if ( ! -e $runfile ) {
+	print "Can't find \`$runfile' !\n";
+	exit(3);
+    }
+    if ( ! -x $runfile ) {
+	print "File \`$runfile' not executable !\n";
+	exit(4);
+    }
 }
 
-check_mem() {
-   if [ ! -f "$memfile" ]
-   then
-     echo "can't find \`$memfile' !"
-     exit 5
-   fi
+sub check_mem {
+    if ( ! -e "$memfile" ) {
+	print "Can't find \`$memfile' !";
+	exit(5);
+    }
+}
+
+# This function takes a string and quotes the `"' and '\' characters
+# with a leading backslash.
+
+sub quote_string {
+    local($str) = @_;
+    $str =~ s#\\#\\\\#g;
+    $str =~ s#"#\\\"#g;
+    return $str;
+}
+
+sub remove_suffix {
+    local($str) = @_;
+    $str =~ s#\.[^\.]*$##;
+    return $str;
 }
 
 #
 # here we go...
 #
 
-if [ $# = 0 ]
-then
-    usage
-fi
+$numArgs = $#ARGV;          # number of Commandline-Arguments
+
+if ( $numArgs eq 1 || $opt_v || $opt_i ) { # two arguments or -v,-i specified
+   $Idxsty = $ARGV[0];
+   $Rawidx = $ARGV[1];
+} else {
+    &usage;
+}
+
+print "Idxsty = $Idxsty\n" if $debug;
+print "Rawidx = $Rawidx\n" if $debug;
 
 # Define the default xindy library directory It should be in a xindy
 # subdirectory of a sibling lib directory. Use /usr/local/lib/xindy if
 # such a directory does not exist. If /usr/local/lib/xindy does not
 # exist as well, the user must set XINDY_LIBDIR explicitely.
 
-if [ "" = "$XINDY_LIBDIR" ]
-then
-    LibDir=`expr $0 : '\(.*\)/'`
-    : ${LibDir:=.}
-    LibDir=$LibDir/../lib/xindy
-    test -d $LibDir  ||  LibDir="@XINDY_LIBDIR@"
-    XINDY_LIBDIR=$LibDir
-fi
+$XINDY_LIBDIR=$ENV{"XINDY_LIBDIR"};
 
-memfile="$XINDY_LIBDIR/xindy.mem"
-runfile="$XINDY_LIBDIR/xindy.run"
+if ( "" eq "$XINDY_LIBDIR" ) {
+    ($LibDir = $0) =~ s#(.*)/[^/]*$#\1#;
+    if ( $LibDir eq "" ) {
+	$LibDir = ".";
+    }
+    $LibDir="$LibDir/../lib/xindy";
+    if ( ! -d $LibDir ) {
+	$LibDir="@XINDY_LIBDIR@";
+    }
+    $XINDY_LIBDIR=$LibDir;
+}
+
+print "XINDY_LIBDIR = $XINDY_LIBDIR\n" if $debug;
+
+$memfile="$XINDY_LIBDIR/xindy.mem";
+$runfile="$XINDY_LIBDIR/xindy.run";
 
 # Set initial searchpath
-SEARCHPATH="(searchpath \".:@XINDY_MODULEDIR@\")"
+$SEARCHPATH="(searchpath \".:@XINDY_MODULEDIR@\")";
 
 # Add/replace (depends on the specification) the search path according
 # to the environment variable
-if [ "$XINDY_SEARCHPATH" != "" ]
-then
-    SEARCHPATH="$SEARCHPATH (searchpath \"$XINDY_SEARCHPATH\")"
-fi
+if ( $XINDY_SEARCHPATH ne "" ) {
+    $SEARCHPATH="$SEARCHPATH (searchpath \"$XINDY_SEARCHPATH\")";
+}
+print "SEARCHPATH = $SEARCHPATH\n" if $debug;
 
-# Parse all arguments.
-
-while true
-do
-  case $1 in
-    -v) version=":show-version t"
-        shift;;
-    -t) tracing=":markup-trace t"
-        shift;;
-    -n) try=1
-        shift;;
-    -c) compile=on
-        shift;;
-    -i) interactive=on
-        shift;;
-    -m) shift
-	memfile="$1"
-        shift;;
-    -o) shift
-	output="$1"
-        shift;;
-    -f) shift
-	filtprg="$1"
-        shift;;
-    -l) shift
-	logfile="$1"
-        shift;;
-    -L) shift
-	level="$1"
-        shift;;
-    -*) usage;;
-     *) break;;
-  esac
-done
+if ($opt_v) { $version = ":show-version t"; }
+if ($opt_t) { $tracing = ":markup-trace t"; }
+if ($opt_n) { $try = 1; }
+if ($opt_c) { $compile = "on"; }
+if ($opt_i) { $interactive = "on"; }
+if ($opt_m) { $memfile = $opt_m; }
+if ($opt_o) { $output = $opt_o; }
+if ($opt_f) { $filtprg = $opt_f; }
+if ($opt_l) { $logfile = $opt_l; }
+if ($opt_L) { $level = $opt_L; }
 
 # Now check if everything is present.
 
-if [ "" != "$try" ]
-then
-   check_bin
-   check_mem
-fi
-
-xindy_run="$runfile -q -M $memfile"
-
-if [ "" != "$interactive" ]
-then
-   $xindy_run
-   exit
-fi
-
-quote_string() {
-   echo "$1" | sed -e 's/"/\\\"/g' -e 's/\\/\\\\/g'
+if ( ! $try ) {
+    &check_bin;
+    &check_mem;
 }
 
-if [ "" != "$compile" ]
-then
-    if [ $# != 1 ]  # -c takes only one argument
-    then
-        usage
-    fi
-    indexstyle=`quote_string "$1"`
-    xindy_cmd="-c $indexstyle"
-else
-    if [ "" != "$version" ]
-    then
-        exec $xindy_run -x "(progn (xindy:startup $version) (exit))"
-    fi
-    if [ $# != 2 ]  # we expect exactly two arguments
-    then
-        usage
-    fi
-    indexstyle=`quote_string "$1"`
-    rawindex=`quote_string "$2"`
-    if [ "$output" = "" ]
-    then
-	# remove the suffix, if one exists
-        output="`echo $2 | sed -e 's/\.[^\.]*$//'`"
-	# append suffix ".ind"
-        output=`quote_string "$output.ind"`
-    fi
-    if [ "" != "$filtprg" ]
-    then
-	# create tmpfile
-	echo "Running filter: $filtprg ..."
-	tmpfile=/tmp/xindy.$$
-	# make ordinary exit and interruptions to remove $tmpfile
-	trap "/bin/rm $tmpfile" 0
-	trap "exit 4" 1 2 3 15
-	$filtprg < "$rawindex" > "$tmpfile"
-	echo "Finished running filter."
-	rawindex=`quote_string "$tmpfile"`
-    fi
-    if [ "$logfile" != "" ]
-    then
-        logfile=":logfile \"`quote_string "$logfile"`\""
-    fi
-    if [ "" != "$level" ]; then
-	logging=":trace-level $level"
-    fi
-    xindy_cmd="-x
+$xindy_run = "$runfile -q -M $memfile";
+print "xindy_run = $xindy_run\n" if $debug;
+
+# Run xindy interactive if this was specified via -i.
+if ( $interactive ) {
+    print "$xindy_run\n";
+    exec "$xindy_run";
+}
+
+# If specified via -v start xindy for showing the version-message.
+if ( "" ne $version ) {
+    print "$xindy_run -x \"(progn (xindy:startup $version) (exit))\"";
+    exec "$xindy_run -x \"(progn (xindy:startup $version) (exit))\"";
+}
+
+exit;
+
+# Quote the filenames, such that LISP can read it.
+$Idxsty = &quote_string($Idxsty);
+$Rawidx = &quote_string($Rawidx);
+
+# If no output-file was specified
+if ( "" eq $output ) {
+    # remove the suffix, if one exists
+    $output = &remove_suffix($Rawidx);
+    # append suffix ".ind"
+    $output = &quote_string("$output.ind");
+}
+
+# Run the intermediate filter if specified via -f.
+if ( "" ne $filtprg ) {
+    # create tmpfile
+    print "Running filter: $filtprg ...";
+    $tmpfile = "/tmp/xindy.$$";
+    # make ordinary exit and interruptions to remove $tmpfile
+    # FIXME: Missing traps
+    #trap "/bin/rm $tmpfile" 0
+    #trap "exit 4" 1 2 3 15
+    system "$filtprg < $rawindex > $tmpfile";
+    print "Finished running filter.";
+    $rawindex = &quote_string($tmpfile);
+}
+
+# Prepare logfile option.
+if ( "" ne $logfile ) {
+    $logfile = ":logfile \"" . &quote_string($logfile) . "\"";
+}
+
+# Prepare trace-level.
+if ( "" ne $level ) {
+    $logging = ":trace-level $level";
+}
+
+# This is the complete LISP-SEXP needed to start the system.
+$xindy_cmd = "-x
 (progn
    $SEARCHPATH
    (xindy:startup :idxstyle \"$indexstyle\"
 	          :rawindex \"$rawindex\"
 		  :output   \"$output\"
 		  $logfile $version $tracing $logging)
-   (exit))"
-fi
+   (exit))";
 
-if [ "" != "$try" ]
-then
-    echo $xindy_run "$xindy_cmd"
-else
-    exec $xindy_run "$xindy_cmd"
-fi
+if ( "" ne "$try" ) {
+    print  $xindy_run . "$xindy_cmd";
+} else {
+    exec $xindy_run "$xindy_cmd";
+}
 
+
+#
+# $Log$
+# Revision 1.8  1997/04/03 09:38:54  kehr
+# First check-in of the rewritten xindy script. The former shell-script
+# has now been replaced by a perl-script.
+#
+#
+
+# Local Variables:
+# mode: perl
+# End:
