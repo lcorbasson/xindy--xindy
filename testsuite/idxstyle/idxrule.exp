@@ -11,8 +11,11 @@
 xsend {(setq ic (create-indexclass "default"))}
 expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 
+xsend {nil}
+expect_NIL
+
 xsend {(mapc #'(lambda (x) (add ic (make-category-attribute x))) '("bold" "italic" "slanted" "default" "typewriter"))}
-expect -re ".*(.*).*$prompt$" { pass "$test" }
+expect -re ".*bold.*typewriter.*$prompt$" { pass "$test" }
 
 xsend {(initialize-category-attributes '(("bold" "italic" "slanted") "default" "typewriter") (get-cat-attrs ic) (get-implicit-subst-rules ic))}
 expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }

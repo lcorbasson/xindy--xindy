@@ -70,7 +70,7 @@ expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 # Generate some category-attributes
 #
 xsend {(mapc #'(lambda (x) (add ic (make-category-attribute x))) '("bold" "italic" "slanted" "default" "typewriter"))}
-expect -re ".*(.*).*$prompt$" { pass "$test" }
+expect -re ".*bold.*typewriter.*$prompt$" { pass "$test" }
 
 xsend {(initialize-category-attributes '(("bold" "italic" "slanted") "default" "typewriter") (get-cat-attrs ic) (get-implicit-subst-rules ic))}
 expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }
@@ -154,9 +154,16 @@ expect_T
 #
 # make some location-references
 #
+#
+# the next expressions were initially contained in a single send, but
+# the AIX-port of expect seems to have problems with it, so I split it
+# into several parts.
+#
+xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 1) ca-default) (cons '(2 1) ca-typewriter) (cons '(2 2) ca-italic) (cons '(2 2) ca-typewriter) (cons '(2 3) ca-typewriter))) (print "ready"))}
+expect -re ".*ready.*$prompt$" { pass "$test" }
 
-xsend {(mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 1) ca-default) (cons '(2 1) ca-typewriter) (cons '(2 2) ca-italic) (cons '(2 2) ca-typewriter) (cons '(2 3) ca-typewriter) (cons '(2 3) ca-bold) (cons '(2 4) ca-default) (cons '(2 4) ca-bold) (cons '(2 4) ca-italic) (cons '(2 7) ca-typewriter) (cons '(2 10) ca-typewriter) (cons '(2 7) ca-default) (cons '(2 8) ca-default) (cons '(2 7) ca-italic) (cons '(2 4) ca-slanted) (cons '(2 10) ca-slanted) (cons '(2 10) ca-italic)))}
-expect -re ".*CAT.*$prompt$" { pass "$test" }
+xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 3) ca-bold) (cons '(2 4) ca-default) (cons '(2 4) ca-bold) (cons '(2 4) ca-italic) (cons '(2 7) ca-typewriter) (cons '(2 10) ca-typewriter) (cons '(2 7) ca-default) (cons '(2 8) ca-default) (cons '(2 7) ca-italic) (cons '(2 4) ca-slanted) (cons '(2 10) ca-slanted) (cons '(2 10) ca-italic))) (print "ready"))}
+expect -re ".*ready.*$prompt$" { pass "$test" }
 
 #
 # now some duplicates to be ignored
