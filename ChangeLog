@@ -1,3 +1,12 @@
+Wed Dec 13 17:44:41 1995  Roger Kehr  <kehr@spelunke>
+
+	* I just finished the semi-formal description. Also implemented a
+	  transitive-hull algorithm and specified a data representation
+	  for it. It seems to work quite well. It was a lot of work and I
+	  spent a while to precisely describe what is going on. But I
+	  think implementation is now just a matter of time and less
+	  intellectual effort. (5 hrs)
+
 Mon Dec 11 18:18:20 1995  Roger Kehr  <kehr@spock>
 
 	* Today I extended the semi-formal description of the
