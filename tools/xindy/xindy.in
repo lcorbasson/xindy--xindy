@@ -3,7 +3,6 @@
 # $Id$
 #
 # This is the perl-frontend to the xindy indexing system.
-# interface.
 #
 
 ($progname = $0) =~ s#.*/##;
@@ -14,10 +13,10 @@ require "getopts.pl";
 
 # $debug = 1;
 
-$numArgs = $#ARGV;          # save number of Commandline-Arguments
+$numArgs = $#ARGV; # save number of command line arguments
 
 # parse for command-line options
-&Getopts( "dtvio:l:f:L:" );
+&Getopts( "dtvnio:l:f:L:" );
 
 $debug = $opt_d;
 
@@ -25,6 +24,10 @@ $debug = $opt_d;
 print STDERR "progname:  $progname\n"  if $debug;
 print STDERR "\@ARGV:  @ARGV\n"  if $debug;
 print STDERR "\$#ARGV: $#ARGV\n" if $debug;
+
+#
+# Synopsis
+#
 
 sub usage {
    print STDERR "\n$progname\t[-t] [-v] [-o output] [-l logfile] [-f filtprg] [-L n]
@@ -46,7 +49,14 @@ EOMSG
    exit(2);
 }
 
+
+#
+# These functions check for the correct installation of the base
+# system.
+#
+
 sub check_bin {
+    print "runfile = $runfile\n" if $debug;
     if ( ! -e $runfile ) {
 	print "Can't find \`$runfile' !\n";
 	exit(3);
@@ -58,15 +68,17 @@ sub check_bin {
 }
 
 sub check_mem {
-    if ( ! -e "$memfile" ) {
+    print "memfile = $memfile\n" if $debug;
+    if ( ! -e $memfile ) {
 	print "Can't find \`$memfile' !";
 	exit(5);
     }
 }
 
+#
 # This function takes a string and quotes the `"' and '\' characters
 # with a leading backslash.
-
+#
 sub quote_string {
     local($str) = @_;
     $str =~ s#\\#\\\\#g;
@@ -78,6 +90,24 @@ sub remove_suffix {
     local($str) = @_;
     $str =~ s#\.[^\.]*$##;
     return $str;
+}
+
+#
+# The generic signal handler that removes temporary files if
+# necessary.
+#
+
+sub sig_catch {
+    unlink $tmpfile;
+    exit(9);
+}
+
+sub sig_setup {
+    $SIG{"HUP"}  = "sig_catch"; # 1
+    $SIG{"INT"}  = "sig_catch"; # 2
+    $SIG{"QUIT"} = "sig_catch"; # 3
+    $SIG{"TERM"} = "sig_catch"; # 15
+    $SigHandlerSet = 1;
 }
 
 #
@@ -102,6 +132,7 @@ print "Rawidx = $Rawidx\n" if $debug;
 # exist as well, the user must set XINDY_LIBDIR explicitely.
 
 $XINDY_LIBDIR=$ENV{"XINDY_LIBDIR"};
+print "XINDY_LIBDIR (from Environment) = $XINDY_LIBDIR\n" if $debug;
 
 if ( "" eq "$XINDY_LIBDIR" ) {
     ($LibDir = $0) =~ s#(.*)/[^/]*$#\1#;
@@ -153,24 +184,22 @@ print "xindy_run = $xindy_run\n" if $debug;
 
 # Run xindy interactive if this was specified via -i.
 if ( $interactive ) {
-    print "$xindy_run\n";
+    print "$xindy_run\n" if $debug;
     exec "$xindy_run";
 }
 
 # If specified via -v start xindy for showing the version-message.
-if ( "" ne $version ) {
-    print "$xindy_run -x \"(progn (xindy:startup $version) (exit))\"";
+if ( $version ) {
+    print "$xindy_run -x \"(progn (xindy:startup $version) (exit))\"" if $debug;
     exec "$xindy_run -x \"(progn (xindy:startup $version) (exit))\"";
 }
-
-exit;
 
 # Quote the filenames, such that LISP can read it.
 $Idxsty = &quote_string($Idxsty);
 $Rawidx = &quote_string($Rawidx);
 
 # If no output-file was specified
-if ( "" eq $output ) {
+if ( ! $output ) {
     # remove the suffix, if one exists
     $output = &remove_suffix($Rawidx);
     # append suffix ".ind"
@@ -178,26 +207,23 @@ if ( "" eq $output ) {
 }
 
 # Run the intermediate filter if specified via -f.
-if ( "" ne $filtprg ) {
+if ( $filtprg ) {
     # create tmpfile
-    print "Running filter: $filtprg ...";
     $tmpfile = "/tmp/xindy.$$";
-    # make ordinary exit and interruptions to remove $tmpfile
-    # FIXME: Missing traps
-    #trap "/bin/rm $tmpfile" 0
-    #trap "exit 4" 1 2 3 15
-    system "$filtprg < $rawindex > $tmpfile";
-    print "Finished running filter.";
+    &sig_setup; # setup signal handler for cleanup
+    print "Running filter: $filtprg \< $Rawidx > $tmpfile\n";
+    system "$filtprg \< $Rawidx > $tmpfile";
+    print "Finished running filter.\n\n";
     $rawindex = &quote_string($tmpfile);
 }
 
 # Prepare logfile option.
-if ( "" ne $logfile ) {
+if ( $logfile ) {
     $logfile = ":logfile \"" . &quote_string($logfile) . "\"";
 }
 
 # Prepare trace-level.
-if ( "" ne $level ) {
+if ( $level ) {
     $logging = ":trace-level $level";
 }
 
@@ -205,25 +231,35 @@ if ( "" ne $level ) {
 $xindy_cmd = "-x
 (progn
    $SEARCHPATH
-   (xindy:startup :idxstyle \"$indexstyle\"
-	          :rawindex \"$rawindex\"
+   (xindy:startup :idxstyle \"$Idxsty\"
+	          :rawindex \"$Rawidx\"
 		  :output   \"$output\"
 		  $logfile $version $tracing $logging)
    (exit))";
 
-if ( "" ne "$try" ) {
+
+# Run program and do final cleanup
+
+if ( $try ) {
     print  $xindy_run . "$xindy_cmd";
 } else {
-    exec $xindy_run "$xindy_cmd";
+    if ( $SigHandlerSet ) {
+        system "$xindy_run '$xindy_cmd'";
+	&sig_catch; # do cleanup
+    } else {
+        exec "$xindy_run '$xindy_cmd'";
+    }
 }
 
 
 #
 # $Log$
+# Revision 1.9  1997/04/03 13:23:51  kehr
+# Many bugs fixed during testing.
+#
 # Revision 1.8  1997/04/03 09:38:54  kehr
 # First check-in of the rewritten xindy script. The former shell-script
 # has now been replaced by a perl-script.
-#
 #
 
 # Local Variables:
