@@ -10,11 +10,11 @@
 
 <!-- Title information -->
 
-<title>Manual of the <bf/xindy/ indexing system
+<title>Manual of the <sf/xindy/ indexing system
 <author>Roger Kehr, email: <tt/kehr@iti.informatik.th-darmstadt.de/
 <date>$Date$
 <abstract>
-This document describes the indexing system <bf/xindy/.
+This document describes the indexing system <sf/xindy/.
 </abstract>
 
 <!-- Table of contents -->
@@ -23,20 +23,20 @@ This document describes the indexing system <bf/xindy/.
 <!-- Begin the document -->
 
 
-<sect>About <bf/xindy/
+<sect>About <sf/xindy/
 
 <p>
-<bf/xindy/ means fle<bf/x/ible <bf/ind/exing s<bf/y/stem. It is an
+<sf/xindy/ means fle<sf/x/ible <sf/ind/exing s<sf/y/stem. It is an
 indexing system that can be used to generate book-like indexes for
-arbitrary text-formatting systems. This term includes systems such as
-TeX and LaTeX, the roff-familiy or SGML-based systems that process
-some kind of text and generate a special output-file. It is not fixed
-to any specific system, but can be configured for a wide variety of
-purposes.
+arbitrary document-preparation systems. This term includes systems
+such as TeX and LaTeX, the roff-family or SGML-based systems that
+process some kind of text and generate a special output-file. It is
+not fixed to any specific system, but can be configured for a wide
+variety of purposes.
 
 Those systems usually don't have the capability to build an index of
 their own, but use other tools to do these work. Such tools are often
-called <em/indexing systems/ or <em/indexers/. <bf/xindy/ is such a
+called <em/indexing systems/ or <em/indexers/. <sf/xindy/ is such a
 system that takes some input data (the <em/raw-index/) and a
 description how to process and markup the raw-index (the so-called
 <em/index-style/) and builds wonderful indexes that can be fed back
@@ -85,7 +85,7 @@ Donald E. Knuth, <em/The TeXbook/ (1984)
 
 The second task to be mastered is to actually compile the index. This
 is a rather tediuos and error-prone process that should be entirely
-left to computers. Indexing systems such as xindy don't support the
+left to computers. Indexing systems such as <sf/xindy/ don't support the
 author in deciding which terms should appear in the index. They master
 the second task after one has written a specification how the
 indexentries should be sorted, merged and finally tagged with the
@@ -95,8 +95,8 @@ appropriate markup.
 <sect1>History
 
 <p>
-In 1987 the <tt/makeindex/-system was developed by Pheong Chen and
-others that gave the large community of TeX/LaTeX users a tool to
+In 1987, the <tt/makeindex/-system was developed by Pheong Chen and
+others. It gave the large community of TeX/LaTeX users a tool to
 easily build indexes and include them into their own documents. In the
 following years it became a de facto standard in the TeX-community.
 Its markup is configurable and one build do a lot of pretty indexes
@@ -118,7 +118,7 @@ But there were still a lot of wishes and it turned out, that the old
 system was not extensible enough to allow major rewrites of the
 source. In 1994 I started a project to reimplement the old
 <tt/makeindex/-system and to introduce a bunch of new features. They
-are described in section <ref id="why xindy">. So xindy can be viewed
+are described in section <ref id="why xindy">. So <sf/xindy/ can be viewed
 as the third step in the tradition of <tt/makeindex/.
 
 
@@ -147,20 +147,20 @@ should be emitted when writing the index down to the output stream.
 The result is sometimes fed back into the document preparation system
 (as it is in the case of TeX) or used otherwise.
 
-The xindy system is oriented on book-like indexes in a form that is
+The <sf/xindy/ system is oriented on book-like indexes in a form that is
 described later in detail. The format of the input data is fixed and a
-small tool that converts the raw-index in a form suitable for xindy
+small tool that converts the raw-index in a form suitable for <sf/xindy/
 shuld not be a hurdle at all. The user is normally not involved in the
-correct format suitable for xindy and some tools will make this work
+correct format suitable for <sf/xindy/ and some tools will make this work
 invisible to him. The exact specification is given in section
 <ref id="raw index" name="&dquot;Raw index&dquot;">
 
-In contrast, the output of the xindy system is highly configureable
+In contrast, the output of the <sf/xindy/ system is highly configureable
 and can produce a variety of different markups for an index.
-Additionally, the way xindy processes the index data can be
+Additionally, the way <sf/xindy/ processes the index data can be
 parametrised and controlled in many ways and gives the user a powerful
 framework for describing complex indexes. The user can learn to tell
-xindy how it should produce an output according to his wishes or
+<sf/xindy/ how it should produce an output according to his wishes or
 simply use some of the predefined styles that com with the
 distribution.
 
@@ -170,13 +170,106 @@ distribution.
 
 <p>
 
-<sect1>The indexstyle
 
-<sect2>Overview
+<sect1>The input
+
+<p>
+In the following sections we introduce some terms that are neccessary
+to understand the way xindy works.
 
 <sect2>Location-classes
 
+<p>
+The index consists of a set of <em/indexentries/. Each indexentry
+references at least one <em/loctation/ in the document. A location is
+a logical or physical part of a document, such as a single page, a
+section or subsection, etc. The symbolic name of a location is called
+a <em/location-reference/. The location-reference is always
+represented as a string (a sequence of characters). The following
+examples may give you an idea how location-references could look like.
+
+<tscreen>
+<tt/"25"/ represents a page-number.
+</tscreen>
+
+<tscreen>
+<tt/"Chapter-3"/ represents the third chapter of a document.
+</tscreen>
+
+<tscreen>
+<tt/"A-I"/ represents the first page, written in uppercase roman
+numbers of the appendix `A', separated by a hyphen.
+</tscreen>
+
+<tscreen>
+<tt/"2.3.4"/ represents the sub-sub-section 2.3.4 of a document.
+</tscreen>
+
+As we can see the location-references often are hierarchially composed
+of smaller entities, such as numbers or names. All location-references
+that belong to the same class form a <em/location-class/. A
+location-class is composed of <em/alphabets/ and <em/separators/.
+xindy has a built-in set of basic alphabets.
+
+<p>
+<descrip>
+<tag/arabic-numbers/ contains all positive numbers beginning with
+zero: 0, 1, 2, ....
+
+<tag/roman-numbers-uppercase/ the roman numbers I, II, III, (IIII/IV),
+V, ... It recognises the old and new roman number system.
+
+<tag/roman-numbers-lowercase/ the same for the lowercase roman
+numbers.
+
+<tag/ALPHA/ the english alphabet (uppercase letters).
+
+<tag/alpha/ the english alphabet (lowercase letters).
+
+<tag/digits/ the digits 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9 in that order.
+
+</descrip>
+
+The user is free to define new alphabets as he wishes. See the
+commands <tt/define-alphabet/ and <tt/define-enumeration/ for further
+details.
+
+A complete location-class can be defined by composing alphabets and
+separators. The location-class of the example <tt/"A-I"/ is defined as
+follows
+
+<tscreen>
+<tt/(ALPHA "-" roman-numbers-uppercase)/
+</tscreen>
+
+This is a list that completely describes all possible instances of
+this location-class. Other valid members are <tt/"A-II"/, <tt/B-VI/,
+etc. Location-classes are defined with the command
+<tt/define-location-class/.
+
+The indexer now reads the incoming strings representing
+location-references and tries to match them against a previously
+defined location-class. There exist no predefined location-classes.
+This is neccessary to be able to sort the location-references and
+possibly build ranges.
+
+
 <sect2>Attributes
+
+<p>
+Each location-reference is associated a so-called <em/attribute/.
+Attributes may be used to give a location-reference a different
+meaning that may influence the processing and markup of this
+reference. Sometimes location-references pointing to semantically
+different locations such as a definition or a usage of a term are
+tagged differently. They often appear in italics of boldface
+indicating their differences. An attribute may now be used to express
+this difference. Since the indexer needs the possible attributes
+before the indexentries are read in, the command
+<tt/define-attributes/ defines a set of attributes and how they
+interact.
+
+
 
 <sect2>Cross-reference-classes
 
@@ -195,14 +288,14 @@ distribution.
 The raw-index is the stream of data that represents the index that is
 to be processed. Since many different document preparation systems may
 use different forms of representing an index, their output must be
-transformed in a form readable by xindy. We also could have written an
+transformed in a form readable by <sf/xindy/. We also could have written an
 configurable parser performing this task, but usually a tool written
 in some text processing tools such as <tt/perl/, <tt/sed/ or <tt/awk/
-can achieve the same task as well. So adapting xindy to a completely
+can achieve the same task as well. So adapting <sf/xindy/ to a completely
 different system can mostly be done by writing an appropriate
 raw-index filter.
 
-The format of the raw-index interface of xindy defined as follows:
+The format of the raw-index interface of <sf/xindy/ defined as follows:
 
 <code>
 (indexentry :key string-list [:print string-list] [:attr string]
@@ -288,7 +381,117 @@ mustn't be used together with cross-references.
 
 
 
-<sect>Invoking xindy
+<sect>Invoking <sf/xindy/
+
+
+
+<sect>Command list
+
+<p>
+Here is the complete list of xindy's commands that may be used in the
+indexstyle. The symbol <tt/name/ always refers to a string. The
+commands are listed in alphabetical order.
+
+
+
+<code>
+(define-alphabet name string-list)
+</code>
+
+Defines <tt/name/ to be the alphabet consisting of all elements of the
+<tt/string-list/. Examples:
+
+<verb>
+(define-alphabet "example-alphabet" ("An" "Example" "Alphabet"))
+</verb>
+
+defines an alphabet consisting of exactly three symbols. For the
+successor-relationship holds: <tt/succ("An")="Example"/ and
+<tt/succ("Example")="Alphabet"/. The built-in alphabet <bf/digits/ is
+defined as follows:
+
+<verb>
+(define-alphabet "digits"
+                 ("0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
+</verb>
+
+
+<code>
+(define-crossref-class name [:unverified])
+</code>
+
+Defines <tt/name/ to be a class of cross-references. We distinguish
+two types of cross-reference classes. <em/Verified/ cross-reference
+classes can be checked for dangling references. If for instance a
+cross-reference points to the non-existent keyword `foo' a warning is
+issued and the user is advised to correct the invalid cross-reference.
+This is the default. If for some reasons this mechanism must be
+deactivated the switch <tt/:unverified/ can be used to suppress this
+behaviour.
+
+
+<code>
+(define-location-class name layer-list
+                       [:min-range-length num]
+		       [:hierdepth num]
+		       [:var])
+</code>
+
+Defines <tt/name/ to be a location-class consisting of the given list
+of layers. A list of layers may consists of names of basetypes and/or
+strings representing separators. All strings that are no valid
+alphabet names are used as separators. If the keyword
+<tt/:min-range-length/ is specified we define the <em/minimum
+range-length/ to be used when building ranges. The argument <tt/num/
+must be a positive integer number or the keyword <tt/none/ in which
+case the building of ranges is disallowed. If the switch <tt/:var/ is
+specified the declared class is of type <em/variable/, i.e. it is a
+<em/var-location-class/. Since building of ranges is currently only
+allowed for standard classes <tt/:var/ and <tt/:min-range-length/
+mustn't be used together. Examples:
+
+<verb>
+(define-location-class "page-numbers" ("arabic-numbers")
+		       :minimum-range-length 3)
+</verb>
+
+Defines the location-class <tt/page-numbers/ consisting of one layer.
+Since the minimum range-length is set to 3 the location-references 2,
+3 and 4 don't form a range because the range-length is only 2. But the
+references 6, 7, 8, and 9 are enough to form a range. Some example
+instances are <tt/0/, <tt/1/, ... <tt/2313/, etc.
+
+<verb>
+(define-location-class "sections" :var
+   ("arabic-numbers" "." "arabic-numbers" "." "arabic-numbers"))
+</verb>
+
+defines a variable location-class. Valid instances are <tt/1/,
+<tt/1.1/, <tt/1.2/, <tt/2/, <tt/2.4.5/, but none of <tt/2-3/ (wrong
+separator), <tt/1.2.3.4/ (more than 3 layers), <tt/2.3-iv/ (roman
+number instead of arabic one).
+
+
+<code>
+(define-location-class-order list)
+</code>
+
+Defines the order in which the location-classes are written to the
+output stream. The parameter <tt/list/ is a list of names of
+location-classes. Examples:
+
+<verb>
+(define-location-class-order
+    ("page-numbers" "sections" "xrefs"))
+</verb>
+
+tells the system that the page-numbers should appear before the
+section-numbers and that the cross-references should appear at the
+end. If this command is ommitted, the declaration order of the
+location-classes in the indexstyle is implicitely used as the output
+order. In the case that a location-class does not appear in the list,
+the output may behave unexpectedly, so you should always enumerate all
+used location-classes when using this command.
 
 
 <sect>Installation
