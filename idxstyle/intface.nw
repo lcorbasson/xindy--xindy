@@ -650,22 +650,40 @@ define several letter groups at once.
     (unless (member file *included-files* :test #'equalp)
       (push file *included-files*)
       (info "~&Loading module ~S..." filename)
+      (watched-load file :echo t)
+      (info "~&Finished loading module ~S.~%" filename))))
+
+#|
+(defun do-require (filename)
+  (let ((file (find-file filename)))
+    (unless (member file *included-files* :test #'equalp)
+      (push file *included-files*)
+      (info "~&Loading module ~S..." filename)
       (let ((*standard-output* (make-string-output-stream)))
         (handler-case
             (load file :verbose nil :echo t)
+;         (stream-error (cond)
+;                       (step
+;                        (progn
+;                          (oops*
+;                            (simple-condition-format-string cond)
+;                            (simple-condition-format-arguments cond))
+;                          (exit))
+;                        )
+;                       )
           (error (condition)
-                 (info "~&~%~A~%" ";;;;;;;;;;;;;;;;;;;;;;;;;;")
-                 (info "~A~%"     ";; BEGIN  INDEXSTYLE-FILE")
-                 (info "~A~%~%"   ";;;;;;;;;;;;;;;;;;;;;;;;;;")
-                 (info "~A" (get-output-stream-string *standard-output*))
                  (info "~&~%~A~%" ";;;;;;;;;;;;;;;;;;;;;;;;")
-                 (info "~A~%"     ";; END  INDEXSTYLE-FILE")
+                 (info "~A~%"     ";; ERROR SECTION START")
+                 (info "~%~A~%" (get-output-stream-string *standard-output*))
+                 (info "~%~A~%"   ";; ERROR SECTION END")
                  (info "~A~%~%"   ";;;;;;;;;;;;;;;;;;;;;;;;")
-;;                 (oops (simple-condition-format-string    condition)
-;;                       (simple-condition-format-arguments condition))
-                 (error-exit)))
+                 (oops* (simple-condition-format-string    condition)
+                        (simple-condition-format-arguments condition))
+                 (error-exit))
+          )
         )
       (info "~&Finished loading module ~S.~%" filename))))
+|#
 @ %def require do-require
 
 \no Since the built-in [[load]] is not very clever when searching for
@@ -686,6 +704,69 @@ find one we load it as usual.
                        *load-paths*)))
       (or found (error "Could not find file ~S !" filename)))))
 @ %def find-file
+
+<<Including files>>=
+(defvar *wl-fmt* "~&Error in section:~A")
+(defun watched-load (filename
+		     &key
+		     (print *load-print*)
+		     (if-does-not-exist t)
+		     (echo *load-echo*))
+  (let ((stream (open (setq filename (pathname filename))
+		      :direction :input-immutable
+		      :element-type 'string-char
+		      :if-does-not-exist nil)))
+    (if stream
+	(let* ((load-stream (make-string-output-stream))
+	       (input-stream (if echo
+				 (make-echo-stream stream load-stream)
+				 stream
+				 ))
+	       (*load-pathname* (if (pathnamep filename) filename nil))
+	       (*load-truename* (if (pathnamep filename) (truename filename) nil))
+	       (*package* *package*)	; *PACKAGE* binden
+	       (*readtable* *readtable*) ; *READTABLE* binden
+	       (end-of-file "EOF"))	; einmaliges Objekt
+	  (setq sys::*load-input-stream* input-stream)
+	  (block nil
+	    (unwind-protect
+		 (tagbody weiter
+		    (let* ((obj
+			    (handler-case (read input-stream nil end-of-file)
+			      (error (cond)
+				(when echo
+				  (info *wl-fmt* (get-output-stream-string
+						  load-stream)))
+				(oops* (simple-condition-format-string cond)
+				       (simple-condition-format-arguments cond))
+				(error-exit))))
+			   (str (get-output-stream-string load-stream)))
+		      (when (eql obj end-of-file)
+			(return-from nil))
+		      (setq obj
+			    (multiple-value-list
+				(cond ((compiled-function-p obj) (funcall obj))
+				      ;;(compiling (funcall (compile-form obj nil nil nil nil nil)))
+				      (t (handler-case (eval obj)
+					   (error (cond)
+					     (info *wl-fmt* str)
+					     (oops* (simple-condition-format-string cond)
+						    (simple-condition-format-arguments cond))
+					     (error-exit)))
+					 (get-output-stream-string load-stream)
+					 ))))
+		      (when print (when obj (print (first obj))))
+		      )
+		    (go weiter)
+		    )
+	      (close stream) (close input-stream)
+	      ) )
+	  t)
+	(if if-does-not-exist
+	    (error "A file with name ~A does not exist" filename)
+	    nil)
+	) ))
+@ %def watched-load
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -780,6 +861,17 @@ return it immediately.
 The following code was borrowed from Gabor Herr which he used in his
 \textsf{ViEWS}-project. It is the heart of the interface macros.
 
+One thing we have added is the following kludge:
+[[destructuring-switch-bind]] preprocesses its arguments and calls
+[[structuring-bind]] to process the remaining arguments. If an error
+occurs in this situation we would not be able to print an error
+message that prints the whole command that caused the problems. Thus,
+we have added an handler around the [[destructuring-bind]]-call (see
+below) and print an error message with the whole command. To make this
+work we make the variable [[whole]] special such that all other
+commands using [[des-sw-bd]] can use this feature with the [[&whole
+whole]] mechanism as part of their macro-arguments.
+
 <<Destructuring-switch-bind macro>>=
 ;;; $Id$
 ;;;----------------------------------------------------------------------
@@ -793,7 +885,8 @@ The following code was borrowed from Gabor Herr which he used in his
 ;(provide 'util-lib)
 ;(in-package 'util-lib)
 
-(export '(destructuring-switch-bind &switch))
+(defvar whole)
+(export '(destructuring-switch-bind &switch whole))
 
 (defmacro destructuring-switch-bind (lambdalist expr . body)
   "Similar to 'destructuring-bind' but also allows switch options at the
@@ -875,16 +968,17 @@ NIL in cases where no switch keyword was found in EXPR.
     ;; construct the expansion form
     ` (LET ((<DESTRUCTURING-SWITCH-FORM> ,expr))
         (LET ,bindings
-	  (HANDLER-CASE
-	    (DESTRUCTURING-BIND ,lambdalist
-		(SET-DIFFERENCE <DESTRUCTURING-SWITCH-FORM>
-				',switchkeys)
-	      ,@body)
-	    (ERROR (COND)
-		   (DECLARE (IGNORE COND))
-		   (ERROR "~&Syntax Error in ~S !" WHOLE))
-	    )
-	  )
+          (HANDLER-CASE
+            (DESTRUCTURING-BIND ,lambdalist
+                (SET-DIFFERENCE <DESTRUCTURING-SWITCH-FORM>
+                                ',switchkeys)
+              ,@body)
+            (ERROR (COND)
+                   (DECLARE (IGNORE COND))
+                   (ERROR "~&Syntax Error in ~S." WHOLE)
+                   )
+            )
+          )
         )
       ))
 
@@ -934,6 +1028,10 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.22  1997/01/22 16:44:47  kehr
+%% Replaced the (load ...) with the new (watched-load ...) that produces
+%% a better error information in case of a broken indexstyle file.
+%%
 %% Revision 1.21  1997/01/17 16:42:11  kehr
 %% Several changes for new version 1.1.
 %%
