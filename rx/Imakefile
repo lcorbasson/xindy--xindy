@@ -10,7 +10,6 @@ XCOMM $Id$
 
 /* needed modules */
 #include <Project.imk>
-#include <noweb-wrap.imk>
 
 #include <Lisp-mod.imk>
 /* This must be included after the redefinition of the above rule(s) */
@@ -25,8 +24,11 @@ XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
 OBJECTS = ordrules.o ordrulei.o rxsub.o rx.o regexi.o
+
 /* CLISP   = ./lisp.run -M ./lispinit.mem */
 CLISP   = clisp
+
+C_FLAGS = -O2
 
 ordrulei.c: ordrulei.lsp
 	    $(CLISP) -c ordrulei.lsp
@@ -44,10 +46,13 @@ clean::
 CObjectTarget(regexi,-I.)
 CObjectTarget(rxsub,-I.)
 CObjectTarget(rx,-I.)
-CObjectTarget(ordrules,-I.)
+CObjectTarget(ordrules,-funsigned-char -I.)
 CObjectTarget(ordrulei,-I.)
 
-CVSAdd(rxsub.h rxsub.c regexi.c)
+CObjectTarget(test-ordrules,-I.)
+CLinkProgramTarget(test-ordrules,test-ordrules.o,,libordrules.a rx/librx.a)
+
+CVSAdd(rxsub.h rxsub.c regexi.c clisp.h)
 CVSAdd(mkind.h ordrules.h ordrules.c)
 CVSAdd(debug.h)
 CVSAdd(*.lsp)
@@ -59,7 +64,14 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.4  1996/07/03 18:48:46  kehr
+ * Revision 1.5  1996/07/18 15:56:35  kehr
+ * Checkin after all changes that resulted from the define-letter-group
+ * modification were finished. Additionally I found an ugly bug in the
+ * ordrules.c file that was discovered when running the system under
+ * Solaris (which seems to have signed chars..Whee!). This is fixed now
+ * and the Imakefiles and that stuff was improved, too.
+ *
+ * Revision 1.4  1996/07/03  18:48:46  kehr
  * Changed ordrules.c. The unescape() mechanism was removed so that not too
  * much quoting is necessary anymore. This feature was olnly for the use in
  * the old makeindex-3 systems.

@@ -16,7 +16,7 @@
 #include <rx/rxposix.h>
 
 #define BEGIN	1		/* representation of '\b' */
-#define END	127		/* representation of '\e' */
+#define END	255		/* representation of '\e' */
 
 /* values for RULE_TYPE */
 #define CHR_RULE	0001
@@ -71,8 +71,8 @@ typedef struct {
 
 */
 
-#define MAX_RULE_TABLE	129	/* # entries in a rule table */
-#define FORALL_POS	128	/* position of regexp rules, that must be applied to all strings */
+#define MAX_RULE_TABLE	257	/* # entries in a rule table */
+#define FORALL_POS	256	/* position of regexp rules, that must be applied to all strings */
 
 typedef RULE_LIST RULE_TABLE[MAX_RULE_TABLE];
 
@@ -117,7 +117,14 @@ char* gen_mergekey  PROTO((char *key));
 
 /*
  * $Log$
- * Revision 1.2  1996/03/27 20:29:11  kehr
+ * Revision 1.3  1996/07/18 15:56:42  kehr
+ * Checkin after all changes that resulted from the define-letter-group
+ * modification were finished. Additionally I found an ugly bug in the
+ * ordrules.c file that was discovered when running the system under
+ * Solaris (which seems to have signed chars..Whee!). This is fixed now
+ * and the Imakefiles and that stuff was improved, too.
+ *
+ * Revision 1.2  1996/03/27  20:29:11  kehr
  * It works. Today I had my first success in getting the FFI running with
  * the ordrules-library. The interface is defined in `ordrulei.lsp' and
  * allows direct access to the functions in `ordrules.c'.

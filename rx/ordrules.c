@@ -9,12 +9,14 @@
 #include "ordrules.h"
 #include "rxsub.h"
 
+/* switch on debugging by excluding the undef directive. */
 #define debug
-#undef  debug
+#undef  debug /* */
 #include "debug.h"
 
+#ifdef debug
 #define DEBUG
-#undef  DEBUG
+#endif
 
 RULE_TABLE SortRules;	/* rules for generating sortkeys */
 RULE_TABLE MergeRules;	/* rules for generating mergekeys */
@@ -85,7 +87,8 @@ int isreject;
       dispstart( regcomp );
       if ( 0 != (errcode = regcomp( r->r.reg.lside, buffer, cflags )) ) {
 	regerror( errcode, r->r.reg.lside, errmsg, STRING_MAX );
-	fprintf( stderr, "add_rule: %s\n", errmsg );
+	/* fprintf( stderr, "Regular Expression Error: %s\n", errmsg );
+	 */
 	return( errcode );
       }
       dispend( regcomp );
@@ -115,7 +118,7 @@ int isreject;
     case CHR_RULE:
       dispstart( CHR_RULE );
       r->r.chr  = *right;
-      pos = *left;
+      pos = (unsigned char)(*left);
       dispend( CHR_RULE );
       break;
 
@@ -127,7 +130,7 @@ int isreject;
       r->r.str.rlen = strlen(right);
       r->r.str.rside = (char *) malloc( (size_t)(r->r.str.rlen + 1) );
       strcpy(r->r.str.rside,right);
-      pos = *left;
+      pos = (unsigned char)(*left);
       dispend( STR_RULE );
       break;
   }
@@ -135,26 +138,45 @@ int isreject;
   if (isreject) r->type |= REJECT;
 
   /* insert new rule into table */
+  dispstart(inserting into table);
+  dispuint(pos);
+  displong(&table[0]);
   list = &table[pos];
-  if (list->first == NULL) list->first = r;
-                 else list->last->next = r;
+  displong(list);
+  displong(NULL);
+  displong(list->first);
+  displong(r);
+  if (list->first == NULL) {
+    list->first = r;
+  } else {
+    displong(list->last);
+    displong(list->last->next);
+    list->last->next = r;
+  }
+  displong(list->last);
   list->last = r;
+  displong(r->next);
   r->next = NULL;
+  dispend(inserting into table);
 
 #ifdef DEBUG
   fprintf(stderr,"\nordrules: added %s%s-rule at position %d ",
-	         (r->type&REJECT)?"*":"",table == MergeRules ? "merge" : "sort",pos);
-  fprintf(stderr,"type %o.",r->type);
+	  (r->type&REJECT)?"*":"",table == MergeRules ?
+	  "merge" : "sort",pos);
+  fprintf(stderr,"type %o.\n",r->type);
   switch ( r->type & ~REJECT ) {
     case CHR_RULE:
       fprintf(stderr,"(CHR,'%c' --> '%c').",*left,r->r.chr); break;
     case STR_RULE:
-      fprintf(stderr,"(STR,'%s' --> '%s').",r->r.str.lside,r->r.str.rside); break;
+      fprintf(stderr,"(STR,'%s' --> '%s').",r->r.str.lside,r->r.str.rside);
+      break;
     case REG_RULE:
       fprintf(stderr,"(REG,'%s' --> '%s').",buffer,r->r.reg.rside); break;
   }
+  fprintf(stderr,"\n");
 #endif
   dispend( add_rule );
+  return( 0 );
 }
 
 /* get the type of the rule 'lside --> rside' */
@@ -185,7 +207,7 @@ char *s;
   return FALSE;
 }
 
-#if 0
+#ifdef UNESCAPE
 /* not necessary anymore */
 
 /* replace all '\x' sequences with the character they represent */
@@ -229,8 +251,13 @@ register size_t buflen;
   while ( *source ) {
 
     /* first check the rules beginning with character '*source' */
-    for ( r = table[(unsigned) *source].first; r; r = r->next ) {
+    dispint( (unsigned) *source );
+    dispint( (unsigned)(*source) );
+    dispint( (unsigned char)(*source) );
+    dispint( (unsigned int)(*source) );
+    for ( r = table[(unsigned char) *source].first; r; r = r->next ) {
 
+      displong( r );
       rtype = (r->type & ~REJECT);
 
       if ( rtype == CHR_RULE ) {
@@ -276,11 +303,13 @@ register size_t buflen;
 
     }
 
+    displong( r );
     if ( r == NULL ) {
 
+      dispmsg( r == NULL );
       /* check regular expression rules, that could match all prefixes */
       for ( r = table[FORALL_POS].first; r; r = r->next ) {
-	dispstart( NULL );
+	dispstart( for-loop regexps );
 	displong( r->r.reg.lside );
 	dispstr(r->r.reg.rside );
 	displong( r->type );
@@ -296,22 +325,24 @@ register size_t buflen;
 	  dest   = strchr(dest,0);
 	  displong( dest );
 	  dispend( regexec match! );
+	  dispend( for-loop regexps );
       	  break;
         }
-	dispend( NULL );
+	dispend( for-loop regexps );
       }
       /* no rule matched, copy character */
       if ( r == NULL ){
-	dispstart( NULL2 );
+	dispstart( no rule matched! );
 	displong( dest );
 	displong( source );
 	*dest++ = *source++;
 	displong( dest );
 	displong( source );
-	dispend( NULL2 );
+	dispend( no rule matched! );
       }
     }
 
+    displong( r );
     /* should we reject? */
     if ( r != NULL && (r->type & REJECT)) {
       dispstart( REJECT );
@@ -322,13 +353,15 @@ register size_t buflen;
 #endif
       apply_rules( table, newsource, newdest, STRING_MAX );
       dispend( REJECT );
+      dispend( apply_rules );
       return;
     }
 
   }
 
-  *dest = 0;
+  dispstart( last part );
   displong( dest );
+  *dest = 0;
   ordrules_string_buffer_used_bytes = strlen( ordrules_string_buffer );
 #ifdef DEBUG
 #ifdef debug
@@ -341,6 +374,7 @@ register size_t buflen;
     fprintf(stderr,"\nordrules: %s '%s' generated for '%s'.", table == MergeRules ? "mergekey" : "sortkey", out, in );
 #endif
 
+  dispend( last part );
   dispend( apply_rules );
 }
 
@@ -424,7 +458,14 @@ int group;
 
 /*
  * $Log$
- * Revision 1.3  1996/07/03 18:48:48  kehr
+ * Revision 1.4  1996/07/18 15:56:40  kehr
+ * Checkin after all changes that resulted from the define-letter-group
+ * modification were finished. Additionally I found an ugly bug in the
+ * ordrules.c file that was discovered when running the system under
+ * Solaris (which seems to have signed chars..Whee!). This is fixed now
+ * and the Imakefiles and that stuff was improved, too.
+ *
+ * Revision 1.3  1996/07/03  18:48:48  kehr
  * Changed ordrules.c. The unescape() mechanism was removed so that not too
  * much quoting is necessary anymore. This feature was olnly for the use in
  * the old makeindex-3 systems.

@@ -17,7 +17,14 @@
  *  PO: HPUX, Linux, AIX
  *
  *  HI: $Log$
- *  HI: Revision 1.1  1996/03/27 20:29:03  kehr
+ *  HI: Revision 1.2  1996/07/18 15:56:38  kehr
+ *  HI: Checkin after all changes that resulted from the define-letter-group
+ *  HI: modification were finished. Additionally I found an ugly bug in the
+ *  HI: ordrules.c file that was discovered when running the system under
+ *  HI: Solaris (which seems to have signed chars..Whee!). This is fixed now
+ *  HI: and the Imakefiles and that stuff was improved, too.
+ *  HI:
+ *  HI: Revision 1.1  1996/03/27  20:29:03  kehr
  *  HI: It works. Today I had my first success in getting the FFI running with
  *  HI: the ordrules-library. The interface is defined in `ordrulei.lsp' and
  *  HI: allows direct access to the functions in `ordrules.c'.
@@ -62,6 +69,7 @@ void    debug_printmem_asc( char* desc, char* str, char* lenname, int len );
 #undef dispend
 #undef displong
 #undef dispint
+#undef dispuint
 #undef dispdouble
 #undef dispchar
 #undef dispstr
@@ -105,6 +113,10 @@ void    debug_printmem_asc( char* desc, char* str, char* lenname, int len );
 	fprintf( stderr, "%*s%s = %d = 0x%X \n", \
                           Debug_Output_Indent, "", #i, (int) i, (int) i );
 
+#define dispuint(i)	\
+	fprintf( stderr, "%*s%s = %d = 0x%X \n", \
+                          Debug_Output_Indent, "", #i, (unsigned int) i, (unsigned int) i );
+
 #define dispdouble(d)	\
 	fprintf( stderr, "%*s%s = %20.10g \n",\
                            Debug_Output_Indent, "", #d, (double) d );
@@ -138,6 +150,7 @@ void    debug_printmem_asc( char* desc, char* str, char* lenname, int len );
 #define dispend(p)
 #define displong(l)
 #define dispint(i)
+#define dispuint(i)
 #define dispdouble(d)
 #define dispchar(c)
 #define dispstr(s)
