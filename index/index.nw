@@ -529,7 +529,7 @@ top-level indexentries into the appropriate letter-groups.
 (defmethod build-indexentry-tree ((index base-index))
   (let ((index-hierdepth (get-hierdepth index)))
     (gol t "~&~%--------------------~%Building indexentry-tree:~%")
-    (gol t "hierdepth of index is ~S.~%" index-hierdepth)
+    (gol t "hierdepth of index is ~S~%" index-hierdepth)
     (set-entries (build-indexentry-tree-recursive (get-entry-list index)
                                                   index-hierdepth)
                  index)
@@ -538,8 +538,8 @@ top-level indexentries into the appropriate letter-groups.
                                          (lookup-letter-group
                                           *indexstyle*
                                           (car (get-sort-key idxent))))
-                                     #'<
-                                     (get-entries index))))
+                                     (get-entries index)
+                                     :sortfunc #'<)))
       (gol t "(done)")
       (set-entries (mapcar #'(lambda (lg-indexentries)
                                (make-letter-group
@@ -583,57 +583,70 @@ slots with the neccessary data.
 
 <<Processing an index>>=
 (defmacro take-first (list)
-  `(AND ,list  (LIST (CAR ,list))))
+  `(AND ,list (LIST (CAR ,list))))
 
 (defun build-indexentry-tree-recursive (idxent-list
                                         max-depth
                                         &optional (curr-depth 1))
-  (if (or (endp idxent-list)          #| nothing more to do |#
-          (> curr-depth max-depth))   #| we reached the end |#
-      (gen-all-sort-keys idxent-list) #| this is the then case |#
-      (let ((idxent-slist (split-list #'(lambda (idxent)
-                                          (car (get-merge-key idxent)))
-                                      #'string<
-                                      idxent-list)))
-        (mapcar
-         #'(lambda (sublist)
-             (let* ((idxent (car sublist))
-                    (merge-key (get-merge-key idxent)))
-               (if (= 1 (length merge-key))
-                   (progn #| length = 1 |#
-                     (set-sort-key #-:ORDRULES merge-key
-                                   #+:ORDRULES (gen-keyword-sortkey-list
-                                                merge-key)
-                                   idxent)
-                     (set-subentries
-                      (sort-indexentries
-                       (build-indexentry-tree-recursive
-                        (remove-first-keywords (cdr sublist))
-                        max-depth
-                        (1+ curr-depth)))
-                      idxent)
-                     idxent)
-                   (let* #| length > 1 |#
-                       ((new-merge-key (take-first merge-key))
-                        (new-idxent
-                         (make-index-entry
-                          :main-key  (take-first (get-main-key idxent))
-                          :merge-key new-merge-key
-                          :sort-key
-                          #-:ORDRULES new-merge-key
-                          #+:ORDRULES (gen-keyword-sortkey-list
-                                       new-merge-key)
-                          ;;:print-key (take-first (get-print-key idxent))
-                          :idxclass  (get-idxclass idxent))))
-                     (set-subentries
-                      (sort-indexentries
-                       (build-indexentry-tree-recursive
-                        (remove-first-keywords sublist)
-                        max-depth
-                        (1+ curr-depth)))
-                      new-idxent)
-                     new-idxent))))
-         idxent-slist))))
+  (gol t "~&b-i-t-r: curr-depth=~S idxent-list=~S~%"
+       curr-depth idxent-list)
+  (step
+   (cond ((endp idxent-list) idxent-list)          #| nothing more to do |#
+	 ((> curr-depth max-depth)   #| we reached the end |#
+	    (gol t "~&THEN:~%")
+	    (gen-all-sort-keys idxent-list) #| this is the then case |#
+	    )
+	 (t (let ((idxent-slist
+		   (split-list #'(lambda (idxent)
+				   (car (get-merge-key idxent)))
+			       idxent-list
+			       :headfunc
+			       #'(lambda (idxent)
+				   (= 1 (length (get-merge-key idxent)))))))
+	      (gol t "~&idxent-slist: ~S~%" idxent-slist)
+	      (mapcar
+	       #'(lambda (sublist)
+		   (let* ((idxent (car sublist))
+
+			  (merge-key (get-merge-key idxent)))
+		     (gol t "~&merge-key: ~S~%" merge-key)
+		     (if (= 1 (length merge-key))
+			 (progn #| length = 1 |#
+			   (gol t " length=1 ")
+			   (set-sort-key #-:ORDRULES merge-key
+					 #+:ORDRULES (gen-keyword-sortkey-list
+						      merge-key)
+					 idxent)
+			   (set-subentries
+			    (sort-indexentries
+			     (build-indexentry-tree-recursive
+			      (remove-first-keywords (cdr sublist))
+			      max-depth
+			      (1+ curr-depth)))
+			    idxent)
+			   idxent)
+			 (let* #| length > 1 |#
+			     ((new-merge-key (take-first merge-key))
+			      (new-idxent
+			       (make-index-entry
+				:main-key  (take-first (get-main-key idxent))
+				:merge-key new-merge-key
+				:sort-key
+				#-:ORDRULES new-merge-key
+				#+:ORDRULES (gen-keyword-sortkey-list
+					     new-merge-key)
+				;;:print-key (take-first (get-print-key idxent))
+				:idxclass  (get-idxclass idxent))))
+			   (gol t " length>1 ")
+			   (set-subentries
+			    (sort-indexentries
+			     (build-indexentry-tree-recursive
+			      (remove-first-keywords sublist)
+			      max-depth
+			      (1+ curr-depth)))
+			    new-idxent)
+			   new-idxent))))
+	       idxent-slist))))))
 @ %def take-first build-indexentry-tree-recursive
 
 <<Processing an index>>=
@@ -754,7 +767,15 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
-%% Revision 1.19  1996/07/03 18:41:42  kehr
+%% Revision 1.20  1996/07/09 14:41:51  kehr
+%% Corrected a bug in the incorrect usage of the split-list-function.
+%% Added some features to this function such that for each group that is
+%% created an element satisfying a predicate can be made the head of the
+%% resulting list. This is supported via the :headfunc keyword-parameter.
+%% I needed this to correct an error in the
+%% build-indexentry-tree-functions.
+%%
+%% Revision 1.19  1996/07/03  18:41:42  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%

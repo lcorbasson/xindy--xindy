@@ -365,8 +365,8 @@ dispatching during the markup process.
   (set-locrefs (convert-sublists-to-specialized-groups
                 (split-list #'(lambda (locref)
                                 (get-ordnum (get-locclass locref)))
-                            #'<
-                            (get-locrefs idxent))
+                            (get-locrefs idxent)
+                            :sortfunc #'<)
                 #'(lambda (sublist)
                     (typecase (car sublist)
                       (layered-location-reference  'locref-class-group)
@@ -555,9 +555,10 @@ the same ordnums.
   #+ASSERT! (assert! (listp locrefs))
   (split-list #'(lambda (locref)
                   (get-ordnums locref))
-              #'(lambda (locref-ordnum-1 locref-ordnum-2)
-                  (locref-ordnum< locref-ordnum-1 locref-ordnum-2))
-              locrefs))
+              locrefs
+              :sortfunc #'(lambda (locref-ordnum-1 locref-ordnum-2)
+			    (locref-ordnum< locref-ordnum-1 locref-ordnum-2))
+	      ))
 @ %def split-same-locrefs
 
 \no The next function takes a list of location-references with the
@@ -718,10 +719,10 @@ additional structure introduced by the mapping process.
 (defun build-ranges-in-locref-class-group (locref-cls-grp idxcls)
   (let ((locref-same-catattr-grps
          (split-list #'(lambda (locref) (get-catattr locref))
-                     #'(lambda (x y)
-                         (< (get-processing-ordnum x)
-                            (get-processing-ordnum y)))
-                     (get-members locref-cls-grp))))
+                     (get-members locref-cls-grp)
+                     :sortfunc #'(lambda (x y)
+				   (< (get-processing-ordnum x)
+				      (get-processing-ordnum y))))))
     (set-members (mapcan #'(lambda (catattr-sublist)
                              (build-ranges catattr-sublist
                                            idxcls
@@ -774,8 +775,8 @@ don't need it at all).
   (set-members (convert-sublists-to-group-objects
                 (split-list #'(lambda (object)
                                 (get-catattr-grp-ordnum (get-catattr object)))
-                            #'<
-                            (get-members locref-cls-grp))
+                            (get-members locref-cls-grp)
+                            :sortfunc #'<)
                 'category-attribute-group)
                locref-cls-grp)
   (mapc #'(lambda (catattr-grp)
@@ -883,8 +884,8 @@ intuitive solution for the moment.
       locref-list  #| this is the THEN case |#
       (let ((locref-slist (split-list #'(lambda (locref)
                                           (car (get-layers locref)))
-                                      #'string<
-                                      locref-list)))
+                                      locref-list
+                                      :sort-func #'string<)))
         (mapcar
          #'(lambda (sublist)
              (let* ((locref (car sublist))
@@ -964,27 +965,38 @@ define a \emph{less-than}-predicate of the values [[split-function]]
 delivers. The result is a list containing the sorted sublists.
 
 <<Splitting lists into sublists --- [[split-list]]>>=
-(defun split-list (split-function sort-function list)
+(defun split-list (split-function list &key sortfunc headfunc)
+  #+:ASSERT! (assert (not (and sortfunc headfunc))
+		     "split-list")
   (let ((list-len (length list)))
     (if (= 1 list-len)
         (list list)
         (let ((split-table (make-hash-table :test #'equal
                                             :size (round (* 1.2 list-len))))
               (key-list '()))
-          (mapc #'(lambda (elt)
-                    (let ((key (funcall split-function elt)))
-                      (setf (gethash key split-table)
-                            (cons elt (gethash key split-table)))))
-                list)
+	  (mapc #'(lambda (elt)
+		    (let ((key (funcall split-function elt)))
+		      (setf (gethash key split-table)
+			    (cons elt (gethash key split-table)))))
+		list)
           (maphash #'(lambda (key element)
                        (declare (ignore element))
                        (push key key-list))
                    split-table)
+	  (gol t  "~&key-list: ~S~%" key-list)
           (maplist #'(lambda (rest-list)
-                       (rplaca rest-list (gethash (car rest-list)
-                                                  split-table)))
-                   (sort key-list sort-function))
-          key-list))))
+		       (info "~&split-list: ~S~%" rest-list)
+		       (let ((entries (gethash (car rest-list) split-table)))
+			 (gol t  "~&entries: ~S~%" entries)
+			 (if headfunc
+			     (let ((head (find-if headfunc entries)))
+			       (rplaca rest-list
+				       (if head
+					   (cons head (delete head entries))
+					   entries)))
+			     (rplaca rest-list entries))))
+		   (if sortfunc (sort key-list sortfunc) key-list))
+	  key-list))))
 
 #|
 This version seems to be a little bit slower than the above one,
@@ -1145,7 +1157,15 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.19  1996/07/01 09:19:26  kehr
+%% Revision 1.20  1996/07/09 14:41:46  kehr
+%% Corrected a bug in the incorrect usage of the split-list-function.
+%% Added some features to this function such that for each group that is
+%% created an element satisfying a predicate can be made the head of the
+%% resulting list. This is supported via the :headfunc keyword-parameter.
+%% I needed this to correct an error in the
+%% build-indexentry-tree-functions.
+%%
+%% Revision 1.19  1996/07/01  09:19:26  kehr
 %% Added support for flat indexes and modified logfile-support.
 %%
 %% Revision 1.18  1996/06/24  09:12:44  kehr
