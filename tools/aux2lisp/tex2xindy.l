@@ -201,9 +201,8 @@ ARGCLOSE \}
 
 main(int argc, char* argv[])
 {
-  fprintf(stderr, "This is `tex2xindy' 1.8.\n");
   if ( argc > 1 ) {
-    fprintf(stderr, "Running in makeindex compatibility mode.\n");
+    fprintf(stderr, "This is `tex2xindy' $Revision$.\n");
     fprintf(stderr, "Writing attribute names to file \"%s\".\n\n", argv[1]);
     attrfd = fopen(argv[1], "w");
   }
@@ -218,6 +217,9 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.12  1999/10/13 08:06:44  kehr
+  Changed revision number message back to RCS-tag. No functional changes.
+
   Revision 1.11  1999/10/13 08:05:10  kehr
   Merged bugfix from Thomas Henlich with my own modifications.
 
