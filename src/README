@@ -1,0 +1,24 @@
+--------------------------------------------------------------------------
+
+   xindy  -  Roger Kehr  07.12.95
+
+--------------------------------------------------------------------------
+
+Dies ist der Source des xindy-Systems zur Zeit der Abgabe im Oktober 1995.
+
+
+Makefile targets:
+
+  all		: generiert und compiliert alle Teilprogramme.
+  doc		: generiert zu jedem Teilprogramm ein dvi.
+  xindy-all.dvi : generiert aus allen noweb-Teilprogrammen ein gemeinsames
+		  Dokument.
+
+Ein Test des Systems ist in der Datei `style' implementiert. Dort
+werden einige Lokationsklassen definiert, Markup f"ur die
+Strichw"orter bereitgestellt und einige Indexeintr"age definiert.
+Durch den Aufruf von (process-index) wird der Index verarbeitet und
+mit Markup versehen ausgegeben.
+
+L"adt man clisp und ruft (load 'style) auf, so wird diese Demo gestartet.
+
