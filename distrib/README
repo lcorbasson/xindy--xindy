@@ -41,6 +41,7 @@ Currently we support binary-distributions for the following platforms:
     AIX-3.2          rs6000
     HP-UX 9.x        hppa
     SunOS 5.2-4      sun4m
+    IRIX 5.3	     mips
 
 Everybody is encouraged to port xindy to new platforms. For any kind
 of suggestions, helpful comments, questions, bug reports and such,

@@ -15,7 +15,6 @@ This file describes how to install xindy on your system:
 
 	cd ./binaries/<platform>
 
-   You need `GNU flex' to make the TeX-parser compile if you need it.
    Modify the Makefile to relect your system paths, etc. The directory
    where xindy looks for ist runtime-system is
 

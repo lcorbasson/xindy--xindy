@@ -1,10 +1,9 @@
 $Id$
 ----------------------------------------------------------------------
 
-Since this is the first release, no errors are known until now.
+This file contains a list of problems that may occur when building
+xindy.
 
-But it would be great if you tell us your problems to improve the
-distribution.
 
 Contact the mailing-list
 
@@ -12,6 +11,22 @@ Contact the mailing-list
 
 for reporting any kind of errors or suggestions how to improve this
 piece of software.
+
+
+
+HP-UX 9.04 (and maybe other versions)
+=====================================
+
+binaries/hppa-hpux/Makefile:
+
+Change the following lines in the Makefile to make the system compile
+`tex2xindy' without gcc.
+
+CFLAGS     = -Ae -O
+
+Thanks to Werner Gross for reporting this problem.
+
+
 
 =====================================================================
 Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
