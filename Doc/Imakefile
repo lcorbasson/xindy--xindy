@@ -46,6 +46,7 @@ realclean::								@@\
 SGMLTarget(manual)
 SGMLTarget(tutorial)
 SGMLTarget(compatibility-guide)
+SGMLTarget(xindy-by-topic)
 
 CVSAdd(*.sgml)
 CVSAdd(*.gif)
@@ -54,12 +55,16 @@ CVSAdd(*.1)
 CVSAdd(linuxdoc-sgml-a4.sty)
 CVSAdd(sgml2*)
 CVSAdd(Imakefile)
+CVSAdd(README)
 CVSAdd(tutorial)
 CVSCommit()
 
 /* ============================================================
  *
  * $Log$
+ * Revision 1.10  1997/02/04 14:42:48  kehr
+ * Added manual page for makeindex4 and the xindy-by-topic documentation.
+ *
  * Revision 1.9  1997/01/17 16:08:55  kehr
  * Committed new changes.
  *
