@@ -1,0 +1,74 @@
+$Id$
+------------------------------------------------------------
+
+xindy (`fleXible INDexing sYstem') is a flexible index-processor. See
+the files in directory ./Doc for a detailed description of what xindy
+does.
+
+This directory contains the distribution as of July 1996. It is
+organized as follows:
+
+  Doc/		contains a manual in html,dvi,ps,info,txt-formats
+
+  tests/        contains a complete testsuite
+
+  bin/		several scripts that forming the enviroment of xindy
+
+  modules/	the library of pre-defined indexstyle-modules
+
+  binaries/     some binaries separated into machine-depended
+	        subdirectories
+
+  src/          the source of the xindy-system
+
+  contrib/	contains additional programs that can be used to make
+		xindy working with various document-formatting systems
+
+
+This distribution is also available at
+
+	ftp://ftp.th-darmstadt.de/@@@
+
+or at our homepage at
+
+	http://www.iti.informatik.th-darmstadt.de/@@@
+
+which contains the most up-to-date information about xindy.
+
+Currently we support binary-distributions for the following platforms:
+
+    Linux ELF      i386
+    AIX-3.2        rs6000
+    HP-UX 9.x      hppa
+    SunOS 5.2-4    sun4m
+
+Everybody is encouraged to port xindy to new platforms. For any kind
+of suggestions, helpful comments, questions, bug reports and such,
+please mail to
+
+	xindy@iti.informatik.th-darmstadt.de
+
+
+See file INSTALL for a description how to install this distribution.
+
+
+LEGALESE: This package is freely distributable software; you can
+redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+This software is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License in
+the file LICENSE along with this package; if not, write to the Free
+Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+Enjoy, Roger.
+
+=====================================================================
+Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
+Computer Science Department
+Technical University of Darmstadt, Germany

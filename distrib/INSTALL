@@ -1,0 +1,78 @@
+$Id$
+----------------------------------------------------------------------
+
+This file describes how to install xindy on your system:
+
+1. If you not have received a binary distribution for your preferred
+   platform(s), get one and unpack it in this directory with
+
+	gtar -xzvf xindy-<version>-<platform>.tar.gz
+
+   The binaries are stored in the director ./binaries/<platform>.
+
+2. Change to the directory of the binary-distribution for which you
+   want to install the system, e.g.
+
+	cd ./binaries/<platform>
+
+3. Build the xindy system `xindy' with the appropriate directory settings.
+   The following directories can be specified.
+
+	BINDIR    where the main executable `xindy.run' and the
+		  dumped file `xindy.mem' go.
+        LIBDIR    where the indexstyle-modules go.
+
+   An example call might be
+
+	make BINDIR=/usr/local/lib/xindy \
+	     LIBDIR=/usr/local/lib/xindy/modules
+
+   This is also the default that is specified in the Makefile.
+
+   Note: This only compiles xindy and modifies some scripts but does
+	 *not* install anything!
+
+   After a while (between 20 seconds and 5 minutes) you should receive
+   a message saying that the compilation succeeded. If not, see file
+   PROBLEMS for further hints.
+
+   This step has produced a memory-image of the xindy-system in file
+   xindy.mem. If you like, you can compress this file with gzip by
+   additionally typing
+
+	make gzipped
+
+   which compresses xindy.mem and stores it under the same name.
+
+4. The next step would be to run the testsuite on the whole system.
+   Type
+
+	make testsuite
+
+   to run all tests. This may last some minutes (go, drink a cup of
+   coffee) but will hopfully report that it has not found any errors.
+
+5. After everything seems to be ok, you only need to install the
+   system.
+
+   The files should be installed as follows:
+
+	cp xindy		<perhaps /usr/local/bin>
+	cp xindy.run xindy.mem	BINDIR
+	cp -R ../../modules     LIBDIR
+	cp ../../Doc		<where you store your docs>
+
+   Its up to you to install all files properly. xindy is the only file
+   that needs be reachable from the path. It searches for xindy.run
+   and xindy.mem in BINDIR.
+
+6. Read the manual with your prefered viewer. Its located in the
+   Doc-directory.
+
+7. You're finished. Go drink a cup of tea or a glass of wine!
+
+
+=====================================================================
+Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
+Computer Science Department
+Technical University of Darmstadt, Germany
