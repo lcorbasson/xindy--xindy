@@ -298,10 +298,13 @@ existing location-classes. Function [[apply-func]] \emph{must} have
 the following signature:
 
 \begin{defunc}{apply-func}{\type{indexclass} \res
-    \type{location-class} \opt{arguments}}
+    \type{location-class} \opt{\emph{arguments}\ldots}} This function
+  should return non-[[NIL]] values for all items it whishes to appear
+  in the result-list of [[map-location-classes]].
 \end{defunc}
 
-\no The results of all calls to [[apply-func]] are returned in a list.
+\no The non-[[NIL]] results of all calls to [[apply-func]] are
+returned in a list.
 
 <<Iterators for \class{indexclass}>>=
 (defmacro map-location-classes (apply-func &rest arguments)
@@ -593,7 +596,10 @@ hash-table representation via calling [[make-ready]].
 @
 
 %% $Log$
-%% Revision 1.10  1996/04/30 09:26:36  kehr
+%% Revision 1.11  1996/04/30 15:52:48  kehr
+%% Minor changes.
+%%
+%% Revision 1.10  1996/04/30  09:26:36  kehr
 %% Changes the adding of location-classes to an index. Old definitions
 %% will now be removed if a new location-class with the same name is
 %% added. The forall-location-classes iterator was rewritten. It is now
@@ -676,7 +682,7 @@ hash-table representation via calling [[make-ready]].
 %%
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:
 
