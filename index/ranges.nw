@@ -89,7 +89,7 @@ Class \textsf{location-range} contains the following slots.
 @ %def location-range make-location-range
 
 <<Export-list of submodule \module{ranges}>>=
-(export '(location-range get-first get-last))
+(export '(location-range get-first get-last get-length))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -641,6 +641,9 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
+%% Revision 1.8  1997/01/23 19:04:46  kehr
+%% Minor changes.
+%%
 %% Revision 1.7  1997/01/17 16:42:34  kehr
 %% Several changes for new version 1.1.
 %%

@@ -23,8 +23,8 @@ XCOMM $Id$
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
-      NW_HEADER  = $(TOPDIR)/noweb/header.tex
-      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+      NW_HEADER  = $(TOPDIR)/xindy/noweb/header.tex
+      NW_TRAILER = $(TOPDIR)/xindy/noweb/trailer.tex
 
       ALL_NOWEB_SRC = idxentry.nw index.nw ranges.nw
       ALL_DOC_SRC= module.nw $(ALL_NOWEB_SRC)
@@ -50,7 +50,10 @@ DejaGnuTarget(index,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.6  1996/05/20 08:48:45  kehr
+ * Revision 1.7  1997/01/23 19:04:37  kehr
+ * Minor changes.
+ *
+ * Revision 1.6  1996/05/20  08:48:45  kehr
  * Major release of the modules locref, idxstyle and index. Added picture
  * for the range-building FSM with a complete rewrite.
  *
