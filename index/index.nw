@@ -92,11 +92,12 @@ following slots:
 (export '(create-index))
 @
 
-\no We are now interested in filling the index with indexentries. The
-first idea was to define a method [[add]] bound to an index and an
-indexentry that looks if the indexentry is already in the table. If
-not it is directly stored into the table, otherwise the indexentry is
-merged with the already existing indexentry with the same key.
+\no We are now interested in the process of filling the index with
+indexentries. The first idea was to define a method [[add]] bound to
+an index and an indexentry that looks if the indexentry is already in
+the table. If not it is directly stored into the table, otherwise the
+indexentry is merged with the already existing indexentry with the
+same key.
 
 This heavily creates instances of indexentries that mostly are merged
 with the already existing indexentry. Most of the time the
@@ -104,22 +105,41 @@ indexentries are created and dropped immediately. This is a waste of
 space and time since the creation of an object isn't for free at all.
 
 The idea is to define a function at a lower level to implement the
-desired behaviour. Function [[add-indexentry]] takes an object that
-must be [[eql]] to a [[entry-table]]. We will directly manipulate this
-object for efficency reasons. The other arguments are directly part of
-an indexentry.
+desired behaviour. We perform the keyword substitions for the
+[[merge-key]] and the [[sort-key]] as described by the [[merge-rule]]
+and [[sort-rule]] replacements. Then we take an already existing
+indexentry from the index with the same [[merge-key]], if one exists,
+and merge both entries together.
 
-Additionally we perform the keyword substitions for the [[merge-key]]
-and the [[sort-key]] as described by the [[merge-rule]] and
-[[sort-rule]] replacements.
+\begin{note}
+  The keyword argument [[:merge-key]] must \emph{always} be supplied
+  when calling this function.
+\end{note}
+
+The policies for all other keys are as follows:
+\begin{enumerate}
+\item The [[merge-key]] is generated from the [[main-key]] by applying
+  the keyword-rules, or if this rewrite-mechanism is not activated
+  ([[#-:ORDRULES]]), the [[main-key]] directly.
+\item The [[sort-key]] is generated from the [[merge-key]] by applying
+  the keyword-rules, or if this rewrite-mechanism is not activated
+  ([[#-:ORDRULES]]), the [[merge-key]] directly.
+\item The [[print-key]] is only set, when it is specified explicitely.
+  If no explicit definition occured we take the [[main-key]] as the
+  [[print-key]]. This can only be done at markup-time since we know
+  only then if one of the raw-indexentries defined the print-key.
+\end{enumerate}
 
 <<Class \class{base-index}>>=
 (defun add-indexentry (entry-table idxcls locref
                                    &key
                                    (merge-key '()) (sort-key '())
                                    (main-key '()) (print-key '()))
+#+:ASSERT! (assert! main-key)
 #+:ORDRULES (unless merge-key (setq merge-key (gen-mergekey main-key)))
 #+:ORDRULES (unless sort-key  (setq sort-key  (gen-sortkey  merge-key)))
+#-:ORDRULES (unless merge-key (setq merge-key main-key))
+#-:ORDRULES (unless sort-key  (setq sort-key  merge-key))
   (let* ((old-entry (gethash merge-key entry-table)))
     (if old-entry
         (setf (gethash merge-key entry-table)
@@ -138,11 +158,10 @@ which is defined as $\lambda x,y.(if x x y)$.
 
 <<Class \class{base-index}>>=
 (defun join-indexentries (idxent main-key sort-key print-key locref)
-  (set-main-key  (join-with-precedence (get-main-key  idxent) main-key) idxent)
-  (set-sort-key  (join-with-precedence (get-sort-key  idxent) sort-key) idxent)
+  (set-main-key (join-with-precedence (get-main-key idxent) main-key) idxent)
+  (set-sort-key (join-with-precedence (get-sort-key idxent) sort-key) idxent)
   (set-print-key (join-with-precedence (get-print-key idxent) print-key) idxent)
-  (set-locrefs   (cons locref (get-locrefs idxent)) idxent)
-  idxent)
+  (set-locrefs (cons locref (get-locrefs idxent)) idxent))
 
 (defun join-with-precedence (x y)
   (declare (inline))
@@ -223,6 +242,8 @@ we simply markup the index and start right out of the box.
 (eval-when (compile load eval)
   (use-package "CLOS")
   (use-package "XP")
+  (require "base")
+  (use-package "BASE")
   (require "locref")
   (use-package "LOCREF")
   (require "idxstyle")
@@ -262,7 +283,10 @@ we simply markup the index and start right out of the box.
 
 
 %% $Log$
-%% Revision 1.9  1996/03/28 16:47:36  kehr
+%% Revision 1.10  1996/04/29 08:38:09  kehr
+%% Forgot some declarations.
+%%
+%% Revision 1.9  1996/03/28  16:47:36  kehr
 %% Changed modules to work together with the foreign package `ordrules'.
 %%
 %% Revision 1.8  1996/03/13  16:53:26  kehr

@@ -115,6 +115,7 @@ function [[add]]. (For a detailed description see
 (export '(indexentry make-indexentry
           get-main-key get-merge-key get-sort-key get-print-key
           get-locrefs set-locrefs get-idxclass
+          get-subentries set-subentries
           add))
 @
 
@@ -873,7 +874,10 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.10  1996/03/28 16:47:33  kehr
+%% Revision 1.11  1996/04/29 08:38:06  kehr
+%% Forgot some declarations.
+%%
+%% Revision 1.10  1996/03/28  16:47:33  kehr
 %% Changed modules to work together with the foreign package `ordrules'.
 %%
 %% Revision 1.9  1996/03/13  16:53:22  kehr
