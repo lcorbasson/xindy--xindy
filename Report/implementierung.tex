@@ -333,6 +333,8 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 \item[locclass] beinhaltet den Namen der zugeordneten Lokationsklasse.
 \end{describeComponents}
 
+\condnewpage
+
 \begin{describeMethods}
   \begin{defunc}{locref<}{\farg{locref-1} \farg{locref-2}}
     Diese Funktion vergleicht die Ordnungszahlen zweier
@@ -446,45 +448,50 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
     den Environment-Stack.  Dieser Stack wird dann von der Funktion
     \texttt{close-environment} gegebenenfalls entleert.
 
-    Wir beschreiben nun den Rumpf der
-    \texttt{markup-object}-Methoden.  Die Punktnotation
+    In Abbildung~\ref{fig:mark-object} ist der generelle Algorithmus
+    der \texttt{markup-object}-Methoden dargestellt. Die Punktnotation
     \emph{list}.\textsf{komp} liefert die Komponente \textsf{komp} des
     ersten Elements der Liste \emph{list}.
-    \begin{algorithm}
-      \FUNC \texttt{markup-object} (\F{object markup-list context-list
-        env-stack})\\
-      \BEGIN\\
-        \>\F{object-list} := \flqq hole \F{object-list} aus
-        \F{object}\frqq\\%%
-        \>\WHILE \=(\F{context-list}.\textsf{value} ==
-        \F{object-list}.\textsf{value}) \OR\\%%
-        \>\>\>(\F{markup-list}.\textsf{typ} == \emph{aktiv})\\%%
-        \>\>\F{counter}++\\%%
-        \>\>\ACTION{\textsl{entferne erste Elemente aus}
-          \F{object-list
-          markup-list context-list}}\\%%
-        \>\ENDWHILE\\%%
-        \>\F{env-stack} := %%
-        \F{close-environments}(\F{env-stack} \F{counter})\\%%
-        \>\WHILE \NOT\ \F{empty}(\F{object-list})\\%%
-        \>\>\F{mprint}(\F{markup-list}.\textsf{pre-node})\\%%
-        \>\>\F{mprint}(\F{markup-list}.\textsf{pre-layer})\\%%
-        \>\>\ACTION{drucke nun \F{object-list}.\textsf{value} \bzw
-          \F{markup-list}.\textsf{repetition-symbol}}\\%%
-        \>\>\F{mprint}(\F{markup-list}.\textsf{post-layer})\\%%
 
-        \>\>\F{push}(\=$\{$\F{markup-list}.\textsf{post-node},
-        \ACTION{\textsl{evtl. auch} \textsf{optional-post-layer}}$\}$,\\%%
+    \begin{tfigure}%%
+      {Basisalgorithmus der \texttt{mark-object}-Methoden}%%
+      {fig:mark-object}%%
+      \begin{algorithm}
+        \FUNC \texttt{markup-object} (\F{object markup-list context-list
+          env-stack})\\
+        \BEGIN\\
+          \>\F{object-list} := \flqq hole \F{object-list} aus
+          \F{object}\frqq\\%%
+          \>\WHILE \=(\F{context-list}.\textsf{value} ==
+          \F{object-list}.\textsf{value}) \OR\\%%
+          \>\>\>(\F{markup-list}.\textsf{typ} == \emph{aktiv})\\%%
+          \>\>\F{counter}++\\%%
+          \>\>\ACTION{\textsl{entferne erste Elemente aus}
+            \F{object-list
+              markup-list context-list}}\\%%
+          \>\ENDWHILE\\%%
+          \>\F{env-stack} := %%
+          \F{close-environments}(\F{env-stack} \F{counter})\\%%
+          \>\WHILE \NOT\ \F{empty}(\F{object-list})\\%%
+          \>\>\F{mprint}(\F{markup-list}.\textsf{pre-node})\\%%
+          \>\>\F{mprint}(\F{markup-list}.\textsf{pre-layer})\\%%
+          \>\>\ACTION{drucke nun \F{object-list}.\textsf{value} \bzw
+            \F{markup-list}.\textsf{repetition-symbol}}\\%%
+          \>\>\F{mprint}(\F{markup-list}.\textsf{post-layer})\\%%
+
+          \>\>\F{push}(\=$\{$\F{markup-list}.\textsf{post-node},
+          \ACTION{\textsl{evtl. auch} \textsf{optional-post-layer}}$\}$,\\%%
           \>\>\>\F{env-stack})\\%%
           \>\>\ACTION{\textsl{entnehme erstes Element aus
               \F{object-list} und
-            \F{markup-list}}}\\%%
-        \>\ENDWHILE\\%%
-        \>\ACTION{\textsl bearbeite Unterelemente von \F{object}}\\%%
-        \ENDFUNC
-    \end{algorithm}
-  \end{defgen}
+              \F{markup-list}}}\\%%
+          \>\ENDWHILE\\%%
+          \>\ACTION{\textsl bearbeite Unterelemente von \F{object}}\\%%
+          \ENDFUNC
+        \end{algorithm}
+      \end{tfigure}
 
+    \end{defgen}
 
   \begin{defunc}{close-environments}{\farg{env-stack}\,
       \texttt{\&optional} \farg{stack-length}}%%
@@ -504,6 +511,7 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 \end{describeMethods}
 
 
+
 %% Local Variables:
 %% mode: latex
 %% TeX-master: "makeindex4.tex"
@@ -511,7 +519,10 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 
 %%
 %% $Log$
-%% Revision 1.4  1995/11/14 16:05:56  kehr
+%% Revision 1.5  1995/11/15 14:58:11  kehr
+%% Final correction (I hope so).
+%%
+%% Revision 1.4  1995/11/14  16:05:56  kehr
 %% Made two more corrections on the report.
 %%
 %% Revision 1.3  1995/11/08  16:16:56  kehr

@@ -36,21 +36,26 @@ XCOMM $Id$
 
 #define BIB bibliographie.bib
 
-TeXSpreadTarget(latex,xindy, SRC EPS STY BIB)
-
 tmp-xindy.dvi: xindy.dvi
 	       cp xindy.dvi tmp-xindy.dvi
+
+all:: tmp-xindy.dvi
+
+TeXSpreadTarget(latex,xindy, SRC EPS STY BIB)
 
 CVSAdd(SRC EPS STY BIB Imakefile)
 CVSCommentLeader("%% ", SRC STY)
 
 clean::
 	$(RM) xindy.ps
-	
+
 /* ============================================================
 
 $Log$
-Revision 1.4  1995/11/14 16:05:52  kehr
+Revision 1.5  1995/11/15 14:58:09  kehr
+Final correction (I hope so).
+
+Revision 1.4  1995/11/14  16:05:52  kehr
 Made two more corrections on the report.
 
 Revision 1.3  1995/10/26  16:05:35  kehr
