@@ -1,0 +1,35 @@
+#
+# $Id$
+#
+# This is the platform dependent part of the Makefile. Feel free to
+# change this section according to your needs.
+#
+
+# The files xindy, tex2xindy and makeindex4 go here.
+INSTBINDIR = /usr/local/bin
+
+# The files xindy.run, xindy.mem and the modules can be found at runtime.
+LIBDIR = /usr/local/lib/xindy
+
+# The files xindy.run, xindy.mem and the modules should be installed
+# here. Use a different path here if for some reason the installation
+# must be somewhere else and not directly stored into LIBDIR.
+INSTLIBDIR = $(LIBDIR)
+
+# The documentation goes there
+INSTDOCDIR = /usr/local/lib/xindy
+
+# works with HP-UX 9.05
+
+RM 	   = /bin/rm -f
+LIBDIR     = /usr/local/lib/xindy/
+CFLAGS     = -Ae -O
+LEX        = lex -t
+LEXLIB     = -ll
+
+# For the use with GNU flex use the following definitions:
+# LEX = flex -t
+# LEX = -lfl
+
+
+# End of platform dependent section.
