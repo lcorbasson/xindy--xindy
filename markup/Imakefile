@@ -1,0 +1,61 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Imakefile for source of the xindy-Project
+ *
+ * (history at end)
+ */
+
+#define NotangleStandardOptions -L';; line %L "%F"%N'
+#define NoweaveStandardOptions -n # -index # -delay
+
+/* needed modules */
+#include <Project.imk>
+#include <noweb-wrap.imk>
+#include <DejaGnu.imk>
+
+#include <Lisp-mod.imk>
+/* This must be included after the redefinition of the above rule(s) */
+#include <Lisp.imk>
+
+
+XCOMM ------------------------------------------------------------
+XCOMM continue in Imakefile
+
+      NW_HEADER  = $(TOPDIR)/noweb/header.tex
+      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+
+      ALL_NOWEB_SRC = markup.nw
+      ALL_DOC_SRC= module.nw $(ALL_NOWEB_SRC)
+
+NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_DOC_SRC))
+NowebLispModuleTarget(markup,$(ALL_NOWEB_SRC))
+
+CVSAdd(*.nw)
+CVSAdd(Imakefile)
+CVSCommentLeader("%% ", *.nw)
+CVSCommit()
+
+clean::
+	$(RM) modules.tex
+
+   TESTDIR     = $(TOPDIR)/testsuite
+#   RUNTEST_OPT = --outdir $(TESTDIR)
+
+DejaGnuTarget(markup,$(TESTDIR))
+
+/* ============================================================
+ *
+ * $Log$
+ * Revision 1.1  1996/01/17 16:14:11  kehr
+ * Introduced a the new module `markup'. It is too important to be part
+ * of the `index'-module.
+ *
+ *
+
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */
