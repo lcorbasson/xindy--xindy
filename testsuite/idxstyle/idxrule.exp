@@ -17,7 +17,7 @@ expect_NIL
 xsend {(mapc #'(lambda (x) (add ic (make-category-attribute x))) '("bold" "italic" "slanted" "default" "typewriter"))}
 expect -re ".*bold.*typewriter.*$prompt$" { pass "$test" }
 
-xsend {(initialize-category-attributes '(("bold" "italic" "slanted") "default" "typewriter") (get-cat-attrs ic) (get-implicit-subst-rules ic))}
+xsend {(initialize-category-attributes '(("bold" "italic" "slanted") ("default") ("typewriter")) ic)}
 expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }
 
 xsend {(add-explicit-substitution-rule ic (lookup-catattr ic "default") (lookup-catattr ic "typewriter"))}

@@ -174,7 +174,7 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{make-loccls-layer}
-  {\tstring \x \tmarkup \res \type{loccls-layer}\uip}%%
+  {\type{basetype} \res \type{loccls-layer}\uip}%%
   Constructor of \class{loccls-layer}.
 \end{defunc}
 
@@ -183,8 +183,8 @@ The following symbols are exported:
 \end{defcls}
 
 \begin{defunc}{make-loccls-separator}%%
-  {\tstring \x \tmarkup \res \type{loccls-separator}\uip}%%
-  Constructor of \class{var-location-class}.
+  {\tstring \res \type{loccls-separator}\uip}%%
+  Constructor of \class{loccls-separator}.
 \end{defunc}
 
 \begin{defvcls}{crossref-location-class}{}
@@ -236,8 +236,8 @@ The following symbols are exported:
   The class of category-attributes.
 \end{defcls}
 
-\begin{defunc}{make-category-attribute}{\uip}
-  Creates instances of class \class{category-attribute}.
+\begin{defunc}{make-category-attribute}{\emph{name}\uip}
+  Creates a new instance of class \class{category-attribute}.
 \end{defunc}
 
 \begin{defmethod}{set-catattr-grp-ordnum}{\tint \x
@@ -269,7 +269,10 @@ The following symbols are exported:
 
 
 %% $Log$
-%% Revision 1.8  1996/01/31 15:25:25  kehr
+%% Revision 1.9  1996/03/13 16:53:42  kehr
+%% Don't remember specific changes. Just time to check-in.
+%%
+%% Revision 1.8  1996/01/31  15:25:25  kehr
 %% Minor modifications.
 %%
 %% Revision 1.7  1996/01/17  16:56:04  kehr

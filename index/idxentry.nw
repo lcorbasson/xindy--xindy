@@ -82,12 +82,13 @@ above.
 
 <<Class \class{indexentry}>>=
 (defclass indexentry ()
-    ((main-key  :reader get-main-key  :writer set-main-key  :initarg :main-key)
-     (merge-key :reader get-merge-key                       :initarg :merge-key)
-     (sort-key  :reader get-sort-key  :writer set-sort-key  :initarg :sort-key)
-     (print-key :reader get-print-key :writer set-print-key :initarg :print-key)
-     (locrefs   :reader get-locrefs   :writer set-locrefs   :initarg :locrefs)
-     (idxclass  :reader get-idxclass                        :initarg :idxclass)))
+    ((main-key   :reader get-main-key   :writer set-main-key   :initarg :main-key)
+     (merge-key  :reader get-merge-key                         :initarg :merge-key)
+     (sort-key   :reader get-sort-key   :writer set-sort-key   :initarg :sort-key)
+     (print-key  :reader get-print-key  :writer set-print-key  :initarg :print-key)
+     (locrefs    :reader get-locrefs    :writer set-locrefs    :initarg :locrefs)
+     (idxclass   :reader get-idxclass                          :initarg :idxclass)
+     (subentries :reader set-subentries :writer set-subentries :initform '())))
 
 (defun make-indexentry (&key (main-key '()) (merge-key '())
                              (sort-key '()) (print-key '())
@@ -172,10 +173,10 @@ underlying algorithm must consider several topics in parallel. We
 start to describe a short theoretical overview, which shall remind us
 what tasks to perform and what to consider generally.
 
-During marking up, the list of location-references an indexentry owns
-must be sorted, merged into ranges and finally be tagged. We're given
-a list of location-references and have to perform the following tasks
-in the order below.
+During markup, the location-references an indexentry owns must be
+sorted, merged into ranges and finally be tagged. We're given a list
+of location-references and have to perform the following tasks in the
+order below.
 
 \newcommand{\Real}{\textsf{normal}\xspace}
 \newcommand{\Virt}{\textsf{virtual}\xspace}
@@ -872,7 +873,10 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.8  1996/01/31 16:13:27  kehr
+%% Revision 1.9  1996/03/13 16:53:22  kehr
+%% Don't remember specific changes. Just time to check-in.
+%%
+%% Revision 1.8  1996/01/31  16:13:27  kehr
 %% Still working on th user-interface...
 %%
 %% Revision 1.7  1996/01/09  14:27:24  kehr
@@ -959,6 +963,6 @@ This section is placed here before the definition of all classes.
 
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:

@@ -249,7 +249,10 @@ we simply markup the index and start right out of the box.
 
 
 %% $Log$
-%% Revision 1.7  1996/01/31 16:13:31  kehr
+%% Revision 1.8  1996/03/13 16:53:26  kehr
+%% Don't remember specific changes. Just time to check-in.
+%%
+%% Revision 1.7  1996/01/31  16:13:31  kehr
 %% Still working on th user-interface...
 %%
 %% Revision 1.6  1996/01/10  16:47:19  kehr
@@ -299,6 +302,6 @@ we simply markup the index and start right out of the box.
 %%
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:

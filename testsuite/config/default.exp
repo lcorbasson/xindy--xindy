@@ -34,7 +34,7 @@ proc expect_NIL {} {
 start_clisp
 
 set prompt "> "
-set timeout 3
+set timeout 10
 
 proc new_timeout {newtimeout} {
     global timeout_old
