@@ -50,8 +50,16 @@ the project.
 <<global definitions>>
 <<show generic functions>>
 <<Error message system>>
+<<Useful macros>>
 
 (defvar *RCS-Identifier* '(("base" . "$Id$")))
+@
+
+<<Useful macros>>=
+(defmacro ifnot (expr then-body else-body)
+  `(IF (NOT ,expr) ,then-body ,else-body))
+
+(export 'ifnot)
 @
 
 This is a simple abbreviation to print the currently active
@@ -130,7 +138,10 @@ The error message system is necessary to handle all error messages.
 %% End:
 %%
 %% $Log$
-%% Revision 1.7  1996/05/09 11:49:01  kehr
+%% Revision 1.8  1996/05/20 08:45:55  kehr
+%% Added macro `ifnot'.
+%%
+%% Revision 1.7  1996/05/09  11:49:01  kehr
 %% Changes in all submodules, due to macro-expansion problems during
 %% compilation.
 %%
