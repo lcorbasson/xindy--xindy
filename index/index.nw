@@ -121,9 +121,9 @@ an indexentry.
               (join-indexentries (gethash merge-key entry-table)
                                  main-key sort-key print-key locref))
         (setf (gethash merge-key entry-table)
-              (make-indexentry :main-key  main-key  :sort-key   sort-key
-                               :merge-key merge-key :print-key  print-key
-                               :locrefs   locref    :indexclass idxcls)))))
+              (make-indexentry :main-key  main-key      :sort-key   sort-key
+                               :merge-key merge-key     :print-key  print-key
+                               :locrefs   (list locref) :indexclass idxcls)))))
 @ %def add-indexentry
 
 \no Function [[join-indexentries]] implements a
@@ -136,7 +136,8 @@ which is defined as $\lambda x,y.(if x x y)$.
   (set-main-key  (join-with-precedence (get-main-key  idxent) main-key) idxent)
   (set-sort-key  (join-with-precedence (get-sort-key  idxent) sort-key) idxent)
   (set-print-key (join-with-precedence (get-print-key idxent) print-key) idxent)
-  (set-locrefs   (cons locref (get-locrefs idxent)) idxent))
+  (set-locrefs   (cons locref (get-locrefs idxent)) idxent)
+  idxent)
 
 (defun join-with-precedence (x y)
   (declare (inline))
@@ -159,7 +160,8 @@ result into slot [[entry-list]].
 (defmethod sort-indexentries ((index base-index))
   (let ((temp-list '()))
     (maphash #'(lambda (key idxent)
-                 (setq temp-list (cons (cons key idxent) temp-list)))
+		 (declare (ignore key))
+                 (setq temp-list (cons (cons (get-sort-key idxent) idxent) temp-list)))
              (get-entry-table index))
     (set-entry-list (sort temp-list
                           #'(lambda (element-1 element-2)
@@ -245,7 +247,10 @@ we simply markup the index and start right out of the box.
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1996/01/09 14:27:27  kehr
+%% Revision 1.4  1996/01/09 15:58:36  kehr
+%% Corrected minor bugs.
+%%
+%% Revision 1.3  1996/01/09  14:27:27  kehr
 %% Moved submodule `ranges' from module `locref' to this module.
 %% Nearly complete rewrite of all submodules. See ChangeLog for further details.
 %%
