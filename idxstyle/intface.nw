@@ -366,20 +366,23 @@ the neccessary functions ourselves. The following chunk is included in
 the root-chunk of module \module{idxstyle}.
 
 <<Use [[ordrules]]-package if available>>=
-(when (member "ORDRULES"
-              (mapcar #'package-name
-                      (list-all-packages))
-              :test #'equal)
-  (pushnew ':ORDRULES *features*)
-  (use-package "ORDRULES"))
+(eval-when (eval load compile)
+  (when (member "ORDRULES"
+                (mapcar #'package-name
+                        (list-all-packages))
+                :test #'equal)
+    (pushnew ':ORDRULES *features*)
+    (eval-when (eval)
+      (usepackage "ORDRULES"))))
 @
-\begin{attributes}
+%%
+\begin{arguments}{replacement}
   \item[pattern] describes the pattern of the substitution rule. It
     must be specified as a string.
-  \item[replacment] describes the replacement. It is also a string.
+  \item[replacement] describes the replacement. It is also a string.
   \item[isreject] is a boolean value that describes if the matching is
     also possible on substituted patterns.
-\end{attributes}
+\end{arguments}
 %%
 For more information see the description of the [[ordrules]]-package.
 
@@ -450,7 +453,10 @@ For more information see the description of the [[ordrules]]-package.
 
 
 %% $Log$
-%% Revision 1.7  1996/03/28 16:46:35  kehr
+%% Revision 1.8  1996/04/29 08:37:34  kehr
+%% Don't remember any changes.
+%%
+%% Revision 1.7  1996/03/28  16:46:35  kehr
 %% Changed indexstule modules to work with the new foreign package `ordrules'.
 %%
 %% Revision 1.6  1996/03/13  16:50:49  kehr
