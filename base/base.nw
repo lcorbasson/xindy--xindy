@@ -31,9 +31,15 @@ and macros, that are used in the other modules.
 (lisp:in-package "BASE")
 (lisp:provide "base")
 
+#+:CMU17 (defpackage "CLOS")
+
+(lisp:use-package "CLOS")
+
 (eval-when (eval load compile)
-  (when (find-package "XP")
-    (pushnew :XP *features*)))
+  #+CLISP (when (find-package "XP")
+            (pushnew :XP *features*))
+  #(or +ALLEGRO-V4.3 :CMU17) (pushnew :XP *features*)
+  )
 
 (setq *print-pretty* t)
 (setq *print-escape* t)
@@ -42,9 +48,12 @@ and macros, that are used in the other modules.
 (defparameter *locref-trace*   nil)
 (export '(*mappings-trace* *locref-trace*))
 
+<<Kludges>>
 <<Error message system>>
 <<Useful macros>>
 <<Assertions>>
+<<Slot accessor macros>>
+<<Splitting lists into sublists --- [[split-list]]>>
 
 (defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
 
@@ -60,13 +69,33 @@ and macros, that are used in the other modules.
 <<Useful macros>>=
 (defmacro ifnot (expr then-body else-body)
   `(IF (NOT ,expr) ,then-body ,else-body))
-
-(defmacro error-exit ()
-  `(EXIT 1))
 @ %def ifnot
+
+Allegro CL has exit in package [[excl]]. CMU-CL uses
+[[unix:unix-exit]] instead.
+
+<<Useful macros>>=
+(defun error-exit ()
+  #+CLISP (exit 1)
+  #+:ALLEGRO-V4.3 (excl:exit 1)
+  #+:CMU17 (unix:unix-exit 1)
+  )
+@ %def error-exit
 
 <<Export-list of module \module{base}>>=
 (export '(ifnot error-exit))
+@
+
+[[CLISP]] still defines [[simple-condition-format-string]] instead of
+[[simple-condition-format-control]]. The following macro simply does
+the necessary redefinition for all other Lisps.
+
+<<Kludges>>=
+#-CLISP
+(defmacro simple-condition-format-string (&rest args)
+  `(simple-condition-format-control ,@args))
+#-CLISP
+(export '(simple-condition-format-string))
 @
 
 
@@ -172,7 +201,158 @@ The following macro can be used to declare assertions.
 (export 'assert!)
 @
 
+\subsection{Slot Accessor Macros}
+
+<<Slot accessor macros>>=
+(defmacro define-slot-accessors (accessors)
+  `(eval-when (compile load eval)
+    ,@(apply #'nconc
+             (mapcar
+              #'(lambda (acc)
+                  (let ((getnam (intern (concatenate 'string "GET-"
+                                                     (symbol-name acc))))
+                        (setnam (intern (concatenate 'string "SET-"
+                                                     (symbol-name acc))))
+                        )
+                    `((defmacro ,getnam (obj)
+                        (list 'slot-value obj '',acc))
+                      (defmacro ,setnam (val obj)
+                        (list 'setf (list 'slot-value obj '',acc) val))
+                      (export '(,getnam ,setnam ,acc)))))
+              accessors))))
+
+(define-slot-accessors (
+                        attribute
+                        base-alphabet
+                        basetype
+                        catattr
+                        catattr-grp-ordnum
+                        entries
+                        entry-list
+                        entry-table
+                        first
+                        group-definition
+                        hierdepth
+                        idxclass
+                        inner
+                        join-length
+                        last
+                        last-in-group
+                        layers
+                        length
+                        letters
+                        locclass
+                        locref-cache
+                        locref-string
+                        locrefs
+                        members
+                        merge-key
+                        sort-key
+                        print-key
+                        main-key
+                        name
+                        order
+                        ordnum
+                        ordnums
+                        origin
+                        processing-ordnum
+                        props
+                        rangeattr
+                        separator
+                        sort-ordnum
+                        state
+                        subentries
+                        subrefs
+                        symbols
+                        target
+                        type
+                        ))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Splitting into sublists}
+
+This is a function that operates on lists. It takes a list and groups
+its elements into new subgroups. The given function [[split-function]]
+must return the same value for all elements that belong to the same
+group. These values are compared with the [[#'equal]]-predicate. Its
+meaning is to create \emph{equivalence-classes} of elements. The
+resulting sublists are sorted by function [[sort-function]] which must
+define a \emph{less-than}-predicate of the values [[split-function]]
+delivers. The result is a list containing the sorted sublists.
+
+<<Splitting lists into sublists --- [[split-list]]>>=
+(defun split-list (split-function list &key sortfunc headfunc)
+  #+:ASSERT! (assert (not (and sortfunc headfunc))
+                     "split-list")
+  (let ((list-len (length list)))
+    (if (= 1 list-len)
+        (list list)
+        (let ((split-table (make-hash-table :test #'equal
+                                            :size (round (* 1.2 list-len))))
+              (key-list '()))
+          (mapc #'(lambda (elt)
+                    (let ((key (funcall split-function elt)))
+                      (setf (gethash key split-table)
+                            (cons elt (gethash key split-table)))))
+                list)
+          (maphash #'(lambda (key element)
+                       (declare (ignore element))
+                       (push key key-list))
+                   split-table)
+          (maplist #'(lambda (rest-list)
+                       (let ((entries (gethash (car rest-list) split-table)))
+                         (if headfunc
+                             (let ((head (find-if headfunc entries)))
+                               (rplaca rest-list
+                                       (if head
+                                           (cons head (delete head entries))
+                                           entries)))
+                             (rplaca rest-list entries))))
+                   (if sortfunc (sort key-list sortfunc) key-list))
+          key-list))))
+
+#|
+This version seems to be a little bit slower than the above one,
+despite the fact that we use a temporary array with a fill-pointer.
+
+(defun split-list (split-function sort-function list)
+  (let ((list-len (length list)))
+    (if (= 1 list-len)
+        (list list)
+        (let ((split-table (make-hash-table :test #'equal
+                                            :size (round (* 1.5 list-len)))))
+          (mapc #'(lambda (elt)
+                    (let ((key (funcall split-function elt)))
+                      (setf (gethash key split-table)
+                            (cons elt (gethash key split-table)))))
+                list)
+          (let ((sort-array (make-array (hash-table-count split-table)
+                                        :fill-pointer 0)))
+            (maphash #'(lambda (key element)
+                         (declare (ignore element))
+                         (vector-push key sort-array))
+                     split-table)
+            (map 'list
+                 #'(lambda (key)
+                     (gethash key split-table))
+                 (sort sort-array sort-function)))))))
+|#
+@ %def split-list
+
+<<Export-list of module \module{base}>>=
+(export '(split-list))
+@
+
+
 %% $Log$
+%% Revision 1.19  1997/03/18 14:49:33  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.18  1997/03/13 14:40:40  kehr
 %% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
 %% be compatible with ANSI CL. Bug was reported by Bernd Raichle.

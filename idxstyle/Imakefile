@@ -26,7 +26,8 @@ XCOMM continue in Imakefile
       NW_HEADER  = $(TOPDIR)/xindy/noweb/header.tex
       NW_TRAILER = $(TOPDIR)/xindy/noweb/trailer.tex
 
-      ALL_NOWEB_SRC = idxclass.nw idxstyle.nw intface.nw idxrule.nw
+      ALL_NOWEB_SRC = idxclass.nw idxrule.nw idxstyle.nw intface.nw \
+		      letters.nw
       ALL_DOC_SRC   = module.nw $(ALL_NOWEB_SRC)
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_DOC_SRC))
@@ -48,6 +49,12 @@ DejaGnuTarget(idxstyle,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
+ * Revision 1.7  1997/03/18 14:49:43  kehr
+ * Checkin after the several changes. a) the definition of slot-accessor
+ * macros in the whole source, b) the modifications suggested by Bernd
+ * Raichle to make the source compatible with Allegro CL and c) a first
+ * version of the new sorting scheme.
+ *
  * Revision 1.6  1997/01/23 21:33:07  kehr
  * Reincorporated (merge-to) rule into indexstyle.
  *

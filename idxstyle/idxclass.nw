@@ -78,8 +78,7 @@ incrementally filled with more information.
 
 <<Class \class{indexclass}>>=
 (defclass indexclass ()
-    ((name                 :reader   get-name
-                           :initarg :name :type string)
+    ((name                 :initarg :name :type string)
      (basetypes            :accessor get-basetypes
                            :initform (make-hash-table :test #'equal :size 10))
      (cat-attrs            :accessor get-cat-attrs
@@ -90,6 +89,10 @@ incrementally filled with more information.
                            :initform '() :type list)
      (letter-groups        :reader get-letter-groups
                            :initform (make-letter-group-manager))
+     (partial-order-dict   :reader get-partial-order-dict
+                           :initform (make-partial-order-dict))
+     (letter-dict          :reader get-letter-dict
+                           :initform (make-letter-dict))
      <<Location-reference-cache definitions>>
      ;;     (succ-table           :accessor get-succ-table
      ;;                           :initform (make-hash-table))
@@ -127,8 +130,7 @@ following chunks define the data-structure layout of the locref-cache.
 @ %def *locref-cache-size* *locref-cache-rehash-size*
 
 <<Location-reference-cache definitions>>=
-     (locref-cache :accessor get-locref-cache
-                   :initform (initialize-locref-cache))
+     (locref-cache :initform (initialize-locref-cache))
 @
 
 <<Location-reference-cache>>=
@@ -248,8 +250,8 @@ section~\ref{sec:rule-hooks}.
 (defparameter *default-letter-group-definition* "default")
 
 (defclass letter-group-definition ()
-    ((name   :reader get-name  :initarg :name   :type string)
-     (ordnum                   :initarg :ordnum  :type number)))
+    ((name    :initarg :name    :type string)
+     (ordnum  :initarg :ordnum  :type number)))
 
 (defun make-letter-group-definition (name)
   (make-instance 'letter-group-definition :name name :ordnum 0))
@@ -493,8 +495,8 @@ first remove it. In all cases we add the new location-class.
   idxcls)
 
 (defmethod add-drop-if-merged-rule ((idxcls indexclass)
-				    (catattr-1 category-attribute)
-				    (catattr-2 category-attribute))
+                                    (catattr-1 category-attribute)
+                                    (catattr-2 category-attribute))
   (rel-insert (get-merge-rules idxcls) catattr-1 catattr-2)
   (rel-insert (get-drop-if-merged-rules idxcls) catattr-1 catattr-2)
   idxcls)
@@ -758,20 +760,20 @@ delayed until the markup).
   <<check for reflexivity>>
 
 ;;  (set-merge-rule-topsort (topsort
-;;			   (remove-reflexivity
-;;			    (transform-relation
-;;			     (get-drop-if-merged-rules idxcls)
-;;			     #'(lambda (attr)
-;;				 (get-ordnum attr)))))
-;;			  *indexstyle*)
+;;                         (remove-reflexivity
+;;                          (transform-relation
+;;                           (get-drop-if-merged-rules idxcls)
+;;                           #'(lambda (attr)
+;;                               (get-ordnum attr)))))
+;;                        *indexstyle*)
 
   ;;(pprint (get-drop-if-merged-rules idxcls))
   ;;(pprint (topsort (get-drop-if-merged-rules idxcls)))
 
   (let ((counter 0))
     (mapc #'(lambda (catattr)
-	      (set-processing-ordnum (incf counter) catattr))
-	  (reverse (topsort (get-drop-if-merged-rules idxcls)))))
+              (set-processing-ordnum (incf counter) catattr))
+          (reverse (topsort (get-drop-if-merged-rules idxcls)))))
 
   idxcls)
 @ %def make-ready
@@ -872,16 +874,21 @@ delayed until the markup).
                                      (write-string "] " s)
                                      (pprint-newline :linear s))
                                  (get-xref-classes idxcls)))
+
+                          (write (get-letter-dict idxcls) :stream s)
+                          (pprint-newline :mandatory s)
+                          (write (get-partial-order-dict idxcls) :stream s)
+                          (pprint-newline :mandatory s)
+
                           (pprint-slot-block
                            "merge-rules {"
                            (write (get-merge-rules idxcls) :stream s))
                           (pprint-slot-block
                            "drop-if-merged-rules {"
                            (write (get-drop-if-merged-rules idxcls) :stream s))
-;                          (pprint-slot-block-line
-;                           "merge-rule-topsort { "
-;                           (write (get-merge-rule-topsort idxcls) :stream s))
-
+                          ;; (pprint-slot-block-line
+                          ;; "merge-rule-topsort { "
+                          ;; (write (get-merge-rule-topsort idxcls) :stream s))
                           (pprint-slot-block
                            "implicit-subst-rules {"
                            (write (get-implicit-subst-rules idxcls) :stream s))
@@ -905,13 +912,19 @@ delayed until the markup).
                            "merge-drop-hook {"
                            (write (get-merge-drop-hook idxcls) :stream s))
 
-;                          (pprint-slot-block
-;                           "keyword-markup {"
-;                           (write (get-keyword-markup idxcls) :stream s))
-                           )))
+                                        ;                          (pprint-slot-block
+                                        ;                           "keyword-markup {"
+                                        ;                           (write (get-keyword-markup idxcls) :stream s))
+                          )))
 @
 
 %% $Log$
+%% Revision 1.19  1997/03/18 14:49:46  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.18  1997/03/10 15:50:46  kehr
 %% Corrected a bug in the macro (merge-to).
 %%

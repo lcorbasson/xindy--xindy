@@ -56,15 +56,10 @@ the following diagram.
 (defclass location-reference ()
     ((locclass  :initarg :locclass)
      (attribute :initarg :attribute)))
-
-(defmacro get-locclass  (locref)  `(SLOT-VALUE ,locref 'LOCCLASS))
-(defmacro get-attribute (locref)  `(SLOT-VALUE ,locref 'ATTRIBUTE))
 @ %def location-reference get-locclass
 
 <<Export-list of submodule \module{locref}>>=
-(export '(location-reference
-          get-locclass locclass
-          get-attribute attribute))
+(export 'location-reference)
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,31 +76,16 @@ structures.
 
 <<Class \class{layered-location-reference}>>=
 (defclass layered-location-reference (location-reference)
-    ((layers    :initarg :layers)
-     (string    :initarg :string   :type string)
-     (ordnums   :initarg :ordnums)
-     (catattr   :initarg :catattr)
-     (state     :initarg :state)
-     (rangeattr                                       :initform 'nil)
-     (origin    :reader get-origin :writer set-origin :initform 'nil)
-     (subrefs                      :type list         :initform '())))
+    ((layers        :initarg :layers)
+     (locref-string :initarg :string   :type string)
+     (ordnums       :initarg :ordnums)
+     (catattr       :initarg :catattr)
+     (state         :initarg :state)
+     (rangeattr     :initform 'nil)
+     (origin        :initform 'nil)
+     (subrefs       :initform '() :type list)))
 
-;; get-layers is already defined in locclass.nw
-(defmacro set-layers (layers locref)   `(SETF (SLOT-VALUE ,locref 'LAYERS) ,layers))
-
-(defmacro get-ordnums (locref)         `(SLOT-VALUE ,locref 'ORDNUMS))
-(defmacro set-ordnums (ordnums locref) `(SETF (SLOT-VALUE ,locref 'ORDNUMS) ,ordnums))
-
-(defmacro get-locref-string (locref)   `(SLOT-VALUE ,locref 'STRING))
-(defmacro get-catattr (locref)         `(SLOT-VALUE ,locref 'CATATTR))
-(defmacro get-rangeattr (locref)       `(SLOT-VALUE ,locref 'RANGEATTR))
-
-(defmacro get-state   (locref)         `(SLOT-VALUE ,locref 'STATE))
-(defmacro set-state   (state locref)   `(SETF (SLOT-VALUE ,locref 'STATE) ,state))
-
-(defmacro get-subrefs (locref)         `(SLOT-VALUE ,locref 'SUBREFS))
-(defmacro set-subrefs (subrefs locref) `(SETF (SLOT-VALUE ,locref 'SUBREFS) ,subrefs))
-@ %def layered-location-reference get-layers set-layers get-catattr get-ordnums get-rangeattr get-locref-string get-subrefs set-subrefs get-state set-state
+@ %def layered-location-reference
 
 \no The constructor takes the additional keyword [[:virtual]] to
 distinguish between the two states a location-reference can be in
@@ -192,7 +172,7 @@ following mutators and predicates.
 
 <<Class \class{crossref-location-reference}>>=
 (defclass crossref-location-reference (location-reference)
-    ((target :reader get-target :writer set-target :initarg :target)))
+    ((target :initarg :target)))
 
 (defun create-cross-reference (loccls target attribute)
   (make-instance 'crossref-location-reference
@@ -259,20 +239,11 @@ Here we define the category-attribute-slots.
 
 <<Class \class{category-attribute}>>=
 (defclass category-attribute ()
-    ((name               :reader get-name
-                         :initarg :name)
-     (catattr-grp-ordnum                               :writer set-catattr-grp-ordnum
-                         :initarg :ordnum)
-     (sort-ordnum        :reader get-sort-ordnum       :writer set-sort-ordnum
-                         :initform 0)
-     (processing-ordnum  :reader get-processing-ordnum :writer set-processing-ordnum
-                         :initform 0)
-     (last-in-group      :reader get-last-in-group     :writer set-last-in-group)
-     (type               :reader get-type              :writer set-type
-                         :initarg :type)))
-
-(defmacro get-catattr-grp-ordnum (catattr)
-  `(SLOT-VALUE ,catattr 'CATATTR-GRP-ORDNUM))
+    ((name               :initarg :name)
+     (catattr-grp-ordnum :initarg :ordnum)
+     (sort-ordnum        :initform 0)
+     (processing-ordnum  :initform 0)
+     (last-in-group      :initarg :type)))
 
 (defun make-category-attribute (attr-name)
   (make-instance 'category-attribute :name attr-name))
@@ -346,11 +317,13 @@ relation.
 i really need it.
 
 <<Sorting location-references>>=
-;; FIXME
-;;(defun locref< (locref-1 locref-2)
-;;  (cond ((locref-class= locref-1 locref-2)
-;;           (locref-ordnum< locref-1 locref-2))
-;;        (t (locref-class< locref-1 locref-2))))
+#|
+FIXME
+(defun locref< (locref-1 locref-2)
+  (cond ((locref-class= locref-1 locref-2)
+           (locref-ordnum< locref-1 locref-2))
+        (t (locref-class< locref-1 locref-2))))
+|#
 
 (defmethod locref= ((locref-1 crossref-location-reference)
                     (locref-2 layered-location-reference))
@@ -390,10 +363,10 @@ i really need it.
 (lisp:in-package "LOCREF")
 (lisp:provide "locref")
 
-(lisp:use-package "CLOS")
-(lisp:require "base")
+(lisp:require "base"))
 (lisp:use-package "BASE")
-#+:XP (lisp:use-package "XP")
+#+(and :XP CLISP) (lisp:use-package "XP")
+(lisp:use-package "CLOS")
 
 <<Submodule \module{basetype}>>
 <<Submodule \module{locclass}>>
@@ -484,6 +457,12 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
+%% Revision 1.27  1997/03/18 14:50:20  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.26  1997/03/13 14:41:10  kehr
 %% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
 %% be compatible with ANSI CL. Bug was reported by Bernd Raichle.

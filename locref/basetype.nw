@@ -112,8 +112,8 @@ we need the same behaviour (\look{sec:match.strings}).
 
 <<Class \class{basetype}>>=
 (defclass basetype ()
-    ((name          :reader get-name          :initarg :name)
-     (base-alphabet :reader get-base-alphabet :initarg :base-alphabet)))
+    ((name          :initarg :name)
+     (base-alphabet :initarg :base-alphabet)))
 @ %def basetype
 
 <<Export-list of submodule \module{basetype}>>=
@@ -140,7 +140,7 @@ initialize [[base-alphabet]] with the result of function
 
 <<Class \class{alphabet}>>=
 (defclass alphabet (basetype)
-    ((symbols  :reader get-symbols  :initarg :symbols)))
+    ((symbols :initarg :symbols)))
 
 (defun make-alphabet (name symbols)
   (make-instance 'alphabet :name name :symbols symbols
@@ -265,6 +265,12 @@ Here is the root chunk of this submodule.
 %%======================================================================
 %%
 %% $Log$
+%% Revision 1.16  1997/03/18 14:50:14  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.15  1997/03/10 15:51:53  kehr
 %% Added support for (merge-to :drop) which was inadvertently left out.
 %%

@@ -87,17 +87,18 @@ above.
      (merge-key  :initarg :merge-key)
      (sort-key   :initarg :sort-key)
      (print-key  :initarg :print-key)
-     (locrefs    :reader get-locrefs    :writer set-locrefs :initarg :locrefs)
-     (idxclass   :reader get-idxclass                      :initarg :idxclass)
-     (subentries :reader get-subentries :writer set-subentries :initform '())))
+     (locrefs    :initarg :locrefs)
+     (idxclass   :initarg :idxclass)
+     (subentries :initform '())))
 
 (defun make-index-entry (&key (main-key '()) (merge-key '())
-                             (sort-key '()) (print-key '())
-                             (locrefs '())  (idxclass nil)
-                             &allow-other-keys)
-  (make-instance 'index-entry :main-key main-key :merge-key merge-key
-                             :sort-key sort-key :print-key print-key
-                             :locrefs  locrefs  :idxclass  idxclass))
+                              (sort-key '()) (print-key '())
+                              (locrefs '())  (idxclass nil)
+                              &allow-other-keys)
+  (make-instance 'index-entry
+                 :main-key main-key :merge-key merge-key
+                 :sort-key sort-key :print-key print-key
+                 :locrefs  locrefs  :idxclass  idxclass))
 @ %def index-entry make-index-entry
 
 \no To keep track of the currently processed indexentry we store this
@@ -122,36 +123,9 @@ function [[add]]. (For a detailed description see
     ,idxent))
 @ %def add-location-reference-to-indexentry
 
-<<Class \class{index-entry}>>=
-(defmacro get-main-key (locref)
-  `(SLOT-VALUE ,locref 'MAIN-KEY))
-(defmacro get-merge-key (locref)
-  `(SLOT-VALUE ,locref 'MERGE-KEY))
-(defmacro get-sort-key (locref)
-  `(SLOT-VALUE ,locref 'SORT-KEY))
-(defmacro get-print-key (locref)
-  `(SLOT-VALUE ,locref 'PRINT-KEY))
-@ %def get-merge-key get-main-key get-sort-key get-print-key
-
-<<Class \class{index-entry}>>=
-(defmacro set-main-key (key locref)
-  `(SETF (SLOT-VALUE ,locref 'MAIN-KEY) ,key))
-(defmacro set-merge-key (key locref)
-  `(SETF (SLOT-VALUE ,locref 'MERGE-KEY) ,key))
-(defmacro set-sort-key (key locref)
-  `(SETF (SLOT-VALUE ,locref 'SORT-KEY) ,key))
-(defmacro set-print-key (key locref)
-  `(SETF (SLOT-VALUE ,locref 'PRINT-KEY) ,key))
-@ %def set-merge-key set-main-key set-sort-key set-print-key
-
 <<Export-list of submodule \module{idxentry}>>=
 (export '(index-entry make-index-entry
-          get-main-key get-merge-key get-sort-key get-print-key
-          set-main-key set-merge-key set-sort-key set-print-key
-          get-locrefs set-locrefs get-idxclass
-          get-subentries set-subentries
-          add-location-reference-to-indexentry
-          main-key merge-key sort-key print-key))
+          add-location-reference-to-indexentry))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -253,7 +227,6 @@ It is also easier to maintain for future extensions.
 The resulting code is now:
 
 <<Separating into location-class-groups>>=
-<<Splitting lists into sublists --- [[split-list]]>>
 <<Convert sublists into group objects --- [[convert-sublists-to-group-objects]]>>
 <<Convert sublists into group objects --- [[convert-sublists-to-specialized-groups]]>>
 <<Class \class{locref-group}>>
@@ -317,7 +290,7 @@ specifies the work that needs to be done on every kind of group.
 
 <<Class \class{locref-group}>>=
 (defclass locref-group ()
-    ((members :reader get-members :writer set-members :initarg :members)))
+    ((members :initarg :members)))
 
 (defun make-locref-group (group-class members)
   (make-instance group-class :members members))
@@ -347,12 +320,12 @@ dispatching during the markup process.
 
 <<Class \class{locref-class-group}>>=
 (defclass locref-class-group (locref-group)
-    ((locclass  :writer set-locclass :initform 'nil)))
+    ((locclass :initform 'nil)))
 @ %def locref-class-group
 
 <<Class \class{crossref-class-group}>>=
 (defclass crossref-class-group (locref-group)
-    ((locclass  :writer set-locclass :initform 'nil)))
+    ((locclass :initform 'nil)))
 @ %def crossref-class-group
 
 
@@ -397,22 +370,22 @@ Process the following steps for each subset $L_i$ separately.
 (defmethod process-group ((locref-cls-grp locref-class-group)
                           (idxcls indexclass))
   (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
-					    "Inital location-refrence group:"))
+                                            "Inital location-refrence group:"))
   (apply-substitution-and-merge-rules locref-cls-grp idxcls)
   (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
-					    "After subst- and merge-to-rules:"))
+                                            "After subst- and merge-to-rules:"))
   (build-ranges-in-locref-class-group locref-cls-grp idxcls)
   (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
-					    "After build-ranges:"))
+                                            "After build-ranges:"))
   (remove-virtual-locrefs locref-cls-grp)
   (gol t "~%FOO1")
   (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
-					    "After remove virtuals:"))
+                                            "After remove virtuals:"))
   (gol t "~%FOO2")
   (separate-into-catattr-groups locref-cls-grp)
   (gol t "~%FOO3")
   (when *locref-trace* (pprint-locref-group *logging-stream* locref-cls-grp
-					    "After separate attr-groups:"))
+                                            "After separate attr-groups:"))
   locref-cls-grp)
 
 <<Apply substitution- and merge-rules>>
@@ -430,7 +403,9 @@ we have to check the verified cross-references.
       (verified-crossref-location-class
          (mapc #'(lambda (xref)
                    (let* ((target (get-target xref))
-                          (merge-key-target (gen-keyword-mergekey-list target)))
+                          (merge-key-target
+                           #+:ORDRULES (gen-keyword-mergekey-list target)
+                           #-:ORDRULES target))
                      (unless (lookup-indexentry merge-key-target)
                        (oops "Cross-reference-target ~S does not exist!"
                              target))))
@@ -676,9 +651,9 @@ not cause any problems (hopefully).
                                            :ordnums  (get-ordnums locref)
                                            :catattr  catattr
                                            :locclass (get-locclass locref)
-					   :attribute (get-attribute locref)
-					   :string   (get-locref-string locref)
-					   )))
+                                           :attribute (get-attribute locref)
+                                           :string   (get-locref-string locref)
+                                           )))
                                      (when (relation-p drop-if-merged-rules
                                                        (get-catattr locref)
                                                        catattr)
@@ -754,33 +729,33 @@ additional structure introduced by the mapping process.
                                    (< (get-processing-ordnum x)
                                       (get-processing-ordnum y))))))
     (set-members (mapcan #'(lambda (catattr-sublist)
-			     (let ((processed-locrefs
-				    (build-ranges catattr-sublist
-						  idxcls
-						  (get-locclass
-						   (car catattr-sublist)))))
-			       (when *locref-trace*
-				 (let ((*print-pretty* t))
-				   (gol t "~&after build-ranges:")
-				   (pprint-newline :mandatory *logging-stream*)
-				   (pprint-newline :mandatory *logging-stream*)
-				   (write processed-locrefs
-					  :stream *logging-stream*)))
-			       (let ((s2 (mapcar
-					  #'(lambda (x)
-					      (post-process
-					       x
-					       #'set-state-deleted))
-					  processed-locrefs)))
-				 (when *locref-trace*
-				   (let ((*print-pretty* t))
-				     (gol t "~&after set-state-deleted:")
-				     (pprint-newline :mandatory *logging-stream*)
-				     (pprint-newline :mandatory *logging-stream*)
-				     (write s2 :stream *logging-stream*)))
-				 s2)))
-			 locref-same-catattr-grps)
-		 locref-cls-grp)))
+                             (let ((processed-locrefs
+                                    (build-ranges catattr-sublist
+                                                  idxcls
+                                                  (get-locclass
+                                                   (car catattr-sublist)))))
+                               (when *locref-trace*
+                                 (let ((*print-pretty* t))
+                                   (gol t "~&after build-ranges:")
+                                   (pprint-newline :mandatory *logging-stream*)
+                                   (pprint-newline :mandatory *logging-stream*)
+                                   (write processed-locrefs
+                                          :stream *logging-stream*)))
+                               (let ((s2 (mapcar
+                                          #'(lambda (x)
+                                              (post-process
+                                               x
+                                               #'set-state-deleted))
+                                          processed-locrefs)))
+                                 (when *locref-trace*
+                                   (let ((*print-pretty* t))
+                                     (gol t "~&after set-state-deleted:")
+                                     (pprint-newline :mandatory *logging-stream*)
+                                     (pprint-newline :mandatory *logging-stream*)
+                                     (write s2 :stream *logging-stream*)))
+                                 s2)))
+                         locref-same-catattr-grps)
+                 locref-cls-grp)))
 @ %def build-ranges-in-locref-class-group
 
 \no The implementation of [[build-ranges]] is continued in submodule
@@ -820,7 +795,7 @@ don't need it at all).
 
 <<Separation into category-attribute-groups>>=
 (defclass category-attribute-group (locref-group)
-    ((ordnum #| get-ordnum is macro |# :writer set-ordnum :initform 'nil)))
+    ((ordnum :initform 'nil)))
 
 (defun separate-into-catattr-groups (locref-cls-grp)
   (set-members (convert-sublists-to-group-objects
@@ -1008,82 +983,6 @@ intuitive solution for the moment.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Splitting into sublists}
-
-This is a function that operates on lists. It takes a list and groups
-its elements into new subgroups. The given function [[split-function]]
-must return the same value for all elements that belong to the same
-group. These values are compared with the [[#'equal]]-predicate. Its
-meaning is to create \emph{equivalence-classes} of elements. The
-resulting sublists are sorted by function [[sort-function]] which must
-define a \emph{less-than}-predicate of the values [[split-function]]
-delivers. The result is a list containing the sorted sublists.
-
-<<Splitting lists into sublists --- [[split-list]]>>=
-(defun split-list (split-function list &key sortfunc headfunc)
-  #+:ASSERT! (assert (not (and sortfunc headfunc))
-                     "split-list")
-  (let ((list-len (length list)))
-    (if (= 1 list-len)
-        (list list)
-        (let ((split-table (make-hash-table :test #'equal
-                                            :size (round (* 1.2 list-len))))
-              (key-list '()))
-          (mapc #'(lambda (elt)
-                    (let ((key (funcall split-function elt)))
-                      (setf (gethash key split-table)
-                            (cons elt (gethash key split-table)))))
-                list)
-          (maphash #'(lambda (key element)
-                       (declare (ignore element))
-                       (push key key-list))
-                   split-table)
-          (maplist #'(lambda (rest-list)
-                       (let ((entries (gethash (car rest-list) split-table)))
-                         (if headfunc
-                             (let ((head (find-if headfunc entries)))
-                               (rplaca rest-list
-                                       (if head
-                                           (cons head (delete head entries))
-                                           entries)))
-                             (rplaca rest-list entries))))
-                   (if sortfunc (sort key-list sortfunc) key-list))
-          key-list))))
-
-#|
-This version seems to be a little bit slower than the above one,
-despite the fact that we use a temporary array with a fill-pointer.
-
-(defun split-list (split-function sort-function list)
-  (let ((list-len (length list)))
-    (if (= 1 list-len)
-        (list list)
-        (let ((split-table (make-hash-table :test #'equal
-                                            :size (round (* 1.5 list-len)))))
-          (mapc #'(lambda (elt)
-                    (let ((key (funcall split-function elt)))
-                      (setf (gethash key split-table)
-                            (cons elt (gethash key split-table)))))
-                list)
-          (let ((sort-array (make-array (hash-table-count split-table)
-                                        :fill-pointer 0)))
-            (maphash #'(lambda (key element)
-                         (declare (ignore element))
-                         (vector-push key sort-array))
-                     split-table)
-            (map 'list
-                 #'(lambda (key)
-                     (gethash key split-table))
-                 (sort sort-array sort-function)))))))
-|#
-@ %def split-list
-
-<<Export-list of submodule \module{locref}>>=
-(export '(split-list))
-@
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \subsubsection{The submodule root}
 
 <<Submodule \module{idxentry}>>=
@@ -1222,6 +1121,12 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
+%% Revision 1.27  1997/03/18 14:50:00  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.26  1997/03/10 15:51:25  kehr
 %% Added support for (merge-to :drop) which was inadvertently left out.
 %%

@@ -195,15 +195,15 @@ string-stream that was never printed.
                                            &key open close sep declare body)
   (let ((name (stringify name)))
     `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
-      (CLOS:DEFMETHOD
+      (CL:DEFMETHOD
           ,(intern (string-upcase (concatenate 'string name "-open"))
                    'markup)
           ,signature ,@declare ,@open ,@body)
-      (CLOS:DEFMETHOD
+      (CL:DEFMETHOD
           ,(intern (string-upcase (concatenate 'string name "-close"))
                    'markup)
           ,signature ,@declare ,@close ,@body)
-      (CLOS:DEFMETHOD
+      (CL:DEFMETHOD
           ,(intern (string-upcase (concatenate 'string name "-sep"))
                    'markup)
           ,signature ,@declare ,@sep ,@body))))
@@ -215,11 +215,11 @@ string-stream that was never printed.
                                       &key open close declare body)
   (let ((name (stringify name)))
     `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
-      (CLOS:DEFMETHOD
+      (CL:DEFMETHOD
           ,(intern (string-upcase (concatenate 'string name "-open"))
                    'markup)
           ,signature ,@declare ,@open ,@body)
-      (CLOS:DEFMETHOD
+      (CL:DEFMETHOD
           ,(intern (string-upcase (concatenate 'string name "-close"))
                    'markup)
           ,signature ,@declare ,@close ,@body))))
@@ -229,7 +229,7 @@ string-stream that was never printed.
                          &key declare body)
   (let ((name (stringify name)))
     `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
-      (CLOS:DEFMETHOD
+      (CL:DEFMETHOD
           ,(intern (string-upcase name) 'markup)
           ,signature ,@declare ,@body))))
 @ %def define-environment-methods define-method
@@ -334,7 +334,6 @@ the markup of the list of all indexentries.
   (do-markup-index-close idx))
 
 (define-environment-methods do-markup-index ((idx base-index))
-  :declare ((declare (ignore idx)))
   :open  ((do-markup-default "INDEX:OPEN")
           (do-markup-indent))
   :close ((do-markup-outdent)
@@ -560,8 +559,8 @@ subtargets for an indexentry markup.
   ;;(info "~&(merge-print-and-main-key ~S ~S)" print-key main-key)
   (if print-key
       (mapcar #'(lambda (print main)
-		  (or print main))
-	      print-key main-key)
+                  (or print main))
+              print-key main-key)
       main-key))
 @ %def do-markup-indexentry
 
@@ -816,15 +815,15 @@ dispatching braches to the right methods.
 
     (cond
       (subrefs
-	 (let ((layer 0))
-	   (do-markup-list (get-layers locref)
-	     :identifier LOCREF-LAYER
-	     :open-body  (do-markup-locref-layer-list-open  loccls depth)
-	     :elt-body   (do-markup-locref-layer LOCREF-LAYER loccls depth
-						 (prog1 layer
-						   (incf layer)))
-	     :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
-	     :close-body (do-markup-locref-layer-list-close loccls depth)))
+         (let ((layer 0))
+           (do-markup-list (get-layers locref)
+             :identifier LOCREF-LAYER
+             :open-body  (do-markup-locref-layer-list-open  loccls depth)
+             :elt-body   (do-markup-locref-layer LOCREF-LAYER loccls depth
+                                                 (prog1 layer
+                                                   (incf layer)))
+             :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
+             :close-body (do-markup-locref-layer-list-close loccls depth)))
 
          (do-markup-list subrefs
            :identifier LOCREF
@@ -837,14 +836,14 @@ dispatching braches to the right methods.
          (do-markup-string (get-locref-string locref)))
 
       (t (let ((layer 0))
-	   (do-markup-list (get-layers locref)
-	     :identifier LOCREF-LAYER
-	     :open-body  (do-markup-locref-layer-list-open  loccls depth)
-	     :elt-body   (do-markup-locref-layer LOCREF-LAYER loccls depth
-						 (prog1 layer
-						   (incf layer)))
-	     :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
-	     :close-body (do-markup-locref-layer-list-close loccls depth)))))
+           (do-markup-list (get-layers locref)
+             :identifier LOCREF-LAYER
+             :open-body  (do-markup-locref-layer-list-open  loccls depth)
+             :elt-body   (do-markup-locref-layer LOCREF-LAYER loccls depth
+                                                 (prog1 layer
+                                                   (incf layer)))
+             :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
+             :close-body (do-markup-locref-layer-list-close loccls depth)))))
 
     (do-markup-locref-close attr loccls depth)))
 @ %def do-markup-layered-locref
@@ -886,11 +885,11 @@ dispatching braches to the right methods.
 (define-environment-methods do-markup-locref-layer
     ((locref-class layered-location-class) (depth number) (layer number))
   :open  ((do-markup-default "LOCREF-LAYER:OPEN"
-	    (get-name locref-class) depth layer)
+            (get-name locref-class) depth layer)
           (do-markup-indent))
   :close ((do-markup-outdent)
           (do-markup-default "LOCREF-LAYER:CLOSE"
-	    (get-name locref-class) depth layer)))
+            (get-name locref-class) depth layer)))
 @ %def do-markup-locref-layer
 
 <<Markup interface>>=
@@ -905,8 +904,8 @@ dispatching braches to the right methods.
                    `(locrefcls (EQL ,(cdr (lookup-locref-class
                                            *indexstyle* class))))
                    '(locrefcls layered-location-class))
-	      ,(if depth `(depth (EQL ,depth)) '(depth number))
-	      ,(if layer `(layer (EQL ,layer)) '(layer number)))
+              ,(if depth `(depth (EQL ,depth)) '(depth number))
+              ,(if layer `(layer (EQL ,layer)) '(layer number)))
              :declare ((declare (ignore depth layer)))
              :open  ,(when open  `((do-markup-string ,open)))
              :close ,(when close `((do-markup-string ,close)))))))
@@ -970,44 +969,43 @@ dispatching braches to the right methods.
   :sep   ((do-markup-default "RANGE:SEP"   (get-name loccls) length)))
 
 (defmethod markup-range-print-end-p ((loccls layered-location-class)
-				     (length number))
-  (declare (ignore loccls length))
+                                     (length number))
   t)
 @ %def do-markup-range
 
 <<Markup interface>>=
 (defmacro markup-range (&whole whole &rest args)
   (destructuring-switch-bind (&key
-			      open close sep class length
-			      &switch ignore-end)
+                              open close sep class length
+                              &switch ignore-end)
       args
     (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
-	  <<Check [[:class]] for location-reference class>>
-	  ((and length (not (numberp length)))
-	     (nraw "parameter `~S' is not a number! (ignored)~%" length))
-	  (t `(let ()
-	       (markup::define-list-environment-methods
-		   DO-MARKUP-RANGE
-		   (,(if class
-			 `(locrefcls (EQL ,(cdr (lookup-locref-class
-						 *indexstyle* class))))
-			 '(locrefcls layered-location-class))
-		    ,(if length
-			 `(length (EQL ,length))
-			 '(length number)))
-		 :open  ,(when open  `((do-markup-string ,open)))
-		 :close ,(when close `((do-markup-string ,close)))
-		 :sep   ,(when sep   `((do-markup-string ,sep))))
-	       (define-method markup::MARKUP-RANGE-PRINT-END-P
-		   (,(if class
-			 `(locrefcls (EQL ,(cdr (lookup-locref-class
-						 *indexstyle* class))))
-			 '(locrefcls layered-location-class))
-		    ,(if length
-			 `(length (EQL ,length))
-			 '(length number)))
-		 :declare ((declare (ignore locrefcls length)))
-		 :body    (,(not ignore-end))))))))
+          <<Check [[:class]] for location-reference class>>
+          ((and length (not (numberp length)))
+             (nraw "parameter `~S' is not a number! (ignored)~%" length))
+          (t `(let ()
+               (markup::define-list-environment-methods
+                   DO-MARKUP-RANGE
+                   (,(if class
+                         `(locrefcls (EQL ,(cdr (lookup-locref-class
+                                                 *indexstyle* class))))
+                         '(locrefcls layered-location-class))
+                    ,(if length
+                         `(length (EQL ,length))
+                         '(length number)))
+                 :open  ,(when open  `((do-markup-string ,open)))
+                 :close ,(when close `((do-markup-string ,close)))
+                 :sep   ,(when sep   `((do-markup-string ,sep))))
+               (define-method markup::MARKUP-RANGE-PRINT-END-P
+                   (,(if class
+                         `(locrefcls (EQL ,(cdr (lookup-locref-class
+                                                 *indexstyle* class))))
+                         '(locrefcls layered-location-class))
+                    ,(if length
+                         `(length (EQL ,length))
+                         '(length number)))
+                 :declare ((declare (ignore locrefcls length)))
+                 :body    (,(not ignore-end))))))))
 @ %def markup-locref
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1137,7 +1135,7 @@ Their elements are simple cross-references.
 (lisp:use-package "CLOS")
 (lisp:require "base")
 (lisp:use-package "BASE")
-#+:XP (lisp:use-package "XP")
+#+(and :XP CLISP) (lisp:use-package "XP")
 (lisp:require "locref")
 (lisp:use-package "LOCREF")
 (lisp:require "idxstyle")
@@ -1216,6 +1214,12 @@ Their elements are simple cross-references.
 
 
 %% $Log$
+%% Revision 1.23  1997/03/18 14:50:26  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.22  1997/03/13 14:41:23  kehr
 %% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
 %% be compatible with ANSI CL. Bug was reported by Bernd Raichle.

@@ -66,14 +66,14 @@ Class \textsf{location-range} contains the following slots.
 
 <<Class \class{location-range}>>=
 (defclass location-range ()
-    ((length   :reader get-length                     :initarg :length)
-     (first    :reader get-first                      :initarg :first)
-     (last     :reader get-last    :writer set-last   :initarg :last)
-     (layers                                          :initarg :layers)
-     (ordnums                                         :initarg :ordnums)
-     (inner    :reader get-inner   :writer set-inner  :initarg :inner)
-     (locclass                                        :initarg :locclass)
-     (catattr                                         :initarg :catattr)
+    ((length   :initarg :length)
+     (first    :initarg :first)
+     (last     :initarg :last)
+     (layers   :initarg :layers)
+     (ordnums  :initarg :ordnums)
+     (inner    :initarg :inner)
+     (locclass :initarg :locclass)
+     (catattr  :initarg :catattr)
      (subrefs  :initform '())))
 
 (defun make-location-range (&key length first last first-ordnum inner locclass)
@@ -190,7 +190,7 @@ proceed, otherwise we return the [[valid-list]] as it is.
 The list is now split into sublists with location-references that
 share the same ordnum. Afterwards we enter the finite state machine
 which consists of a simple [[loop]]. It is described far more detailed
-below and implements the given fsm-graph above.
+below and implements the given FSM-graph above.
 
 <<Building of location-reference-ranges>>=
 <<Build-ranges macro definitions>>
@@ -219,9 +219,9 @@ below and implements the given fsm-graph above.
 \no The following code manages the handling in state [[:START]]. If we
 encounter the end of the input list we return the [[result-list]].
 The normal case is that we meet location-references without any tag.
-We simply push them onto the stack and swith to state [[:READ]]. If we
-meet a [[open]] and a [[close]] location-reference at the same time,
-we assume that the are placed in the right order and switch into state
+We simply push them onto the stack and switch to state [[:READ]]. If we
+meet an [[open]] and a [[close]] location-reference at the same time,
+we assume that they are placed in the right order and switch into state
 [[:READ]] after pushing the locrefs to the stack. When seeing a
 [[open]] we switch to state [[:OPEN-RANGE]] also accompanied by a
 push. The last case shouldn't occur!
@@ -230,7 +230,7 @@ push. The last case shouldn't occur!
 (cond (list-end     (return (apply #'nconc  #| see note below for explanation |#
                                    (apply #'nconc result-list))))
       (no-typ-p     (newstat :READ)       (pushl))
-      (open+close-p (newstat :READ)       (pushl))
+      (open+close-p (newstat :READ)       (pushone))
       (open-p       (newstat :OPEN-RANGE) (pushl) (set-open-range))
       (close-p      (warn-invalid-close locref) (newstat :START))
       (t (error
@@ -250,18 +250,18 @@ push. The last case shouldn't occur!
 
 \no The piece of code for [[:READ]] is more sophisticated. If we meet
 the [[list-end]] we switch back to state [[:START]] accompanied by
-trying to make a range from the stack-contents. An important invarant
+trying to make a range from the stack-contents. An important invariant
 of the algorithm is that there is always something on the stack when
-in states [[:READ]] or [[:OPEN-RANGE]], so [[make-range]] has always
-something to do. Otherwise we are interested if the location-reference
-is successor of the previous one, whose ordnum is stored in
-[[prev-ordnum]]. If the successor relationship holds and we encounter
-a tag-free location-reference or one with both tags set, we simply
-push it to the stack. If we met a location-reference that breaks the
-range we switch back to state [[:START]], keeping the current locref
-for the next start and trying to build a range. The last case is an
-error, since in [[:READ]]-mode we shouldn't encounter a [[close]] that
-was never opened.
+we are in the states [[:READ]] or [[:OPEN-RANGE]], so [[make-range]]
+has always something to do. Otherwise we are interested if the
+location-reference is a successor of the previous one, whose ordnum is
+stored in [[prev-ordnum]]. If the successor relationship holds and we
+encounter a tag-free location-reference or one with both tags set, we
+simply push it to the stack. If we met a location-reference that
+breaks the range we switch back to state [[:START]], keeping the
+current locref for the next start and trying to build a range. The
+last case is an error, since in [[:READ]]-mode we shouldn't encounter
+a [[close]] that was never opened.
 
 <<Code for [[:READ]]>>=
 (if list-end
@@ -269,9 +269,8 @@ was never opened.
     (progn
       (setq curr-ordnum (get-ordnums locref))
       (let ((succ-p (ordnum-successor-p prev-ordnum curr-ordnum)))
-        (cond ((and succ-p
-                    (or no-typ-p
-                        open+close-p)) (pushl))
+        (cond ((and succ-p no-typ-p)     (pushl))
+              ((and succ-p open+close-p) (pushone))
               ((or no-typ-p
                    (not (and succ-p
                              open-p))) (newstat :START) (keep) (make-range))
@@ -331,6 +330,15 @@ implementation details from the interested reader.
     (setq prev-ordnum curr-ordnum)
     (push locrefs locref-stack)))
 
+(defmacro pushone ()
+  `(progn
+    (setq curr-ordnum (get-ordnums locref))
+    (unless locref-stack
+      (setq first-ordnum curr-ordnum)
+      (setq first-locref locref))
+    (setq prev-ordnum curr-ordnum)
+    (push (list (car locrefs)) locref-stack)))
+
 (defmacro set-open-range ()
   `(setq last-open-locref locref))
 
@@ -355,14 +363,14 @@ first-ordnum prev-ordnum curr-ordnum
 
 <<Calculate new variable settings>>=
 (setq locrefs  (car same-ordnum-list))
-(setq locref   (car locrefs))
 (setq list-end (null locrefs))
+(setq locref   (car locrefs))
 (setq open-p   (find-if #'(lambda (locref)
                             (rangeattr-open-p (get-rangeattr locref)))
                         locrefs))
-(setq close-p (find-if #'(lambda (locref)
-                           (rangeattr-close-p (get-rangeattr locref)))
-                       locrefs))
+(setq close-p  (find-if #'(lambda (locref)
+                            (rangeattr-close-p (get-rangeattr locref)))
+                        locrefs))
 (setq open+close-p  (and open-p close-p))
 (setq no-typ-p (not (or  open-p close-p)))
 @
@@ -645,6 +653,12 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
+%% Revision 1.10  1997/03/18 14:50:08  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.9  1997/03/10 15:51:29  kehr
 %% Added support for (merge-to :drop) which was inadvertently left out.
 %%

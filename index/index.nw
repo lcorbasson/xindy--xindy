@@ -69,16 +69,14 @@ following slots:
 (defconstant *all-hierarchy-layers* MOST-POSITIVE-FIXNUM)
 
 (defclass base-index ()
-    ((entry-table :reader get-entry-table
-                  :writer set-entry-table
-                  :initform (make-hash-table :test #'equal))
-     (entry-list  :reader get-entry-list :writer set-entry-list)
-     (entries     :reader get-entries    :writer set-entries)
-     (idxclass    :reader get-idxclass   :initarg  :idxclass)
+    ((entry-table :initform (make-hash-table :test #'equal))
+     (entry-list  :initform '())
+     (entries     :initform '())
+     (idxclass    :initarg  :idxclass)
      (hierdepth   :initform *all-hierarchy-layers*)))
 
 (defun make-base-index (idxclass)
-  (make-instance 'base-index :idxclass idxclass ))
+  (make-instance 'base-index :idxclass idxclass))
 @ %def base-index make-base-index
 
 <<Export-list of submodule \module{index}>>=
@@ -257,8 +255,9 @@ print-key.
 @
 
 <<Raw-index interface-definitions>>=
-(defparameter *raw-index-interface-definitions*
-  '(indexentry))
+(eval-when (compile load eval)
+  (defparameter *raw-index-interface-definitions*
+    '(indexentry)))
 @ %def *raw-index-interface-definitions*
 
 <<Export-list of submodule \module{index}>>=
@@ -540,10 +539,8 @@ top-level indexentries into the appropriate letter-groups.
 
 <<Class \class{letter-group}>>=
 (defclass letter-group ()
-    ((members          :accessor get-members :type list
-                       :initarg  :members)
-     (group-definition :accessor get-group-definition
-                       :initarg  :group-definition)))
+    ((members          :initarg :members :type list)
+     (group-definition :initarg :group-definition)))
 @ %def letter-group make-letter-group
 
 \no Creating an instance of this class means so initialize the slot
@@ -571,8 +568,8 @@ letter-group-definitions.
   (let ((index-hierdepth (get-hierdepth index)))
     (gol t "~&~%Building indexentry-tree:~%")
     (gol t "Hierdepth of index is ~S~%~%"
-	 (if (= index-hierdepth most-positive-fixnum)
-	     :tree index-hierdepth))
+         (if (= index-hierdepth most-positive-fixnum)
+             :tree index-hierdepth))
     (set-entries (build-indexentry-tree-recursive (get-entry-list index)
                                                   index-hierdepth)
                  index)
@@ -759,7 +756,7 @@ modified their sort-key according to the sort-mapping.
 (lisp:use-package "CLOS")
 (lisp:require "base")
 (lisp:use-package "BASE")
-#+:XP (lisp:use-package "XP")
+#+(and :XP CLISP) (lisp:use-package "XP")
 (lisp:require "locref")
 (lisp:use-package "LOCREF")
 (lisp:require "idxstyle")
@@ -807,6 +804,12 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
+%% Revision 1.30  1997/03/18 14:50:04  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.29  1997/03/13 14:41:00  kehr
 %% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
 %% be compatible with ANSI CL. Bug was reported by Bernd Raichle.

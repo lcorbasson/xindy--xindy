@@ -35,15 +35,20 @@ particular platform.
 
 <<Global definitions>>=
 (defparameter *xindy-version*      "1.2")
-(defvar       lisp::*xindy-bin-version*)
+;; (defparameter lisp::*xindy-bin-version* "unkown")
+#+CLISP
 (defparameter *xindy-bin-version*  lisp::*xindy-bin-version*)
 (defparameter *xindy-platform*     "unknown")
 @ %def *xindy-platform* *xindy-version* *xindy-bin-version*
 
 <<Startup functions>>=
 (defun issue-startup-message ()
-  (info "~&This is `xindy' version ~A (~A binary version ~A).~%~%"
-	*xindy-version* *xindy-platform* *xindy-bin-version*))
+  (info "~&This is `xindy' version ~A " *xindy-version*)
+  #+CLISP
+  (info "(~A binary version ~A).~%~%" *xindy-platform* *xindy-bin-version*)
+  #-CLISP
+  (info "(Running on ~S).~%~%" (lisp-implementation-type))
+  )
 
 (defun startup (&key idxstyle rawindex output logfile
                      show-version markup-trace (trace-level 0))
@@ -54,9 +59,9 @@ particular platform.
   (handler-case
       (do-startup idxstyle rawindex output logfile trace-level)
     (error
-	(condition)
+        (condition)
       (oops* (simple-condition-format-string    condition)
-	     (simple-condition-format-arguments condition))
+             (simple-condition-format-arguments condition))
       (error-exit)))
   #-:HANDLER
   (do-startup idxstyle rawindex output logfile trace-level))
@@ -84,7 +89,7 @@ particular platform.
       (3 (setq *mappings-trace* t) (setq *locref-trace* t))
       (t (error "Invalid :trace-level ~S !" trace-level)))
     #+:ORDRULES (when *mappings-trace*
-		  (setq ordrules::*message-logging* 1))
+                  (setq ordrules::*message-logging* 1))
 
     (multiple-value-bind (sec min hour day mon year)
         (get-decoded-time)
@@ -221,6 +226,12 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
+%% Revision 1.16  1997/03/18 14:50:30  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.15  1997/03/13 14:41:26  kehr
 %% Changed all IN-PACKAGE, DEFPACKAGE, REQUIRE, PROVIDE declarations to
 %% be compatible with ANSI CL. Bug was reported by Bernd Raichle.

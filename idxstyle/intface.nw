@@ -459,11 +459,8 @@ the root-chunk of module \module{idxstyle}.
 
 <<Use [[ordrules]]-package if available>>=
 (eval-when (eval load compile)
-  (when (member "ORDRULES"
-                (mapcar #'package-name
-                        (list-all-packages))
-                :test #'equal)
-    (pushnew ':ORDRULES *features*)))
+  (when (find-package "ORDRULES")
+    (pushnew :ORDRULES *features*)))
 @
 %%
 \begin{arguments}{replacement}
@@ -569,16 +566,16 @@ For more information see the description of the [[ordrules]]-package.
   (destructuring-switch-bind (from to &switch drop)
       args
     (let ((from-attr (lookup-catattr *indexstyle* from))
-	  (to-attr   (lookup-catattr *indexstyle* to)))
+          (to-attr   (lookup-catattr *indexstyle* to)))
       (cond ((not from-attr)
-	       (nraw "`~S' is not a known attribute in:~&~A" from whole))
-	    ((not to-attr)
-	       (nraw "`~S' is not a known attribute in:~&~A" to whole))
-	    (t (if drop
-		   `(ADD-DROP-IF-MERGED-RULE *INDEXSTYLE*
-		     ,from-attr ,to-attr)
-		   `(ADD-MERGE-RULE *INDEXSTYLE*
-		     ,from-attr ,to-attr)))))))
+               (nraw "`~S' is not a known attribute in:~&~A" from whole))
+            ((not to-attr)
+               (nraw "`~S' is not a known attribute in:~&~A" to whole))
+            (t (if drop
+                   `(ADD-DROP-IF-MERGED-RULE *INDEXSTYLE*
+                     ,from-attr ,to-attr)
+                   `(ADD-MERGE-RULE *INDEXSTYLE*
+                     ,from-attr ,to-attr)))))))
 @ %def merge-to
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -730,68 +727,68 @@ find one we load it as usual.
 <<Including files>>=
 (defvar *wl-fmt* "~&~%Error in line ~S:~%~A~%")
 (defun watched-load (filename
-		     &key
-		     (print *load-print*)
-		     (if-does-not-exist t)
-		     (echo *load-echo*))
+                     &key
+                     (print *load-print*)
+                     (if-does-not-exist t)
+                     echo)
   (let ((stream (open (setq filename (pathname filename))
-		      :direction :input-immutable
-		      :element-type 'string-char
-		      :if-does-not-exist nil))
-	(lineno 1))
+                      :direction :input-immutable
+                      :element-type 'string-char
+                      :if-does-not-exist nil))
+        (lineno 1))
     (if stream
-	(let* ((load-stream (make-string-output-stream))
-	       (input-stream (if echo
-				 (make-echo-stream stream load-stream)
-				 stream
-				 ))
-	       (*load-pathname* (if (pathnamep filename) filename nil))
-	       (*load-truename* (if (pathnamep filename) (truename filename) nil))
-	       (*package* *package*)	; *PACKAGE* binden
-	       (*readtable* *readtable*) ; *READTABLE* binden
-	       (end-of-file "EOF"))	; einmaliges Objekt
-	  (setq sys::*load-input-stream* input-stream)
-	  (block nil
-	    (unwind-protect
-		 (tagbody weiter
-		    (let* ((obj
-			    (handler-case (read input-stream nil end-of-file)
-			      (error (cond)
-				(when echo
-				  (let* ((str (get-output-stream-string load-stream))
-					 (cnt (count #\Newline str)))
-				    (info *wl-fmt* (+ cnt lineno) str)
-				    (oops* (simple-condition-format-string cond)
-					   (simple-condition-format-arguments cond))
-				    (error-exit))))))
-			   (str (get-output-stream-string load-stream))
-			   (cnt (count #\Newline str)))
-		      (incf lineno cnt)
-		      (when (eql obj end-of-file)
-			(return-from nil))
-		      (setq obj
-			    (multiple-value-list
-				(cond ((compiled-function-p obj) (funcall obj))
-				      ;;(compiling (funcall (compile-form obj nil nil nil nil nil)))
-				      (t (handler-case (eval obj)
-					   (error (cond)
-					     (info *wl-fmt* lineno str)
-					     (oops* (simple-condition-format-string cond)
-						    (simple-condition-format-arguments cond))
-					     (error-exit)))
-					 (get-output-stream-string load-stream)
-					 ))))
-		      (when print (when obj (print (first obj))))
-		      )
-		    (go weiter)
-		    )
-	      (close stream) (close input-stream)
-	      ) )
-	  t)
-	(if if-does-not-exist
-	    (error "A file with name ~A does not exist" filename)
-	    nil)
-	) ))
+        (let* ((load-stream (make-string-output-stream))
+               (input-stream (if echo
+                                 (make-echo-stream stream load-stream)
+                                 stream
+                                 ))
+               (*load-pathname* (if (pathnamep filename) filename nil))
+               (*load-truename* (if (pathnamep filename) (truename filename) nil))
+               (*package* *package*)    ; *PACKAGE* binden
+               (*readtable* *readtable*) ; *READTABLE* binden
+               (end-of-file "EOF"))     ; einmaliges Objekt
+          ;;(setq sys::*load-input-stream* input-stream)
+          (block nil
+            (unwind-protect
+                 (tagbody weiter
+                    (let* ((obj
+                            (handler-case (read input-stream nil end-of-file)
+                              (error (cond)
+                                (when echo
+                                  (let* ((str (get-output-stream-string load-stream))
+                                         (cnt (count #\Newline str)))
+                                    (info *wl-fmt* (+ cnt lineno) str)
+                                    (oops* (simple-condition-format-string cond)
+                                           (simple-condition-format-arguments cond))
+                                    (error-exit))))))
+                           (str (get-output-stream-string load-stream))
+                           (cnt (count #\Newline str)))
+                      (incf lineno cnt)
+                      (when (eql obj end-of-file)
+                        (return-from nil))
+                      (setq obj
+                            (multiple-value-list
+                                (cond ((compiled-function-p obj) (funcall obj))
+                                      ;;(compiling (funcall (compile-form obj nil nil nil nil nil)))
+                                      (t (handler-case (eval obj)
+                                           (error (cond)
+                                             (info *wl-fmt* lineno str)
+                                             (oops* (simple-condition-format-string cond)
+                                                    (simple-condition-format-arguments cond))
+                                             (error-exit)))
+                                         (get-output-stream-string load-stream)
+                                         ))))
+                      (when print (when obj (print (first obj))))
+                      )
+                    (go weiter)
+                    )
+              (close stream) (close input-stream)
+              ) )
+          t)
+        (if if-does-not-exist
+            (error "A file with name ~A does not exist" filename)
+            nil)
+        ) ))
 @ %def watched-load
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1055,6 +1052,12 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.25  1997/03/18 14:49:53  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.24  1997/03/10 15:50:50  kehr
 %% Corrected a bug in the macro (merge-to).
 %%

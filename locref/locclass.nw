@@ -65,12 +65,8 @@ all location-classes.
 
 <<Class \class{location-class}>>=
 (defclass location-class ()
-    ((name   :reader get-name :type string :initarg :name)
-     (ordnum :writer set-ordnum :type number
-             :initform (gen-next-loccls-ordnum))))
-
-(defmacro get-ordnum (loccls)
-  `(SLOT-VALUE ,loccls 'ORDNUM))
+    ((name   :type string :initarg :name)
+     (ordnum :type number :initform (gen-next-loccls-ordnum))))
 @ %def location-class get-ordnum
 
 \no Every derived class must define a constructor-function
@@ -110,19 +106,10 @@ because they share multiple similiarities.
 (defclass layered-location-class (location-class)
     ((layers    :initarg  :layers)
      (hierdepth :initarg  :hierdepth)))
-
-(defmacro get-layers (locref)
-  `(SLOT-VALUE ,locref 'LAYERS))
-(defmacro get-hierdepth (locref)
-  `(SLOT-VALUE ,locref 'HIERDEPTH))
-(defmacro set-hierdepth (depth locref)
-  `(SETF (SLOT-VALUE ,locref 'HIERDEPTH) ,depth))
-@ %def layered-location-class get-layers set-layers get-hierdepth set-hierdepth
+@ %def layered-location-class
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(layered-location-class
-          get-layers set-layers layers
-          get-hierdepth set-hierdepth hierdepth))
+(export '(layered-location-class))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,8 +123,7 @@ built of its lenght is at least [[join-length]]. If [[join-length]] is
 
 <<Class \class{standard-location-class}>>=
 (defclass standard-location-class (layered-location-class)
-    ((join-length :reader get-join-length :writer set-join-length
-                  :initarg :join-length)))
+    ((join-length :initarg :join-length)))
 
 (defun make-standard-location-class (name layers join-length hierdepth)
   (make-instance 'standard-location-class
@@ -201,7 +187,7 @@ as an extra class to be free for future additions.
 
 <<Class \class{loccls-layer}>>=
 (defclass loccls-layer ()
-    ((basetype :reader get-basetype :initarg :basetype)))
+    ((basetype :initarg :basetype)))
 
 (defun make-loccls-layer (basetype)
   (make-instance 'loccls-layer :basetype basetype))
@@ -232,7 +218,7 @@ future extensions.
 
 <<Class \class{loccls-separator}>>=
 (defclass loccls-separator ()
-    ((separator  :reader get-separator  :initarg :separator)))
+    ((separator :initarg :separator)))
 
 (defun make-loccls-separator (separator)
   (make-instance 'loccls-separator :separator separator))
@@ -285,7 +271,7 @@ by the subclasses. For explanation see below.
 
 <<Class \class{crossref-location-class}>>=
 (defclass crossref-location-class (location-class)
-    ((target :reader get-target :writer set-target :initarg :target)))
+    ((target :initarg :target)))
 @ %def crossref-location-class
 
 <<Export-list of submodule \module{locclass}>>=
@@ -569,6 +555,12 @@ is not an error, because we do a prefix-matching.
 
 
 %% $Log$
+%% Revision 1.20  1997/03/18 14:50:17  kehr
+%% Checkin after the several changes. a) the definition of slot-accessor
+%% macros in the whole source, b) the modifications suggested by Bernd
+%% Raichle to make the source compatible with Allegro CL and c) a first
+%% version of the new sorting scheme.
+%%
 %% Revision 1.19  1997/03/10 15:51:56  kehr
 %% Added support for (merge-to :drop) which was inadvertently left out.
 %%
