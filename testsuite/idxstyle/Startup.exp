@@ -1,0 +1,37 @@
+#
+# this tests just if clisp responds correctly
+#
+
+set timeout 10
+
+set test "test for nil"
+send "nil\n"
+expect_NIL
+
+set test "(use-package 'clos)"
+send "(use-package 'clos)\n"
+expect_T
+
+set test "(use-package 'xp)"
+send "(use-package 'xp)\n"
+expect_T
+
+#
+# this loads the idxstyle package
+#
+
+new_timeout 20
+set test "(load 'locref)"
+send "(load 'locref)\n"
+expect_T
+backup_timeout
+
+set test "(use-package 'locref)"
+send "(use-package 'locref)\n"
+expect_T
+
+xsend {(load 'idxstyle)}
+expect_T
+
+xsend {(use-package 'idxstyle)}
+expect_T

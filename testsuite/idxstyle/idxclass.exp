@@ -1,0 +1,16 @@
+#
+#
+#
+
+xsend {(< 1 2)}
+expect_T
+
+xsend {(setq idxcls (make-indexclass "default"))}
+expect {
+    -re "\#<INDEXCLASS.*>.*$prompt$" { pass "$test" }
+}
+
+xsend {(pprint idxcls)}
+expect {
+    -re "(Index.*)$prompt$" { pass "$test" }
+}
