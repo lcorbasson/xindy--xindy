@@ -181,8 +181,7 @@ distribution.
 <sect2>Cross-reference-classes
 
 
-
-<sect1>The markup
+<sect2>The markup
 
 <sect2>Viewing the index as a tree
 
@@ -191,6 +190,102 @@ distribution.
 
 
 <sect1>Raw-index interface
+
+<p>
+The raw-index is the stream of data that represents the index that is
+to be processed. Since many different document preparation systems may
+use different forms of representing an index, their output must be
+transformed in a form readable by xindy. We also could have written an
+configurable parser performing this task, but usually a tool written
+in some text processing tools such as <tt/perl/, <tt/sed/ or <tt/awk/
+can achieve the same task as well. So adapting xindy to a completely
+different system can mostly be done by writing an appropriate
+raw-index filter.
+
+The format of the raw-index interface of xindy defined as follows:
+
+<code>
+(indexentry :key string-list [:print string-list] [:attr string]
+	    { { :locref string | [:open-range | :close-range] }
+	    | { :xref string-list [:xref-type string] } } )
+</code>
+
+Here the braces &lsqb; and &rsqb; denote optional parts of the syntax
+and &lcub; and &rcub; denote the groups of elements. However the
+enclosing round braces <em/are/ part of the syntax and must be
+supplied. The pseudo-variable <em/string/ is a sequence of characters
+surrounded by double-quotes, e.g.
+
+<tscreen><verb>
+"Hi, it's me"  "one"  "a string with two \"double quotes\""
+</verb></tscreen>
+
+are three examples of valid strings. If you need to include a
+double-qoute as a literal character, you must quote it itself with a
+backslash as shown in the third example. A <em/string-list/ is simply
+a list of strings separated by whitespaces and surrounded by round
+braces. An example of a string-list is
+
+<tscreen><verb>
+("This" "is" "a" "list" "of" "strings")
+</verb></tscreen>
+
+So far about the syntax. The semantics of the different elements are
+described here.
+
+<p>
+<descrip>
+
+<tag/<tt/:key//The argument <em/string-list/ defines the keyword of
+the indexentry. Is is a list of strings, since the keyword may consist
+of different layers such as <tt>("heap" "fibonacci")</tt>. This
+argument is mandatory.
+
+<tag/<tt/:print//The optional <em/print-key/ defines the way the
+keyword has to be printed in the markup phase.
+
+<tag/<tt/:locref//The reference an indexentry describes can be a
+<em/location-reference/ or a <em/cross-reference/. The switch
+<tt/:locref/ describes a location-reference. Its optional arguments
+are <tt/:open-range/ and <tt/:close-range/. The <em/string/ that must
+be supplied must somehow encode the location-reference. It might look
+like the string <tt/"25"/ representing the page number 25, or
+<tt/"Appendix-I"/ representing the first appendix numbered in
+uppercase roman numbers.
+
+<tag/<tt/:open-range/,<tt/:close-range//These are switches that do not
+take any arguments. They describe the beginning and ending of a
+<em/range/, starting or ending from the location-reference that is
+given by the argument <tt/:locref/. If they are supplied, the
+location-reference may have influence on the way ranges are build.
+
+<tag/<tt/:xref/,<tt/:xref-type//These arguments choose the second
+alternative. The argument <em/string-list/ of parameter <tt/:xref/
+describes where the indexentry should point to. The optinal parameter
+<tt/:xref-type/ may be used to declare the cross-reference to be of a
+certain type.
+
+<tag/<tt/:attr//This parameter may be used to tag a location-reference
+or a cross-reference with a certain attribute. For location-references
+it parametries the way ranges are built. It may also used to associate
+different markup for different attributes in the markup phase.
+
+</descrip>
+
+Some examples:
+
+<tscreen><verb> (indexentry :key ("airplane") :locref "25") </verb></tscreen>
+defines an indexentry with the key 'airplane' and indexed on page
+'25'.
+
+<tscreen><verb> (indexentry :key ("house") :xref ("building"))
+</verb></tscreen> defines a cross-reference with the key 'house'
+pointing to the term 'building'.
+
+<tscreen><verb> (indexentry :key ("house") :xref ("building") :open-range)
+</verb></tscreen> is an invalid specification, since <tt/:open-range/
+mustn't be used together with cross-references.
+
 
 
 <sect>Invoking xindy
