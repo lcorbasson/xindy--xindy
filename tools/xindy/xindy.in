@@ -158,12 +158,7 @@ else
     then
         logfile=":logfile \"`quote_string "$logfile"`\""
     fi
-    case $level in
-      1) logging=":mappings-trace t";;
-      2) logging=":mappings-trace t";;
-      3) logging=":mappings-trace t";;
-    esac
-
+    logging=":trace-level $level"
     xindy_cmd="-x
 (progn
    (xindy:startup :idxstyle \"$indexstyle\"

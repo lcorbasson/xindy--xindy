@@ -34,34 +34,34 @@ xindy runs. Its value will be set anew when dumping xindy on a
 particular platform.
 
 <<Global definitions>>=
-(defparameter *xindy-version*  "`xindy'")
+(defparameter *xindy-version*  "unknown")
 (defparameter *xindy-platform* "unknown")
 @ %def *xindy-platform* *xindy-version*
 
 <<Startup functions>>=
 (defun issue-startup-message ()
-  (info "~&This is ~A (~A).~%" *xindy-version* *xindy-platform*)
+  (info "~&This is xindy ~A (~A).~%" *xindy-version* *xindy-platform*)
   (info "Copyright (c) 1996,1997  Roger Kehr~%~%"))
 
 (defun startup (&key idxstyle rawindex output logfile
-                     show-version markup-trace mappings-trace)
+                     show-version markup-trace (trace-level 0))
   (issue-startup-message)
   (when show-version (exit))
   (when markup-trace (setq *markup-verbose-mode* t))
   #+:HANDLER
   (handler-case
-      (do-startup idxstyle rawindex output logfile mappings-trace)
+      (do-startup idxstyle rawindex output logfile trace-level)
     (error
-       (condition)
-       (oops* (simple-condition-format-string    condition)
-	      (simple-condition-format-arguments condition))
-       (error-exit)))
+	(condition)
+      (oops* (simple-condition-format-string    condition)
+	     (simple-condition-format-arguments condition))
+      (error-exit)))
   #-:HANDLER
-  (do-startup idxstyle rawindex output logfile mappings-trace))
+  (do-startup idxstyle rawindex output logfile trace-level))
 @ %def issue-startup-message startup
 
 <<Startup functions>>=
-(defun do-startup (idxstyle raw-index output logfile mappings-trace)
+(defun do-startup (idxstyle raw-index output logfile trace-level)
   (set-searchpath-by-environment)
   (when logfile
     (info "~&Opening logfile ~S " logfile)
@@ -73,9 +73,17 @@ particular platform.
              (oops "Opening logfile ~S failed!" logfile)
              (error-exit)))
     (info "(done)~%")
+    ;; Set necessary flags...
     (setq *logging-on* t)
-    #+:ORDRULES (when mappings-trace
-                 (setq ordrules::*message-logging* 1))
+    (case trace-level
+      (0)
+      (1 (setq *mappings-trace* t))
+      (2 (setq *mappings-trace* t) (setq *locref-trace* t))
+      (3 (setq *mappings-trace* t) (setq *locref-trace* t))
+      (t (error "Invalid :trace-level ~S !" trace-level)))
+    #+:ORDRULES (when *mappings-trace*
+		  (setq ordrules::*message-logging* 1))
+
     (multiple-value-bind (sec min hour day mon year)
         (get-decoded-time)
       (gol t ";; This logfile was generated automatically by `xindy'~%")
@@ -210,6 +218,10 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
+%% Revision 1.11  1997/01/23 21:36:05  kehr
+%% Introduced the :trace-level interface. Depending on this flag other
+%% global flags are set that control the different logging-schemes.
+%%
 %% Revision 1.10  1997/01/22 16:49:12  kehr
 %% Minor changes.
 %%
