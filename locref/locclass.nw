@@ -117,12 +117,14 @@ The following symbols are exported:
 \label{sec:location-class}
 
 A location-class is the abstract base-class of all location-class
-types. The only common slot to all subclasses is [[name]].
+types. Each location-class is identified by a name and has an
+associated [[ordnum]] that specifies the output precedence list among
+all location-classes.
 
-<<class \class{location-class}>>=
+<<Class \class{location-class}>>=
 (defclass location-class ()
-    ((name    :reader   get-name   :initarg :name)
-     (ordnum  :accessor get-ordnum :initform (gen-next-loccls-ordnum))))
+    ((name        :reader   get-name   :initarg :name)
+     (ordnum      :accessor get-ordnum :initform (gen-next-loccls-ordnum))))
 @ %def location-class
 
 \no Every derived class must define a constructor-function
@@ -133,8 +135,9 @@ name that is stored in the [[name]]-slot. Additionally every derived
 location-class must implement a method [[perform-match]]
 (\look{sec:match.strings}).
 
-<<export-list of submodule \module{locclass}>>=
-(export '(location-class perform-match get-name get-ordnum))
+<<Export-list of submodule \module{locclass}>>=
+(export '(location-class perform-match
+          get-name get-ordnum))
 @
 
 \no We define a relation between location-classes that is used to sort
@@ -144,7 +147,7 @@ corresponding location-classes. We introduce the relations
 location-classes [[loccls-1]] and [[loccls-2]] and returns [[t]] if
 the first one is \emph{smaller} than/\emph{equal} to the second one.
 
-<<class \class{location-class}>>=
+<<Class \class{location-class}>>=
 (defgeneric location-class< (location-class-1 location-class-2))
 
 (defgeneric location-class= (location-class-1 location-class-2))
@@ -160,7 +163,7 @@ initial value 0 and increase it everytime we declare a new
 location-class by calling [[gen-next-loccls-ordnum]]. It is called in
 the [[:initform]] of the class-descriptions.
 
-<<class \class{location-class}>>=
+<<Class \class{location-class}>>=
 (defparameter *curr-loccls-ordnum* 0)
 
 (defun gen-next-loccls-ordnum ()
@@ -170,7 +173,7 @@ the [[:initform]] of the class-descriptions.
 \no The default implementation that needs to be modified later is as
 follows:
 
-<<class \class{location-class}>>=
+<<Class \class{location-class}>>=
 (defmethod location-class< ((loccls-1 location-class)
                             (loccls-2 location-class))
   (< (get-ordnum loccls-1) (get-ordnum loccls-2)))
@@ -185,75 +188,80 @@ follows:
 
 \subsubsection{Class \sans{layered-location-class}}
 
-\no We combine Standard-classes and Var-classes to a Layered-class
+We combine Standard-classes and Var-classes to a Layered-class
 because they share multiple similiarities.
 
-<<class \class{layered-location-class}>>=
+<<Class \class{layered-location-class}>>=
 (defclass layered-location-class (location-class)
-    ((layers      :reader   get-layers      :initarg :layers)
-     (join-layers :reader   get-join-layers :initarg :join-layers)))
+    ((layers :reader get-layers :initarg :layers)))
 @ %def layered-location-class
+
+<<Export-list of submodule \module{locclass}>>=
+(export '(layered-location-class get-layers))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \sans{standard-location-class}}
 
-<<class \class{standard-location-class}>>=
+Slot [[join-length]] contains the length of a range in the last layer
+of a location-reference of a standard-location-class. If
+[[join-length]] is [[nil]] then no range-building is allowed for this
+location-class.
+
+<<Class \class{standard-location-class}>>=
 (defclass standard-location-class (layered-location-class)
-    ())
+    ((join-length :reader get-join-length :writer set-join-length
+                  :initarg :join-length)))
 
-(defun make-standard-location-class (name layers join-layers)
+(defun make-standard-location-class (name layers join-length)
   (make-instance 'standard-location-class
-                 :name name :layers layers :join-layers join-layers))
-
+                 :name name :layers layers :join-length join-length))
 @ %def standard-location-class make-standard-location-class
+
+<<Class \class{standard-location-class}>>=
+(defmethod joining-allowed-p ((loccls standard-location-class))
+  (or (get-join-length loccls)))
+@ %def joining-allowed-p
 
 \no We add a function for a checked creation of a location-class, that
 checks for correct arguments. Currently we just forward it to the
 normal instantiation without any validation.
 
-<<class \class{standard-location-class}>>=
+<<Class \class{standard-location-class}>>=
 (defun checked-make-standard-location-class (name layers join-layers)
   (make-standard-location-class name layers join-layers))
 @ %def checked-make-location-class
 
-
+<<Export-list of submodule \module{locclass}>>=
+(export '(standard-location-class
+          get-join-length set-join-length
+          joining-allowed-p
+          checked-make-standard-location-class))
+@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \sans{var-location-class}}
 
-<<class \class{var-location-class}>>=
+<<Class \class{var-location-class}>>=
 (defclass var-location-class (layered-location-class)
     ())
 
-(defun make-var-location-class (name layers join-layers)
+(defun make-var-location-class (name layers)
   (make-instance 'var-location-class
-                 :name name :layers layers :join-layers join-layers))
-
-(defmethod show ((loccls var-location-class))
-  (format t "[LocCls `~A': (" (get-name loccls))
-  (show (get-layers loccls))
-  (show (get-join-layers loccls))
-  (write-string ")")
-  (values))
+                 :name name :layers layers))
 @ %def var-location-class make-var-location-class
 
-<<class \class{var-location-class}>>=
-(defun checked-make-var-location-class (name layers join-layers)
-  (make-var-location-class name layers join-layers))
+<<Class \class{var-location-class}>>=
+(defun checked-make-var-location-class (name layers)
+  (make-var-location-class name layers))
 @ %def checked-make-var-location-class
-
-\medskip
 
 \no Here follows the list of all exported location-classes and their
 constructors.
 
-<<export-list of submodule \module{locclass}>>=
-(export '(layered-location-class
-          standard-location-class
-          var-location-class
-          checked-make-layered-location-class
-          checked-make-standard-location-class
+<<Export-list of submodule \module{locclass}>>=
+(export '(var-location-class
           checked-make-var-location-class))
 @
 
@@ -266,7 +274,7 @@ A \term{location-class-layer} is based upon a basetype. We define this
 as an extra class to be free for future additions. (Later on... Great
 idea, because we now store the markup-information into the class, too.)
 
-<<class \class{loccls-layer}>>=
+<<Class \class{loccls-layer}>>=
 (defclass loccls-layer ()
     ((basetype :reader get-basetype :initarg :basetype)
      (markup   :reader get-markup   :initarg :markup)))
@@ -275,7 +283,7 @@ idea, because we now store the markup-information into the class, too.)
   (make-instance 'loccls-layer :basetype basetype :markup markup))
 @ %def loccls-layer make-loccls-layer
 
-<<export-list of submodule \module{locclass}>>=
+<<Export-list of submodule \module{locclass}>>=
 (export '(loccls-layer make-loccls-layer))
 @
 
@@ -283,53 +291,11 @@ idea, because we now store the markup-information into the class, too.)
 [[layer]] we just forward the result to the basetype of thar
 location-class layer.
 
-<<class \class{loccls-layer}>>=
+<<Class \class{loccls-layer}>>=
 (defmethod prefix-match ((locstring string)
                          (layer     loccls-layer))
   (prefix-match locstring (get-basetype layer)))
 @ %def prefix-match
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsubsection{Other stuff --- still a lot of kluges}
-
-This function counts the number of basetypes in a layer-list. It is
-used to initialize the [[join-layers]]-value of a location-class.
-
-<<class \class{layered-location-class}>>=
-;(defun num-of-basetypes (layers)
-;  (list (count nil layers
-;               :test #'(lambda (dummy layer)
-;                         (declare (ignore dummy))
-;                         (typep layer 'loccls-layer)))))
-@
-
-This function checks whether given level [[level-number]] appears in
-the list of valid layers of the location-class. Is its used to check
-if two location-references are successors that may be joined at at
-certain level.
-
-<<class \class{standard-location-class}>>=
-(defun joinable-on-layer-x-p (loccls-name level-number)
-  (find level-number
-          (get-join-layers loccls-name)))
-@
-
-This function returns the minimum range-length for a given
-location-class. Only if a range is built whose length is greater or
-equal to this value a range is valid.
-
-We haven't implemented location-class specific values yet, so we just
-return the fixed constant [[3]] for now. The value this function
-returns must be at least greater that 1 because a range of length 1
-should never be valid.
-
-<<class \class{standard-location-class}>>=
-(defun get-minimum-range-length (loccls-name)
-  (declare (ignore loccls-name))
-  3)
-@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -339,7 +305,7 @@ should never be valid.
 The separators is simply a string. We define this as an extra class
 for future extensions.
 
-<<class \class{loccls-separator}>>=
+<<Class \class{loccls-separator}>>=
 (defclass loccls-separator ()
     ((separator  :reader get-separator  :initarg :separator)
      (markup     :reader get-markup     :initarg :markup)))
@@ -348,7 +314,7 @@ for future extensions.
   (make-instance 'loccls-separator :separator separator :markup markup))
 @ %def loccls-separator make-loccls-separator
 
-<<export-list of submodule \module{locclass}>>=
+<<Export-list of submodule \module{locclass}>>=
 (export '(loccls-separator make-loccls-separator))
 @
 
@@ -365,7 +331,7 @@ indicate success or a multiple value [[(nil nil nil)]] otherwise.
   [[locstring]] starting from position [[seplen]].
 \end{note}
 
-<<class \class{loccls-separator}>>=
+<<Class \class{loccls-separator}>>=
 (defmethod prefix-match ((locstring string)
                          (separator loccls-separator))
   (let* ((sepstr (get-separator separator))
@@ -539,19 +505,19 @@ is not an error, because we do a prefix-matching.
 
 \subsubsection{The submodule root}
 
-<<submodule \module{locclass}>>=
+<<Submodule \module{locclass}>>=
 ;; $Id$
 ;;
 
-<<class \class{location-class}>>
-<<class \class{layered-location-class}>>
-<<class \class{standard-location-class}>>
-<<class \class{var-location-class}>>
-<<class \class{loccls-layer}>>
-<<class \class{loccls-separator}>>
+<<Class \class{location-class}>>
+<<Class \class{layered-location-class}>>
+<<Class \class{standard-location-class}>>
+<<Class \class{var-location-class}>>
+<<Class \class{loccls-layer}>>
+<<Class \class{loccls-separator}>>
 <<Matching strings with location-classes>>
 
-<<export-list of submodule \module{locclass}>>
+<<Export-list of submodule \module{locclass}>>
 @
 
 <<RCS-Identifier>>=
@@ -608,7 +574,11 @@ is not an error, because we do a prefix-matching.
 %% End:
 %%
 %% $Log$
-%% Revision 1.8  1995/12/19 11:00:11  kehr
+%% Revision 1.9  1996/01/09 14:28:35  kehr
+%% Moved submodule `ranges' from this module to module `index'.
+%% Minor modifications in conjunction with the rewrite of module `index'.
+%%
+%% Revision 1.8  1995/12/19  11:00:11  kehr
 %% Significant changes.
 %%
 %% Revision 1.7  1995/12/15  17:09:49  kehr

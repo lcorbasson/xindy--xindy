@@ -72,24 +72,35 @@ important.
 \subsubsection{External interface}
 
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \class{location-reference}}
 
-We start with classs \class{location-reference}. The implementation is
+<<Class \class{location-reference}>>=
+(defclass location-reference ()
+    ())
+@ %def location-reference
+
+<<Export-list of submodule \module{locref}>>=
+(export 'location-reference)
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Class \class{structured-locref}}
+
+We start with class \class{structured-locref}. The implementation is
 directly derived from its abstract description.
 
-<<class \class{location-reference}>>=
-(defclass location-reference ()
-    ((layers    :reader get-layers   :initarg :layers)
-     (ordnums   :reader get-ordnums  :initarg :ordnums)
-     (catattr   :reader get-catattr  :initarg :catattr)
-     (locclass  :reader get-locclass :initarg :locclass)
-     (state     :accessor get-state  :initform 'normal)
-     (origin    :accessor get-origin :initform 'nil)))
-@ %def location-reference
+<<Class \class{structured-locref}>>=
+(defclass structured-locref (location-reference)
+    ((layers   :reader get-layers                    :initarg :layers)
+     (ordnums  :reader get-ordnums                   :initarg :ordnums)
+     (catattr  :reader get-catattr                   :initarg :catattr)
+     (locclass :reader get-locclass                  :initarg :locclass)
+     (state    :reader get-state  :writer set-state  :initarg :state)
+     (origin   :reader get-origin :writer set-origin :initform 'nil)))
+@ %def structured-locref
 
 \no The definition of the constructor is a little bit tricky since it
 uses [[&allow-other-keys]] to allow other (for creation of instances
@@ -98,45 +109,118 @@ when this function is called from outside (\emph{see} function
 [[gen-indexentries]] and [[forall-location-classes]] for more
 details).
 
-<<class \class{location-reference}>>=
-(defun make-location-reference (&key (layers '()) (ordnums '())
-                                     (catattr "") (locclass nil)
+<<Class \class{structured-locref}>>=
+(defun make-structured-locref (&key (layers '())  (ordnums '())
+                                     (catattr nil) (locclass nil)
                                      &allow-other-keys)
-  (make-instance 'location-reference
+  (make-instance 'structured-locref
                  :layers  layers   :ordnums  ordnums
+                 :state   'locref-state-normal
                  :catattr catattr  :locclass locclass))
-@ %def make-location-reference
+@ %def make-structured-locref
 
-<<export-list of submodule \module{locref}>>=
-(export '(location-reference make-location-refrence
-          get-layers get-ordnums get-catattr get-locclass))
+<<Class \class{structured-locref}>>=
+(defun make-virtual-structured-locref (&key (layers '())  (ordnums '())
+                                             (catattr nil) (locclass nil)
+                                             &allow-other-keys)
+  (make-instance 'structured-locref
+                 :layers  layers   :ordnums  ordnums
+                 :state   'locref-state-virtual
+                 :catattr catattr  :locclass locclass))
+@ %def make-virtual-structured-locref
+
+\no The states a structured-locref can be in are
+[['locref-state-normal]] and [['locref-state-virtual]]. They should be
+accessed only by the following mutators and predicates.
+
+<<Class \class{structured-locref}>>=
+(defmethod state-normal-p ((locref structured-locref))
+  (eql 'locref-state-normal (get-state locref)))
+
+(defmethod state-virtual-p ((locref structured-locref))
+  (eql 'locref-state-virtual (get-state locref)))
+
+(defmethod state-deleted-p ((locref structured-locref))
+  (eql 'locref-state-deleted (get-state locref)))
+
+(defmethod set-state-normal ((locref structured-locref))
+  (set-state 'locref-state-normal locref)
+  locref)
+
+(defmethod set-state-virtual ((locref structured-locref))
+  (set-state 'locref-state-virtual locref)
+  locref)
+
+(defmethod set-state-deleted ((locref structured-locref))
+  (set-state 'locref-state-deleted locref)
+  locref)
+@ %def state-normal-p state-virtual-p state-deleted-p set-state-normal set-state-virtual set-state-deleted
+
+<<Export-list of submodule \module{locref}>>=
+(export '(structured-locref
+          make-structured-locref
+          make-virtual-structured-locref
+          get-layers get-ordnums get-catattr get-locclass
+          get-origin       set-origin
+          state-normal-p   state-virtual-p   state-deleted-p
+          set-state-normal set-state-virtual set-state-deleted
+          ))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \class{category-attribute}}
 
-Here we define category-attributes. They currently consist of a name
-stored in slot [[name]]. Each category-attribute has a [[ordnum]] that
-is neccessary to determine the output sequence and an associated
-[[type]] that gives information if this cat-attr is declared as a
-\term{single} group or as a \term{member} of a group. The respective
-symbols are [[catattr-single]] and [[catattr-member]].
+Here we define the category-attribute-slots.
 
-<<class \class{category-attribute}>>=
+\begin{slots}{processing-ordnum}
+\item [name] Category-attributes have a name that is specified by the
+  user and stored in this slot.
+\item [ordnum] By defining the category-attribute-groups each
+  category-attribute is given a ordnum which says that it is member of
+  the [[ordnum]]th category-attribute-group. Used for sorting-purposes.
+\item [sort-ordnum] defines the position in the sort-order.
+\item [processing-ordnum] defines the order that is defined by the
+  topologial sort of the \irule{drop-if-merged}-rules.
+\item [type] gives information if this cat-attr is declared as a
+  \term{single} group or as a \term{member} of a group. The respective
+  symbols are [[catattr-single]] and [[catattr-member]].
+\item [markup] The user also can specify a special markup for each
+  attribute.
+\end{slots}
+
+<<Class \class{category-attribute}>>=
 (defclass category-attribute ()
-    ((name   :reader get-name   :initarg :name)
-     (ordnum :reader get-ordnum :initarg :ordnum)
-     (type   :reader get-type   :initarg :type)))
+    ((name   :reader get-name                      :initarg :name)
+     (catattr-grp-ordnum :reader get-catattr-grp-ordnum
+                         :writer set-catattr-grp-ordnum
+                         :initarg :ordnum)
+     (sort-ordnum        :reader get-sort-ordnum
+                         :writer set-sort-ordnum
+                         :initform 0)
+     (processing-ordnum  :reader get-processing-ordnum
+                         :writer set-processing-ordnum
+                         :initform 0)
+     (type   :reader get-type   :writer set-type   :initarg :type)
+     (markup :reader get-markup :writer set-markup :initarg :markup)))
 
-(defun make-category-attribute (attr-name ordnum type)
+(defun make-category-attribute (attr-name &optional (markup nil))
   (make-instance 'category-attribute
-                 :name attr-name :ordnum ordnum :type type))
+                 :name attr-name :markup markup))
 @ %def category-attribute make-category-attribute
 
-<<export-list of submodule \module{locref}>>=
+\no When spcifying the category-attribute-groups each catattr is
+informed about its [[ordnum]] and [[type]]. These can be set directly
+by using [[set-ordnum]] and [[set-type]].
+
+<<Export-list of submodule \module{locref}>>=
 (export '(category-attribute make-category-attribute
-          get-name get-ordnum get-type))
+          get-name
+          get-catattr-grp-ordnum set-catattr-grp-ordnum
+          get-sort-ordnum        set-sort-ordnum
+          get-processing-ordnum  set-processing-ordnum
+          get-type   set-type
+          get-markup set-markup))
 @
 
 
@@ -144,8 +228,8 @@ symbols are [[catattr-single]] and [[catattr-member]].
 
 %%\subsubsection{Class \class{locref-layer}}
 %%
-%%A \term{location-reference-layer} layer is a \tstring. It is the
-%%smallest entity in the location-reference data hierarchy. It consists
+%%A \term{structured-locref-layer} layer is a \tstring. It is the
+%%smallest entity in the structured-locref data hierarchy. It consists
 %%only of the string that matched with the corresponding layer during
 %%the input-parsing of raw location-references.
 %%
@@ -193,6 +277,7 @@ relation.
 
 <<Sorting location-references>>=
 (defun locref-ordnum< (ordnum-list-1 ordnum-list-2)
+  (declare (inline))
   (cond ((equal ordnum-list-1 ordnum-list-2) nil)
         (t (do ((rest-1 ordnum-list-1 (cdr rest-1))
                 (rest-2 ordnum-list-2 (cdr rest-2)))
@@ -203,6 +288,7 @@ relation.
                         (t (< (first rest-1) (first rest-2)))))))))
 
 (defun locref-ordnum= (ordnum-list-1 ordnum-list-2)
+  (declare (inline))
   (equal ordnum-list-1 ordnum-list-2))
 @ %def locref-ordnum< locref-ordnum=
 
@@ -216,50 +302,16 @@ i really need it.
         (t (locref-class< locref-1 locref-2))))
 
 (defun locref= (locref-1 locref-2)
-  (cond ((locref-class= locref-1 locref-2)
-           (locref-ordnum= locref-1 locref-2))
-        (t nil)))
+  (and (eql (get-catattr locref-1) (get-catattr locref-2))
+       (eql (get-catattr locref-1) (get-catattr locref-2))
+       (locref-ordnum= (get-ordnums locref-1) (get-ordnums locref-2))))
 @ %def locref< locref=
 
-<<export-list of submodule \module{locref}>>=
+<<Export-list of submodule \module{locref}>>=
 (export '(locref-class<  locref-class=
           locref-ordnum< locref-ordnum=
           locref<        locref=))
 @
-
-\begin{TODO}
-  \item The following part is uncorrected yet.
-\end{TODO}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsubsection{Class \class{virtual-locref}}
-
-This class is used as a helpful construct during the processing of
-location-references. A \term{virtual} location-reference is created by
-applying a \textsf{merge-to}--rule. It additionally contains the slot
-[[secondary-attr]] which holds the name of the original attribute. E.g
-[[bold]] \textsf{merge-to} [[default]] creates a virtual
-location-reference with the [[catattr]] set to [[default]] and
-[[secondary-attr]] set to [[bold]].
-
-It means that a virtual location-reference is based upon a existing
-location-reference and a secondary attribute.
-
-<<class \class{vitual-locref}>>=
-(defclass virtual-locref (location-reference)
-    ((secondary-attr :accessor get-secondary-attr :initarg :secondary-attr)))
-
-(defun make-virtual-locref (locref catattr secondary-attrib)
-  (make-instance 'virtual-locref
-                 :layers         (get-layers  locref)
-                 :ordnums        (get-ordnums locref)
-                 :catattr        catattr
-                 :locclass       (get-locclass locref)
-                 :secondary-attr secondary-attrib))
-@ %def virtual-locref make-virtual-locref
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -279,9 +331,9 @@ location-reference and a secondary attribute.
     (load 'base))
   (use-package 'base))
 
-<<submodule \module{basetype}>>
-<<submodule \module{locclass}>>
-<<submodule \module{locref}>>
+<<Submodule \module{basetype}>>
+<<Submodule \module{locclass}>>
+<<Submodule \module{locref}>>
 
 ;(eval-when (compile load)
 ;  (require 'ranges))
@@ -291,13 +343,13 @@ location-reference and a secondary attribute.
 (defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
 @
 
-<<submodule \module{locref}>>=
-<<class \class{location-reference}>>
-<<class \class{vitual-locref}>>
-<<class \class{category-attribute}>>
+<<Submodule \module{locref}>>=
+<<Class \class{location-reference}>>
+<<Class \class{structured-locref}>>
+<<Class \class{category-attribute}>>
 <<Sorting location-references>>
 <<markup methods>>
-<<export-list of submodule \module{locref}>>
+<<Export-list of submodule \module{locref}>>
 @
 
 <<RCS-Identifier>>=
@@ -312,7 +364,7 @@ location-reference and a secondary attribute.
 simple printing of all layers and separators.
 
 <<markup methods>>=
-(defmethod markup-object ((locref location-reference)
+(defmethod markup-object ((locref structured-locref)
                           (dummmy-markup-list  list)
                           (context-list list)
                           (dummmy-env-stack    list))
@@ -325,16 +377,6 @@ simple printing of all layers and separators.
            (markup-object (pop layers) '() '() '()))
         (loccls-separator
            (markup-object loccls-layer '() '() '()))))))
-@
-
-\no We don't need to markup any virtual location-references.
-
-<<markup methods>>=
-(defmethod markup-object ((vlocref virtual-locref)
-                          (dummmy-markup-list  list)
-                          (dummmy-context-list list)
-                          (dummmy-env-stack    list))
-  )
 @
 
 
@@ -355,27 +397,28 @@ printing of the layer-string.
 \no A block for pretty-printing a location-reference.
 
 <<pretty-print>>=
-(defun pprint-location-reference (s locref)
+(defun pprint-structured-locref (s locref)
   (pprint-logical-block
-   (s nil :prefix "<" :suffix ">")
-   (pprint-indent :block 2 s)
-   (pprint-newline :linear s)
+   (s nil :prefix "[" :suffix "]")
+   ;(pprint-indent :block 2 s)
+   (cond ((state-normal-p  locref) (write-string "N:" s))
+         ((state-virtual-p locref) (write-string "V:" s))
+         (t (write-string "D:" s)))
    (write (get-layers locref) :stream s)
-   (pprint-newline :linear s)
    (write-string "=" s)
-   (pprint-newline :linear s)
    (write (get-ordnums locref) :stream s)
    (write-string ";" s)
+   (pprint-newline :fill s)
    (write (get-locclass locref) :stream s)
    (write-string ";" s)
-   (pprint-newline :linear s)
-   (write-string (get-catattr locref) s)
-   (when (typep locref 'virtual-locref)
-     (write-string " + " s)
-     (write-string (get-secondary-attr locref) s))
+   (pprint-newline :fill s)
+   (write (get-catattr locref) :stream s)
+   (when (get-origin locref)
+     (write-string "<-" s)
+     (write (get-catattr (get-origin locref)) :stream s))
    ))
 
-(set-pprint-dispatch 'location-reference #'pprint-location-reference)
+(set-pprint-dispatch 'structured-locref #'pprint-structured-locref)
 @
 
 <<pretty-print>>=
@@ -383,7 +426,7 @@ printing of the layer-string.
                      #'(lambda (s catattr)
                          (write-string "`" s)
                          (write-string (get-name catattr) s)
-                         (write-string "`" s)))
+                         (write-string "'" s)))
 @
 
 %% Local Variables:
@@ -391,7 +434,11 @@ printing of the layer-string.
 %% End:
 %%
 %% $Log$
-%% Revision 1.9  1995/12/19 11:00:15  kehr
+%% Revision 1.10  1996/01/09 14:28:38  kehr
+%% Moved submodule `ranges' from this module to module `index'.
+%% Minor modifications in conjunction with the rewrite of module `index'.
+%%
+%% Revision 1.9  1995/12/19  11:00:15  kehr
 %% Significant changes.
 %%
 %% Revision 1.8  1995/12/15  17:09:52  kehr

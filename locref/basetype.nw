@@ -144,7 +144,7 @@ The following symbols are exported:
 
 Here is the root chunk of this submodule.
 
-<<submodule \module{basetype}>>=
+<<Submodule \module{basetype}>>=
 ;; $Id$
 ;;
 
@@ -316,7 +316,11 @@ constructor.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.7  1995/12/19 11:00:07  kehr
+%% Revision 1.8  1996/01/09 14:28:33  kehr
+%% Moved submodule `ranges' from this module to module `index'.
+%% Minor modifications in conjunction with the rewrite of module `index'.
+%%
+%% Revision 1.7  1995/12/19  11:00:07  kehr
 %% Significant changes.
 %%
 %% Revision 1.6  1995/12/15  17:09:47  kehr
