@@ -57,7 +57,8 @@ program.tex: program.nw							@@\
 	$(NOWEAVE) $(NOWEAVE_FLAGS) -n program.nw |\
 	  cat header - trailer > program.tex				@@\
                                                                         @@\
-TeXFileTarget(latex,program,tex)                                        @@\
+/*TeXFileTarget(latex,program,tex)*/                                    @@\
+TeXDocTarget(latex,program)                                             @@\
                                                                         @@\
 clean::                                                                 @@\
         $(RM) program.tex
@@ -75,7 +76,8 @@ program.tex: docs							@@\
 	$(NOWEAVE) $(NOWEAVE_FLAGS) -n docs | \
 	  cat header - trailer > program.tex				@@\
                                                                         @@\
-TeXFileTarget(latex,program,tex)                                        @@\
+/*TeXFileTarget(latex,program,tex)*/                                    @@\
+TeXDocTarget(latex,program)                                             @@\
                                                                         @@\
 clean::                                                                 @@\
         $(RM) program.tex
@@ -88,7 +90,14 @@ clean::                                                                 @@\
 /* ============================================================
 
 $Log$
-Revision 1.1  1995/10/16 19:21:36  kehr
+Revision 1.2  1995/10/17 15:49:39  kehr
+Removed TeX.imk and replaced it with a mixin-module named
+TeXspread.imk. Made minor modifications in the noweb-module. It now
+supports a `doc'-target which is used to generate all noweaved
+documentation from the noweb-sources. Adapted project.conf to these
+modifications.
+
+Revision 1.1  1995/10/16  19:21:36  kehr
 Changed CVS-imake-template. I hope that it helps to manage the `add'
 and `admin'-commands of CVS. I'll verify the correct behaviour later.
 

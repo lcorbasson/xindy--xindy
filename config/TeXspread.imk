@@ -1,0 +1,82 @@
+#ifndef TEXSPREAD_IMK_INCLUDED			/* -*- Indented-Text -*- */
+#define TEXSPREAD_IMK_INCLUDED
+
+XCOMM ======================================================================
+XCOMM Imake template for TeX & friends
+XCOMM $Id$
+
+/* history at end */
+
+/*
+ * This Imake template supports the usage of TeX and associated utilities.
+ *
+ * These rules are intended to add support for (La)TeX-documents that are
+ * spread over several files. To add more dependencies fo the
+ * main-file we add a sources-field which can be used to specify the
+ * rest of the documents' files.
+ *
+ * The following definitons/rules are exported:
+ *
+ *    TeXSpreadTarget(format,doc,sources)
+ *     				-- doc.tex -> doc.dvi, runs BibTeX & MakeIndex
+ *				-- if necessary. 'format' must be a command to
+ *				-- call TeX, but may be more than word.
+ *				-- doc.dvi is added to `all' dependencies.
+ *    TeXFileTarget(format,doc,suffix,sources)
+ *				-- Document has 'suffix' ext. instead of `tex'.
+ *				-- No all dependency is created.
+ */
+
+#ifndef TeXSpreadFileTarget
+#define TeXSpreadFileTarget(format,doc,suffix,sources)			@@\
+doc.dvi: doc.suffix sources						@@\
+	$(TEX_IT) format $(TEX_FMT_OPTIONS) doc.suffix
+#endif
+
+#ifndef TeXSpreadTarget
+#define TeXSpreadTarget(format,doc,sources)				@@\
+AllTarget(doc.dvi)							@@\
+TeXSpreadFileTarget(format,doc,tex,sources)
+#endif
+
+
+/*
+ * The following rule works exactly as TexTarget() but adds a
+ * dependency to the `doc'-target.
+ *
+ *    TeXDocTarget(format,doc)  -- doc.tex -> doc.dvi, runs BibTeX & MakeIndex
+ *                              -- if necessary. 'format' must be a command to
+ *                              -- call TeX, but may be more than word.
+ *                              -- doc.dvi is added to `doc' dependencies.
+ */
+
+/*
+ * DocTarget - make targets on make doc
+ */
+#ifndef DocTarget
+#define DocTarget(targets)                                              @@\
+doc:: targets
+#endif
+
+#ifndef TeXDocTarget
+#define TeXDocTarget(format,doc)                                        @@\
+DocTarget(doc.dvi)                                                      @@\
+TeXFileTarget(format,doc,tex)
+#endif
+
+
+/* ============================================================
+
+$Log$
+Revision 1.1  1995/10/17 15:49:37  kehr
+Removed TeX.imk and replaced it with a mixin-module named
+TeXspread.imk. Made minor modifications in the noweb-module. It now
+supports a `doc'-target which is used to generate all noweaved
+documentation from the noweb-sources. Adapted project.conf to these
+modifications.
+
+
+*/
+
+
+#endif /*  TEXSPREAD_IMK_INCLUDED */
