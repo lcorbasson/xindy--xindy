@@ -1,0 +1,589 @@
+% $Id$
+%----------------------------------------------------------------------
+%
+% Context-Based Markup
+% Technical Report 1997
+% Institut für Theoretische Informatik, TH Darmstadt
+%
+% [LaTeX2e]
+% (history at end)
+
+%\documentclass[titlepage,11pt]{article}
+\documentclass[titlepage,11pt,draft]{article}
+
+\usepackage{jsdoc}
+\usepackage{a4-9}
+\usepackage{xspace}
+%\usepackage{itititle}
+\usepackage{environments}
+%\usepackage{ifthen}
+%\usepackage{theorem}
+\usepackage{bslash}
+\usepackage{alltt}
+\usepackage{enumerate}
+\usepackage{verbatim}
+%\usepackage{afterpage}
+\usepackage{rotating}
+\usepackage{epsfig}
+\usepackage[hang,sf]{caption}
+%\usepackage[textures,bottomafter]{draftcopy}
+%\usepackage{version}
+
+\def\TechReport{1}
+\def\ReportMode{0}
+\usepackage{stdwrk}
+
+\usepackage{xindy}
+
+\makeatletter
+\renewcommand{\@oddfoot}{\textsf{DRAFT}\hfil\textsf{\thepage}\hfil\textsf{DRAFT}}
+\makeatother
+
+\frenchspacing
+
+%%\def\mkidx{{\texttt{makeindex}}\xspace}
+\def\mkidx{\emph{MakeIndex}\xspace}
+\def\Xindy{{\normalfont\textsf{xindy}}\xspace}
+\def\imkidx{{\emph{International MakeIndex}}\xspace}
+
+\newcommand{\xindy}{%%
+   \mbox{\normalfont%%
+     \textsf{x\kern-0.6pt%%
+       \shortstack{{\scriptsize$\circ$}\\[-2pt]\i}%%
+       \kern-1pt%%
+       ndy}%%}%%
+     }\xspace}
+
+\newcommand{\XINDY}{%
+   \mbox{\normalfont\huge%%
+         \textsf{x\shortstack{{\large$\circ$}\\\i}ndy}}}
+
+%\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\newlength\vertspace
+
+\newenvironment{mfigure}[2]{%
+  \begin{figure}[htbp]%
+    \renewcommand{\tfigurecaption}%
+                 {\caption{#1}}        % save the caption
+    \renewcommand{\tfigurelabel}%
+                 {\label{#2}}          % save the label
+    \Hrule                             % start with horizontal line
+    \vspace*{3mm}                      % small vertical space
+}
+{\vspace*{3mm}                         % another skip at the end
+  \Hrule                               % another line
+  \normalfont                          %
+  \vskip\vertspace                     %
+  \tfigurecaption                      % insert caption
+  \tfigurelabel                        % and label
+\end{figure}%                          % ok, we're done
+}
+
+\newenvironment{mtable}[2]{%
+  \begin{table}[htbp]%
+    \renewcommand{\ttablecaption}%
+                 {\caption{#1}}        % save the caption
+    \renewcommand{\ttablelabel}%
+                 {\label{#2}}          % save the label
+    \Hrule                             % start with horizontal line
+    \vspace*{3mm}                      % small vertical space
+}
+{\vspace*{3mm}                         % another skip at the end
+  \Hrule                               % another line
+  \normalfont                          %
+  \vskip\vertspace                     %
+  \ttablecaption                       % insert caption
+  \ttablelabel                         % and label
+\end{table}%                           % ok, we're done
+}
+
+\begin{document}
+
+\date{April 1997}
+
+\title{A Simple Context-Based Markup Algorithm and its Efficient
+  Implementation in \textsc{Clos}\\[2ex]
+  \Huge\sffamily %%DRAFT VERSION
+  }
+
+\author{Roger Kehr}
+
+%\iti{Bericht TI-XXX/97}
+
+\maketitle
+
+\def\emdash{--}
+
+\def\Lisp{{\normalfont\textsc{Lisp}}\xspace}
+\def\CL{{\normalfont\textsc{Common Lisp}}\xspace}
+\def\CLOS{{\normalfont\textsc{Clos}}\xspace}
+\def\COST{{\normalfont\textsc{CoST}}\xspace}
+\def\STIL{{\normalfont\textsc{Stil}}\xspace}
+\def\dps{document preparation system\xspace}
+\def\nroff{{\tt nroff}\xspace}
+\def\term#1{\emph{#1}}
+\def\pair#1{\mbox{$\langle$}#1\mbox{$\rangle$}}
+\def\ts{\hspace*{0.9ex}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+{
+  \let\oldbfseries\bfseries
+  \def\newbfseries{\sffamily\oldbfseries}
+  \let\bfseries\sffamily
+
+  \begin{abstract}
+    This report describes a simple though powerful context-based
+    markup algorithm and its implementation.
+
+    Markup algorithms are often used to tag data structures with
+    markup for representation purposes. They often follow an
+    event-dispatching mechanism that allows the declaration of markup
+    tags depending on the context in which an event is occurs.
+
+    We describe the markup algorithm which is used in the \xindy index
+    processor and show how the multi-method dispatching facilities of
+    \CLOS could be easily exploited to obtain an efficient
+    implementation.
+  \end{abstract}
+}
+
+\parskip=0.2\baselineskip plus 2pt minus 1pt
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+
+\section{Introduction}
+
+It is often necessary to output some data structure stored in main
+memory into a data stream using some particular form of
+\term{representation}.  Somehow this process can be seen as the
+reverse work of a \term{parser}. The reasons for representing data
+structures in a stream are often \term{persistence}, the need to store
+the data structures for later reuse, and \term{structured markup},
+making the representation further available for other post-processing
+steps such as typesetting.
+
+We are interested in the problem of \term{tagging} the data to obtain
+a specific markup needed for typesetting purposes. This problem is
+easily solvable as long as the way how markup is assigned to data
+objects is static. In this case the markup process can be directly
+coded into some algorithm.
+
+If there is a need for \term{configurable markup}, the situation is
+more complicated. For an illustration of the difference imagine a tree
+consisting of nodes representing different objects that have to be
+output.  Usually one traverses the tree and emits appropriate markup
+tags when moving from one node to another. This kind of markup is
+called \term{environment-based markup}, since the objects (in our case
+the nodes of the tree) are encapsulated into an environment of markup
+tags.
+
+In almost all cases the nodes of a particular type are tagged
+uniformly in the same manner. This kind of markup is often used to
+\term{dump} a representation of a tree into a data stream. However,
+there are application domains for which one wants to make the issued
+markup tags depending to the node's position within the tree.
+
+Therefore, we can roughly divide the markup schemes into
+\term{context-free} and \term{context-based} (or
+\term{context-sensitive}) markup. In this paper we will further
+concentrate on context-based markup.
+
+The rest of this paper is organised as follows. In
+section~\ref{relwrk} we first discuss existing systems that already
+contributed solutions to this kind of problem. In section~\ref{CCBM}
+we describe the application domain for which we needed an efficient
+solution to the problem. We present our traversing algorithm and its
+efficient implementation in \CLOS~\cite{Keene:88}.
+
+
+
+\section{Related Work}
+\label{relwrk}
+
+The problem of context-based markup has several interesting general
+solutions. We briefly present the solutions of two different systems:
+\COST~\cite{CoST} and \STIL~\cite{stil}. Both systems are intended as
+back-ends for SGML \term{parsers}. SGML documents must conform to a
+structure that is described in a BNF-like grammar, called the
+\term{document type definition} (DTD). A document conforming to some
+DTD can be represented as a tree having SGML \term{elements} as its
+nodes. A SGML parser validates a document against its DTD and produces
+a structural description of its contents, the so-called ESIS (Element
+Structure Information Set).
+
+Both systems read the output of a SGML-parser and construct an
+internal representation of the tree. This tree is then traversed in
+some order (typically depth first order) and appropriate markup is
+output when entering or leaving a node. The \term{context} of a node
+is different in both systems. In \COST all nodes along the path from
+the root node to the current node form a node's context. In \STIL the
+whole tree forms a node's context.
+
+Both systems allow to specify markup depending on the particular
+context in a very powerful way. Each SGML element is represented as
+the instance of a particular class (\COST uses [incr
+Tcl]~\cite{McLennan:1995:NIT}, \STIL uses \CLOS~\cite{Keene:88} as
+their object systems). When a node is entered or left an event is
+generated. It is essentially a message sent to the current object
+which must offer an appropriate callback method.
+
+The user of these systems simply binds methods to the element classes
+that output the desired markup. Both systems offer a rich set of
+primitives to make the context information available inside these
+methods.
+
+Thus, one can implement very powerful context-based markup strategies
+in a very declarative manner.
+
+
+
+\section{A Configurable Context-Based Markup Scheme}
+\label{CCBM}
+
+\subsection{The Problem}
+
+When implementing the \xindy index processor~\cite{xindy:tr} we were
+faced with a similar though less complicated problem. After processing
+the index its internal tree representation needs to be output
+according to an user definable markup.
+
+The nodes of the tree are instances of internally defined classes as
+well as user-defined classes. An example of such user-defined classes
+are the so-called \term{location classes} that can be specified in the
+\term{index style}\footnote{The index style contains a description of
+  the occuring location classes and other objects}. Other nodes in the
+tree are lists containing other objects as their elements. Since the
+markup of different location classes may be different, we decided to
+offer to the users a context-based markup scheme to be sufficient
+powerful.
+
+For the intended application domain the functionality of systems such
+as \textsc{Stil} was not appropriate and we aimed for a more efficient
+solution to the markup problem.\footnote{Especially writing \CLOS
+  methods cannot be expected by any non-programmer user.} As a first
+restriction we decided to make available only a subset of the elements
+along the path as a node's context. Furthermore we observed that most
+often there is a need for making the attributes of an instance
+accessible as context information.
+
+After these simplification steps we ended up in a very simple model.
+The context information for a particular node did not exceed four
+different objects. The basic traversing order was the depth first
+order and events were generated when entering a node and when leaving
+a node. For list nodes we additionally generated an event when moving
+from one element in the list to its successor.
+
+
+\subsection{An Efficient Implementation in CLOS}
+
+The implemented markup system consists of two different parts, (1) the
+markup algorithm traversing the data structure and raising appropriate
+events, and (2) the user interface, establishing the corresponding
+event bindings.
+
+We continue with a description of the underlying context-based markup
+scheme and a description of the dispatching mechanism which is
+directly implemented using \CLOS method calls. Finally we describe the
+user interface responsible for the dynamic establishing of event
+bindings.
+
+
+
+\subsubsection*{Context Based Markup via Multi-Method Dispatch}
+\label{sec:tagging}
+
+The tagging process directly operates on the tree representation as
+illustrated in figure~\ref{fig:index-tree}.
+%%
+\begin{sidewaysfigure}
+  \begin{center}
+    \input{index-tree.latex}
+  \end{center}
+  \caption{Skeleton tree structure of an index}
+  \label{fig:index-tree}
+\end{sidewaysfigure}
+%%
+For each inner node there exists a path from the root to the current
+node. Starting from the root in figure~\ref{fig:index-tree}, such a
+path could look like
+%%
+\def\emrm#1{\mbox{\normalfont\emph{#1}}}%%
+{\small\begin{alltt}
+       \emrm{index}
+         \emrm{letter group =} "G"
+           \emrm{index entry =} "foo"
+             \emrm{location class =} "page-numbers"
+               \emrm{attribute group =} 1
+                 \emrm{location reference attribute =} "definition"
+\end{alltt}}
+%%
+\noindent The context of an object consists of this path and all
+attributes the object owns. In our system, an event is generated each
+time a node is entered for the first time or left forever. The event
+contains a certain subset of the information present in the current
+context and passes this information to the dispatching unit.
+
+In contrast to \STIL, which represents events as \CLOS method calls
+using a \term{single-argument dispatch}, we use in \xindy{} the
+\term{multi-method dispatch facilities} of \CLOS to implement the
+event bindings. The current context of a node is entirely passed as
+the method's arguments to the multi-method dispatcher of \CLOS that
+finds the appropriate method.
+
+The method definitions make heavy use of the
+\texttt{eql}-specialisation feature of method arguments. This feature
+specialises a method not only on a certain class, which is usually the
+case in traditional object-oriented languages, but rather specialises
+on a single instance which can be determined at run-time. This makes
+it possible to specialise an event-binding to only a particular subset
+of the context arguments.
+
+A sample method that is called in response to an event generated when
+entering a location reference owning the attribute \emph{definition},
+belonging to class \emph{pagenums}, and being positioned on an
+arbitrary depth is represented through the following method.
+
+{\small\begin{verbatim}
+   (defmethod do-markup-locref-open
+       ((attr      (eql #<attribute "definition">))
+        (locrefcls (eql #<class     "pagenums">))
+        (depth     number))
+     (do-markup-string "\macro{"))
+\end{verbatim}
+    }
+
+\noindent This method simple outputs the string ``\verb|\macro{|'' to the markup  stream. It is specialised\footnote{Specialisation is done with the
+    argument to the \texttt{eql}-specialiser. The notation
+    \texttt{\#<...>} simply denotes an instance of some class.} to an
+  attribute instance and a location reference class
+  instance\footnote{Location classes are themselves instances of
+    another class.}. The above method is specialised to only two of
+  three arguments. Since the argument \texttt{depth} is not
+  specialised any further this method matches all location references
+  of the given class and attribute appearing at any depth.
+
+
+\subsubsection*{The User Interface}
+
+The user interface is primarily responsible to establish appropriate
+event-bindings. Since event bindings are implemented as \CLOS methods
+the user interface consists of \Lisp macros expanding to appropriate
+method definitions. Defining methods at run-time is a very powerful
+property of \CLOS on which this approach relies mostly.
+
+All markup commands in index style have the following form:
+%%
+\def\itarg#1{\mbox{\normalfont\emph{#1}}}
+\def\rmarg#1{\mbox{\normalfont #1}}
+{\small\begin{alltt}
+   (markup-\itarg{index-tree-node-name}
+       \rmarg{[}:open \itarg{markup}\rmarg{]} \rmarg{[}:close \itarg{markup}\rmarg{]} \rmarg{[}:sep \itarg{markup}\rmarg{]}\footnote{Option \texttt{:sep} is applicable for list nodes only.}
+       \rmarg{[\emph{context-dependent options such as} \texttt{:attr}, \texttt{:group}, \texttt{:class}, \texttt{:depth}, \ldots]})
+\end{alltt}}
+
+\noindent Since all fields are optional one can assign
+the markup to only a subset of the context arguments. The accessible
+context arguments depend on the type of the object that is to be
+output. We have not made the whole context available to the user, but
+instead have selected a meaningful subset for each markup command.
+
+\newpage
+
+The \term{context-based markup specification} allows to assign a
+generic markup, for instance, for all location reference classes with
+the command
+{\small%%
+\begin{verbatim}
+   (markup-locref :open  "\generic{"
+                  :close "}")
+\end{verbatim}
+}%%
+\noindent but redefining the markup for the instances of a certain
+location class as follows:
+{\small%%
+\begin{verbatim}
+   (markup-locref :class "special-class"
+                  :open  "\special{"
+                  :close "}")
+\end{verbatim}
+}%%
+
+\noindent The event dispatcher has to decide which of the markup schemes
+is the most specialised one that matches the given arguments.  In the
+above situation the second markup is selected for a location reference
+of class \texttt{special-class}, but for all others the generic markup
+is used, as defined by the first command.
+
+%\enlargethispage{\baselineskip}
+
+As an example of the run-time definition of methods consider the
+following user interface declaration, which is specialised on all
+three possible arguments,
+%%
+{\small\begin{verbatim}
+   (markup-locref :open "\defin{" :close "}"
+                  :attr "definition"
+                  :class "pagenums"
+                  :depth 1 ))
+\end{verbatim}
+    }
+%%
+\noindent roughly expands to
+%%
+{\small%%
+\begin{verbatim}
+   (progn
+     (defmethod do-markup-locref-open
+         ((attr      (eql #<attribute "definition">))
+          (locrefcls (eql #<class     "pagenums">))
+          (depth     (eql 1)))
+       (do-markup-string "\defin{"))
+
+     (defmethod do-markup-locref-close
+         ((attr      (eql #<attribute "definition">))
+          (locrefcls (eql #<class     "pagenums">))
+          (depth     (eql 1)))
+       (do-markup-string "}")))
+\end{verbatim}
+  }%%
+\noindent Thus, we use \texttt{eql}-specialisation on instances for
+all three specifiers. Both methods simply output the open (resp.\
+close) tag by calling the function \texttt{do-markup-string}.
+
+A question that comes up when analysing this implementation is that of
+the \term{metrics} that are used to find the \term{most-specialised}
+method of a certain set of methods. The problem arises when
+considering an event with the arguments \emph{attr=definition},
+\emph{locrefcls=pagenums} that must dispatch to exactly one of the two
+following methods:
+
+{\small%%
+\begin{verbatim}
+   (defmethod do-markup-locref-open
+      ((attr      (eql #<attribute "definition">))
+       (locrefcls class) ... ))
+
+   (defmethod do-markup-locref-close
+      ((attr      attribute)
+       (locrefcls (eql #<class "pagenums">)) ... ))
+\end{verbatim}
+  }
+
+\noindent Both methods match the given event but since exactly one method must
+be called the dispatcher must somehow decide what is the most
+specialised method of both. Since the method dispatcher of \CLOS has a
+built-in metric that always finds one most-specialised method we
+simply use it to resolve this kind of ambiguity for us.\footnote{In
+  \CLOS the first method would be selected since the first argument
+  \emph{attribute} is more special than the second attribute. We have
+  chosen the positions of the arguments in a way that seems to be most
+  useful in practice.}
+
+\bigskip
+
+\noindent\textsf{Example 1: Tagging of Ranges}
+
+\smallskip
+
+\noindent A common way of tagging ranges is as follows: a range of
+length 1 is printed with the starting page number and the suffix `f.',
+those of length 2 with suffix `f\kern0ptf.', and all others in the form
+`$x$--$y$'. Assume we want to do this for the location class
+\emph{pagenums} we can specify the markup as follows:
+
+{\small\begin{verbatim}
+  (markup-range :class "pagenums" :close "f."  :length 1 :ignore-end)
+  (markup-range :class "pagenums" :close "ff." :length 2 :ignore-end)
+  (markup-range :class "pagenums" :sep "--")
+\end{verbatim}
+    }
+
+\noindent The first two commands specialise on two different depths',
+whereas the third command can be seen as the otherwise-case that is
+invoked for all ranges which are not of length one or two. The special
+switch \texttt{:ignore-end} causes the second location reference to be
+suppressed in the resulting output.
+
+\bigskip
+
+\noindent\textsf{Example 1: Tagging of Hierarchies}
+
+\smallskip
+
+\noindent Sometimes references to appendices are tagged in the following way:
+\begin{center}
+  \itshape A-1, A-7, A-11, B-3, B-4, B-5, C-1, C-8, C-12, C-13, C-22
+\end{center}
+\noindent This kind of markup can be achieved with the following
+markup commands:
+
+{\small\begin{verbatim}
+   (markup-locref-list       :class "appendices" :sep ", ")
+   (markup-locref-layer-list :class "appendices" :sep "-")
+\end{verbatim}
+}
+\noindent The first command indicates that all location references shall be
+separated by a comma followed by a blank character. The second line
+says that the different layers the location references consist of
+shall be separated by a hyphen character.\footnote{The location
+  reference \emph{A-1} consists of the following list of layers
+  (\emph{A}\ \emph{1}).} Our example could also be represented using
+a much more compact form:
+\begin{center}
+   \itshape A 1, 7, 11; B 3, 4, 5; C 1, 8, 12, 13, 22
+\end{center}
+\noindent To achieve this markup one needs to transform the location
+references into a hierarchy. This yields the location reference
+\emph{A} and its sub-references \emph{1}, \emph{7}, and
+\emph{11}. The following markup can then be used to obtain the
+desired result:
+
+{\small\begin{verbatim}
+   (markup-locref-list :class "appendices" :depth 0           :sep "; ")
+   (markup-locref-list :class "appendices" :depth 1 :open " " :sep ", ")
+\end{verbatim}
+}
+\noindent The locations at depth zero are separated by a semicolon whereas
+the ones at depth one are separated by a colon.
+
+
+\section{Conclusion}
+
+We have presented a very efficient implementation of a simple
+context-based markup algorithm in \CLOS. The implementation mostly
+benefits from three interesting properties of \CLOS, (a) the ability
+to define methods at run-time using the macro expansion mechanism, (b)
+the \texttt{eql}-specialisation feature that allows specialisation of
+methods down to single instances of a class, and (c) the multi-method
+dispatching paradigm. These features made it possible to implement the
+markup algorithm with minimal effort. The resulting code is extremely
+compact and easily maintainable and extensible.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\newpage
+
+\bibliographyIntroduction={The following books and papers were
+  referenced in this report.}
+
+\bibliography{bibliographie}
+\bibliographystyle{abbrv}
+
+
+\end{document}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% $Log$
+% Revision 1.1  1997/03/28 13:01:27  kehr
+% Initial Checkin of the Context-Based Markup Report.
+%
+%
