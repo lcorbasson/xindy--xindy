@@ -9,7 +9,7 @@
 % (history at end)
 
 %\documentclass[titlepage,11pt]{article}
-\documentclass[11pt,draft]{article}
+\documentclass[11pt]{article}
 
 \usepackage{jsdoc}
 \usepackage{a4-9}
@@ -36,7 +36,7 @@
 \usepackage{xindy}
 
 \makeatletter
-\renewcommand{\@oddfoot}{\textsf{DRAFT}\hfil\textsf{\thepage}\hfil\textsf{DRAFT}}
+%\renewcommand{\@oddfoot}{\textsf{DRAFT}\hfil\textsf{\thepage}\hfil\textsf{DRAFT}}
 \makeatother
 
 \frenchspacing
@@ -100,7 +100,7 @@
 
 \begin{document}
 
-\date{\today}
+\date{June 1997}
 
 \title{A Simple Context-Based\\ Markup Algorithm and its\\Efficient
   Implementation in \textsc{Clos}
@@ -170,17 +170,17 @@ steps such as typesetting.
 We are interested in the problem of \term{tagging} the data to obtain
 a specific markup needed for typesetting purposes. This problem is
 easily solvable as long as the way how markup is assigned to data
-objects is fixed. In this case the markup process can be directly
+objects is fix. In this case the markup process can be directly
 coded into some algorithm.
 
 If there is a need for \term{configurable markup}, the situation is
-more complicated. For an illustration of the difference imagine a tree
-consisting of nodes of different types that have to be output.
-Usually one traverses the tree and emits appropriate markup tags when
-moving from one node to another. This kind of markup is called
-\term{environment-based markup}, since the objects (in this example
-the nodes of the tree) are encapsulated into an environment of markup
-tags.
+slightly more complicated. For an illustration of the difference
+consider a tree consisting of nodes of different types that have to be
+serialized into an output stream. Usually one traverses the tree and
+emits appropriate markup tags when moving from node to node. This kind
+of markup is called \term{environment-based markup}, since the objects
+(in this example the nodes of the tree) are encapsulated into an
+environment of markup tags.
 
 In almost all cases the nodes of a particular type are tagged
 uniformly in the same manner. This kind of markup is often used to
@@ -252,8 +252,8 @@ descriptions.
 
 When implementing the \xindy index processor~\cite{xindy:tr} we were
 faced with a similar though less complicated problem. After processing
-the index its internal tree representation needs to be output
-according to an user definable markup.
+the index its internal tree representation has to be tagged with user
+definable markup.
 
 The nodes of the tree are instances of internally defined classes as
 well as user-defined classes. An example of such user-defined classes
@@ -264,11 +264,11 @@ can be page numbers, section numbers, or other kinds of location
 references for which a class definition must be supplied in the index
 style. As the markup of different location classes may be different
 (e.g.\ page numbers are encapsulated into other markup than section
-numbers or location references of the same class may need different
+numbers, or location references of the same class may need different
 markup depending on certain attribute values they own), we decided to
 offer to the users a context-based markup scheme to be sufficient
 powerful. Consider an index of a textbook that contains references to
-a location class of page numbers which has to optically distinguish
+a location class of page numbers which has to visually distinguish
 between definitions of items on a page and their usage. An example
 index is shown here:
 
@@ -287,21 +287,21 @@ index is shown here:
 in boldface, whereas the references to the usage of an item are
 without any specific markup. This requires that the location
 references own attributes that can be used to distinguish their
-intended meaning. The attribute values can be accessed during tree
+intended meaning. The attribute values can be accessed at tree
 traversal time.
 
 For the intended application domain the functionality of systems such
 as \STIL or \COST are not appropriate for two reasons: (1) the target
 group of users for an indexing system are typically non-programmers
 which cannot be expected to write \CLOS methods or Tcl code, and (2)
-the functionality offered by both systems is not absolutely necessary
-due to the limited context of an index.
+the functionality offered by both systems is not necessary due to the
+limited context of an index.
 
 Hence, we aimed for a more efficient solution to the markup problem.
-As a first restriction we decided to make available only a subset of
-the elements along the path as a node's context. Furthermore we
-observed that in many cases there is a need for making the attributes
-of an instance accessible as context information.
+As a first restriction we decided to define only a subset of the
+elements along the path as a node's context. Furthermore we observed
+that in many cases there is a need for making the attributes of an
+instance accessible as context information.
 
 After these simplification steps we ended up in a very simple model.
 The context information for a particular node did not exceed four
@@ -328,9 +328,9 @@ interface responsible for the dynamic establishing of event bindings.
 \subsubsection*{Context-Based Markup via Multi-Method Dispatch}
 \label{sec:tagging}
 
-The tagging process directly operates on the tree representation as
-illustrated in figure~\ref{fig:index-tree}.
-%%
+\enlargethispage{\baselineskip}
+
+
 \begin{sidewaysfigure}
   \begin{center}
     \input{index-tree.latex}
@@ -338,10 +338,11 @@ illustrated in figure~\ref{fig:index-tree}.
   \caption{Skeleton tree structure of an index}
   \label{fig:index-tree}
 \end{sidewaysfigure}
-%%
-For each inner node there exists a path from the root to the current
-node. Starting from the root in figure~\ref{fig:index-tree}, such a
-path could look like
+
+\noindent The tagging process directly operates on the tree representation as
+illustrated in figure~\ref{fig:index-tree}. For each inner node there
+exists a path from the root to the current node. Starting from the
+root in figure~\ref{fig:index-tree}, such a path could look like
 %%
 \def\emrm#1{\mbox{\normalfont\emph{#1}}}%%
 {\small\begin{alltt}
@@ -365,7 +366,7 @@ using a \term{single-argument dispatch}, we use in \xindy{} the
 event bindings. The current context of a node is entirely passed as
 the method's arguments to the multi-method dispatcher of \CLOS that
 finds the appropriate method. In \STIL{} there is only one method
-bound to a class and the method itself is reponsible for issuing the
+bound to a class and the method itself is responsible for issuing the
 desired markup. Hence, the user of \STIL{} is forced to write a
 \Lisp-function that (a) accesses the necessary context of the node
 using functions, and (b) uses the results obtained from the context
@@ -378,9 +379,10 @@ The method definitions make heavy use of the
 \texttt{eql}-specialisation feature of method arguments. This feature
 specialises a method not only on a certain class, which is usually the
 case in traditional object-oriented languages, but rather specialises
-on a single instance which can be determined at run-time. This allows
-to specialise an event-binding to only a particular subset of the
-context arguments.
+on a single instance which can be determined at run-time\footnote{This
+  is possible in \CLOS because methods can be defined at run-time
+  after objects have been instantiated.}. This allows to specialise an
+event-binding to only a particular subset of the context arguments.
 
 A sample method that is called in response to an event generated when
 entering a location reference owning the attribute \emph{definition},
@@ -398,12 +400,12 @@ arbitrary depth is represented through the following method:
 
 \noindent This method simply outputs the string ``\verb|\macro{|'' to
   the markup stream. It is specialised\footnote{Specialisation is done
-    with the argument to the \texttt{eql}-specialiser. The notation
-    \texttt{\#<...>} simply denotes an instance of some class.} to an
+    on the argument of the \texttt{eql}-specialiser. The notation
+    \texttt{\#<...>} simply denotes an instance of some class.} on an
   attribute instance and a location reference class
   instance\footnote{In the \xindy{}-implementation location classes
     are themselves instances of another class.}. The above method is
-  specialised to only two of three arguments. Since the argument
+  specialised on only two of three arguments. Since the argument
   \texttt{depth} is not specialised any further this method matches
   all location references of the given class and attribute appearing
   at any depth.
@@ -412,10 +414,10 @@ arbitrary depth is represented through the following method:
 \subsubsection*{The User Interface}
 
 The user interface is primarily responsible to establish appropriate
-event-bindings. Since event bindings are implemented as \CLOS methods
+event-bindings. Since event bindings are implemented as \CLOS methods,
 the user interface consists of \Lisp macros expanding to appropriate
 method definitions. Defining methods at run-time is a very powerful
-property of \CLOS on which this approach relies mostly.
+characteristic of \CLOS on which this approach relies heavily.
 
 \noindent All markup commands in index style have the following form:
 %%
@@ -494,11 +496,10 @@ all three specifiers. Both methods simply output the open (resp.\
 close) tag by calling the function \texttt{do-markup-string}.
 
 With this implementation the question of the \term{metrics} had to be
-answered that that is used to find the \term{most-specialised} method
-of a certain set of methods. The problem arises when considering an
-event with the arguments (\emph{attr=definition},
-\emph{locrefcls=pagenums}) that must dispatch to exactly one of the two
-following methods:
+answered that is used to find the \term{most-specialised} method of a
+certain set of methods. The problem arises when considering an event
+with the arguments (\emph{attr=definition}, \emph{locrefcls=pagenums})
+that must dispatch to exactly one of the following two methods:
 
 {\small%%
 \begin{verbatim}
@@ -520,8 +521,8 @@ simply use it to resolve this kind of ambiguity.\footnote{In \CLOS the
   first method would be selected since the first argument
   \emph{attribute} is more special than the second attribute. We have
   chosen the positions of the arguments in a way that seems to be most
-  useful in practice.} If it is not resolved as desired one can define
-another more-specialised method that resolves this amiguity
+  useful in practice.} If it is not resolved as desired, one can
+define another more-specialised method that resolves this ambiguity
 explicitly.
 
 \bigskip
@@ -571,7 +572,7 @@ markup commands:
 \noindent The first command indicates that all location references
 should be separated by a comma followed by a blank character. The
 second line says that the different layers the location references
-consist of shall be separated by a hyphen character. The location
+consist of, shall be separated by a hyphen character. The location
 reference \emph{A-1} consists of the following list of layers
 (\emph{A}\ \emph{1}). Our example could also be output using a much
 more compact form:
@@ -590,7 +591,7 @@ desired result:
 \end{verbatim}
 }
 \noindent The location references at depth zero are separated by a
-semicolon whereas those at depth one are separated by a colon.
+semicolon whereas those at depth one are separated by a comma.
 
 
 \section{Conclusion}
@@ -599,16 +600,16 @@ We have presented an efficient implementation of a simple
 context-based markup algorithm in \CLOS. Our notion of efficiency
 mainly concerns the elegance and simplicity of the implementation from
 the programmers perspective.\footnote{This does not necessarily mean
-  that the implementation is fast.} Our implementation mostly benefits
-from three interesting properties of \CLOS, (a) the ability to define
-methods at run-time using the macro expansion mechanism, (b) the
-\texttt{eql}-specialisation feature that allows specialisation of
-methods down to single instances of a class, and (c) the multi-method
-dispatching paradigm. These features allow to implement the markup
-algorithm with minimal effort. The resulting code is extremely compact
-and easily maintainable and extensible. We think that our example is a
-valuable demonstration of the usefulness of programming concepts such
-as multi-methods.
+  that the implementation results in a short run-time.} Our
+implementation mostly benefits from three interesting properties of
+\CLOS, (a) the ability to define methods at run-time using the macro
+expansion mechanism, (b) the \texttt{eql}-specialisation feature that
+allows specialisation of methods down to single instances of a class,
+and (c) the multi-method dispatching paradigm. These features allow to
+implement the markup algorithm with minimal effort. The resulting code
+is extremely compact and easily maintainable and extensible. We think
+that our example is a demonstration of the usefulness of programming
+concepts such as multi-methods.
 
 
 
@@ -627,6 +628,9 @@ as multi-methods.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % $Log$
+% Revision 1.5  1997/06/04 08:35:23  kehr
+% Incorporated changes suggested by Waldschmidt. Need TR-no. to finish.
+%
 % Revision 1.4  1997/05/28 14:04:28  kehr
 % Added example into first part of text.
 %
