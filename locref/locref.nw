@@ -35,28 +35,18 @@ location-references. This part implements location-references and is
 responsible for their construction and management.
 
 Since the structure of a location-reference must match a
-location-class description their stucture is somehow comparable.
-A location-reference consists of subparts called \term{layers}. Each
+location-class description their structure is somehow comparable.  A
+location-reference consists of subparts called \term{layers}. Each
 layer corresponds to a basetype.
-
-
-%\subsection{Abstract Specification}
-
-%\subsubsection{Definition}
-
-%\subsubsection{Operation}
-
 
 \subsection{Concrete Specification}
 
-This is one of the most important parts of the project. Because of its
-complexity we will try to enter the source description in a more
-educational way starting with the global classes and structures and
-extending to more complex issues. After general introduction we
-concentrate on the \term{markup} of the introduced objects. Finally we
-present pretty-printing functions and other stuff which are less
-important.
+The inheritance graph of the location-reference classes is shown in
+the following diagram.
 
+\begin{center}
+  \input{locref.epic}
+\end{center}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -73,84 +63,67 @@ important.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Class \class{structured-locref}}
+\subsubsection{Class \class{layered-location-reference}}
 
-We start with class \class{structured-locref}. The implementation is
+We start with class \class{layered-location-reference}. The implementation is
 directly derived from its abstract description.
 
-<<Class \class{structured-locref}>>=
-(defclass structured-locref (location-reference)
+<<Class \class{layered-location-reference}>>=
+(defclass layered-location-reference (location-reference)
     ((layers    :reader get-layers                          :initarg :layers)
      (ordnums   :reader get-ordnums                         :initarg :ordnums)
      (catattr   :reader get-catattr                         :initarg :catattr)
      (state     :reader get-state     :writer set-state     :initarg :state)
      (origin    :reader get-origin    :writer set-origin    :initform 'nil)
      (attribute :reader get-attribute :writer set-attribute :initarg :attribute)))
-@ %def structured-locref
+@ %def layered-location-reference
 
-\no The definition of the constructor is a little bit tricky since it
-uses [[&allow-other-keys]] to allow other (for creation of instances
-unneccessary) keys specifiers to be given. We gain a much easier code
-when this function is called from outside (\emph{see} function
-[[gen-indexentries]] and [[forall-location-classes]] for more
-details).
+\no The constructor takes the additional keyword [[:virtual]] to
+distinguish between the two states a location-reference can be in
+after creation.
 
-<<Class \class{structured-locref}>>=
-(defun make-structured-locref (&key (layers '())  (ordnums '())
-                                    (catattr nil) (locclass nil)
-                                    (attribute nil)
-                                    &allow-other-keys)
-  (make-instance 'structured-locref
+<<Class \class{layered-location-reference}>>=
+(defun make-layered-location-reference (&key (layers '())    (ordnums '())
+                                             (catattr nil)   (locclass nil)
+                                             (attribute nil) (virtual nil))
+  (make-instance 'layered-location-reference
                  :layers    layers   :ordnums  ordnums
-                 :state     'locref-state-normal
                  :catattr   catattr  :locclass locclass
-                 :attribute attribute))
-@ %def make-structured-locref
+                 :attribute attribute
+                 :state  (if virtual 'locref-state-virtual 'locref-state-normal)))
+@ %def make-layered-location-reference
 
-<<Class \class{structured-locref}>>=
-(defun make-virtual-structured-locref (&key (layers '())  (ordnums '())
-                                            (catattr nil) (locclass nil)
-                                            (attribute nil)
-                                            &allow-other-keys)
-  (make-instance 'structured-locref
-                 :layers  layers   :ordnums  ordnums
-                 :state   'locref-state-virtual
-                 :catattr catattr  :locclass locclass
-                 :attribute attribute))
-@ %def make-virtual-structured-locref
-
-\no The states a structured-locref can be in are
+\no The states a layered-location-reference can be in are
 [['locref-state-normal]], [['locref-state-virtual]] and
 [['locref-state-deleted]]. They should be accessed only by the
 following mutators and predicates.
 
-<<Class \class{structured-locref}>>=
-(defmethod state-normal-p ((locref structured-locref))
+<<Class \class{layered-location-reference}>>=
+(defmethod state-normal-p ((locref layered-location-reference))
   (eql 'locref-state-normal (get-state locref)))
 
-(defmethod state-virtual-p ((locref structured-locref))
+(defmethod state-virtual-p ((locref layered-location-reference))
   (eql 'locref-state-virtual (get-state locref)))
 
-(defmethod state-deleted-p ((locref structured-locref))
+(defmethod state-deleted-p ((locref layered-location-reference))
   (eql 'locref-state-deleted (get-state locref)))
 
-(defmethod set-state-normal ((locref structured-locref))
+(defmethod set-state-normal ((locref layered-location-reference))
   (set-state 'locref-state-normal locref)
   locref)
 
-(defmethod set-state-virtual ((locref structured-locref))
+(defmethod set-state-virtual ((locref layered-location-reference))
   (set-state 'locref-state-virtual locref)
   locref)
 
-(defmethod set-state-deleted ((locref structured-locref))
+(defmethod set-state-deleted ((locref layered-location-reference))
   (set-state 'locref-state-deleted locref)
   locref)
 @ %def state-normal-p state-virtual-p state-deleted-p set-state-normal set-state-virtual set-state-deleted
 
 <<Export-list of submodule \module{locref}>>=
-(export '(structured-locref
-          make-structured-locref
-          make-virtual-structured-locref
+(export '(layered-location-reference
+          make-layered-location-reference
           get-layers get-ordnums get-catattr
           get-origin       set-origin
           state-normal-p   state-virtual-p   state-deleted-p
@@ -171,6 +144,36 @@ following mutators and predicates.
 (export '(crossref-location-reference))
 @
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{How to build a location-reference}
+
+This section deals with the task to build location-references from a
+given string, a category-attribute and a location-class description.
+The signature of the function [[build-location-reference]] is
+described in the interface of this module. The implementatation is
+realised via methods bount to the location-classes, since the
+construction of a location-reference directly depends on the
+location-class.
+
+Currently we support only the creation of structured location-references.
+
+<<Building a location-reference>>=
+(defmethod build-location-reference ((locclass   layered-location-class)
+                                     (locref-str string)
+                                     (catattr    category-attribute)
+                                     attribute)
+  (multiple-value-bind (layers ordnums)
+      (perform-match locref-str locclass)
+    (and layers ordnums
+         (make-layered-location-reference :locclass  locclass :layers  layers
+                                          :ordnums   ordnums  :catattr catattr
+                                          :attribute attribute))))
+@ %def build-location-reference
+
+<<Export-list of submodule \module{locclass}>>=
+(export 'build-location-reference)
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -327,9 +330,10 @@ i really need it.
 
 <<Submodule \module{locref}>>=
 <<Class \class{location-reference}>>
-<<Class \class{structured-locref}>>
+<<Class \class{layered-location-reference}>>
 <<Class \class{category-attribute}>>
 <<Class \class{crossref-location-reference}>>
+<<Building a location-reference>>
 <<Sorting location-references>>
 <<Export-list of submodule \module{locref}>>
 @
@@ -344,10 +348,10 @@ i really need it.
 A block for pretty-printing a location-reference.
 
 <<Pretty-printing>>=
-(defun pprint-structured-locref (s locref)
+(defun pprint-layered-location-reference (s locref)
   (pprint-logical-block
    (s nil :prefix "[" :suffix "]")
-   ;(pprint-indent :block 2 s)
+                                        ;(pprint-indent :block 2 s)
    (cond ((state-normal-p  locref) (write-string "N:" s))
          ((state-virtual-p locref) (write-string "V:" s))
          (t (write-string "D:" s)))
@@ -365,7 +369,8 @@ A block for pretty-printing a location-reference.
      (write (get-catattr (get-origin locref)) :stream s))
    ))
 
-(set-pprint-dispatch 'structured-locref #'pprint-structured-locref)
+(set-pprint-dispatch 'layered-location-reference
+                     #'pprint-layered-location-reference)
 @
 
 <<Pretty-printing>>=
@@ -378,7 +383,10 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.15  1996/04/30 15:54:57  kehr
+%% Revision 1.16  1996/05/06 10:01:49  kehr
+%% Minor changes in nearly all modules.
+%%
+%% Revision 1.15  1996/04/30  15:54:57  kehr
 %% Corrected some descriptions in the text.
 %%
 %% Revision 1.14  1996/01/31  15:25:22  kehr
@@ -485,6 +493,6 @@ A block for pretty-printing a location-reference.
 %%
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:

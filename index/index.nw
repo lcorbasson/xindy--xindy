@@ -152,45 +152,50 @@ of functions:
 (defun add-indexentry (entry-table idxcls locref
                                    &key
                                    (merge-key '()) (sort-key '())
-                                   (main-key '()) (print-key '())
-                                   (catattr nil))
+                                   (main-key  '()) (print-key '())
+                                   (catattr   nil)
+                                   (attribute nil))
   #+:ASSERT! (assert! (and entry-table main-key idxcls locref))
 
-  (unless catattr (setq catattr (lookup-catattr idxcls "default")))
-  (unless (lookup-catattr idxcls catattr)
-    (warn "unknown attribute `~A'! (ignored)" catattr))
+  (unless catattr (setq catattr "default"))
+  (let ((catattr-obj (lookup-catattr idxcls catattr)))
+    (if (not catattr-obj)
+        (warn "unknown attribute `~A'! (ignored)" catattr)
+        (let ((location-reference (create-location-reference-from-string
+                                   locref catattr-obj attribute)))
+          (when location-reference  #| only one vaild location-reference! |#
+            #+:ORDRULES (unless merge-key
+                          (setq merge-key (gen-keyword-mergekey-list main-key)))
+            #+:ORDRULES (unless sort-key
+                          (setq sort-key  (gen-keyword-sortkey-list merge-key)))
+            #-:ORDRULES (unless merge-key (setq merge-key main-key))
+            #-:ORDRULES (unless sort-key  (setq sort-key  merge-key))
 
-  (let ((location-reference
-         (create-location-reference-from-string locref catattr)))
-
-    #+:ORDRULES (unless merge-key
-                  (setq merge-key (gen-keyword-mergekey-list main-key)))
-    #+:ORDRULES (unless sort-key
-                  (setq sort-key  (gen-keyword-sortkey-list merge-key)))
-    #-:ORDRULES (unless merge-key (setq merge-key main-key))
-    #-:ORDRULES (unless sort-key  (setq sort-key  merge-key))
-
-    (let ((old-entry (gethash merge-key entry-table)))
-      (if old-entry
-          (setf (gethash merge-key entry-table)
-                (join-indexentries (gethash merge-key entry-table)
-                                   main-key sort-key print-key locref))
-          (setf (gethash merge-key entry-table)
-                (make-indexentry :main-key  main-key   :sort-key   sort-key
-                                 :merge-key merge-key  :print-key  print-key
-                                 :locrefs   (list location-reference)
-                                 :indexclass idxcls))))))
+            (let ((old-entry (gethash merge-key entry-table)))
+              (if old-entry
+                  (setf (gethash merge-key entry-table)
+                        (join-indexentries (gethash merge-key entry-table)
+                                           main-key sort-key print-key locref))
+                  (setf (gethash merge-key entry-table)
+                        (make-indexentry :main-key  main-key
+                                         :sort-key  sort-key
+                                         :merge-key merge-key
+                                         :print-key print-key
+                                         :locrefs   (list location-reference)
+                                         :indexclass idxcls)))))))))
 @ %def add-indexentry
 
 \no These functions perform the keword-rewriting on a list of strings.
 
 <<Adding an indexentry>>=
+#+:ORDRULES
 (defun gen-keyword-mergekey-list (list-of-strings)
   #+ASSERT! (assert! (listp list-of-strings))
   (mapcar #'(lambda (str)
               (gen-keyword-mergekey str))
           list-of-strings))
 
+#+:ORDRULES
 (defun gen-keyword-sortkey-list (list-of-strings)
   #+ASSERT! (assert! (listp list-of-strings))
   (mapcar #'(lambda (str)
@@ -228,15 +233,18 @@ location-reference-string matches with some of them. If it matches it
 location-reference
 
 <<Adding an indexentry>>=
-(defun create-location-reference-from-string (locref-str catattr)
+(defun create-location-reference-from-string (locref-str catattr attribute)
   (let* ((locref-list
-	  (map-location-classes #'(lambda (loccls)
-				    (make-locref locref-str loccls catattr)))))
+          (map-location-classes
+           #'(lambda (idxcls loccls)
+               (build-location-reference loccls  locref-str
+                                         catattr attribute)))))
     (case (length locref-list)
-      (0 (warn "location-reference ~A did not match any location-class! (ignored)" locref-str))
+      (0 (warn "location-reference ~S did not match any location-class! (ignored)" locref-str)
+         nil)
       (1 (car locref-list) #| return its only member |#)
-      (t (warn "location-reference ~A did match multiple location-classes! (taking first one)" locref-str)
-	 (car locref-list) #| return its first member |#))))
+      (t (warn "location-reference ~S did match multiple location-classes! (taking first one)" locref-str)
+         (car locref-list) #| return its first member |#))))
 @ %def create-location-reference-from-string
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -349,7 +357,10 @@ we simply markup the index and start right out of the box.
 
 
 %% $Log$
-%% Revision 1.11  1996/04/30 15:54:17  kehr
+%% Revision 1.12  1996/05/06 10:01:26  kehr
+%% Minor changes in nearly all modules.
+%%
+%% Revision 1.11  1996/04/30  15:54:17  kehr
 %% Rewrote large parts of part that ist responsible for adding an
 %% indexentry. Moved some parts from idxentry to index and restructured
 %% the whole functions that deal with that topic.

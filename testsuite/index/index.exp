@@ -5,6 +5,12 @@
 xsend {(setq ic (create-indexclass "default"))}
 expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 
+xsend {(add ic loccls-num-0-20)}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add ic (make-category-attribute "default"))}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
 xsend {(setq idx (create-index ic))}
 expect -re "\#<.*INDEX.*>.*$prompt$" { pass "$test" }
 

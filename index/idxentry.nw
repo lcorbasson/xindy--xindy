@@ -532,8 +532,8 @@ the indexstyle. Otherwise no substitution may occur.
 
 <<Apply substitution-rules>>=
 (defmethod substitutable-p ((idxcls         indexclass)
-                            (test-locref    structured-locref)
-                            (against-locref structured-locref))
+                            (test-locref    layered-location-reference)
+                            (against-locref layered-location-reference))
   (cond ((eql test-locref against-locref)
            nil)
         ((and (state-normal-p against-locref)
@@ -586,7 +586,8 @@ not cause any problems (hopefully).
            (mapcan #'(lambda (locref)
                        (mapcan #'(lambda (catattr)
                                    (let ((new-locref
-                                          (make-virtual-structured-locref
+                                          (make-layered-location-reference
+                                           :virtual  t
                                            :catattr  catattr
                                            :ordnums  (get-ordnums locref)
                                            :layers   (get-layers locref)
@@ -830,7 +831,10 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.12  1996/04/30 15:54:14  kehr
+%% Revision 1.13  1996/05/06 10:01:22  kehr
+%% Minor changes in nearly all modules.
+%%
+%% Revision 1.12  1996/04/30  15:54:14  kehr
 %% Rewrote large parts of part that ist responsible for adding an
 %% indexentry. Moved some parts from idxentry to index and restructured
 %% the whole functions that deal with that topic.

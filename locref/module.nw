@@ -59,7 +59,6 @@ The module is separated into the following submodules:
   \item Sorting of the category-attributes via [[sort-ordnum]] with
     respect of the [[sort-ordnum]] of catattr-group is still not
     exactly solved.
-  \item [[make-structured-locref]] misses some details.
   \end{itemize}
 \item (locclass:)\\
   \begin{itemize}
@@ -70,11 +69,18 @@ The module is separated into the following submodules:
   \end{itemize}
 \end{TODO}
 
+\section{Abstract Specification}
 
+\subsection{Definition}
+
+A location-class is a list of layers and separators. A \term{layer} is
+based on the basetypes and consists of a string and a order number. A
+\term{separator} is a string.
+
+\subsection{Operation}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
 \section{External interface of module \module{locref}}
 
 \subsection{Submodule \module{basetype}}
@@ -237,7 +243,12 @@ The following symbols are exported:
   Sets the state of a location-reference to \textsf{deleted}.
 \end{defmethod}
 
-\begin{defunc}{make-structured-locref}{\uip}
+\begin{defunc}{build-location-reference}{\tstring \x \tcatattr \x \tloccls \res
+    \{\tlocref \vbar\ [[nil]]\}}%%
+  Builds a location-reference from the given string if the string
+  matches the structure of the location-class. The \tcatattr is the
+  category-attribute of the resulting location-reference. If the
+  string didn't match the location-class [[nil]] is returned.
 \end{defunc}
 
 \begin{defcls}{category-attribute}{}
@@ -277,7 +288,10 @@ The following symbols are exported:
 
 
 %% $Log$
-%% Revision 1.10  1996/04/30 15:54:59  kehr
+%% Revision 1.11  1996/05/06 10:01:52  kehr
+%% Minor changes in nearly all modules.
+%%
+%% Revision 1.10  1996/04/30  15:54:59  kehr
 %% Corrected some descriptions in the text.
 %%
 %% Revision 1.9  1996/03/13  16:53:42  kehr

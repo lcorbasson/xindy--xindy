@@ -189,6 +189,10 @@ the markup of the list of all indexentries.
   (markup-default "INDEX:CLOSE"))
 @ %def markup-index
 
+<<Export-list of submodule \module{markup}>>=
+(export '(markup-index markup-index-open markup-index-close))
+@
+
 
 \paragraph{Indexentry markup}
 
@@ -263,6 +267,17 @@ subtargets for an indexentry markup.
   (markup-default "IDXENT-LST:CLOSE"))
 @ %def markup-indexentry-list-*
 
+<<Export-list of submodule \module{markup}>>=
+(export '(markup-indexentry
+          markup-indexentry-open
+          markup-indexentry-close
+          markup-indexentry-list-open
+          markup-indexentry-list-sep
+          markup-indexentry-list-close
+          markup-keyword-open
+          markup-keyword-sep
+          markup-keyword-close))
+@
 
 
 \paragraph{Indexentry markup}
@@ -280,13 +295,12 @@ subtargets for an indexentry markup.
 (in-package "MARKUP")
 (provide "MARKUP")
 
-(eval-when (eval compile load)
-  (use-package "CLOS")
-  (use-package "XP")
-  (require "base")
-  (use-package "BASE")
-  (require "index")
-  (use-package "INDEX"))
+(use-package "CLOS")
+(use-package "XP")
+(require "base")
+(use-package "BASE")
+(require "index")
+(use-package "INDEX")
 
 <<Submodule \module{markup}>>
 
@@ -320,7 +334,10 @@ subtargets for an indexentry markup.
 
 
 %% $Log$
-%% Revision 1.3  1996/04/29 08:38:39  kehr
+%% Revision 1.4  1996/05/06 10:01:57  kehr
+%% Minor changes in nearly all modules.
+%%
+%% Revision 1.3  1996/04/29  08:38:39  kehr
 %% Started to implement teh new `markup'-submodule.
 %%
 %% Revision 1.2  1996/03/13  16:53:47  kehr

@@ -106,32 +106,32 @@ expect -re "\#<INDEXENTRY.*>.*$prompt$" { pass "$test" }
 # xsend {(pprint ie)}
 # expect -re ".*{.*}.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(11) :catattr ca-default :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(11) :catattr ca-default :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(13) :catattr ca-default :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(13) :catattr ca-default :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(14) :catattr ca-default :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(14) :catattr ca-default :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(15) :catattr ca-default :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(15) :catattr ca-default :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(17) :catattr ca-default :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(17) :catattr ca-default :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(25) :catattr ca-default :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(25) :catattr ca-default :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
 
-# xsend {(add ie (make-structured-locref :ordnums '(12) :catattr ca-bold :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(12) :catattr ca-bold :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(15) :catattr ca-bold :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(15) :catattr ca-bold :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(25) :catattr ca-bold :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(25) :catattr ca-bold :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
 xsend {(set-substitution-subst-hook #'set-state-virtual ic)}
@@ -143,13 +143,13 @@ expect -re "\#<.*SET-STATE-VIRTUAL.*>.*$prompt$" { pass "$test" }
 xsend {(make-ready ic)}
 expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-xsend {(substitutable-p ic (make-structured-locref :catattr ca-default) (make-structured-locref :catattr ca-typewriter))}
+xsend {(substitutable-p ic (make-layered-location-reference :catattr ca-default) (make-layered-location-reference :catattr ca-typewriter))}
 expect_NIL
 
-xsend {(substitutable-p ic (make-structured-locref :catattr ca-default) (make-structured-locref :catattr ca-default))}
+xsend {(substitutable-p ic (make-layered-location-reference :catattr ca-default) (make-layered-location-reference :catattr ca-default))}
 expect_NIL
 
-xsend {(substitutable-p ic (make-structured-locref :catattr ca-typewriter) (make-structured-locref :catattr ca-default))}
+xsend {(substitutable-p ic (make-layered-location-reference :catattr ca-typewriter) (make-layered-location-reference :catattr ca-default))}
 expect_T
 
 #
@@ -160,23 +160,23 @@ expect_T
 # the AIX-port of expect seems to have problems with it, so I split it
 # into several parts.
 #
-xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 1) ca-default) (cons '(2 1) ca-typewriter) (cons '(2 2) ca-italic) (cons '(2 2) ca-typewriter) (cons '(2 3) ca-typewriter))) (print "ready"))}
+xsend {(progn (mapc #'(lambda (x) (add ie (make-layered-location-reference :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 1) ca-default) (cons '(2 1) ca-typewriter) (cons '(2 2) ca-italic) (cons '(2 2) ca-typewriter) (cons '(2 3) ca-typewriter))) (print "ready"))}
 expect -re ".*ready.*$prompt$" { pass "$test" }
 
-xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 3) ca-bold) (cons '(2 4) ca-default) (cons '(2 4) ca-bold) (cons '(2 4) ca-italic) (cons '(2 7) ca-typewriter) (cons '(2 10) ca-typewriter))) (print "ready"))}
+xsend {(progn (mapc #'(lambda (x) (add ie (make-layered-location-reference :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 3) ca-bold) (cons '(2 4) ca-default) (cons '(2 4) ca-bold) (cons '(2 4) ca-italic) (cons '(2 7) ca-typewriter) (cons '(2 10) ca-typewriter))) (print "ready"))}
 expect -re ".*ready.*$prompt$" { pass "$test" }
 
-xsend {(progn (mapc #'(lambda (x) (add ie (make-structured-locref :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 7) ca-default) (cons '(2 8) ca-default) (cons '(2 7) ca-italic) (cons '(2 4) ca-slanted) (cons '(2 10) ca-slanted) (cons '(2 10) ca-italic))) (print "ready"))}
+xsend {(progn (mapc #'(lambda (x) (add ie (make-layered-location-reference :ordnums (car x) :catattr (cdr x) :locclass loccls-Alph-num))) (list (cons '(2 7) ca-default) (cons '(2 8) ca-default) (cons '(2 7) ca-italic) (cons '(2 4) ca-slanted) (cons '(2 10) ca-slanted) (cons '(2 10) ca-italic))) (print "ready"))}
 expect -re ".*ready.*$prompt$" { pass "$test" }
 
 #
 # now some duplicates to be ignored
 #
 
-# xsend {(add ie (make-structured-locref :ordnums '(25) :catattr ca-default :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(25) :catattr ca-default :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-# xsend {(add ie (make-structured-locref :ordnums '(15) :catattr ca-default :locclass loccls-num-0-20))}
+# xsend {(add ie (make-layered-location-reference :ordnums '(15) :catattr ca-default :locclass loccls-num-0-20))}
 # expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
 #

@@ -51,10 +51,10 @@ BNF-expressions.
     crossref-grp}\texttt{+}\\%%
   structured-loccls-grp &\ISA& \LIST{catattr-grp\texttt{+}}\\%%
   catattr-grp &\ISA& \LIST{locref-list}\\%%
-  locref-list &\ISA& \Braces{structured-locref $|$ range}\texttt{+}\\%%
-  range &::=& \LIST{ structured-locref\ \ structured-locref }\\%%
-  structured-locref &\ISA& \LIST{ \LIST{layer\texttt{+}}
-    \LIST{structured-locref\texttt{*}} }\\%%
+  locref-list &\ISA& \Braces{layered-locref $|$ range}\texttt{+}\\%%
+  range &::=& \LIST{ layered-locref\ \ layered-locref }\\%%
+  layered-locref &\ISA& \LIST{ \LIST{layer\texttt{+}}
+    \LIST{layered-locref\texttt{*}} }\\%%
   layer &\ISA& \LIST{\textsf{string}}\\%%
   crossref-grp &\ISA& \LIST{crossref-locref\texttt{+}}\\%%
   crossref-locref &\ISA& \LIST{\textsf{string}}\\%%
@@ -73,7 +73,10 @@ and trigger the necessary user-defined markup-strings.
 
 
 %% $Log$
-%% Revision 1.3  1996/04/29 08:38:40  kehr
+%% Revision 1.4  1996/05/06 10:01:59  kehr
+%% Minor changes in nearly all modules.
+%%
+%% Revision 1.3  1996/04/29  08:38:40  kehr
 %% Started to implement teh new `markup'-submodule.
 %%
 %% Revision 1.2  1996/01/23  12:17:11  kehr

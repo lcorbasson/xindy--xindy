@@ -46,19 +46,15 @@ A \term{Cross-reference} describes how cross references such as
 \textit{see}, \textit{see also under} \etc are represented.
 
 
-\subsection{Abstract Specification}
-
-\subsubsection{Definition}
-
-A location-class is a list of layers and separators. A \term{layer} is
-based on the basetypes and consists of a string and a order number. A
-\term{separator} is a string.
-
-\subsubsection{Operation}
-
-
 \subsection{Concrete Specification}
 
+The following diagram shows the \emph{is-a}-relation among the
+location-classes.  The classes \class{location-class} and
+\class{structured-location-class} are abstract classes.
+
+\begin{center}
+  \input{locclass.epic}
+\end{center}
 
 \subsubsection{Class \class{location-class}}
 \label{sec:location-class}
@@ -72,7 +68,7 @@ all location-classes.
 (defclass location-class ()
     ((name   :reader get-name   :initarg :name)
      (ordnum :reader get-ordnum :writer set-ordnum :type number
-	     :initform (gen-next-loccls-ordnum))))
+             :initform (gen-next-loccls-ordnum))))
 @ %def location-class
 
 \no Every derived class must define a constructor-function
@@ -578,7 +574,10 @@ is not an error, because we do a prefix-matching.
 
 
 %% $Log$
-%% Revision 1.12  1996/01/17 16:55:59  kehr
+%% Revision 1.13  1996/05/06 10:01:46  kehr
+%% Minor changes in nearly all modules.
+%%
+%% Revision 1.12  1996/01/17  16:55:59  kehr
 %% Improved documentation and threw out some of the markup-stuff.
 %%
 %% Revision 1.11  1996/01/15  19:17:28  kehr
