@@ -231,19 +231,78 @@ Here is missing the definition of the `\irule{drop-if-merged}'-hook.
 
 \subsection{File-IO}
 
+\newpage
 
-\subsection{Indexentries}
+\section{The raw-index interface}
 
-The parser of the raw-index is currently implemented as a
-\cmd{perl}-frontend. It parses the raw-index an generates
-\Lisp-expressions of the following form:
-
-\begin{istui}{indexentry}{}
-  Defines a new indexentry.
-\end{istui}
+After the indexstyle is completely set up we read all indexentries
+from the raw-index stream. The indexentries are specified via a stream
+of \Lisp-expressions. The following interface is currently supported:
 
 
-\subsection{Miscellaneous}
+\begin{tabbing}%
+  \texttt{indexentry}\quad\=%%
+  \sw{:key} \emph{string-list}\quad\opt{\sw{:print}
+    \emph{string-list}}\quad\opt{\sw{:attr} \emph{string}}\\%%
+  \>\{\ \opt{\sw{:locref} \emph{string}\quad\opt{\sw{:open-range}$|$%%
+      \sw{:close-range}} }\\%%
+  \>\ $|$ \opt{\sw{:xref} \emph{string-list}\quad
+    \opt{\sw{:xref-type} \emph{string}} }\ \}\\%%
+\end{tabbing}
+
+\noindent Adds a new indexentry to the currently active index. The
+argument \emph{string} must be a quoted \Lisp-string (e.g.\
+\texttt{"\ldots"}).  A \emph{string-list} is a list of quoted
+strings (e.g.\ \texttt{("\ldots"}\verb*| |\texttt{"\ldots"}%
+\verb*| |\ldots\verb*| |\texttt{"\ldots")}). The keyword arguments are
+defined as follows:
+
+\begin{keys}{XXXXXXXX}
+\item[:locref] defines the string representing the location-reference.
+  This string will be matched against the location-classes that were
+  defined in the indexstyle. The structure of this reference will be
+  analysed by the indexing system. This argument is mandatory if the
+  argument \texttt{:xref} is ommited, and vice versa. One of both is
+  always neccessary.
+\item[:key] defines the keyword(s) of the indexentry. It
+  constists of a list of string each representing a layer of the
+  keyword hierarchy. E.g.\ \texttt{("trees" "binary")} defines
+  \texttt{tree} to be the main-entry, \texttt{binary} the
+  corresponding subentry. This argument is mandatory. The
+  \emph{merge-} and \emph{sort-key} will be derived from this key via
+  the rewrite-rules defined in the indexstyle.
+\item[:print] defines the printed representation of the main-key.
+  If supplied this will be used during the markup.
+\item[:xref] and \texttt{:xref-type} define a cross-reference.
+  Argument \texttt{:xref} defines the target keyword of the
+  cross-reference (where the indexentry points to) and
+  \texttt{:xref-type} defines the type of the cross-reference.
+  Currently only \texttt{:xref} is supported.
+\item[:attr] defines the attribute of the location-reference. We
+  distinguish the following two cases: (1) If \texttt{:locref} is
+  specified, the attribute defines the \emph{attribute} of the
+  location-reference such as \emph{definition}, \emph{default}, etc.
+  If \texttt{:attr} is omitted, attribute \texttt{"default"} will be
+  assumed. (2) If \texttt{:xref} is used this argument describes the
+  attribute of the cross-reference, e.g.\ if \texttt{:xref} is
+  \texttt{("beautiful")} then \texttt{:attr} must be something like
+  \texttt{"see"} or \texttt{"see also"}. This attribute must be
+  defined in the indexstyle as a special attribute for
+  cross-references. This type of attributes is independend from the
+  attributes for location-references.
+
+  All attributes \emph{must} already be defined in the indexstyle
+  before reading the indexentries.
+
+\item[:open-range] and \texttt{:close-range} may be used to open or
+  close a so-called \emph{range} of indexentries. Only one may be
+  specified at a time. These arguments make no sense in combination
+  with the cross-reference arguments and should only be used in
+  conjunction with the \texttt{:locref}-argument.
+\end{keys}
+
+
+\section{Miscellaneous}
 
 \begin{itemize}
 \item Debug- and verbosity-switches.
