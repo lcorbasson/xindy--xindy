@@ -1,0 +1,531 @@
+From VM Tue Sep  8 13:44:18 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["13132" "Wed" "2" "September" "1998" "21:47:37" "+0200" "Thomas Henlich" "thenlich@Rcs1.urz.tu-dresden.de" nil "495" "Making glossaries with XINDY" "^From:" nil nil "9" nil nil nil nil nil]
+	nil)
+Content-Length: 13132
+Received: (from majordom@localhost)
+	by spelunke.iti.informatik.tu-darmstadt.de (8.9.1a/8.9.1) id VAA02634
+	for xindy-outgoing; Wed, 2 Sep 1998 21:48:36 +0200
+Received: from POP3.tu-dresden.de (POP3.tu-dresden.de [141.30.2.83])
+	by spelunke.iti.informatik.tu-darmstadt.de (8.9.1a/8.9.1) with SMTP id VAA02628
+	for <xindy@iti.informatik.tu-darmstadt.de>; Wed, 2 Sep 1998 21:48:32 +0200
+Received: from rmail.urz.tu-dresden.de by rks3 with SMTP (PP);
+          Wed, 2 Sep 1998 21:43:26 +0200
+Received: from rcs.urz.tu-dresden.de (actually Rcs1.urz.tu-dresden.de) by rmail 
+          with SMTP (PP); Wed, 2 Sep 1998 21:45:22 +0200
+Received: from Rcs1.urz.tu-dresden.de (th@RDIAL166.urz.tu-dresden.de [141.30.35.166]) 
+          by rcs.urz.tu-dresden.de (8.8.8/8.8.8) with ESMTP id VAA17288 
+          for <xindy@iti.informatik.tu-darmstadt.de>;
+          Wed, 2 Sep 1998 21:46:49 +0200
+Message-ID: <35EDA0D9.3F0C02B5@Rcs1.urz.tu-dresden.de>
+X-Mailer: Mozilla 4.5b1 [en] (X11; I; Linux 2.0.35 i586)
+X-Accept-Language: de,fr,ru,en
+MIME-Version: 1.0
+References: <359F91FF.E437B858@rcs.urz.tu-dresden.de> <199807131418.QAA17961@spring.iti.informatik.tu-darmstadt.de>
+Content-Type: multipart/mixed; boundary="------------3EDF1B5F0B39901423590FC0"
+Precedence: bulk
+Reply-To: xindy
+From: Thomas Henlich <thenlich@Rcs1.urz.tu-dresden.de>
+Sender: owner-xindy@iti.informatik.tu-darmstadt.de
+To: xindy <xindy@iti.informatik.tu-darmstadt.de>
+Subject: Making glossaries with XINDY
+Date: Wed, 02 Sep 1998 21:47:37 +0200
+
+This is a multi-part message in MIME format.
+--------------3EDF1B5F0B39901423590FC0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+Here I post the makeglos package for producing glossaries and sorted
+lists of mathematical symbols in LaTeX documents.
+
+This posting has 6 attachments.
+
+-- Thomas Henlich
+--------------3EDF1B5F0B39901423590FC0
+Content-Type: text/plain; charset=us-ascii;
+ name="glosdoc.txt"
+Content-Disposition: inline;
+ filename="glosdoc.txt"
+Content-Transfer-Encoding: 7bit
+
+The makeglos package for XINDY
+
+Thomas Henlich (thenlich@Rcs1.urz.tu-dresden.de)
+
+How to use XINDY as a glossary processor
+
+1. Files
+makeglos.sty - LaTeX style file for glossaries
+makeglos.xdy - XINDY style file for glossaries
+tex2xindy.l  - Enhanced TeX to XINDY filter, source
+math.xdy     - XINDY style file with sorting rules for mathematical symbols
+example.tex  - example LaTeX document, see below
+
+2. How to process the example
+`latex example' should produce a file called "example.glo"
+with lines: \glossaryentry{...
+
+`tex2xindy <example.glo >example.raw' produces a file "example.raw".
+This file contains lines beginning with: (indexentry :tkey 
+If the file "example.raw" is empty, copy the enhanced filter
+"tex2xindy.l" to the XINDY source directory and recompile XINDY.
+
+`xindy -o example.gls makeglos.xdy example.raw' produces the file
+"example.gls" which contains the "theglossary" environment, with
+sorted entries.
+
+Another `latex example' produces the finished document, including the
+glossary.
+
+3. Glossary entries
+Glossary entries (arguments to the \glossary command) have the same
+syntax as index entries except for one enhancement:
+`\glossary{word:explanation}' is the same as `\glossary{word|is{explanation}}'.
+
+-- Thomas Henlich
+
+
+
+
+--------------3EDF1B5F0B39901423590FC0
+Content-Type: text/plain; charset=us-ascii;
+ name="makeglos.sty"
+Content-Disposition: inline;
+ filename="makeglos.sty"
+Content-Transfer-Encoding: 7bit
+
+\newcommand*\gsee[2]{\emph{\seename} #1}
+\newcommand\printglossary{\@input@{\jobname.gls}}
+\providecommand\seename{see}
+\providecommand\glossaryname{Glossary}
+\providecommand\glossaryintro{}
+\newenvironment{theglossary}%
+{\chapter*{\glossaryname}\glossaryintro\begin{description}\boldmath}%
+{\end{description}}
+\endinput
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
+
+
+
+
+--------------3EDF1B5F0B39901423590FC0
+Content-Type: text/plain; charset=iso-8859-1;
+ name="makeglos.xdy"
+Content-Disposition: inline;
+ filename="makeglos.xdy"
+Content-Transfer-Encoding: quoted-printable
+
+(define-attributes ("default"))
+
+(define-location-class "arabic-page-numbers" ("arabic-numbers"))
+(define-location-class "roman-page-numbers"  ("roman-numbers-lowercase"))=
+
+(define-location-class "Roman-page-numbers"  ("roman-numbers-uppercase"))=
+
+(define-location-class "alpha-page-numbers"  ("alpha"))
+(define-location-class "Alpha-page-numbers"  ("ALPHA"))
+
+(define-crossref-class "see")
+(markup-crossref-list :open "\gsee{" :close "}{}" :class "see")
+
+(define-crossref-class "is" :unverified)
+(markup-crossref-list :open "" :sep "; " :close "" :class "is")
+
+(define-location-class-order ("is"
+			      "see"
+			      "roman-page-numbers"
+			      "arabic-page-numbers"
+			      "alpha-page-numbers"
+			      "Roman-page-numbers"
+			      "Alpha-page-numbers"))
+
+(markup-index :open  "\begin{theglossary}"
+              :close "~n\end{theglossary}~n"
+              :flat)
+
+(markup-indexentry :open "~n  \item "           :depth 0)
+(markup-keyword-list :open "[" :sep ", " :close "]")
+
+(markup-locclass-list :open " " :sep ", ")
+
+(markup-locref-list   :sep ", ")
+
+(markup-range :sep "--")
+
+(define-letter-groups
+    ("a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m"
+     "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z"))
+
+(sort-rule "A" "a")
+(sort-rule "B" "b")
+(sort-rule "C" "c")
+(sort-rule "D" "d")
+(sort-rule "E" "e")
+(sort-rule "F" "f")
+(sort-rule "G" "g")
+(sort-rule "H" "h")
+(sort-rule "I" "i")
+(sort-rule "J" "j")
+(sort-rule "K" "k")
+(sort-rule "L" "l")
+(sort-rule "M" "m")
+(sort-rule "N" "n")
+(sort-rule "O" "o")
+(sort-rule "P" "p")
+(sort-rule "Q" "q")
+(sort-rule "R" "r")
+(sort-rule "S" "s")
+(sort-rule "T" "t")
+(sort-rule "U" "u")
+(sort-rule "V" "v")
+(sort-rule "W" "w")
+(sort-rule "X" "x")
+(sort-rule "Y" "y")
+(sort-rule "Z" "z")
+
+;; End
+=0C
+;; Local Variables:
+;; mode: lisp
+;; End:
+
+
+
+
+--------------3EDF1B5F0B39901423590FC0
+Content-Type: text/plain; charset=us-ascii;
+ name="tex2xindy.l"
+Content-Disposition: inline;
+ filename="tex2xindy.l"
+Content-Transfer-Encoding: 7bit
+
+%{
+  /*
+
+   $Id$
+
+   This is the source of `tex2xindy'.
+
+   It tries to parse an TeX-auxiliary-file `.aux' or index-file
+   `.idx' into a raw-index-form readable by xindy.
+
+   This program was written since it was not easily possible to
+   extract the parser from the old makeindex system. Therefore it does
+   not find all errors in the input as the makeindex version.
+   Additionally it uses only the default input specifiers of
+   makeindex. If other input specifiers (cf. manual page of makeindex)
+   are needed, the input specifiers below (starting from the pattern
+   KEYWORD, see below) must be changed and the program must be
+   recompiled. See the Migration Manual that comes with this
+   distribution for further details.
+
+   It can also be used as a template for writing other frontends for
+   xindy. Please send us your preprocessors. We are likely to include
+   them into the distribution. */
+
+#include <stdio.h>
+
+FILE* stat = NULL;
+
+int lineno    = 1;
+int braces    = 0;
+int xref_mode = 0;
+int glos_mode = 0;
+
+#define err( msg ) fprintf(stderr, "line %d: %s\n", lineno, msg)
+
+#define NO_RANGE     0
+#define OPEN_RANGE   1
+#define CLOSE_RANGE  2
+
+int range = NO_RANGE;
+
+/* This function quotes a character, if necessary. */
+
+void qc( char ch ) {
+  switch (ch) {
+    case '\\' : putchar( '\\' ); break;
+    case '"'  : putchar( '\\' ); break;
+  }
+  putchar(ch);
+}
+
+/* Quote an entire string. */
+
+void qs( char* str ) {
+  while ( *str ) {
+    qc( *str++ );
+  }
+}
+
+%}
+
+KEYWORD  \\indexentry
+KEYWORDG \\glossaryentry
+ENCAP    \|
+ACTUAL   @
+ESCAPE   \\
+LEVEL    !
+IS       :
+QUOTE    \"
+ROPEN    \(
+RCLOSE   \)
+ARGOPEN  \{
+ARGCLOSE \}
+
+%s key print skip2location location encap xref is skiplocation
+
+%%
+
+^{KEYWORD}[ \t]*{ARGOPEN} { printf("(indexentry :tkey ((\"");
+                            xref_mode = 0;
+                            glos_mode = 0;
+                            BEGIN(key); }
+
+^{KEYWORDG}[ \t]*{ARGOPEN} { printf("(indexentry :tkey ((\"");
+                            xref_mode = 0;
+                            glos_mode = 1;
+                            BEGIN(key); }
+
+<key,print>{ESCAPE}    { qc('\\'); qc(input()); }
+<key,print>{QUOTE}     { qc(input()); }
+<key,print>{ENCAP}     { printf("\")) :attr \"");
+                         range = NO_RANGE; BEGIN(encap); }
+<key,print>{IS}        { if (glos_mode == 1)
+                           {
+                             printf("\")) :attr \"is\" :xref (\"");
+                             range = NO_RANGE;
+			     fprintf(stat, "\txref\n");
+		           BEGIN(is);
+			   }
+                         else
+			   ECHO; }
+<key>{LEVEL}           { printf("\") (\""); }
+<print>{LEVEL}         { printf("\") (\""); BEGIN(key); }
+<key,print>{ARGOPEN}   { ECHO; braces++; }
+<key,print>{ARGCLOSE}  { if ( braces > 0 )
+                           {ECHO; braces--;}
+                         else
+			   {printf("\"))");
+		         BEGIN(skip2location);}
+                       }
+
+<key>{ACTUAL}          { printf("\" \""); BEGIN(print); }
+<print>{ACTUAL}        { err( "multiple @'s" ); }
+
+<key,print>.           { ECHO;}
+
+<encap>{ENCAP}         { err( "multiple |'s" ); }
+<encap>{ESCAPE}        { qc('\\'); ECHO; }
+<encap>{ROPEN}         { range = OPEN_RANGE; }
+<encap>{RCLOSE}        { range = CLOSE_RANGE; }
+<encap>{ARGOPEN}       { /* close :attr "... */
+                         printf("\" :xref (\"");
+			 fprintf(stat, "\txref\n");
+		         braces++;
+		         BEGIN(xref);
+                       }
+<encap>{ARGCLOSE}      { if ( braces > 0 )
+                           {ECHO; braces--;}
+                         else {
+			   putchar('"');
+			   fprintf(stat, "\tlocref\n");
+			   switch (range) {
+			     case OPEN_RANGE : printf(" :open-range");
+			       break;
+			     case CLOSE_RANGE: printf(" :close-range");
+			       break;
+			   }
+			   BEGIN(skip2location);
+			 }
+                       }
+<encap>.              { ECHO;
+                        if (stat) {
+			  fwrite(yytext, sizeof(char), 1, stat);
+			}
+	              }
+
+
+
+<xref,is>{ESCAPE}      { qc('\\'); qc(input()); }
+<xref,is>{ARGOPEN}     { ECHO; braces++; }
+<xref>{ARGCLOSE}       { if     ( braces >   1 )
+                           {ECHO; braces--;}
+                         else if ( braces == 1 )
+		           { braces--; }
+                         else {
+		           printf("\")");
+			   xref_mode = 1;
+		           BEGIN(skip2location);
+		         }
+                       }
+<is>{ARGCLOSE}         { if     ( braces > 0 )
+                           {ECHO; braces--;}
+                         else {
+		           printf("\")");
+			   xref_mode = 1;
+		           BEGIN(skip2location);
+		         }
+                       }
+<xref,is>.            { ECHO; }
+
+<skip2location>[ \t]*{ARGOPEN} {
+                        if (xref_mode)
+			  { BEGIN(skiplocation); }
+			else
+			  { printf(" :locref \"");
+			    BEGIN(location);
+			  }
+                       }
+
+<location>{ARGCLOSE}  { printf("\")\n"); BEGIN(0); }
+<location>.           {ECHO;}
+
+<skiplocation>{ARGCLOSE} { printf(")\n"); BEGIN(0); }
+<skiplocation>.       { ; }
+
+\n                    { lineno++; }
+.                     { ; }
+
+%%
+
+
+main(int argc, char* argv[])
+{
+  fprintf(stderr, "This is `tex2xindy' $Revision$.\n");
+  if ( argc > 1 ) {
+    fprintf(stderr, "Running in makeindex compatibility mode.\n");
+    fprintf(stderr, "Writing attribute names to file \"%s\".\n\n", argv[1]);
+    stat = fopen(argv[1], "w");
+  }
+  yylex();
+  fclose(stat);
+}
+
+/*
+  $Log$
+  Revision 1.1  1998/09/08 12:04:09  kehr
+  Initial checkin of makeglos package from Thomas Henlich.
+
+  Revision 1.6  1997/02/13 14:42:50  kehr
+  Minor changes.
+
+  Revision 1.5  1997/01/21 16:44:36  kehr
+  Bugfix: State <print> was not changed back to <key> if {LEVEL} was found.
+
+  Revision 1.4  1997/01/17 16:30:37  kehr
+  Rewrote makeindex4 and heavily modified tex2xindy.
+
+  Revision 1.3  1996/07/19  17:15:18  kehr
+  Made this program comaptible with lex by correctly enclosing all
+  actions--stupid bug, 'cause lex didn't complain and flex did some
+  wonderful matching of all the actions such that no error was
+  discovered.
+
+  Revision 1.2  1996/07/11  14:16:55  kehr
+  Complete Major checkin before changing the letter-groups.
+
+  Revision 1.1  1996/06/24  08:53:57  kehr
+  Initial checkin of the Makefile, README and tex2xindy.
+*/
+
+
+
+
+--------------3EDF1B5F0B39901423590FC0
+Content-Type: text/plain; charset=us-ascii;
+ name="math.xdy"
+Content-Disposition: inline;
+ filename="math.xdy"
+Content-Transfer-Encoding: 7bit
+
+; this file defines rules for sorting TeX math expressions
+; Thomas Henlich
+
+; any sequence of 2 spaces or more are MERGED into 1 space
+;because for TeX it's all the same
+(merge-rule "  +" " " :again :eregexp)
+
+;math. mode delimiters
+(sort-rule "\$(.*)\$" "\1" :again :bregexp)
+
+(sort-rule "\," "" :string)
+(sort-rule " " "" :string)
+
+;sort greek letters (math. symbols) according to their full name
+
+;(sort-rule "\iota" "jota" :string)
+;(sort-rule "\upsilon" "ypsilon" :string)
+;(sort-rule "\Upsilon" "Ypsilon" :string)
+
+; put \varepsilon and \epsilon in the same place
+(sort-rule "\var" "" :string)
+
+; x_{\rm orig} --> x_orig    and   x_\textrm{orig} --> x_orig
+(merge-rule "\\mathrm{(.*)}" "{\rm \1}" :again :bregexp)
+(sort-rule "{\\rm (.*)}" "\1~e" :again :bregexp)
+(sort-rule "\\textrm{(.*)}" "\1~e" :again :bregexp)
+(sort-rule "}" "" :string :run 1)
+(sort-rule "{" "" :string :run 1)
+
+(merge-rule "\\emph{(.*)}" "{\em \1}" :again :bregexp)
+(sort-rule "{\\em (.*)}" "\1~e" :again :bregexp)
+(sort-rule "\" "" :string)
+
+; $a_x$ should come before "amplification" 
+;   that's why a_x --> a x and not a_x --> ax
+(sort-rule "_" " " :string)
+(sort-rule "^" " " :string)
+
+; periods in abbrev.  A.B.C. --> ABC
+(sort-rule ". " "" :string)
+(sort-rule "." "" :string)
+
+;; Local Variables:
+;; mode: lisp
+;; End:
+
+
+
+
+--------------3EDF1B5F0B39901423590FC0
+Content-Type: application/x-tex;
+ name="example.tex"
+Content-Disposition: inline;
+ filename="example.tex"
+Content-Transfer-Encoding: 7bit
+
+\documentclass[a4paper]{report}
+\usepackage[T1]{fontenc}
+\usepackage{makeglos}
+\makeglossary
+\title{The makeglos package for XINDY -- example}
+\author{Thomas Henlich (thenlich@Rcs1.urz.tu-dresden.de)}
+\begin{document}
+\maketitle
+\printglossary
+\addcontentsline{toc}{chapter}{\glossaryname}
+
+\glossary{glossary:A list of words with explanations of these words}
+\glossary{XINDY|is{an index processor, can also be used to process glossaries}}
+\glossary{XINDY|see{glossary}}
+
+\chapter{Introduction}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
+
+
+
+
+--------------3EDF1B5F0B39901423590FC0--
+
