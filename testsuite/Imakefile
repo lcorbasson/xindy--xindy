@@ -1,0 +1,21 @@
+/* $Id$
+ *----------------------------------------------------------------------
+ */
+
+/*
+ * Top Imakefile for XXX project
+ *
+ * (history at end)
+ */
+#include <Project.imk>
+
+CVSAdd(config site.exp)
+CVSAdd(base)
+
+/*======================================================================
+ *
+ * $Log$
+ * Revision 1.1  1995/11/21 14:59:59  kehr
+ * Initial checkin.
+ *
+ */
