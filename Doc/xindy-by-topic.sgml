@@ -12,18 +12,19 @@
 
 <title>&XINDY;
 
-<subtitle><sf/A Flexible Indexing System/
+<subtitle>A Flexible Indexing System
 
-<author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
+<author>Roger Kehr, Computer Science Department, Darmstadt University
+of Technology
 
-<date>&xindy; by Topic, Edition March 1997 for &xindy; version 1.1
-
+<date>&xindy; by Topic, Edition February 1998 for xindy version 2.0
 <abstract>
 <em>The &xindy; by topic manual is intended for all practitioners that
 do not want to read too much about &xindy;s details but rather start
-to solve concrete problems immediately. Thus, we have written it in a
-how-to manner starting from a concrete problem and describing all the
-necessary steps that are needed to solve the problem.
+to solve concrete problems immediately. This is Edition February 1998
+and describes the features of &xindy; version 2.0. The most up-to-date
+version of this document can be obtained from the <sf/xindy/ homepage
+at http://www.iti.informatik.tu-darmstadt.de/xindy/.
 </em>
 </abstract>
 
@@ -114,7 +115,7 @@ Gabor Herr &lsqb;3, 6&rsqb; have shown that adding extensions to
 new indexing tool from scratch. The new tool is based on a new
 requirements analysis and offers very interesting features for
 processing very complex indexing schemes. The resulting index model is
-described in&spc;&lsqb;5&rsqb;.
+described in&spc;&lsqb;5, 7, 8&rsqb;.
 
 
 <!-- ================================================================= -->
@@ -845,6 +846,9 @@ document. Multiple indexes support the generation of several indexes
 for one document. For instance, one can make an author or command
 index in addition to a global index.
 
+Another option is to use the <tt/xindy.sty/ from Andreas Schlechte
+that comes with the &xindy; distribution. Take a look at the
+<tt/contrib/ directory that should contain a version.
 
 <sect1>What editor should I use when writing xindy style files?
 <p>
@@ -977,11 +981,19 @@ Cahiers GUTenberg, 10, p81-90, 1991
 Preparation/, TR-87/347, University of California Berkeley, 1987
 <label id="makeindex">
 
-<item> Roger Kehr, &xindy;, <em/Ein Flexibles Indexierungssystem/,
+<item> Roger Kehr, xindy <em/Ein Flexibles Indexierungssystem/,
 Studienarbeit FB Informatik, TH-Darmstadt, November 1995.
 
 <item> Joachim Schrod and Gabor Herr, <em/MakeIndex Version 3.0/,
 Technical University of Darmstadt, 1991
+
+<item> Roger Kehr, <sf/xindy/ -- <em/A Flexible Indexing System/,
+Technical Report No. 11/1997, Computer Science Department, Darmstadt
+University of Technology, 1997. Also accessible from the xindy
+homepage.
+
+<item> Roger Kehr, <sf/xindy/ -- <em/A Flexible Indexing System/,
+Proceedings of the Euro&TeX;'98, St. Malo, France, March 1998
 
 </enum>
 
