@@ -19,15 +19,22 @@ ProjectTop()
  */
 
 /* ATTN: modules are made in list order! */
-BuildProjectModules(Report Presentation src locref xindy base)
+BuildProjectModules(Report Presentation\
+		    src locref xindy base\
+		    testsuite)
 
-CVSAdd(ChangeLog Imakefile Report Presentation noweb src)
+CVSAdd(ChangeLog Imakefile)
+CVSAdd(Report Presentation)
+CVSAdd(noweb src testsuite)
 CVSAdd(base xindy locref)
 
 /*======================================================================
  *
  * $Log$
- * Revision 1.5  1995/11/19 18:38:37  kehr
+ * Revision 1.6  1995/11/21 14:55:05  kehr
+ * Added support for DejaGnu-Framework.
+ *
+ * Revision 1.5  1995/11/19  18:38:37  kehr
  * Introduced packages base and locref.
  *
  * Revision 1.4  1995/11/08  16:16:07  kehr

@@ -13,6 +13,7 @@ XCOMM $Id$
 /* needed modules */
 #include <Project.imk>
 #include <noweb-wrap.imk>
+#include <DejaGnu.imk>
 
 #include <Lisp-mod.imk>
 /* This must be included after the redefinition of the above rule(s) */
@@ -62,10 +63,18 @@ CVSCommit()
 clean::
 	$(RM) modules.tex
 
+   TESTDIR     = $(TOPDIR)/testsuite
+   RUNTEST_OPT = --outdir $(TESTDIR)
+
+DejaGnuTarget(base,$(TESTDIR))
+
 /* ============================================================
  *
  * $Log$
- * Revision 1.1  1995/11/19 18:38:53  kehr
+ * Revision 1.2  1995/11/21 14:55:13  kehr
+ * Added support for DejaGnu-Framework.
+ *
+ * Revision 1.1  1995/11/19  18:38:53  kehr
  * Introduced packages base and locref.
  *
  * Revision 1.1  1995/11/08  16:13:18  kehr

@@ -1,0 +1,47 @@
+#
+# start clisp
+#
+
+proc start_clisp {} {
+    global spawn_id
+    global clispID
+
+    set clispID [spawn clisp -noreadline -q]
+    expect {
+	-re "> $" { send_user "clisp started with PID $clispID\n" }
+	timeout   { error "Failed to spawn `clisp' (timeout)"; exit 1 }
+    }
+}
+
+proc expect_T {} {
+    global prompt
+    global test
+    expect {
+	-re "T.*$prompt$"  { pass $test }
+    }
+}
+
+proc expect_NIL {} {
+    global prompt
+    global test
+    expect {
+	-re "NIL.*$prompt$"  { pass $test }
+    }
+}
+
+start_clisp
+
+set prompt "> "
+set timeout 3
+
+expect_after {
+    -re "\[^\n\r\]*Break$prompt$" {
+	fail "$test (broke)"
+	send "unwind\n"
+    }
+    "must be recompiled" { perror "recompilation needed"; exit 1 }
+    timeout { fail "$test (timeout)" }
+}
+
+send_user "working directory: [pwd]\n"
+

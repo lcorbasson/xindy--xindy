@@ -1,0 +1,11 @@
+#
+# this loads the base package
+#
+
+set test "(load 'base)"
+send "(load 'base)\n"
+expect_T
+
+set test "(use-package 'base)"
+send "(use-package 'base)\n"
+expect_T

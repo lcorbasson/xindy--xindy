@@ -1,0 +1,96 @@
+#ifndef DEJAGNU_IMK_INCLUDED			/* -*- Indented-Text -*- */
+#define DEJAGNU_IMK_INCLUDED
+
+XCOMM ======================================================================
+XCOMM Imake module for DejaGnu-Framework
+XCOMM $ITI$
+
+/* history at end */
+
+/*
+ * This Imake module XXX
+ *
+ * The following target rules are exported:
+ *
+ *    XXXTarget(XXX)		-- XXX
+ *
+ * The following definitions may be set to configure target creation:
+ *
+ *    RUNTEST_OPT               -- defines additional options
+ *				   (besides --tool and --srcdir)
+ *				   that can be set when invoking runtest.
+ *
+ * The following definitions/rules are made by this template:
+ *
+ *    XXX			-- XXX
+ */
+
+/*
+ * Parameters for adaption to different platforms:
+ *
+ *    XXX			-- XXX
+ */
+
+
+/*
+
+
+REALIZATION:
+
+
+XXX
+
+*/
+
+
+
+/* ============================================================
+ *
+ * parameters
+ *
+ */
+
+#ifndef DejaGnuRuntestCmd
+#define DejaGnuRuntestCmd runtest
+#endif
+
+
+/* ============================================================
+ *
+ * definitions
+ *
+ */
+
+    RUNTEST = DejaGnuRuntestCmd
+
+
+/* ============================================================
+ *
+ * rules
+ *
+ */
+
+
+#ifndef DejaGnuTarget
+#define DejaGnuTarget(toolnames,src)				@@\
+check-toolname::						@@\
+    $(RUNTEST) $(RUNTEST_OPT) --tool toolnames --srcdir src	@@\
+								@@\
+check:: check-toolname						@@\
+								@@\
+clean::								@@\
+    $(RM) toolname.log						@@\
+								@@\
+realclean ::							@@\
+    $(RM) toolname.sum
+#endif
+
+
+
+/* ============================================================
+
+$ITIlog$
+*/
+
+
+#endif  /* already imported */
