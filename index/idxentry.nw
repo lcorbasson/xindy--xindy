@@ -27,13 +27,14 @@
 
 \subsection{Introduction}
 
-This module is responsible for the managemant of an indexentry. It is
-one of the main modules of the whole system. An indexentry is a object
-that holds the keywords of the indexentry (we currently distinguish
-the \emph{main-key, merge-key, sort-key} and \emph{print-key}), the
-corresponding list of location-references and the indexclass the entry
-belongs to. We must be able to process the location-references, and to
-markup the indexentry during output-tagging.
+This module is responsible for the management of an indexentry. It is
+one of the main modules of the whole system. An indexentry is an
+object that holds the keywords of the indexentry (we currently
+distinguish the \emph{main-key, merge-key, sort-key} and
+\emph{print-key}), the corresponding list of location-references and
+the reference to the indexclass the entry belongs to. We must be able
+to process the location-references, and to markup the indexentry
+during output-tagging.
 
 
 \subsection{Abstract Specification}
@@ -97,8 +98,10 @@ An indexentry consists of the following elements:
 @ %def indexentry make-indexentry
 
 <<export-list of module \module{index}>>=
-(export '(indexentry))
-@
+(export '(indexentry make-indexentry))
+@ %def indexentry make-indexentry
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \no The following function takes an indexentry and scans all possible
 location-classes if the location-reference matches with them. If it
@@ -115,16 +118,16 @@ call [[gen-indexentry-if-matched]] as the apply-function.
                            locref-str keyword-arguments))
 @ %def gen-indexentries
 
-Remember that the applier-function of [[forall-location-classes]]
+\no Remember that the applier-function of [[forall-location-classes]]
 takes the three arguments indexclass, locationclass and given
 parameter-list. As the parameter-list we have constructed a list whose
 first element is the location-string and the rest is the given
 keyword-list. They are needed for instatiaton of the
 location-reference and the indexentry. Allowed keywords can be found
-in the corresponding class definitions. Keywords that will
-explicitely determined in this function (such as [[:layers]] and
-[[:ordnums]] for the location-reference. [[:locrefs]] and
-[[:idxclasses]] for indexentries) mustn't be set.
+in the corresponding class definitions. Keywords that will explicitely
+determined in this function (such as [[:layers]] and [[:ordnums]] for
+the location-reference. [[:locrefs]] and [[:idxclasses]] for
+indexentries) mustn't be set.
 
 <<generate indexentries>>=
 (defun gen-indexentry-if-matched (idxcls loccls keyword-arguments)
@@ -181,17 +184,195 @@ context is the [[print-key]] of the previous printed indexentry.
   env-stack)
 @
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Processing an indexentry}
 
-Processing an indexentry is mainly a work on the location-references
-the indexentry contains. First of all we need to apply the defined
-indexstyle-rules. This may create virtual attributes and change order-
-and successor-neighbourship and may even remove some entries because
-of substitution-rules. Afterwards the indexentries will be sorted.
-Then we step over all references and compare neighbours to their
-successor-relationship. If it is possible, we build ranges by joining
-two references. Afterwards we need to step over again to remove some
-location-references if some appropriate rules were specified.
+\subsubsection{Semi-formal description}
+
+Processing an indexentry is one of the central parts of the system.
+Since a lot of different rules parametrize this process, the
+underlying algorithm must consider several topics in parallel. We
+start to describe a short theoretical overview, which shall remind us
+what tasks to perform and what to consider generally.
+
+During marking up, the list of location-references an indexentry owns
+must be sorted, merged into ranges and finally be tagged. We're given
+a list of location-references and have to perform the following tasks
+in the order below.
+
+\newcommand{\Real}{\textsf{normal}\xspace}
+\newcommand{\Virt}{\textsf{virtual}\xspace}
+
+Before starting with the process' description we introduce some
+slot-functions (which are both readable and setable) according to the
+slots that appear in the description of class
+\class{location-refererence} extended by some new slots:
+\begin{deflist}{XXXXXX}
+  \item [\fcatattr{$l$}] returns the category-attribute of $l$.
+  \item [\floccls{$l$}] returns the location-class $l$ belongs to.
+  \item [\fordnum{$l$}] returns the list of ordnums of $l$.
+  \item [\fvcatattr{$l$}] returns the virtual category-attribute of
+    $l$. Initially this value is empty.
+  \item [\fstat{$l$}] returns the state of $l$ with
+    $\fstat{l}\in\{\Real,\Virt\}$. This slot is initially set to
+    \Real.
+  \item [\fparent{$l$}] returns a reference to the location-reference
+    $l$ was generated from. This value is initially set to \fnil.
+\end{deflist}
+Additionally we introduce an operator $[\ldots]$ which is used in
+the form
+\[k := l\,[s_1:=v_1,\ldots,s_n:=v_n]\]
+with $k,l$ location-references and $s_i$~slot, $v_i$~new slot-value.
+With this notation we describe that $k$ inherits all slot-values from
+$l$ except those mentioned in the $[\ldots]$-list. This operator is
+called \term{inheritance-operator}.\footnote{The idea is simply
+  borrowed from similar notations which are used with variable
+  substitutions in denotational semantics and unification.}
+
+\bigskip
+
+\no We start with an initial set $R$ of location-references such that
+\[\forall l,k\in R: l\not=k\Rightarrow\fcatattr{l}\not=\fcatattr{k}\vee
+\fordnum{l}\not=\fordnum{k}\vee \floccls{l}\not=\floccls{k}.\] So we
+imply that there exist no duplicates in $R$.
+
+\begin{enumerate}
+\item Divide $R$ into equivalence-classes of location-references
+  based on the location-classes. We receive a set of sets of
+  location-references $R:=\{L_1,\ldots,\L_n\}$, where in each subset
+  $L_i$ for each pair $l,k\in{}L_i$, $i=1\ldots{}n$ of
+  location-references holds: \func{loccls}($l$)=\func{loccls}($k$).
+
+  Process the following steps for each subset $L_i$ separately:
+
+\item Apply all \irule{substitute-if-double}-rules.
+
+  This application operates on a set $L_i$ of location-references. All
+  \irule{substitute-if-double}-rules define a relation on the set of
+  category-attributes $C$. At first consider the following example:
+
+  Given are the relations `\irule{substitute-if-double} \texttt{bold}
+  \texttt{italic}' and `\irule{substitute-if-double} \texttt{italic}
+  \texttt{default}' and the location-references `\texttt{1}' and `1'.
+  It is not clear whether `\textbf{1}' should substitute `1', or not.
+  If it should do so then we need the transitive hull of
+  \irule{substitute-if-double}-relations to express the desired
+  behaviour.  Otherwise it would be possible to define the relations
+  `\irule{substitute-if-double}~\texttt{bold}~\texttt{italic}' and
+  `\irule{substitute-if-double}~\texttt{italic}~\texttt{bold}' which
+  actually makes no sense, but would be possible without a transitive
+  hull.
+
+  We decide to use the transitive hull for determining the
+  substitution rules mainly for two reasons:
+  \begin{itemize}
+  \item We actually need it in the definition of virtual
+    category-attributes to express their precedence order.
+  \item In some sense the behaviour is more under control of the
+    system and the user may be informed about a circular definition.
+    This is done by implementing a check to test if a
+    category-attribute substitutes itself which obviously indicates an
+    error in the relation definition. It seems more restrictive, but
+    the user should receive results he expected to see.
+  \end{itemize}
+  We denote the transitive hull with
+  $\irule{substitute-if-double}^\Phi$.
+
+  Informally we can describe this process as follows. For all
+  location-references $l$ in $L_i$ test, if there exists $k$ with
+  \fstat{$k$}=\Real, \fordnum{$k$}=\fordnum{$l$} and a rule
+  `$\irule{substitute-if-double}^\Phi~\fcatattr{k}~\fcatattr{l}$' in which
+  case we set \fstat{$l$} to \Virt.
+
+  Actually we reset $l$'s state to \Virt means to move it from the set
+  of \emph{real} location-references into the set of \emph{virtual}
+  location-references. This happens only in the case that there really
+  exists a location-reference $k$ which is \Real.
+  \begin{note}
+    The definition of a virtual category-attribute \texttt{(bold
+      italic default)} implies the following rules:
+    \begin{enumerate}
+    \item \irule{substitute-if-double} \texttt{bold} \texttt{italic}
+    \item \irule{substitute-if-double} \texttt{italic} \texttt{default}
+    \end{enumerate}
+    When generating the transitive hull of both rules
+    `\irule{substitute-if-double}$^\Phi$ \texttt{bold}
+    \texttt{default}' holds.
+  \end{note}
+
+\item Apply all \irule{merge-to}-rules. Initialize the set of new
+  location-references $L_i^+:=\{\}$. For all $l\in{}L_i$ (virtual or
+  not) if exists a rule `$\irule{merge-to}~\fcatattr{l}~x$' then
+  $L_i^+:=L_i^+\cup{}l_+$ with
+  \[l_+:=l\,[\Fstat{}:=\Virt,\Fcatattr{}:=x].\]
+  or if additionally holds `\irule{drop-if-merged}~\fcatattr{l}~x'
+  \[l_+:=l\,[\Fstat{}:=\Virt,\Fcatattr{}:=x,\Fparent:=\fparent{l}].\]
+
+  The idea is to generate new location-references that are equal to
+  their parents but with \Fstat set to \Virt and if there exists
+  an applicable \irule{drop-if-merged}-rule additionally \Fparent
+  holds a reference to the parent location-reference, since we must be
+  able to actually \emph{drop} the parent, if necessary.
+
+\item Union both sets to receive the extended set $L_i:=L_i\cup L_i^+$.
+
+\item Remove all duplicate location-references from $L_i$ and all
+  \[l\in L_i \fstat{l}=\Virt\wedge\exists k:\fstat{k}=\Real\wedge\fcatattr{k}=\fcatattr{l}\wedge\fordnum{k}=\fordnum{k}.\]
+  We remove all virtual location-references that have a real
+  neighbour.
+  Then the following holds:%
+  \[\forall l,k\in L_i:
+  \fcatattr{l}\not=\fcatattr{k}\vee \fordnum{l}\not=\fordnum{k}.\]
+
+
+\item The virtual category-attributes are described by a injective
+  function $\phi$ from the set $C$ of category-attributes to the set
+  $V$ of virtual ca's. We set $\fvcatattr{l}:=\phi(\fcatattr{l})$
+
+  Divide $L_i$ into equivalence-classes $K_1,\ldots,K_m$ that for each
+  pair $l,k\in{}K_j$ holds:
+  $\fvcatattr{l}=\fvcatattr{k}$.\footnote{This is actually implemented
+    in a more effective way.}
+
+\item Building ranges in all $K_j$. This is separated into two stages:
+  \begin{enumerate}
+  \item Process all $K_{\phi(j)}$ for which exists a
+    `$\irule{merge-to}~x~j$'-rule.
+
+    Build ranges (will be described later) and for all
+    location-references $l$ that will be merged into a range check, if
+    condition $\fparent{l}\not=\fnil{}$ is true in which case
+    $\fstat{\fparent{l}}:=\Virt$ achieves that the state of $l$'s
+    parent is set to virtual.
+
+  \item Continue to process all $K_{\phi(j)}$ for which does not exist
+    a `$\irule{merge-to}~x~j$'-rule.
+  \end{enumerate}
+  These steps must be done in the described order because the
+  \irule{drop-if-merged}-rule.
+
+\end{enumerate}
+
+
+\subsubsection{Building of ranges}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\subsubsection{OLD}
+
+Processing an indexentry is mainly a work that relates to the
+location-references an indexentry contains. First of all we need to
+apply the defined indexstyle-rules. This may create virtual attributes
+and change order- and successor-neighbourship and may even remove some
+entries because of substitution-rules. Afterwards the indexentries
+will be sorted.  Then we step over all references and compare
+neighbours to their successor-relationship. If it is possible, we
+build ranges by joining two references. Afterwards we need to step
+over again to remove some location-references if some appropriate
+rules were specified.
 
 The process itself is more or less a operation of refinement on the
 underlying structure. For example, we subgroup the list of
@@ -277,7 +458,7 @@ pretty-printer.
                        rank))
 @
 
-When adding types is is absolutely neccessary to add a rank into the
+When adding types is is absolutely necessary to add a rank into the
 dispatch-table, that describes the inheritance-relations between the
 classes. For examplem class [[locref-group]] is base-class of all
 other locref-groups. Therefore the other classes need a higher rank to
@@ -376,7 +557,7 @@ belonging to the same loccation-class. It processes as folows:
 \item builds up equivalence-classes of all location-references that
   have the same order
 \item builds ranges by joining the constructed equivalence-classes
-\item removes unneccessary location-references.
+\item removes unnecessary location-references.
 \end{enumerate}
 
 The general idea is to use the generic function [[do-group]] to
@@ -582,9 +763,13 @@ The next class defines all location-references that have the same
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/12/05 18:46:29  kehr
+%% Revision 1.2  1995/12/11 17:37:01  kehr
+%% Added semi-formal description of the location-refernce handling.
+%%
+%% Revision 1.1  1995/12/05  18:46:29  kehr
 %% Added module `index' and restructured some parts.
 %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 %% Revision 1.13  1995/07/28  10:41:17  kehr
 %% Added simple markup for location-references and ranges. Currently
