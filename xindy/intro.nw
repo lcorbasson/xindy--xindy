@@ -1,0 +1,174 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Introduction}
+
+In the next few sections we will give a short introduction to the
+project and its realization. We will concentrate on the structure of
+the project and how the system is arranged in a hierarchical
+structure. We do not describe details of the implementation or give
+any theoretical background here. Each module itself describes this
+background, how it works and what kind of data it manipulates.
+
+We continue with a description of the document structure and the
+modularization of the \xindy-system. Thereafter follows a description
+of topics that concern \Lisp as the implementation language and a
+short description of the Literate Programming System (LPS) \noweb and
+how to read a \noweb-source.
+
+
+\subsection{Document structure and Modularization}
+
+In this section we concentrate on the structure of the source parts of
+the project. Information about other parts of the project may be found
+elsewhere.
+
+The source itself is separated into several \term{modules}. A module
+is an entity of the source that contains all data descriptions and
+functions that operate on those data and is intended to serve as a
+separate unit with a fixed and well-documented interface and its
+description. Currently the project is divided into the following
+modules:
+
+\begin{deflist}{locclass}
+\item[\module{xindy}] This module is the top module of the project.
+\item[\module{locclass}]
+\item[\module{base}] This module defines basic services an is the
+  lowest in the hierarchy of modules.
+\end{deflist}
+
+The dependency graph between the modules is shown in ???.
+
+\CL provides a mechanism to define units with a separate name space
+called \term{package}. For each of the above defined modules we create
+a package with its own name space and explicitly \term{export} objects
+from the package to make them accessible from other modules.
+
+Each module is stored in a separate subdirectory of the top-level
+directory. Every module may consist of several different files called
+\term{parts}. One of those parts is the \term{main} part in which a
+description of the interface of the module can be found. The
+convention is, that the name of the main part equals the name of the
+module. Each part is organized in exactly one file.
+
+
+\subsection{The \noweb-system and automatic file generation}
+
+Each part is written in the \noweb-LPS. The programming paradigm of
+\term{Literate Programming} was first introduced by D.E.Knuth\cite{}.
+Its idea is to combine program source and its documentiation in a
+single file which helps to keep program and documentation consistent
+and to generate a pretty-printed document of the source. We try to use
+this paradigm to give all the interested people an idea of how this
+system was programmed and to help ourselves in decreasing debugging
+time and not ruining our nerves.
+
+Our so far gained experience in programming with a LPS showed us that
+we concentrated more on the description of our problem (\eg writing an
+new function) and that the additional amount of time spend in thinking
+about the problem and writing down the ideas helped us to write more
+or less error-free code sections. This decreases debugging time and
+overall time spend into implementation.
+
+Every \noweb-file is written in \LaTeX{} with intermixed portions of so
+called \term{code-chunks}. A code-chunk is introduced by a identifier
+and a piece of code written plainly into the document. A code-chink
+itself may contain the identifier of another code-chunk which is
+expanded later during the tangling process. With the ability to
+describe a program by a series of refinements all chunks form a tree
+with one \term{root chunk}.
+
+The process to generate a source-file from a given \noweb-file is
+called \term{tangling}. A tool named \cmd{notangle} processes the
+input file and expands all code chunks starting from the only root
+chunk. The generated source is not intended to be read by a reader.
+
+A program called \cmd{noweave} processes a \noweb-source (with
+extension and \term{weaves} a \LaTeX-file.  This file may now be
+\TeX{}ed and the resulting \cmd{dvi}-file is ready for reading or
+printing or whatever you like to do with.  In the top-level Makefile
+we define a target that typesets the whole source as an article.
+
+
+
+\subsection{Naming conventions}
+
+We have to define conventions for the names of different kind of
+objects to be consistent throughout the whole project.  A short
+description of the conventions used in the project follows.
+
+\subsubsection{File naming}
+
+File naming is mainly a definition of the filename extensions. The
+following extensions may accour:
+
+\begin{deflist}{XXXX}
+\item[\cmd{.nw}] the \noweb source files.
+\item[\cmd{.tex}] the weaved \LaTeX{} files.
+\item[\cmd{.lsp}] the tangled \CL files.
+\end{deflist}
+
+We did not exceed filename length beyond 8 + 3~characters to be able
+to create an easy port to MS-DOS filesystems.
+
+
+\subsubsection{\Lisp naming conventions}
+
+\subsubsection*{Identifiers}
+
+\subsubsection*{Functions}
+
+\subsubsection*{Slot methods}
+
+
+\subsubsection{\noweb}
+
+
+
+\subsubsection*{\noweb chunk naming}
+
+As mentioned earlier \noweb uses \term{chunks} to name a piece of
+code.  Chunks may be enlarged by additionally defining a chunk that
+already appeared earlier in the source. The real source is generated
+by expanding the so-called \term{root chunk}. This expansion to the
+real source makes it easy so define a portion of code everywhere in
+the document. We use the following naming scheme for chunks of code:
+
+\begin{deflist}{pretty print}
+\item[interface] This chunk is used to define the package interface.
+\item[module] Root chunk for a given module
+\item[class name] Definition of a class
+\item[pretty print] Everything that belongs to pretty-printing. It
+  allows us to disable PP in a distributable environment.
+\item[root] Root of the whole source
+\end{deflist}
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/11/06 16:46:09  kehr
+%% Initial checkin.
+%%
+%%
