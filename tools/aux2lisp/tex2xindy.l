@@ -94,7 +94,7 @@ ARGCLOSE \}
 <key>{ACTUAL}          { printf("\" \""); BEGIN(print); }
 <print>{ACTUAL}        { err( "multiple @'s" ); }
 
-<key,print>.           { ECHO;}
+<key,print>.           { qc(*yytext);}
 
 <encap>{ENCAP}         { err( "multiple |'s" ); }
 <encap>{ESCAPE}        { qc('\\'); ECHO; }
@@ -138,7 +138,7 @@ ARGCLOSE \}
 		           BEGIN(skip2location);
 		         }
                        }
-<xref>.               { ECHO; }
+<xref>.               { qc(*yytext); }
 
 <skip2location>[ \t]*{ARGOPEN} {
                         if (xref_mode)
@@ -175,6 +175,9 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.8  1999/04/27 08:57:48  kehr
+  Added quoting patch sent by Thomas Henlich <thenlich@Rcs1.urz.tu-dresden.de>
+
   Revision 1.7  1999/04/27 08:56:59  kehr
   Another checkin.
 
