@@ -1,10 +1,25 @@
-#!@XINDY_PERL@
-#
+#!/usr/bin/perl
 # $Id$
+#----------------------------------------------------------------------
 #
 # This is a perl-script that wraps xindy into a makeindex-like
 # interface.
 #
+
+
+# NOTE: Usage of this script is depreciated. Use texindy instead.
+# Yes, this is Perl 4 code -- it is as old. I don't plan to change
+# that, as there's a better replacement available anyhow. Let's tell
+# this with each usage... ;-)
+
+print STDERR <<'_EOF_'
+
+NOTE: Usage of makindex4 is depreciated. This script is not supported
+any more. Please consider switching to the supported command texindy.
+
+_EOF_
+  ;
+
 
 ($progname = $0) =~ s#.*/##;
 
@@ -34,11 +49,6 @@ This file is a wrapper that makes `xindy' somehow behave as
 arguments and some of the flags are differently implemented in the
 xindy system. So don't expect it to be a plug-in replacement for the
 makeindex-system.
-
-For more information concering compatibility between makeindex and
-`xindy' see the "Quick Guide" that comes with the distribution of `xindy'.
-
-Go with the future and move to the new features of xindy!
 EOMSG
    exit(1);
 }
@@ -187,6 +197,11 @@ exec($CmdLine);
 
 #
 # $Log$
+# Revision 1.8  2004/10/05 21:13:21  jschrod
+#     Notes that its usage is depreciated. Doesn't reference the Quick
+# Guide any more.
+#     Assumes /usr/bin/perl to exist.
+#
 # Revision 1.7  1999/04/27 08:56:59  kehr
 # Another checkin.
 #
