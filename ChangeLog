@@ -1,3 +1,32 @@
+Mon Dec 18 22:08:19 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Finished some tests in submodules `idxclass' and `idxrule'.
+	  Corrected some minor bugs and extended some regression tests.
+	  (3 hrs)
+
+Sun Dec 17 21:56:54 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* This weekend I reorganized module `idxstyle'. This had also many
+	  consequences on module `locref'. The design looks clearer now
+	  and makes much more sense.
+	* Added class `category-attribute'.
+	  Rewrote whole parts of submodule `idxrule'.
+	* Tested some new ideas for interactive test generation.
+	* All in all I made important design decisions (hope it was good)
+	  but the next steps will be straightforward ;-)
+	  (11 hrs)
+
+Fri Dec 15 18:12:59 1995  Roger Kehr  <kehr@spock>
+
+	* Finished two days of hard work. Implemented the
+	  transitive-hull-stuff and some conversion functions.
+	* Restructured all modules due to problems with the
+	  compilation-process.
+	* Added new pretty-printing functions.
+	* Seems that I found some kind of a bug with expect. Don't have
+	  time for a closer look.
+	  (9 hrs)
+
 Wed Dec 13 17:44:41 1995  Roger Kehr  <kehr@spelunke>
 
 	* I just finished the semi-formal description. Also implemented a
