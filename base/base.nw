@@ -66,23 +66,50 @@ the project.
 
 \subsection{Error message system}
 
-The error message system is necessary to handle all error messages. We
-support a function that issues a simple warning.
+The error message system distinguished the following kind of errors:
 
-<<Error message system>>=
-(defmacro oops (&rest msg)
-  `(FORMAT *ERROR-OUTPUT* ,@msg))
+\begin{description}
+\item[info] indicates a informative message for the user. The
+  character of these messages is not an error but simply an
+  information.
+\item[oops] indicates a serious problem. The user should correct the
+  error or unpredictable behaviour might result. Use this macro to
+  report a serious error. Additionally, all these problems are also
+  reported to the logfile.
+\item[nraw] (reverse of `warn'). Use this to report a situation which
+  is correct but maybe unwanted. These are not reported to the logfile.
+\item[gol] (reverse of `log') writes some useful information into the
+  logfile.
+\end{description}
 
-(defmacro apply-oops (&rest msg)
-  `(APPLY #'FORMAT *ERROR-OUTPUT* ,@msg))
-@ %def oops apply-oops
 
 <<Error message system>>=
 (defmacro info (&rest msg)
-  `(FORMAT *ERROR-OUTPUT* ,@msg))
+  `(APPLY #'FORMAT *ERROR-OUTPUT* (LIST ,@msg)))
 @ %def info
 
-\subsection{Logging message system}
+<<Error message system>>=
+(defparameter *oops-error-message* "~&ERROR: ")
+
+(defmacro oops (&rest msg)
+  `(LET ((MSG (LIST ,@msg)))
+    (FORMAT *ERROR-OUTPUT* BASE::*OOPS-ERROR-MESSAGE*)
+    (APPLY #'FORMAT *ERROR-OUTPUT* MSG)
+    (WHEN *LOGGING-ON*
+      (FORMAT *LOGGING-STREAM* BASE::*OOPS-ERROR-MESSAGE*)
+      (APPLY #'FORMAT *LOGGING-STREAM* MSG))))
+@ %def oops
+
+<<Error message system>>=
+(defparameter *nraw-error-message* "~&ERROR: ")
+
+(defmacro nraw (&rest msg)
+  `(PROGN
+    (FORMAT *ERROR-OUTPUT* BASE::*NRAW-ERROR-MESSAGE*)
+    (APPLY #'FORMAT *ERROR-OUTPUT* (LIST ,@msg))))
+@ %def nraw
+
+\subsection*{Logging message system}
 
 The following macro can be used to issue useful logging-information
 into the stream \texttt{*log-stream*}. Logging can be dynamically
@@ -97,11 +124,12 @@ on logging''.
 
 (defmacro gol (flag &rest msg)
   `(WHEN (AND ,flag *LOGGING-ON*)
-    (FORMAT *LOGGING-STREAM* ,@msg)))
+    (APPLY #'FORMAT *LOGGING-STREAM* (list ,@msg))))
 @ %def gol
 
 <<Export-list of module \module{base}>>=
-(export '(oops apply-oops info *logging-stream* *logging-on* gol))
+(export '(oops nraw info gol
+          *logging-stream* *logging-on*))
 @
 
 \subsection{Assertions}
@@ -113,8 +141,8 @@ The following macro can be used to declare assertions.
   `(UNLESS ,cond
     (FORMAT *ERROR-OUTPUT* "Internal error! Assertion ~A failed!" ',cond)
     ,(if msg
-	 `(ERROR "~S" ,msg)
-	 `(ERROR "Entering debugger!"))))
+         `(ERROR "~S" ,msg)
+         `(ERROR "Entering debugger!"))))
 
 (pushnew :ASSERT! *features*)
 @
@@ -123,21 +151,11 @@ The following macro can be used to declare assertions.
 (export 'assert!)
 @
 
-\subsection{Errors}
-
-The following macro can be used to describe an error.
-
-<<Error message system>>=
-(defmacro xerror (&rest msg)
-  `(LET ((*PRINT-READABLY* t)) (ERROR ,@msg)))
-@ %def xerror
-
-<<Export-list of module \module{base}>>=
-(export 'xerror)
-@
-
 %% $Log$
-%% Revision 1.12  1996/07/11 14:15:36  kehr
+%% Revision 1.13  1996/07/22 15:52:28  kehr
+%% Changed the error-system-macros.
+%%
+%% Revision 1.12  1996/07/11  14:15:36  kehr
 %% Complete Major checkin before changing the letter-groups.
 %%
 %% Revision 1.11  1996/07/03  18:41:34  kehr
