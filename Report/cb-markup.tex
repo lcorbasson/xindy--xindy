@@ -9,12 +9,12 @@
 % (history at end)
 
 %\documentclass[titlepage,11pt]{article}
-\documentclass[titlepage,11pt,draft]{article}
+\documentclass[11pt,draft]{article}
 
 \usepackage{jsdoc}
 \usepackage{a4-9}
 \usepackage{xspace}
-%\usepackage{itititle}
+\usepackage{itititle}
 \usepackage{environments}
 %\usepackage{ifthen}
 %\usepackage{theorem}
@@ -102,14 +102,14 @@
 
 \date{\today}
 
-\title{A Simple Context-Based Markup Algorithm and its Efficient
+\title{A Simple Context-Based\\ Markup Algorithm and its\\Efficient
   Implementation in \textsc{Clos}\\[2ex]
   \Huge\sffamily DRAFT VERSION
   }
 
 \author{Roger Kehr}
 
-%\iti{Bericht TI-XXX/97}
+\iti{Bericht TI-XXX/97}
 
 \maketitle
 
@@ -140,11 +140,11 @@
     Markup algorithms are often used to tag data structures with
     markup for representation purposes. They often follow an
     event-dispatching mechanism that allows the declaration of markup
-    tags depending on the context in which an event is occurs.
+    tags depending on the context in which an event occurs.
 
     We describe the markup algorithm which is used in the \xindy index
     processor and show how the multi-method dispatching facilities of
-    \CLOS could be easily exploited to obtain an efficient
+    \CLOS can be easily exploited to obtain an efficient
     implementation.
   \end{abstract}
 }
@@ -170,15 +170,15 @@ steps such as typesetting.
 We are interested in the problem of \term{tagging} the data to obtain
 a specific markup needed for typesetting purposes. This problem is
 easily solvable as long as the way how markup is assigned to data
-objects is static. In this case the markup process can be directly
+objects is fixed. In this case the markup process can be directly
 coded into some algorithm.
 
 If there is a need for \term{configurable markup}, the situation is
 more complicated. For an illustration of the difference imagine a tree
-consisting of nodes representing different objects that have to be
-output.  Usually one traverses the tree and emits appropriate markup
-tags when moving from one node to another. This kind of markup is
-called \term{environment-based markup}, since the objects (in our case
+consisting of nodes of different types that have to be output.
+Usually one traverses the tree and emits appropriate markup tags when
+moving from one node to another. This kind of markup is called
+\term{environment-based markup}, since the objects (in this example
 the nodes of the tree) are encapsulated into an environment of markup
 tags.
 
@@ -186,7 +186,7 @@ In almost all cases the nodes of a particular type are tagged
 uniformly in the same manner. This kind of markup is often used to
 \term{dump} a representation of a tree into a data stream. However,
 there are application domains for which one wants to make the issued
-markup tags depending to the node's position within the tree.
+markup tags depending on the node's position within the tree.
 
 Therefore, we can roughly divide the markup schemes into
 \term{context-free} and \term{context-based} (or
@@ -196,9 +196,10 @@ concentrate on context-based markup.
 The rest of this paper is organised as follows. In
 section~\ref{relwrk} we first discuss existing systems that already
 contributed solutions to this kind of problem. In section~\ref{CCBM}
-we describe the application domain for which we needed an efficient
+we describe the application domain for which we needed a simpler
 solution to the problem. Finally we present our traversing algorithm
-and its efficient implementation in \CLOS~\cite{Keene:88}.
+and its efficient implementation in
+\CLOS~\cite{Gabriel:White:Bobrow:cacm:1991,Keene:88,Steele:common-lisp-2}.
 
 
 
@@ -218,27 +219,28 @@ Structure Information Set).
 
 Both systems read the output of a SGML-parser and construct an
 internal representation of the tree. This tree is then traversed in
-some order (typically depth first order) and appropriate markup is
-output when entering or leaving a node. The \term{context} of a node
-is different in both systems. In \COST all nodes along the path from
-the root node to the current node form a node's context. In \STIL the
-whole tree forms a node's context.
+some order (typically preorder) and appropriate markup is output when
+entering or leaving a node. The \term{context} of a node is different
+in both systems. In \COST all nodes along the path from the root node
+to the current node form a node's context. In \STIL the whole tree
+forms a node's context.
 
 Both systems allow to specify markup depending on the particular
 context in a very powerful way. Each SGML element is represented as
 the instance of a particular class (\COST uses [incr
-Tcl]~\cite{McLennan:1995:NIT}, \STIL uses \CLOS~\cite{Keene:88} as
-their object systems). When a node is entered or left an event is
-generated. It is essentially a message sent to the current object
-which must offer an appropriate callback method.
+Tcl]~\cite{McLennan:1995:NIT}, \STIL uses \CLOS as their underlying
+object systems). When a node is entered or left an event is generated.
+This essentially is a message sent to the current object whose class
+must offer an appropriate callback method.
 
-The user of these systems simply binds methods to the element classes
-that output the desired markup. Both systems offer a rich set of
-primitives to make the context information available inside these
-methods.
+The user of these systems simply binds methods to these classes that
+output the desired markup. Both systems offer a rich set of primitives
+to make the context information available inside the method bodies
+that have to be written by the end-user.
 
 Thus, one can implement very powerful context-based markup strategies
-in a very declarative manner.
+with a mixture of declarative specification and functional
+descriptions.
 
 
 
@@ -256,41 +258,44 @@ The nodes of the tree are instances of internally defined classes as
 well as user-defined classes. An example of such user-defined classes
 are the so-called \term{location classes} that can be specified in the
 \term{index style}\footnote{The index style contains a description of
-  the occuring location classes and other objects.}. Other nodes in the
-tree are lists containing other objects as their elements. Since the
-markup of different location classes may be different, we decided to
-offer to the users a context-based markup scheme to be sufficient
-powerful.
+  the occuring location classes and other objects.}. Location classes
+can be page numbers, section numbers, or other kinds of location
+references for which a class definition must be supplied in the index
+style. As the markup of different location classes may be different
+(e.g.\ page numbers are encapsulated into other markup than section
+numbers), we decided to offer to the users a context-based markup
+scheme to be sufficient powerful. Other nodes in the tree are lists
+containing other objects as elements.
+
 
 For the intended application domain the functionality of systems such
 as \textsc{Stil} was not appropriate and we aimed for a more efficient
 solution to the markup problem.\footnote{Especially writing \CLOS
   methods cannot be expected by any non-programmer user.} As a first
 restriction we decided to make available only a subset of the elements
-along the path as a node's context. Furthermore we observed that most
-often there is a need for making the attributes of an instance
+along the path as a node's context. Furthermore we observed that in
+many cases there is a need for making the attributes of an instance
 accessible as context information.
 
 After these simplification steps we ended up in a very simple model.
 The context information for a particular node did not exceed four
-different objects. The basic traversing order was the depth first
-order and events were generated when entering a node and when leaving
-a node. For list nodes we additionally generated an event when moving
-from one element in the list to its successor.
+different objects. The basic traversing order was preorder and events
+were generated when entering a node and when leaving a node. For list
+nodes we additionally generated an event when moving from one element
+in the list to its successor.
 
 
 \subsection{An Efficient Implementation in CLOS}
 
-The implemented markup system consists of two different parts, (1) the
-markup algorithm traversing the data structure and raising appropriate
+The implemented markup system consists of two parts, (1) the markup
+algorithm traversing the data structure and raising appropriate
 events, and (2) the user interface, establishing the corresponding
 event bindings.
 
-We continue with a description of the underlying context-based markup
-scheme and a description of the dispatching mechanism which is
-directly implemented using \CLOS method calls. Finally we describe the
-user interface responsible for the dynamic establishing of event
-bindings.
+We continue with the description of the underlying context-based
+markup scheme and the dispatching mechanism which is directly
+implemented using \CLOS method calls. Finally we describe the user
+interface responsible for the dynamic establishing of event bindings.
 
 
 
@@ -333,20 +338,28 @@ using a \term{single-argument dispatch}, we use in \xindy{} the
 \term{multi-method dispatch facilities} of \CLOS to implement the
 event bindings. The current context of a node is entirely passed as
 the method's arguments to the multi-method dispatcher of \CLOS that
-finds the appropriate method.
+finds the appropriate method. In \STIL{} there is only one method
+bound to a class and the method itself is reponsible for issuing the
+desired markup. Hence, the user of \STIL{} is forced to write a
+\Lisp-function that (a) accesses the necessary context of the node
+using functions, and (b) uses the results obtained from the context
+queries to output appropriate markup. This functional description of
+defining markup has been replaced in \xindy{} by a pattern-oriented,
+purely declarative specification which is less powerful though in our
+opinion better understandable by the end-user.
 
 The method definitions make heavy use of the
 \texttt{eql}-specialisation feature of method arguments. This feature
 specialises a method not only on a certain class, which is usually the
 case in traditional object-oriented languages, but rather specialises
-on a single instance which can be determined at run-time. This makes
-it possible to specialise an event-binding to only a particular subset
-of the context arguments.
+on a single instance which can be determined at run-time. This allows
+to specialise an event-binding to only a particular subset of the
+context arguments.
 
 A sample method that is called in response to an event generated when
 entering a location reference owning the attribute \emph{definition},
 belonging to class \emph{pagenums}, and being positioned at an
-arbitrary depth is represented through the following method.
+arbitrary depth is represented through the following method:
 
 {\small\begin{verbatim}
    (defmethod do-markup-locref-open
@@ -362,11 +375,12 @@ arbitrary depth is represented through the following method.
     with the argument to the \texttt{eql}-specialiser. The notation
     \texttt{\#<...>} simply denotes an instance of some class.} to an
   attribute instance and a location reference class
-  instance\footnote{Location classes are themselves instances of
-    another class.}. The above method is specialised to only two of
-  three arguments. Since the argument \texttt{depth} is not
-  specialised any further this method matches all location references
-  of the given class and attribute appearing at any depth.
+  instance\footnote{In the \xindy{}-implementation location classes
+    are themselves instances of another class.}. The above method is
+  specialised to only two of three arguments. Since the argument
+  \texttt{depth} is not specialised any further this method matches
+  all location references of the given class and attribute appearing
+  at any depth.
 
 
 \subsubsection*{The User Interface}
@@ -377,7 +391,9 @@ the user interface consists of \Lisp macros expanding to appropriate
 method definitions. Defining methods at run-time is a very powerful
 property of \CLOS on which this approach relies mostly.
 
-All markup commands in index style have the following form:
+\newpage
+
+\noindent All markup commands in index style have the following form:
 %%
 \def\itarg#1{\mbox{\normalfont\emph{#1}}}
 \def\rmarg#1{\mbox{\normalfont #1}}
@@ -387,17 +403,17 @@ All markup commands in index style have the following form:
        \rmarg{[\emph{context-dependent options such as} \texttt{:attr}, \texttt{:group}, \texttt{:class}, \texttt{:depth}, \ldots]})
 \end{alltt}}
 
+\enlargethispage{\baselineskip}
+
 \noindent Since all fields are optional one can assign
 the markup to only a subset of the context arguments. The accessible
 context arguments depend on the type of the object that is to be
-output. We have not made the whole context available to the user, but
+output. We have not made available the whole context to the user, but
 instead have selected a meaningful subset for each markup command.
 
-\newpage
-
-The \term{context-based markup specification} allows to assign a
-generic markup, for instance, for all location reference classes with
-the command
+The \term{context-based markup specification} allows, for example, to
+assign a generic markup for all location reference classes with the
+command
 {\small%%
 \begin{verbatim}
    (markup-locref :open  "\generic{"
@@ -420,11 +436,9 @@ above situation the second markup is selected for a location reference
 of class \texttt{special-class}, but for all others the generic markup
 is used, as defined by the first command.
 
-%\enlargethispage{\baselineskip}
-
 As an example of the run-time definition of methods consider the
 following user interface declaration, which is specialised on all
-three possible arguments,
+three arguments,
 %%
 {\small\begin{verbatim}
    (markup-locref :open "\defin{" :close "}"
@@ -444,7 +458,6 @@ three possible arguments,
           (locrefcls (eql #<class     "pagenums">))
           (depth     (eql 1)))
        (do-markup-string "\defin{"))
-
      (defmethod do-markup-locref-close
          ((attr      (eql #<attribute "definition">))
           (locrefcls (eql #<class     "pagenums">))
@@ -452,15 +465,15 @@ three possible arguments,
        (do-markup-string "}")))
 \end{verbatim}
   }%%
-\noindent Thus, we use \texttt{eql}-specialisation on instances for
+\noindent Thus, we use \texttt{eql}-specialisation on objects for
 all three specifiers. Both methods simply output the open (resp.\
 close) tag by calling the function \texttt{do-markup-string}.
 
-A question that comes up when analysing this implementation is that of
-the \term{metrics} that are used to find the \term{most-specialised}
-method of a certain set of methods. The problem arises when
-considering an event with the arguments \emph{attr=definition},
-\emph{locrefcls=pagenums} that must dispatch to exactly one of the two
+With this implementation the question of the \term{metrics} had to be
+answered that that is used to find the \term{most-specialised} method
+of a certain set of methods. The problem arises when considering an
+event with the arguments (\emph{attr=definition},
+\emph{locrefcls=pagenums}) that must dispatch to exactly one of the two
 following methods:
 
 {\small%%
@@ -475,15 +488,17 @@ following methods:
 \end{verbatim}
   }
 
-\noindent Both methods match the given event but since exactly one method must
-be called the dispatcher must somehow decide what is the most
-specialised method of both. Since the method dispatcher of \CLOS has a
-built-in metric that always finds one most-specialised method we
-simply use it to resolve this kind of ambiguity for us.\footnote{In
-  \CLOS the first method would be selected since the first argument
+\noindent Both methods match the given event but since exactly one
+method must be called the dispatcher must somehow decide what is the
+most specialised method of both. Since the method dispatcher of \CLOS
+has a built-in metric that always finds one most-specialised method we
+simply use it to resolve this kind of ambiguity.\footnote{In \CLOS the
+  first method would be selected since the first argument
   \emph{attribute} is more special than the second attribute. We have
   chosen the positions of the arguments in a way that seems to be most
-  useful in practice.}
+  useful in practice.} If it is not resolved as desired one can define
+another more-specialised method that resolves this amiguity
+explicitly.
 
 \bigskip
 
@@ -491,11 +506,12 @@ simply use it to resolve this kind of ambiguity for us.\footnote{In
 
 \smallskip
 
-\noindent A common way of tagging ranges of location references is as
-follows: a range of length 1 is printed with the starting page number
-and the suffix `f.', those of length 2 with suffix `f\kern0ptf.', and
-all others in the form `$x$--$y$'. Assume we want to do this for the
-location class \emph{pagenums} we can specify the markup as follows:
+\noindent A common way of tagging ranges of location references in an
+index entry is as follows: a range of length 1 is printed with the
+starting page number and the suffix `f.', those of length 2 with
+suffix `f\kern0ptf.', and all others in the form `$x$--$y$'. Assuming
+we want to achieve this for the location class \emph{pagenums} we can
+specify the markup as follows:
 
 {\small\begin{verbatim}
   (markup-range :class "pagenums" :close "f."  :length 1 :ignore-end)
@@ -504,15 +520,17 @@ location class \emph{pagenums} we can specify the markup as follows:
 \end{verbatim}
     }
 
-\noindent The first two commands specialise on two different depths,
-whereas the third command can be seen as the otherwise-case that is
-invoked for all ranges which are not of length one or two. The special
-switch \texttt{:ignore-end} causes the second location reference to be
-suppressed in the resulting output.
+\noindent The first two commands specialise on two different range
+lengths, whereas the third command can be seen as the otherwise-case
+that is invoked for all ranges which are not of length one or two. The
+special switch \texttt{:ignore-end} causes the second location
+reference to be suppressed in the resulting output.
 
 \bigskip
 
-\noindent\textsf{Example 1: Tagging of Hierarchies}
+\newpage
+
+\noindent\textsf{Example 2: Tagging of Hierarchies}
 
 \smallskip
 
@@ -528,13 +546,13 @@ markup commands:
    (markup-locref-layer-list :class "appendices" :sep "-")
 \end{verbatim}
 }
-\noindent The first command indicates that all location references shall be
-separated by a comma followed by a blank character. The second line
-says that the different layers the location references consist of
-shall be separated by a hyphen character. The location reference
-\emph{A-1} consists of the following list of layers (\emph{A}\
-\emph{1}). Our example could also be represented using a much more
-compact form:
+\noindent The first command indicates that all location references
+should be separated by a comma followed by a blank character. The
+second line says that the different layers the location references
+consist of shall be separated by a hyphen character. The location
+reference \emph{A-1} consists of the following list of layers
+(\emph{A}\ \emph{1}). Our example could also be output using a much
+more compact form:
 \begin{center}
    \itshape A 1, 7, 11; B 3, 4, 5; C 1, 8, 12, 13, 22
 \end{center}
@@ -549,27 +567,30 @@ desired result:
    (markup-locref-list :class "appendices" :depth 1 :open " " :sep ", ")
 \end{verbatim}
 }
-\noindent The locations at depth zero are separated by a semicolon whereas
-the ones at depth one are separated by a colon.
+\noindent The location references at depth zero are separated by a
+semicolon whereas those at depth one are separated by a colon.
 
 
 \section{Conclusion}
 
-We have presented a very efficient implementation of a simple
-context-based markup algorithm in \CLOS. The implementation mostly
-benefits from three interesting properties of \CLOS, (a) the ability
-to define methods at run-time using the macro expansion mechanism, (b)
-the \texttt{eql}-specialisation feature that allows specialisation of
+We have presented an efficient implementation of a simple
+context-based markup algorithm in \CLOS. Our notion of efficiency
+mainly concerns the elegance and simplicity of the implementation from
+the programmers perspective.\footnote{This does not necessarily mean
+  that the implementation is fast.} Our implementation mostly benefits
+from three interesting properties of \CLOS, (a) the ability to define
+methods at run-time using the macro expansion mechanism, (b) the
+\texttt{eql}-specialisation feature that allows specialisation of
 methods down to single instances of a class, and (c) the multi-method
-dispatching paradigm. These features made it possible to implement the
-markup algorithm with minimal effort. The resulting code is extremely
-compact and easily maintainable and extensible.
+dispatching paradigm. These features allow to implement the markup
+algorithm with minimal effort. The resulting code is extremely compact
+and easily maintainable and extensible. We think that our example is a
+valuable demonstration of the usefulness of programming concepts such
+as multi-methods.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%\newpage
 
 \bibliographyIntroduction={The following books and papers were
   referenced in this report.}
@@ -584,6 +605,9 @@ compact and easily maintainable and extensible.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % $Log$
+% Revision 1.3  1997/05/23 15:58:52  kehr
+% After Waldschmidts corrections.
+%
 % Revision 1.2  1997/05/02 12:10:59  kehr
 % Minor corrections.
 %
