@@ -18,7 +18,7 @@ XCOMM continue in Imakefile
 all::manual.tex manual.info manual.html manual.txt
 
 manual.tex: manual.sgml
-	    sgml2latex manual.sgml
+	    sgml2latex -2e manual.sgml
 
 TeXTarget(latex,manual)
 
@@ -45,7 +45,10 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.2  1996/05/29 15:41:15  kehr
+ * Revision 1.3  1996/06/03 10:00:36  kehr
+ * Modified Imakefile and more Documentation.
+ *
+ * Revision 1.2  1996/05/29  15:41:15  kehr
  * Second checkin, after the Imakefile has been completed and tested.
  *
  * Revision 1.1  1996/05/29  15:29:49  kehr

@@ -210,8 +210,8 @@ The format of the raw-index interface of xindy defined as follows:
 	    | { :xref string-list [:xref-type string] } } )
 </code>
 
-Here the braces &lsqb; and &rsqb; denote optional parts of the syntax
-and &lcub; and &rcub; denote the groups of elements. However the
+Here the braces <tt/[/ and <tt/]/ denote optional parts of the syntax
+and <tt/{/ and <tt/}/ denote the groups of elements. However the
 enclosing round braces <em/are/ part of the syntax and must be
 supplied. The pseudo-variable <em/string/ is a sequence of characters
 surrounded by double-quotes, e.g.
