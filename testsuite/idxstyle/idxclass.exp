@@ -71,7 +71,7 @@ xsend {(add ic loccls-Alph-num)}
 expect -re "\#<INDEX.*>.*$prompt$"
 
 xsend {(pprint *indexstyle*)}
-expect -re ".*I.*$prompt" { pass "$test" }
+expect -re ".*indexclass.*rules.*hook.*$prompt$" { pass "$test" }
 
 #
 # test finders

@@ -13,10 +13,16 @@ CVSAdd(Imakefile)
 CVSAdd(config site.exp)
 CVSAdd(base locref index idxstyle)
 
+clean::
+	$(RM) *.sum *.log
+
 /*======================================================================
  *
  * $Log$
- * Revision 1.3  1995/12/15 17:10:54  kehr
+ * Revision 1.4  1996/01/09 14:29:33  kehr
+ * .
+ *
+ * Revision 1.3  1995/12/15  17:10:54  kehr
  * .
  *
  * Revision 1.2  1995/11/22  16:45:46  kehr

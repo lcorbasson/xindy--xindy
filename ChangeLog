@@ -1,3 +1,70 @@
+Tue Jan  9 01:26:22 1996    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Re-implemented the submodule `index'.
+	  (2 hrs)
+
+Thu Jan  4 21:53:12 1996    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Yesterday I discovered that my topsort-solution was only the
+	  half of the real solution. Actually, I need a second topsort for
+	  the category-attibute-groups. I'd never thought that there are
+	  so many difficult details to implement. It's somehow frustrating
+	  to come one step further just to see the next problem to solve.
+	  I worked intensively the last days and it seems that I made only
+	  small progress -- Argh !
+
+	* Today I finished the processing of location-references. Made
+	  several additions to category-attributes. Building of ranges was
+	  carefully implemented and intensively tested by hand. I have no
+	  idea how well the implementation is and how fast processing of
+	  large indexes will be but the implemented steps are absolutely
+	  necessary and there is actually a lot of things to do to process
+	  location-references with a lot of rules.
+	  (7 hrs)
+
+Wed Jan  3 03:42:14 1996    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Totally tired...
+
+	* Its now 12:00 and I slept quite well. Yesterday I finished the
+	  merge-rule stuff. It was or more complicated than I expected. My
+	  specification contained a small hole that could only be solved
+	  by topsorting the drop-if-merged-rules. Now the dropping of
+	  location-references in the meaning of removing should also work.
+	  (10 hrs)
+
+	  It is always those little details that cause a lot of trouble...
+
+Sun Dec 31 19:01:08 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Made good progress today. Nearly finished the application of
+	  substitution-rules. Introduced all new rules and their hooks in
+	  the indexclass. Most of the work was done in submodule
+	  `indexclass'. I'm really astonished that I've got to work there
+	  that much. Made some improvements in the submodule `locref'.
+
+Sat Dec 30 20:00:19 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Puh, I'm tired. Today I was really f***ed because that typeless
+	  LISP caused myself to make several buggies. I finished the whole
+	  setup for substitution-rules including their hooks. I had to
+	  modify the category-attributes and the catattr-groups because
+	  there were some logical mistakes inside. It took me quite a
+	  while and somtimes I think that I'm really slow. But I shouldn't
+	  forget: I set up several pretty-printers, and detected some
+	  problems during the compilation process.
+	  (6 hrs)
+
+Fri Dec 29 18:59:40 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Today I started implementing the indexentry-processing. Re-used
+	  a lot of code. Made minor modifications in several modules. Most
+	  work was done in submodule `idxentry' that will be my working
+	  module for the next days. Finished the separation of
+	  location-references into location-class-groups. Next will be the
+	  application of substitute-if-double-rules.
+	  (5 hrs)
+
 Mon Dec 18 22:08:19 1995    (kehr@eliade.hrz.th-darmstadt.de)
 
 	* Finished some tests in submodules `idxclass' and `idxrule'.
@@ -34,7 +101,8 @@ Wed Dec 13 17:44:41 1995  Roger Kehr  <kehr@spelunke>
 	  for it. It seems to work quite well. It was a lot of work and I
 	  spent a while to precisely describe what is going on. But I
 	  think implementation is now just a matter of time and less
-	  intellectual effort. (5 hrs)
+	  intellectual effort.
+	  (5 hrs)
 
 Mon Dec 11 18:18:20 1995  Roger Kehr  <kehr@spock>
 
@@ -52,7 +120,8 @@ Sun Dec 10 23:18:16 1995    (kehr@eliade.hrz.th-darmstadt.de)
 	  theoretically). Today I now added a semi-formal description of
 	  the process into submodule `idxentry'. The task is now to think
 	  about some implementation details and to code the whole stuff.
-	  All in all I feel comfortable with it. (5 hrs)
+	  All in all I feel comfortable with it.
+	  (5 hrs)
 
 Thu Dec  7 19:16:05 1995  Roger Kehr  (kehr@spock)
 
@@ -103,7 +172,8 @@ Sun Nov 19 19:30:22 1995  Roger Kehr  (kehr@spock)
 	  tried to figure out, how their interaction works. I compiled
 	  DejaGnu for rs6000-platform. I want to use it for intensive
 	  regression tests. The module structure seems to work well right
-	  now and I hope to make further progress in the next week. (6 hrs)
+	  now and I hope to make further progress in the next week.
+	  (6 hrs)
 
 Tue Oct 17 16:50:45 1995  Roger Kehr  (kehr@spock)
 

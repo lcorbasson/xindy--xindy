@@ -1,0 +1,39 @@
+#
+# testing some indexrules
+#
+
+# (load 'idxstyle)
+# (use-package 'idxstyle)
+# (use-package 'locref)
+# (use-package 'clos)
+#
+
+xsend {(setq ic (create-indexclass "default"))}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(mapc #'(lambda (x) (add ic (make-category-attribute x))) '("bold" "italic" "slanted" "default" "typewriter"))}
+expect -re ".*(.*).*$prompt$" { pass "$test" }
+
+xsend {(initialize-category-attributes '(("bold" "italic" "slanted") "default" "typewriter") (get-cat-attrs ic) (get-implicit-subst-rules ic))}
+expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }
+
+xsend {(add-explicit-substitution-rule ic (lookup-catattr ic "default") (lookup-catattr ic "typewriter"))}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add-explicit-substitution-rule ic (lookup-catattr ic "slanted") (lookup-catattr ic "typewriter"))}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(add-explicit-substitution-rule ic (lookup-catattr ic "italic") (lookup-catattr ic "typewriter"))}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(pprint ic)}
+expect -re ".*indexclass.*$prompt$" { pass "$test" }
+
+xsend {(apply-substitution-hooks ic)}
+expect -re "\#<SUBST.*>.*$prompt$" { pass "$test" }
+
+xsend {(pprint ic)}
+expect -re ".*indexclass.*$prompt$" { pass "$test" }
+
+xsend {(pprint (topsort (get-implicit-subst-rules ic)))}
+expect -re ".*typewriter.*default.*slanted.*italic.*bold.*$prompt$" { pass "$test" }
