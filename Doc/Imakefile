@@ -15,7 +15,8 @@ XCOMM $Id$
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
-DISTRIBDIR = ../distrib/Doc
+DISTRIBDIR  = ../distrib/Doc
+HOMEPAGEDIR = $$HOME/.public_html/xindy-docs
 DOCS       = *.html *.dvi *.info *.txt *.ps
 MOREDOCS   = *.gif *.sgml README tutorial
 
@@ -23,6 +24,8 @@ Distrib: distrib
 
 distrib: all
 	cp -R $(DOCS) $(MOREDOCS) $(DISTRIBDIR)
+	(cd $(HOMEPAGEDIR) && $(RM) *)
+	cp *.html *.gif sort-rules.ps $(HOMEPAGEDIR)
 
 #define SGMLTarget(file)						@@\
 all:: file.sgml file.html file.dvi file.info file.txt file.ps		@@\
@@ -50,6 +53,7 @@ realclean::								@@\
 SGMLTarget(manual)
 SGMLTarget(tutorial)
 SGMLTarget(xindy-by-topic)
+SGMLTarget(sort-rules)
 
 CVSAdd(*.sgml)
 CVSAdd(*.gif)
@@ -65,6 +69,9 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
+ * Revision 1.12  1997/03/03 16:12:26  kehr
+ * *** empty log message ***
+ *
  * Revision 1.11  1997/02/07 15:24:01  kehr
  * Reorganised the by-Topic guide and removed the compatibility guide.
  *

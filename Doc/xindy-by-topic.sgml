@@ -128,13 +128,46 @@ Here are the most important differences between &xindy; and
 
 <descrip>
 
-<tag/Less command-line options./ &xindy; has dropped the usage of
-command-line options in favour of a well-defined indexstyle
-description language. Thus, options that could be activated at the
-command-line level of <tt/makeindex/ must now be specified in the
-indexstyle file. This sounds more restrictive than it is, because the
-indexstyle files can be composed from several modules which makes it
-possible to write style files in just a few lines of code.
+<tag/Internationalization/ <sf/xindy/ can be configured to process
+indexes for many languages with different letter sets and different
+sorting rules. For example, many roman languages such as Italian,
+French, Portuguese or Spanish contain accentuated letters such as
+&Agrave;, &Aacute;, &ntilde;. Other languages from northern Europe
+have letters like &Auml;, &Oslash;, &aelig; or &szlig; which often
+can't be processed by many index processors not talking about sorting
+them correctly into an index. The <sf/xindy/-system can be configured
+to process these alphabets by defining <em/sort/ and
+<em/merge-rules/ that allow expressing of language specific rules.
+One example of such a rule would be
+
+<verb>
+(sort-rule &quot;ä&quot; &quot;ae&quot;)
+</verb>
+
+defining that a word containing the umlaut-a will be sorted as if it
+contained the letters <tt/ae/ instead. This is one form of how the
+umlaut-a is sorted into german indexes. With an appropriate set of
+rules one can express the complete rules of a specific language.
+
+<tag/Location classes./ <tt/makeindex/ is able to recognize and
+process arabic numbers, roman numerals and letter-based alphabets as
+specifiers for the indexed location. Simple composite structures of
+these are also possible to process. This implicit recognition scheme
+has completely been dropped in favour of a well-defined and very
+powerful declaration scheme called <em/location-classes/. Thus,
+&xindy; initally does not know any location-class by default and
+must be instructed to accept certain location-classes. A typical
+declaration might look like:
+
+<tscreen><verb>
+(define-location-class "page-numbers" ("arabic-numbers"))
+</verb></tscreen>
+
+This declares that page numbers consist of the enumeration of the
+arabic numbers. The arabic numbers are referred to as <em/alphabets/.
+Users may use the pre-defined alphabets arabic numbers, roman
+numerals, etc. or define new alphabets as needed. See the tutorial
+that comes with this distribution for some examples.
 
 <tag/The concept of attributes./ With <tt/makeindex/ one can assign a
 markup to each index entry using the encapsulators (usually following
@@ -168,25 +201,13 @@ This makes it possible to implement <em/checked/ cross references,
 i.e. cross-refernces that can be checked if they point to an existing
 index entry instead of somewhere ``behind-the-moon''.
 
-<tag/Location classes./ <tt/makeindex/ is able to recognize and
-process arabic numbers, roman numerals and letter-based alphabets as
-specifiers for the indexed location. Simple composite structures of
-these are also possible to process. This implicit recognition scheme
-has completely been dropped in favour of a well-defined and very
-powerful declaration scheme called <em/location-classes/. Thus,
-&xindy; initally does not know any location-class by default and
-must be instructed to accept certain location-classes. A typical
-declaration might look like:
-
-<tscreen><verb>
-(define-location-class "page-numbers" ("arabic-numbers"))
-</verb></tscreen>
-
-This declares that page numbers consist of the enumeration of the
-arabic numbers. The arabic numbers are referred to as <em/alphabets/.
-Users may use the pre-defined alphabets arabic numbers, roman
-numerals, etc. or define new alphabets as needed. See the tutorial
-that comes with this distribution for some examples.
+<tag/Less command-line options./ &xindy; has dropped the usage of
+command-line options in favour of a well-defined indexstyle
+description language. Thus, options that could be activated at the
+command-line level of <tt/makeindex/ must now be specified in the
+indexstyle file. This sounds more restrictive than it is, because the
+indexstyle files can be composed from several modules which makes it
+possible to write style files in just a few lines of code.
 
 <tag/Raw index parser./ The parser built into <tt/makeindex/ has
 completely been separated from the core &xindy; system. &xindy;
@@ -259,7 +280,7 @@ releases if necessary.
 <sect1>How to write my first index style?
 <p>
 
-Copy the file <tt>markup/tex/makeidx.xdy</tt> from the library to your
+Copy the file <tt>tex/makeidx.xdy</tt> from the library to your
 local directory. It is documented in in a way that should make it easy
 to fill in new commands or remove or modify others.
 

@@ -1170,16 +1170,27 @@ the keyword argument <tt/:class/.
 <!-- ================================================================= -->
 
 <label id="markup-locref-layer-list">
+<label id="markup-locref-layer">
 <cmddesc>
+(markup-locref-layer      [:open string] [:close string]
+		          [:depth integer] [:layer integer]
+			  [:class locref-class])
+
 (markup-locref-layer-list [:open string] [:close string]
 			  [:sep string]
-		          [:depth integer] [:class locref-class])
+		          [:depth integer]
+			  [:class locref-class])
 </cmddesc>
 
-A location reference contains a list of location reference layers.
-This markup command can be used to markup this list. It specializes on
-the class of the location references and the depth (if sub-references
-are used).
+A location reference contains a list of location reference layers. The
+second markup command can be used to markup this list. It specializes
+on the class of the location references and the depth (if
+sub-references are used).
+
+The first command allows to tag the elements of a layer list
+differently. The first element of this list can is specialisable with
+<tt/:layer 0/, the next element with <tt/:layer 1/, etc. See the next
+example for an example.
 
 <!-- ================================================================= -->
 
@@ -1210,16 +1221,18 @@ keyword argument <tt/:hierdepth 2/ informs <sf/xindy/ to markup these
 location references in a hierarchical form. With the commands
 
 <verb>
-  (markup-locref-list           :sep "; "
-		      :depth 0  :class "Appendix")
-  (markup-locref-list :open " " :sep ","
-                      :depth 1  :class "Appendix")
+  (markup-locref-list            :sep "; "
+		       :depth 0  :class "Appendix")
+  (markup-locref-list  :open " " :sep ","
+                       :depth 1  :class "Appendix")
+  (markup-locref-layer :open "{\bf " :close "}" :layer 0
+		       :depth 0  :class "Appendix")
 </verb>
 
 we obtain a markup sequence for some example data that could look like
 
 <verb>
-  A 1,2,5; B 5,6,9; D 1,5,8; ...
+  {\bf A} 1,2,5; {\bf B} 5,6,9; {\bf D} 1,5,8; ...
 </verb>
 
 
@@ -1796,6 +1809,8 @@ searchpath is added to the entire searchpath. See the command
 <ref id="markup-locref" name="<tt>markup-locref</tt>">
 <newline>
 <ref id="markup-locref-class" name="<tt>markup-locref-class</tt>">
+<newline>
+<ref id="markup-locref-layer" name="<tt>markup-locref-layer</tt>">
 <newline>
 <ref id="markup-locref-layer-list" name="<tt>markup-locref-layer-list</tt>">
 <newline>
