@@ -14,7 +14,7 @@ ALLTESTS       = attr1 attr2 startup mappings infII xref-1 \
 TESTS 	       = $(ALLTESTS)
 XINDY_DIR      = ../../binaries/$(XINDY_PLATFORM)
 LOGFILE	       = -l $$tst.xlg
-TRACE	       = -L 2 # -t
+TRACE	       = -L 1
 
 testsuite: banner clean tests compare
 
