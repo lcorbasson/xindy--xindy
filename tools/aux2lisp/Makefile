@@ -11,8 +11,8 @@
 # Modify the libraries according to your site.
 #
 
-FLEX    = flex -t
-FLEXLIB = -L/usr/local/lib -L/usr/local/lib/lib -lfl
+LEX    = lex -t
+LEXLIB = -ll
 
 #
 # Usual stuff
@@ -25,10 +25,10 @@ CFLAGS = -O2
 all: tex2xindy
 
 tex2xindy.c: tex2xindy.l
-	$(FLEX) tex2xindy.l > tex2xindy.c
+	$(LEX) tex2xindy.l > tex2xindy.c
 
 tex2xindy: tex2xindy.c
-	$(CC) $(CFLAGS) tex2xindy.c -o tex2xindy $(FLEXLIB)
+	$(CC) $(CFLAGS) tex2xindy.c -o tex2xindy $(LEXLIB)
 
 clean: force
 	$(RM) tex2xindy tex2xindy.c

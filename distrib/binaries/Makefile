@@ -33,8 +33,8 @@ TEX2XINDYL = $(TOPDIR)/bin/tex2xindy.l
 RM 	   = /bin/rm -f
 LIBDIR     = /usr/local/lib/xindy/
 CFLAGS 	   = -O2
-FLEX       = flex -t
-FLEXLIB    = -L/usr/local/lib -L/usr/local/lib/lib -L/usr/local/lib/flex -lfl
+LEX       = lex -t
+LEXLIB    = -ll
 
 
 # Target section
@@ -90,10 +90,10 @@ PLATFORM:
 	   fi
 
 tex2xindy.c: $(TEX2XINDYL)
-	$(FLEX) $(TEX2XINDYL) > tex2xindy.c
+	$(LEX) $(TEX2XINDYL) > tex2xindy.c
 
 tex2xindy: tex2xindy.c
-	$(CC) $(CFLAGS) tex2xindy.c -o tex2xindy $(FLEXLIB)
+	$(CC) $(CFLAGS) tex2xindy.c -o tex2xindy $(LEXLIB)
 
 clean: force
 	$(RM) *.fas *.lib
