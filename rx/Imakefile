@@ -54,7 +54,7 @@ CLinkProgramTarget(test-ordrules,test-ordrules.o,,libordrules.a rx/librx.a)
 
 CVSAdd(rxsub.h rxsub.c regexi.c clisp.h)
 CVSAdd(mkind.h ordrules.h ordrules.c)
-CVSAdd(debug.h)
+CVSAdd(debug.h README)
 CVSAdd(*.lsp)
 CVSAdd(*.nw)
 CVSAdd(Imakefile)
@@ -64,7 +64,10 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.5  1996/07/18 15:56:35  kehr
+ * Revision 1.6  1996/07/22 15:55:59  kehr
+ * Added support for SGI-IRIX-5.3.
+ *
+ * Revision 1.5  1996/07/18  15:56:35  kehr
  * Checkin after all changes that resulted from the define-letter-group
  * modification were finished. Additionally I found an ugly bug in the
  * ordrules.c file that was discovered when running the system under

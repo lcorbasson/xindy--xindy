@@ -44,6 +44,11 @@ the platform.
 #   define  CONF_INCLUDED
 #endif
 
+/* IRIX 5.x */
+#if defined(__mips)
+#   include "clisp.h-files/mips-irix.clisp.h"
+#   define  CONF_INCLUDED
+#endif
 
 /*
  * configuration header files for classes of systems,
@@ -63,7 +68,10 @@ the platform.
 /*======================================================================
  *
  * $Log$
- * Revision 1.1  1996/07/18 15:56:36  kehr
+ * Revision 1.2  1996/07/22 15:56:03  kehr
+ * Added support for SGI-IRIX-5.3.
+ *
+ * Revision 1.1  1996/07/18  15:56:36  kehr
  * Checkin after all changes that resulted from the define-letter-group
  * modification were finished. Additionally I found an ugly bug in the
  * ordrules.c file that was discovered when running the system under
