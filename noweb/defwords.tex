@@ -28,6 +28,7 @@
 
 \newcommand{\tint}{\type{int}\xspace}
 \newcommand{\tchar}{\type{char}\xspace}
+\newcommand{\tbool}{\type{bool}\xspace}
 \newcommand{\tstring}{\type{string}\xspace}
 \newcommand{\tstringlist}{\type{stringlist}\xspace}
 \newcommand{\tlist}{\type{list}\xspace}
@@ -69,6 +70,16 @@
 \newcommand{\Fparent}{\func{parent}}
 \newcommand{\Fordnum}{\func{ordnum}}
 \newcommand{\Floccls}{\func{loccls}}
+
+\newcommand{\remark}[1]{%
+  \mbox{}\marginpar{\footnotesize\raggedright\hspace{0pt}\textsl{#1}}}
+
+\newcommand{\uip}{\remark{User Interface Primitive}}
+\newcommand{\suip}{\remark{UIP}}
+
+\newcommand{\List}[1]{\texttt{(}#1\texttt{)}}
+\newcommand{\opt}[1]{\mbox{$[$}#1\mbox{$]$}}
+\newcommand{\sw}[1]{\texttt{#1}}
 
 %%% Local Variables:
 %%% mode: latex

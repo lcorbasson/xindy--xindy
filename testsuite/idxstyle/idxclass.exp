@@ -21,12 +21,12 @@ expect {
 # create some location-class layers (empty markup)
 #
 
-xsend {(setq loccls-layer-digit (make-loccls-layer alph-digit nil))}
+xsend {(setq loccls-layer-digit (make-loccls-layer alph-digit))}
 expect {
     -re "\#<LOCCLS-LAYER.*>.*$prompt$" { pass "$test" }
 }
 
-xsend {(setq loccls-layer-a-h (make-loccls-layer alph-a-h nil))}
+xsend {(setq loccls-layer-a-h (make-loccls-layer alph-a-h))}
 expect {
     -re "\#<LOCCLS-LAYER.*>.*$prompt$" { pass "$test" }
 }
@@ -35,11 +35,11 @@ expect {
 # create some location-class separators (empty markup)
 #
 
-xsend {(setq separator-minus (make-loccls-separator "-" nil))}
+xsend {(setq separator-minus (make-loccls-separator "-"))}
 expect {
     -re "\#<LOCCLS-SEPARATOR.*>.*$prompt$" { pass "$test" }
 }
-xsend {(setq separator-dot (make-loccls-separator "." nil))}
+xsend {(setq separator-dot (make-loccls-separator "."))}
 expect {
     -re "\#<LOCCLS-SEPARATOR.*>.*$prompt$" { pass "$test" }
 }
