@@ -34,14 +34,16 @@ xindy runs. Its value will be set anew when dumping xindy on a
 particular platform.
 
 <<Global definitions>>=
-(defparameter *xindy-version*  "unknown")
-(defparameter *xindy-bin-version*  "unknown")
-(defparameter *xindy-platform* "unknown")
-@ %def *xindy-platform* *xindy-version*
+(defparameter *xindy-version*      "1.2")
+(defvar       lisp::*xindy-bin-version*)
+(defparameter *xindy-bin-version*  lisp::*xindy-bin-version*)
+(defparameter *xindy-platform*     "unknown")
+@ %def *xindy-platform* *xindy-version* *xindy-bin-version*
 
 <<Startup functions>>=
 (defun issue-startup-message ()
-  (info "~&This is xindy 1.0b (~A).~%" *xindy-platform*))
+  (info "~&This is `xindy' version ~A (~A binary version ~A).~%~%"
+	*xindy-version* *xindy-platform* *xindy-bin-version*))
 
 (defun startup (&key idxstyle rawindex output logfile
                      show-version markup-trace (trace-level 0))
@@ -218,6 +220,9 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
+%% Revision 1.14  1997/03/10 15:52:34  kehr
+%% Modified startup-banner.
+%%
 %% Revision 1.13  1997/03/03 16:00:12  kehr
 %% Added new markup command `markup-locref-layer'.
 %%
