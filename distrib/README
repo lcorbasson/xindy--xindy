@@ -5,25 +5,6 @@ xindy (`fleXible INDexing sYstem') is a flexible index-processor. See
 the files in directory ./Doc for a detailed description of what xindy
 does.
 
-This directory contains the distribution as of July 1996. It is
-organized as follows:
-
-  Doc/          Contains a Manual and a Tutorial in
-		html,dvi,ps,info,txt-formats
-
-  modules/	The library of pre-defined indexstyle-modules
-
-  binaries/     Some binaries separated into machine-depended
-	        subdirectories
-
-  src/          The source of the xindy-system. Contains several
-		scripts and tools forming the environment of xindy.
-
-  tests/        Contains a complete testsuite
-
-  contrib/      Contains additional programs that can be used to make
-		xindy work with various document-formatting systems
-
 
 This distribution is also available at
 
@@ -40,7 +21,8 @@ Currently we support binary-distributions for the following platforms:
     Linux ELF        i386
     AIX-3.2          rs6000
     HP-UX 9.x        hppa
-    SunOS 5.2-4      sun4m
+    Solaris 2.4      sun4m
+    Solaris 2.5      sun4m
     IRIX 5.3	     mips
 
 Everybody is encouraged to port xindy to new platforms. For any kind

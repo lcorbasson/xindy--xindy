@@ -3,46 +3,84 @@ $Id$
 
 This file describes how to install xindy on your system:
 
-1. Enter the directory one level above the current one (the directory
-   this file is in) by typing
+xindy is divided into two packages. A machine dependent one and a
+independent one. Since we expect that the machine dependent parts will
+rarely need patches, we separated both. After unpacking the archives
+you will obtain the following directory structure:
 
-        cd ..
+
+ xindy/		      The TOPLEVEL directory.
+
+  binaries/           Each of the machine-dependent packages will be
+		      unpacked into one of the following directories.
+
+        hppa-hpux/
+        i386-linux-elf/
+	mips-irix/
+	rs6000-aix/
+        sun4-solaris/
+
+
+  xindy-<version>/    This is the machine-independent part.
+
+        Doc/          Contains a Manual and a Tutorial in
+		      html,dvi,ps,info,txt-formats
+
+        modules/      The library of pre-defined indexstyle-modules
+
+        binaries/     Some binaries separated into machine-depended
+		      subdirectories
+
+        src/          The source of the xindy-system. Contains several
+		      scripts and tools forming the environment of
+		      xindy.
+
+        tests/        Contains a complete testsuite
+
+        contrib/      Contains additional programs that can be used to make
+      		      xindy work with various document-formatting
+      		      systems
+
+1. Take the most recent machine-independent package and unpack it
+   using
+
+	gtar xzvf xindy-<version>.tar.gz
+
+   It will unpack itself into the directory ./xindy/xindy-<version>/.
+
+   The directory ./xindy will now be the TOPLEVEL-directory in all
+   further steps.
+
+2. Enter the TOPLEVEL directory (see diagram above).
 
    Now establish the following link
 
         ln -s xindy-<version> current
 
-   with xindy-<version> being the directory where this INSTALL file is
-   stored. The following steps use this link to select the current
-   xindy-version. Thus you can keep several versions in parallel.
+   with xindy-<version> being the directory where the most recent
+   xindy-package is stored. The following steps use this link to
+   select the current xindy-version. Thus you can keep several
+   versions in parallel.
 
-2. If you not have received a binary distribution for your preferred
-   platform(s), get one and unpack it in the current directory with
+3. If you not have received a binary distribution for your preferred
+   platform(s), get one and unpack it in the TOPLEVEL-directory with
 
 	gtar xzvf xindy-<version>-<platform>.tar.gz
 
-   The binaries will be stored into the directory ./binaries/<platform>.
+   The binaries will be stored into the directory TOPLEVEL/binaries/<platform>.
 
-3. a) Change to the directory of the binary-distribution for which you
+4. a) Change to the directory of the binary-distribution for which you
       want to install the system, e.g.
 
 	  cd ./binaries/<platform>
 
-   b) Modify the `Makefile.platform' to reflect your systema paths,
+   b) Modify the `Makefile.platform' to reflect your system paths,
       etc. The directory where xindy looks for its runtime-system is
 
 	  LIBDIR    where the main executable `xindy.run', the dumped
 		    file `xindy.mem' and the indexstyle-modules go.
 
-   c) Generate the Makefile by running `make' on `Makefile.in'.
-      An example call might be
-
-	  make -f Makefile.in
-
-      If you ever change `Makefile.platform' again, simply type `make'
-      which will generate a new Makefile for you.
-
-   d) Build all programs by typing
+   c) Build all programs by typing
 
           make all
 
@@ -64,7 +102,7 @@ This file describes how to install xindy on your system:
        which compresses xindy.mem and stores it under the same name.
        This saves space but can result in a longer startup-phase.
 
-3. The next step would be to run the test suite on the whole system.
+5. The next step would be to run the test suite on the whole system.
    Type
 
 	make testsuite
@@ -72,7 +110,7 @@ This file describes how to install xindy on your system:
    to run all tests. This may last some minutes (go, drink a cup of
    coffee) but will hopefully report that it has not found any errors.
 
-4. After everything seems to be ok, you only need to install the
+6. After everything seems to be ok, you only need to install the
    system.
 
    If you have set the paths in `Makefile.platform' all files will be
@@ -84,10 +122,10 @@ This file describes how to install xindy on your system:
 
 	make install
 
-5. Read the manual and go through the tutorial with your preferred
+7. Read the manual and go through the tutorial with your preferred
    viewer/browser. They can be found in the Doc-directory.
 
-6. Have fun! (very important)
+8. Have fun! (very important)
 
 =====================================================================
 Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
