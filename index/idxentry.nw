@@ -22,13 +22,13 @@
 \ModuleTitle{}
 
 
-\section{Module \module{indexentry}}
+\section{Submodule \module{indexentry}}
 
 
 \subsection{Introduction}
 
 This module is responsible for the management of an indexentry. It is
-one of the main modules of the whole system. An indexentry is an
+one of the main submodules of the whole system. An indexentry is an
 object that holds the keywords of the indexentry (we currently
 distinguish the \emph{main-key, merge-key, sort-key} and
 \emph{print-key}), the corresponding list of location-references and
@@ -97,9 +97,11 @@ An indexentry consists of the following elements:
                              :locrefs  locrefs  :idxclass  idxclass))
 @ %def indexentry make-indexentry
 
-<<export-list of module \module{index}>>=
-(export '(indexentry make-indexentry))
-@ %def indexentry make-indexentry
+<<Export-list of submodule \module{index}>>=
+(export '(indexentry make-indexentry
+          get-main-key get-merge-key get-sort-key get-print-key
+          get-locrefs get-idxclass))
+@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -231,7 +233,7 @@ called \term{inheritance-operator}.\footnote{The idea is simply
   borrowed from similar notations which are used with variable
   substitutions in denotational semantics and unification.}
 
-\paragraph{Initally accessible data}
+\paragraph{Initially accessible data}
 
 \no We start with an initial set $R$ of location-references such that
 \[\forall l,k\in R: l\not=k\Rightarrow\fcatattr{l}\not=\fcatattr{k}\vee
@@ -409,118 +411,6 @@ This is separated into two stages:
 
 \subsubsection{Building of ranges}
 
-\subsubsection{Relations and their transitive hull}
-
-We already mentioned in \secref{sec:subs-if-dbl} that we need a
-transitive hull calculation base on the category-attibutes.  Because
-we calculate this only a few times with usually only a small number of
-elements we don't need to worry about an effective implementation.
-More interesting is a fast access to prove if two elements are in
-relation.
-
-The usual calculation-algorithm needs to know the whole set
-$V_i=\{v_{i,1},\ldots,v_{i,n}\}$ of neighbours of node $v_i$ for which
-holds $\forall v'\in V_i: v_i\rightarrow v'$. So we need a
-representation that is based on sets. We use association-lists with
-nodes as key and a list of neighbours as elements, \eg
-\begin{center}
-  ( (\emph{node$_1$} . (\emph{neighbours of node$_1$})) \ldots
-  (\emph{node$_n$}. ($n_i,n_j,\ldots,n_l$)) ).
-\end{center}
-%%
-\begin{note}
-  It is absolutely necessary that nodes with no neighbours are
-  represented in the relation, too. So a node $v$ with no successors
-  is represented in the relation as a \texttt{(acons $v$ $\{\}$)}.
-  Otherwise the algorithm will produce wrong results.
-\end{note}
-The following destructive function [[transitive-hull]] needs a weel-formed
-relation of the specified structure and returns the same modified
-relation which represents the transitive hull of the given relation.
-
-<<Transitive hull algorithm>>=
-(defun transitive-hull (relation)
-  (mapc #'(lambda (j)
-            (mapc #'(lambda (i)
-                      (when (member (car j) (cdr i))
-                        (mapc #'(lambda (k)
-                                  (when (member (car k) (cdr j))
-                                    (rplacd (last i)
-                                            (list (car k)))))
-                              relation)))
-                  relation))
-        relation))
-@ %def transitive-hull
-
-\no The relation is calculated once and used heavily afterwards. The
-only operation we need later is to check if $x$ is in relation to $y$
-or not. Therefore we transform the represenation now into a faster
-hash-table representation.
-
-The representation of the hashed elements is a pair ($x~y$) with $x,y$
-category-attributes. We simply traverse the relation and for each pair
-($x~y$) we [[cons]] both elements and use the result of the key for
-the hash-table. To accomplish an exact test we use keyword %%
-[[:test #'equal]] for the comparison function. (Another idea would be
-to use [[sxhash]] and use [[#'eql]] for hashing if we should need a
-speed-up)
-
-<<Transform relation into hash-table>>=
-(defun relation-to-hash (relation)
-  (let ((ht (make-hash-table :test #'equal)))
-    (mapc #'(lambda (node)
-              (mapc #'(lambda (succ-node)
-                        (let ((elt (cons (car node) succ-node)))
-                          (setf (gethash elt ht) t)))
-                    (cdr node)))
-          relation)
-    ht))
-@ %def relation-to-hash
-
-\no Finally we define a predicate [[relation-p]] that tests if $x$ is
-in relation with $y$ in relation [[rel]].
-
-<<Test for relation>>=
-(defun relation-p (x y rel)
-  (gethash (cons x y) rel))
-@ %def relation-p
-
-\no The whole source is
-
-<<Relations and transitive hull>>=
-<<Transitive hull algorithm>>
-<<Transform relation into hash-table>>
-<<Test for relation>>
-@
-
-<<test>>=
-(defun init ()
-  (setq a 'a)
-  (setq b 'b)
-  (setq c 'c)
-  (setq d 'd)
-  (setq e 'e)
-  (setq f 'f)
-
-  (setq z 'z)
-  (setq y 'y)
-  (setq x 'x)
-
-  (setq rel '())
-  (setq rel (acons z '() rel))
-  (setq rel (acons y (list z) rel))
-  (setq rel (acons x (list y) rel))
-
-  (setq rel (acons f '() rel))
-  (setq rel (acons e (list f) rel))
-  (setq rel (acons d (list e) rel))
-  (setq rel (acons c (list d) rel))
-  (setq rel (acons b (list c) rel))
-  (setq rel (acons a (list b) rel))
-
-  (transitive-hull rel)
-)
-@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -912,8 +802,6 @@ The next class defines all location-references that have the same
 
 
 <<*>>=
-(provide 'idxentry)
-(use-package 'clos)
 
 <<class indexentry>>
 <<generate indexentries>>
@@ -921,71 +809,15 @@ The next class defines all location-references that have the same
 <<markup methods>>
 @
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-<<test>>=
-(defun transitive-hull (relation)
-  (mapc #'(lambda (j)
-            (format t "j=~A: looking for ~A in i-lists~%" j (car j))
-            (mapc #'(lambda (i)
-                      (format t "  i=~A: " i)
-                      (cond ((member (car j) (cdr i))
-                               (progn
-                                 (format t "found ~A in ~A !~%" (car j) (cdr i))
-                                 (mapc #'(lambda (k)
-                                           (format t "     k=~A: looking for ~A in ~A~%" k (car k) (cdr j))
-                                           (when (member (car k) (cdr j))
-                                             (format t "found ~A !~%" (car k))
-                                             (rplacd (last i)
-                                                     (list (car k)))
-                                             (format t "new relation: ~A~%"
-                                                     relation)
-                                             (format t "new j: ~A~%" j)
-                                             (format t "new i: ~A~%" i)
-                                             )
-                                           )
-                                       relation)))
-                            (t (format t "~%"))))
-                  relation)
-            (format t "~%"))
-        relation)
-  )
-
-(defun init ()
-  (setq a 'a)
-  (setq b 'b)
-  (setq c 'c)
-  (setq d 'd)
-  (setq e 'e)
-  (setq f 'f)
-
-  (setq z 'z)
-  (setq y 'y)
-  (setq x 'x)
-
-  (setq rel '())
-  (setq rel (acons z '() rel))
-  (setq rel (acons y (list z) rel))
-  (setq rel (acons x (list y) rel))
-
-  (setq rel (acons f '() rel))
-  (setq rel (acons e (list f) rel))
-  (setq rel (acons d (list e) rel))
-  (setq rel (acons c (list d) rel))
-  (setq rel (acons b (list c) rel))
-  (setq rel (acons a (list b) rel))
-  )
-
-(transitive-hull rel)
-@
-
 %% Local Variables:
 %% mode: latex
-%% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.5  1995/12/15 17:09:07  kehr
+%% Revision 1.6  1995/12/19 10:59:44  kehr
+%% Changes Imakefile.
+%%
+%% Revision 1.5  1995/12/15  17:09:07  kehr
 %% Wrote down more specification for the locref-handling.
 %%
 %% Revision 1.4  1995/12/13  16:44:16  kehr
