@@ -263,6 +263,11 @@ string-stream that was never printed.
  (nraw "parameter `~S' is not a number! (ignored)~%" depth))
 @
 
+<<Check [[:layer]]>>=
+((and layer (not (integerp layer)))
+ (nraw "parameter `~S' is not a number! (ignored)~%" layer))
+@
+
 <<Check [[:group]]>>=
 ((and group (progn
               (setq group (stringify group))
@@ -811,13 +816,15 @@ dispatching braches to the right methods.
 
     (cond
       (subrefs
-         (do-markup-list (get-layers locref)
-           :identifier LAYER
-           :counter    depth
-           :open-body  (do-markup-locref-layer-list-open  loccls depth)
-           :elt-body   (do-markup-locref-layer LAYER loccls (INCF COUNTER))
-           :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
-           :close-body (do-markup-locref-layer-list-close loccls depth))
+	 (let ((layer 0))
+	   (do-markup-list (get-layers locref)
+	     :identifier LOCREF-LAYER
+	     :open-body  (do-markup-locref-layer-list-open  loccls depth)
+	     :elt-body   (do-markup-locref-layer LOCREF-LAYER loccls depth
+						 (prog1 layer
+						   (incf layer)))
+	     :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
+	     :close-body (do-markup-locref-layer-list-close loccls depth)))
 
          (do-markup-list subrefs
            :identifier LOCREF
@@ -829,13 +836,15 @@ dispatching braches to the right methods.
       ((= 0 depth)
          (do-markup-string (get-locref-string locref)))
 
-      (t (do-markup-list (get-layers locref)
-           :identifier LAYER
-           :counter    depth
-           :open-body  (do-markup-locref-layer-list-open  loccls depth)
-           :elt-body   (do-markup-locref-layer LAYER loccls (INCF COUNTER))
-           :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
-           :close-body (do-markup-locref-layer-list-close loccls depth))))
+      (t (let ((layer 0))
+	   (do-markup-list (get-layers locref)
+	     :identifier LOCREF-LAYER
+	     :open-body  (do-markup-locref-layer-list-open  loccls depth)
+	     :elt-body   (do-markup-locref-layer LOCREF-LAYER loccls depth
+						 (prog1 layer
+						   (incf layer)))
+	     :sep-body   (do-markup-locref-layer-list-sep   loccls depth)
+	     :close-body (do-markup-locref-layer-list-close loccls depth)))))
 
     (do-markup-locref-close attr loccls depth)))
 @ %def do-markup-layered-locref
@@ -848,13 +857,6 @@ dispatching braches to the right methods.
   :sep   ((do-markup-default "LOCREF-LAYER-LIST:SEP"   (get-name loccls) depth))
   :close ((do-markup-outdent)
           (do-markup-default "LOCREF-LAYER-LIST:CLOSE" (get-name loccls) depth)))
-
-(defun do-markup-locref-layer (layer loccls depth)
-  (declare (ignore loccls depth))
-  ;;(do-markup-locref-layer-open  loccls depth)
-  (do-markup-string layer)
-  ;;(do-markup-locref-layer-close loccls depth)
-  )
 @ %def do-markup-locref-layer-list
 
 <<Markup interface>>=
@@ -875,6 +877,40 @@ dispatching braches to the right methods.
              :sep   ,(when sep   `((do-markup-string ,sep)))))))
 @ %def markup-locref-layer-list
 
+<<Location-reference markup>>=
+(defun do-markup-locref-layer (locref-layer loccls depth layer)
+  (do-markup-locref-layer-open loccls depth layer)
+  (do-markup-string locref-layer)
+  (do-markup-locref-layer-close loccls depth layer))
+
+(define-environment-methods do-markup-locref-layer
+    ((locref-class layered-location-class) (depth number) (layer number))
+  :open  ((do-markup-default "LOCREF-LAYER:OPEN"
+	    (get-name locref-class) depth layer)
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "LOCREF-LAYER:CLOSE"
+	    (get-name locref-class) depth layer)))
+@ %def do-markup-locref-layer
+
+<<Markup interface>>=
+(defmacro markup-locref-layer (&key class open close depth layer)
+  (cond <<Check [[:open]] and [[:close]]>>
+        <<Check [[:depth]]>>
+        <<Check [[:layer]]>>
+        <<Check [[:class]] for location-reference class>>
+        (t `(markup::define-environment-methods
+             DO-MARKUP-LOCREF-LAYER
+             (,(if class
+                   `(locrefcls (EQL ,(cdr (lookup-locref-class
+                                           *indexstyle* class))))
+                   '(locrefcls layered-location-class))
+	      ,(if depth `(depth (EQL ,depth)) '(depth number))
+	      ,(if layer `(layer (EQL ,layer)) '(layer number)))
+             :declare ((declare (ignore depth layer)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-locref-layer
 
 <<Location-reference markup>>=
 (define-environment-methods do-markup-locref ((attr   category-attribute)
@@ -1179,6 +1215,9 @@ Their elements are simple cross-references.
 
 
 %% $Log$
+%% Revision 1.20  1997/03/03 16:00:09  kehr
+%% Added new markup command `markup-locref-layer'.
+%%
 %% Revision 1.19  1997/01/23 15:10:41  kehr
 %% Removed forgotten debug-output.
 %%

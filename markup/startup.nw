@@ -35,13 +35,13 @@ particular platform.
 
 <<Global definitions>>=
 (defparameter *xindy-version*  "unknown")
+(defparameter *xindy-bin-version*  "unknown")
 (defparameter *xindy-platform* "unknown")
 @ %def *xindy-platform* *xindy-version*
 
 <<Startup functions>>=
 (defun issue-startup-message ()
-  (info "~&This is xindy ~A (~A).~%" *xindy-version* *xindy-platform*)
-  ;;(info "Copyright (c) 1996,1997  Roger Kehr~%~%"))
+  (info "~&This is xindy 1.0b (~A).~%" *xindy-platform*))
 
 (defun startup (&key idxstyle rawindex output logfile
                      show-version markup-trace (trace-level 0))
@@ -218,6 +218,9 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
+%% Revision 1.13  1997/03/03 16:00:12  kehr
+%% Added new markup command `markup-locref-layer'.
+%%
 %% Revision 1.12  1997/02/06 15:23:04  kehr
 %% Removed the copyright notice during startup.
 %%
