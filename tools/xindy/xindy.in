@@ -1,0 +1,137 @@
+#!/bin/sh
+#
+# $Id$
+#
+# This is a shell-skript containing the wrapper for the `xindy'
+# indexing system.
+#
+
+XINDY_LIBDIR=${XINDY_LIBDIR:=@XINDY_LIBDIR@}
+XINDY_BINDIR=${XINDY_BINDIR:=@XINDY_BINDIR@}
+
+#
+# some functions
+#
+
+usage() {
+	echo "
+`basename $0` [-t] [-v] [-o output]  indexstyle raw-index
+
+options:
+
+  -t   enters tracing-mode for markup-tags.
+  -v   displays the current version of xindy.
+  -o   specifies the output-file for the tagged index.
+
+"
+	exit 2
+}
+
+check_bin() {
+   if [ ! -f $XINDY_BINDIR/xindy.run ]
+   then
+     echo "can't find \`$XINDY_BINDIR/xindy.run' !"
+     exit 3
+   fi
+   if [ ! -x $XINDY_BINDIR/xindy.run ]
+   then
+     echo "\`$XINDY_BINDIR/xindy.run' not executable !"
+     exit 4
+   fi
+}
+
+check_mem() {
+   if [ ! -f $memfile ]
+   then
+     echo "can't find \`$memfile' !"
+     exit 5
+   fi
+}
+
+#
+# here we go...
+#
+
+if [ $# = 0 ]
+then
+    usage
+fi
+
+memfile="$XINDY_BINDIR/xindy.mem"
+
+while true
+do
+  case $1 in
+    -v) version=":show-version t"
+        shift;;
+    -t) tracing=":markup-trace t"
+        shift;;
+    -n) try=1
+        shift;;
+    -c) compile=on
+        shift;;
+    -m) shift
+	memfile="$1"
+        shift;;
+    -o) shift
+	output="$1"
+        shift;;
+    -*) usage;;
+     *) break;;
+  esac
+done
+
+if [ ! $try ]
+then
+   check_bin
+   check_mem
+fi
+
+xindy_run="$XINDY_BINDIR/xindy.run -q -M $memfile"
+
+quote_string() {
+   echo $1 | sed -e 's/"/\\\"/g' -e 's/\\/\\\\/g'
+}
+
+if [ "" != "$compile" ]
+then
+    if [ $# != 1 ]  # -c takes only one argument
+    then
+        usage
+    fi
+    indexstyle=`quote_string "$1"`
+    xindy_cmd="-c $indexstyle"
+else
+    if [ "" != "$version" ]
+    then
+        exec $xindy_run -x "(progn (xindy:startup $version) (exit))"
+    fi
+    if [ $# != 2 ]  # we expect exactly two arguments
+    then
+        usage
+    fi
+    indexstyle=`quote_string "$1"`
+    rawindex=`quote_string "$2"`
+    if [ "$output" = "" ]
+    then
+	# remove the suffix, if one exists
+        output="`echo $2 | sed -e 's/\.[^\.]*$//'`"
+	# append suffix ".out"
+        output=`quote_string "$output.out"`
+    fi
+    xindy_cmd="-x
+(progn
+   (xindy:startup :idxstyle \"$indexstyle\"
+	          :rawindex \"$rawindex\"
+		  :output   \"$output\"
+		  $version  $tracing)
+   (exit))"
+fi
+
+if [ $try ]
+then
+    echo $xindy_run "$xindy_cmd"
+else
+    exec $xindy_run "$xindy_cmd"
+fi
+

@@ -5,13 +5,17 @@
 # Makefile
 #
 
-XINDY_BINDIR=/usr/local/lib/xindy/bin
 XINDY_LIBDIR=/usr/local/lib/xindy
+XINDY_BINDIR=/usr/local/lib/xindy
 
-xindy.sh : force
+xindy : xindy.in
 	-sed -e "s|@XINDY_BINDIR@|$(XINDY_BINDIR)|" \
 	     -e "s|@XINDY_LIBDIR@|$(XINDY_LIBDIR)|" \
-	     < xindy.sh.in > xindy.sh
-	-chmod a+x xindy.sh
+	     < xindy.in > xindy
+	-chmod a+x xindy
+
+test : force
+	$(MAKE) XINDY_BINDIR=$(CLISP_LIBDIR) \
+	        XINDY_LIBDIR=$(CLISP_LIBDIR) xindy
 
 force:
