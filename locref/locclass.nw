@@ -207,7 +207,7 @@ because they share multiple similiarities.
   (make-instance 'standard-location-class
                  :name name :layers layers :join-layers join-layers))
 
-(defmethod show ((loccls layered-location-class))
+(defmethod show ((loccls standard-location-class))
   (format t "[LocCls `~A': (" (get-name loccls))
   (show (get-layers loccls))
   (show (get-join-layers loccls))
@@ -237,7 +237,7 @@ normal instantiation without any validation.
   (make-instance 'var-location-class
                  :name name :layers layers :join-layers join-layers))
 
-(defmethod show ((loccls layered-location-class))
+(defmethod show ((loccls var-location-class))
   (format t "[LocCls `~A': (" (get-name loccls))
   (show (get-layers loccls))
   (show (get-join-layers loccls))
@@ -593,7 +593,10 @@ is not an error, because we do a prefix-matching.
 %% End:
 %%
 %% $Log$
-%% Revision 1.5  1995/12/05 18:47:07  kehr
+%% Revision 1.6  1995/12/07 18:15:13  kehr
+%% Minor modifications.
+%%
+%% Revision 1.5  1995/12/05  18:47:07  kehr
 %% Minor changes (nreverse etc.)
 %%
 %% Revision 1.4  1995/12/05  13:53:39  kehr

@@ -145,7 +145,6 @@ The following symbols are exported:
 Here is the root chunk of this part.
 
 <<*>>=
-
 (eval-when (compile)
   (use-package 'clos)
   (use-package 'xp))
@@ -283,6 +282,8 @@ list of strings. See \secref{def:prefix-match} for more details.
 @ %def prefix-match prefix-match-stringlist string-to-list
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{Class \class{enumeration}}
 
 An [[enumeration]] is a subclass of [[basetype]]. Because we can't
@@ -296,6 +297,7 @@ Our constuctor is therefore defined as a general-purpose-constructor.
 We give it a class as an argument. Additionally and in distinction to
 alphabets we need to give the base-alphabet as argument to the
 constructor.
+
 
 <<class \class{enumeration}>>=
 (defclass enumeration (basetype)
@@ -326,7 +328,10 @@ constructor.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.4  1995/12/05 13:53:36  kehr
+%% Revision 1.5  1995/12/07 18:15:11  kehr
+%% Minor modifications.
+%%
+%% Revision 1.4  1995/12/05  13:53:36  kehr
 %% Complete restructuring of submodule `locclass'. New generic functions
 %% introduced and separation of standard- and var-classes implemented.
 %%

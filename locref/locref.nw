@@ -237,8 +237,9 @@ location-reference and a secondary attribute.
 (use-package 'clos)
 (use-package 'xp)
 
-(require 'base)
-(use-package 'base)
+(unless (find-package 'base)
+  (require 'base)
+  (use-package 'base))
 
 (require 'basetype)
 (require 'locclass)
@@ -289,11 +290,11 @@ simple printing of all layers and separators.
 printing of the layer-string.
 
 <<markup methods>>=
-(defmethod markup-object ((layer locref-layer)
-                          (dummmy-markup-list  list)
-                          (dummmy-context-list list)
-                          (dummmy-env-stack    list))
-  (mprint (get-layer layer)))
+;(defmethod markup-object ((layer locref-layer)
+;                          (dummmy-markup-list  list)
+;                          (dummmy-context-list list)
+;                          (dummmy-env-stack    list))
+;  (mprint (get-layer layer)))
 @
 
 
@@ -340,7 +341,10 @@ printing of the layer-string.
 %% End:
 %%
 %% $Log$
-%% Revision 1.6  1995/12/05 18:47:09  kehr
+%% Revision 1.7  1995/12/07 18:15:16  kehr
+%% Minor modifications.
+%%
+%% Revision 1.6  1995/12/05  18:47:09  kehr
 %% Minor changes (nreverse etc.)
 %%
 %% Revision 1.5  1995/12/05  13:53:41  kehr
