@@ -38,7 +38,10 @@ CVSCommentLeader("%% ", xindy-slides.tex)
 /* ============================================================
 
 $Log$
-Revision 1.1  1995/10/16 17:31:42  kehr
+Revision 1.2  1997/01/17 16:16:19  kehr
+Don't know what I modified.
+
+Revision 1.1  1995/10/16  17:31:42  kehr
 Initial checkin of Report and Presentation.
 
 */
