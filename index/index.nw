@@ -279,7 +279,7 @@ supporting cross-references is implemented in a separate function.
         (unless catattr (setq catattr "default"))
         (let ((catattr-obj (lookup-catattr idxcls catattr)))
           (if (not catattr-obj)
-              (warn "unknown attribute `~A'! (ignored)" catattr)
+              (nraw "unknown attribute `~A'! (ignored)" catattr)
               (multiple-value-bind (num location-reference)
                   (create-location-reference-from-string
                    locref catattr-obj attribute)
@@ -308,7 +308,7 @@ supporting cross-references is implemented in a separate function.
 @ %def add-locref-indexentry
 
 <<Warning both :open-range and :close-range>>=
-(warn "specification of both :open-range and :close-range is invalid! (ignored)")
+(nraw "specification of both :open-range and :close-range is invalid! (ignored)")
 @
 
 <<Adding an indexentry>>=
@@ -326,7 +326,7 @@ supporting cross-references is implemented in a separate function.
   (unless xref-class-name (setq xref-class-name "default"))
   (let ((xref-class (cdr (lookup-crossref-class idxcls xref-class-name))))
     (if (not xref-class)
-        (warn "unknown cross-reference-class `~A'! (ignored)~%"
+        (nraw "unknown cross-reference-class `~A'! (ignored)~%"
               xref-class-name)
         (let ((cross-reference (create-cross-reference xref-class
                                                        xref attribute)))
@@ -451,12 +451,12 @@ The function returns a multiple value of the form \texttt{(\emph{num}
 @ %def create-location-reference-from-string
 
 <<Warning multiple>>=
-(warn "location-reference ~S did match multiple location-classes! (taking first one)"
+(nraw "location-reference ~S did match multiple location-classes! (taking first one)"
       locref-str)
 @
 
 <<Warning none>>=
-(warn "location-reference ~S did not match any location-class! (ignored)"
+(nraw "location-reference ~S did not match any location-class! (ignored)"
       locref-str)
 @
 
@@ -507,6 +507,7 @@ percentage count.
                   `(10 20 30 40 50 60 70 80 90 100 ,MOST-POSITIVE-FIXNUM)))
     (setq *processing-percentage-list* *percentage-list*)
     (mapc #'process-indexentry (get-entry-list index))
+    (print-rest-of-percentages *processing-percentage-list*)
     index))
 @ %def process-index
 
@@ -784,7 +785,10 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
-%% Revision 1.24  1996/07/24 13:49:30  kehr
+%% Revision 1.25  1996/08/02 14:11:31  kehr
+%% Corrected bug when printing the percentage-list.
+%%
+%% Revision 1.24  1996/07/24  13:49:30  kehr
 %% Fixed a bug in the handling of hierarchical location-references that
 %% appeared with ranges.
 %%

@@ -360,8 +360,7 @@ dispatching during the markup process.
 (defun process-indexentry (idxent)
   (setq *currently-processed-indexentry* idxent)
   (when (>= (incf *current-number*) (caar *processing-percentage-list*))
-    (info " [~A%]" (cdar *processing-percentage-list*))
-    (pop *processing-percentage-list*))
+    (print-percent (pop *processing-percentage-list*)))
   (set-locrefs (convert-sublists-to-specialized-groups
                 (split-list #'(lambda (locref)
                                 (get-ordnum (get-locclass locref)))
@@ -1067,12 +1066,24 @@ despite the fact that we use a temporary array with a fill-pointer.
 <<Global definitions of submodule \submodule{idxentry}>>=
 (defvar *number-of-indexentries*)
 (defvar *current-number*)
+@ %def *number-of-indexentries* *current-number*
+
+<<Global definitions of submodule \submodule{idxentry}>>=
 (defvar *percentage-list*)
 (defvar *processing-percentage-list*)
-@ %def *number-of-indexentries* *current-number* *percentage-list* *processing-percentage-list*
+
+(defun print-rest-of-percentages (plist)
+  (dolist (percent plist)
+    (when (<= (cdr percent) 100)
+      (print-percent percent))))
+
+(defun print-percent (percent-cons)
+  (info " [~A%]" (cdr percent-cons)))
+@ %def *percentage-list* *processing-percentage-list* print-rest-of-percentages print-percent
+
 
 <<Export-list of submodule \module{idxentry}>>=
-(export '*percentage-list*)
+(export '(*percentage-list* print-rest-of-percentages print-percent))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1173,7 +1184,10 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.23  1996/07/24 13:49:26  kehr
+%% Revision 1.24  1996/08/02 14:11:27  kehr
+%% Corrected bug when printing the percentage-list.
+%%
+%% Revision 1.23  1996/07/24  13:49:26  kehr
 %% Fixed a bug in the handling of hierarchical location-references that
 %% appeared with ranges.
 %%

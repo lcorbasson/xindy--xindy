@@ -1,4 +1,4 @@
-%
+%%
 %% This file is part of the `xindy'-project at the
 %% Technical University Darmstadt, Computer Science Department
 %% WG System Programming, Germany.
@@ -29,12 +29,12 @@ This submodule contains some startup-code.
 \subsubsection{Startup}
 
 The following constants help to identify the \xindy-version. Variable
-\texttt{*xindy-platform*} is a string indicating the platform on which
-xindy runs. Its value will be set when dumping xindy on a particular
-platform.
+[[*xindy-platform*]] is a string indicating the platform on which
+xindy runs. Its value will be set anew when dumping xindy on a
+particular platform.
 
 <<Global definitions>>=
-(defparameter *xindy-version*  "`xindy' version 0.9 June 1996")
+(defparameter *xindy-version*  "`xindy'")
 (defparameter *xindy-platform* "unknown")
 @ %def *xindy-platform* *xindy-version*
 
@@ -54,11 +54,6 @@ platform.
   #+:HANDLER
   (handler-case
       (do-startup idxstyle rawindex output logfile)
-    (condition
-       (condition)
-       (oops (simple-condition-format-string    condition)
-             (simple-condition-format-arguments condition))
-       (error-exit))
     (error
        (condition)
        (oops (simple-condition-format-string    condition)
@@ -131,32 +126,58 @@ platform.
     (when sp (idxstyle:set-searchpath-by-string sp))))
 @ %def set-searchpath-by-environment
 
+
 \subsubsection{The BREAK-driver}
 
-The Break-driver is necessary to make \cmd{clisp} handle
-user-interrupts via \texttt{CRTL-C} correctly. The installed handler
-calls the break-driver (which is \texttt{SYSTEM::BREAK-LOOP} by
-default---\emph{see} \texttt{user1.lsp} in the \cmf{clisp}-source)
-when a user interrupt happens. This handler is called with the first
-argument set to \texttt{T} indicating, that the handler may continue.
-We replace this handler with a new one that simply exits. Now a user
-break will result in a program stop and not in an annoying habit of
-simple ignoring users commands ;-)
+The Break-driver is necessary to make [[clisp]] handle user-interrupts
+via \fbox{\small CRTL-C} correctly. The installed handler calls the
+break-driver (which is [[SYSTEM::BREAK-LOOP]] by default---\emph{see}
+\texttt{user1.lsp} in the [[clisp]]-source) when a user interrupt
+happens. This handler is called with the first argument set to [[T]]
+indicating, that the handler may continue.  We replace this handler
+with a new one that simply exits. Now a user break will result in a
+program stop and not in an annoying habit of simple ignoring users
+commands ;-)
+
+We use the feature [[:BREAK-DRIVER]] to decide if the break-driver is
+to be installed. The lambda-list of the break-driver was borrowed from
+its counterpart [[break-loop]] as mentioned above. If the argument
+[[condition]] is supplied we do format the message before quitting.
+The old version which did not handle this case is still left here.
 
 The handler must be installed when dumping \xindy.
 
-\begin{quote}
-  Hmmmm. Doesn't work as expected. Now most of the errors won't get
-  handled... Must ask someone...
-\end{quote}
-
 <<The BREAK-driver>>=
+#+:BREAK-DRIVER
 (fmakunbound '*break-driver*)
 
-(defun *break-driver* (continuable)
-  (declare (ignore continuable))
+#+:BREAK-DRIVER
+(defun *break-driver* (continuable
+                       &optional (condition nil) (print-it nil)
+                       &aux (may-continue
+                             (or continuable
+                                 (and condition
+                                      (find-restart 'continue condition))
+                                 ) )
+                       (interactive-p (interactive-stream-p *debug-io*))
+                       (commandsr '())
+                       )
+  (declare (ignore may-continue interactive-p commandsr))
+  ;; This when-clause is from Bruno Haible.
+  (when (and condition print-it)
+    (terpri *error-output*)
+    (write-string "*** - " *error-output*)
+    (system::print-condition condition *error-output*))
+  (format *ERROR-OUTPUT* "~&Bye.")
+  (error-exit))
+
+#+:BREAK-DRIVER-OLD
+(defun *break-driver* (continuable &rest rest)
+  (declare (ignore continuable rest))
+  (format *ERROR-OUTPUT* "~&Bye.")
   (exit))
 
+#+:BREAK-DRIVER
 (export '*break-driver*)
 @ %def  *break-driver*
 
@@ -172,7 +193,10 @@ The handler must be installed when dumping \xindy.
 (lisp:use-package "CLOS")
 (lisp:import markup:*markup-user-interface-definitions*)
 
-;;(pushnew :HANDLER *features*)
+(eval-when (compile load eval)
+  (pushnew :HANDLER      *features*))
+(eval-when (compile load eval)
+  (pushnew :BREAK-DRIVER *features*))
 
 <<Global definitions>>
 <<Startup functions>>
@@ -187,7 +211,10 @@ The handler must be installed when dumping \xindy.
 
 
 %% $Log$
-%% Revision 1.7  1996/07/24 13:50:55  kehr
+%% Revision 1.8  1996/08/02 14:12:02  kehr
+%% Corrected bug when printing the percentage-list.
+%%
+%% Revision 1.7  1996/07/24  13:50:55  kehr
 %% Added the *break-driver*. But this is still not working correctly.
 %%
 %% Revision 1.6  1996/07/22  15:55:29  kehr

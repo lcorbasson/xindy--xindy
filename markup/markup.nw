@@ -79,11 +79,6 @@ nothing).
 (defvar *markup-percentage-list*)
 (defvar *current-number*)
 
-(defparameter *internal-error-output* (make-string-output-stream))
-#| can be visited and flushed by calling
-(get-output-stream-string *internal-error-output* )
-|#
-
 (defun do-markup-indent ()
   (incf *markup-indent-level* *markup-indentation*))
 (defun do-markup-outdent ()
@@ -119,27 +114,13 @@ verbose-mode is turned on.
           do (write-string " " *markup-output-stream*))
     (do-markup-string *markup-verbose-open*)
     (do-markup-string str)
-    (when arg1 (etypecase arg1
-                 (string (do-markup-string " [")
-                         (do-markup-string arg1)
-                         (do-markup-string "]"))
-                 (number (do-markup-string " [")
-                         (write arg1 :stream *markup-output-stream*)
-                         (do-markup-string "]"))))
-    (when arg2 (etypecase arg2
-                 (string (do-markup-string " [")
-                         (do-markup-string arg2)
-                         (do-markup-string "]"))
-                 (number (do-markup-string " [")
-                         (write arg2 :stream *markup-output-stream*)
-                         (do-markup-string "]"))))
-    (when arg3 (etypecase arg3
-                 (string (do-markup-string " [")
-                         (do-markup-string arg3)
-                         (do-markup-string "]"))
-                 (number (do-markup-string " [")
-                         (write arg3 :stream *markup-output-stream*)
-                         (do-markup-string "]"))))
+    (when arg1
+      (format *markup-output-stream* " [~S]" arg1)
+      (when arg2
+        (format *markup-output-stream* " [~S]" arg2)
+        (when arg3
+          (format *markup-output-stream* " [~S]" arg3)
+          )))
     (do-markup-string *markup-verbose-close*)
     (terpri *markup-output-stream*)
     ))
@@ -199,12 +180,21 @@ T
 |#
 @
 
-<<Markup primitives>>=
+\paragraph{Method-defining primitives}
+
+This paragraph contains macros that expand to CLOS-method-definitions.
+These methods are used to assign appropriate markup to classes and
+objects. The [[handler-bind]]-mechanism is used to hide the warnings
+CLOS issues when redefining methods which can happen here.  The former
+solution was to temporary bind the stream [[*ERROR-OUTPUT*]] to a
+string-stream that was never printed.
+
+<<Method-defining primitives>>=
 (defmacro define-list-environment-methods (name
                                            (&whole signature)
                                            &key open close sep declare body)
   (let ((name (stringify name)))
-    `(LET ((*ERROR-OUTPUT* *INTERNAL-ERROR-OUTPUT*))
+    `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
       (CLOS:DEFMETHOD
           ,(intern (string-upcase (concatenate 'string name "-open"))
                    'markup)
@@ -219,12 +209,12 @@ T
           ,signature ,@declare ,@sep ,@body))))
 @ %def define-list-environment-methods
 
-<<Markup primitives>>=
+<<Method-defining primitives>>=
 (defmacro define-environment-methods (name
                                       (&whole signature)
                                       &key open close declare body)
   (let ((name (stringify name)))
-    `(LET ((*ERROR-OUTPUT* *INTERNAL-ERROR-OUTPUT*))
+    `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
       (CLOS:DEFMETHOD
           ,(intern (string-upcase (concatenate 'string name "-open"))
                    'markup)
@@ -235,10 +225,10 @@ T
           ,signature ,@declare ,@close ,@body))))
 
 (defmacro define-method (name
-			 (&whole signature)
-			 &key declare body)
+                         (&whole signature)
+                         &key declare body)
   (let ((name (stringify name)))
-    `(LET ((*ERROR-OUTPUT* *INTERNAL-ERROR-OUTPUT*))
+    `(HANDLER-BIND ((WARNING #'MUFFLE-WARNING))
       (CLOS:DEFMETHOD
           ,(intern (string-upcase name) 'markup)
           ,signature ,@declare ,@body))))
@@ -250,52 +240,52 @@ T
 
 <<Check [[:open]] and [[:close]]>>=
 ((and open (not (stringp open)))
- (warn "parameter `~S' is not a string! (ignored)~%" open))
+ (nraw "parameter `~S' is not a string! (ignored)~%" open))
 ((and close (not (stringp close)))
- (warn "parameter `~S' is not a string! (ignored)~%" close))
+ (nraw "parameter `~S' is not a string! (ignored)~%" close))
 @
 
 <<Check [[:open-head]] and [[:close-head]]>>=
 ((and open-head (not (stringp open-head)))
- (warn "parameter `~S' is not a string! (ignored)~%" open-head))
+ (nraw "parameter `~S' is not a string! (ignored)~%" open-head))
 ((and close-head (not (stringp close-head)))
- (warn "parameter `~S' is not a string! (ignored)~%" close-head))
+ (nraw "parameter `~S' is not a string! (ignored)~%" close-head))
 @
 
 <<Check [[:open]], [[:close]] and [[:sep]]>>=
 <<Check [[:open]] and [[:close]]>>
 ((and sep  (not (stringp sep)))
- (warn "parameter `~S' is not a string! (ignored)~%" sep))
+ (nraw "parameter `~S' is not a string! (ignored)~%" sep))
 @
 
 <<Check [[:depth]]>>=
 ((and depth (not (integerp depth)))
- (warn "parameter `~S' is not a number! (ignored)~%" depth))
+ (nraw "parameter `~S' is not a number! (ignored)~%" depth))
 @
 
 <<Check [[:group]]>>=
 ((and group (progn
-	      (setq group (stringify group))
-	      (not (lookup-letter-group-definition *indexstyle* group))))
- (warn "parameter `~S' is not a valid letter-group! (ignored)~%" group))
+              (setq group (stringify group))
+              (not (lookup-letter-group-definition *indexstyle* group))))
+ (nraw "parameter `~S' is not a valid letter-group! (ignored)~%" group))
 @
 
 <<Check [[:class]] for location-reference class>>=
 ((and class (progn (setq class (stringify class))
                    (not (lookup-locref-class *indexstyle* class))))
- (warn "parameter `~S' is not a location-reference class! (ignored)~%" class))
+ (nraw "parameter `~S' is not a location-reference class! (ignored)~%" class))
 @
 
 <<Check [[:class]] for cross-reference class>>=
 ((and class (progn (setq class (stringify class))
                    (not (lookup-crossref-class *indexstyle* class))))
- (warn "parameter `~S' is not a cross-reference class! (ignored)~%" class))
+ (nraw "parameter `~S' is not a cross-reference class! (ignored)~%" class))
 @
 
 <<Check [[:attr]]>>=
 ((and attr (progn (setq attr (stringify attr))
                    (not (lookup-catattr *indexstyle* attr))))
- (warn "parameter `~S' is not an attribute! (ignored)~%" attr))
+ (nraw "parameter `~S' is not an attribute! (ignored)~%" attr))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -305,16 +295,16 @@ T
 <<Markup interface>>=
 (defmacro markup-trace (&rest args)
   (destructuring-switch-bind (&key
-			      (open  *markup-verbose-open*)
-			      (close *markup-verbose-close*)
-			      &switch
-			      on)
+                              (open  *markup-verbose-open*)
+                              (close *markup-verbose-close*)
+                              &switch
+                              on)
       args
     (cond <<Check [[:open]] and [[:close]]>>
-	  (t `(LET ()
-	       (SETQ *markup-verbose-open*  ,open)
-	       (SETQ *markup-verbose-close* ,close)
-	       ,(when on `(SETQ *markup-verbose-mode* t)))))))
+          (t `(LET ()
+               (SETQ *markup-verbose-open*  ,open)
+               (SETQ *markup-verbose-close* ,close)
+               ,(when on `(SETQ *markup-verbose-mode* t)))))))
 @ %def markup-trace
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -335,6 +325,7 @@ the markup of the list of all indexentries.
     :elt-body   (do-markup-letter-group LETTER-GRP)
     :sep-body   (do-markup-letter-group-list-sep)
     :close-body (do-markup-letter-group-list-close))
+  (index:print-rest-of-percentages *markup-percentage-list*)
   (do-markup-index-close idx))
 
 (define-environment-methods do-markup-index ((idx base-index))
@@ -352,36 +343,36 @@ the markup of the list of all indexentries.
 <<Index markup>>=
 (defmacro markup-index (&whole whole &rest args)
   (destructuring-switch-bind (&key
-			      open close hierdepth
-			      &switch
-			      tree flat)
+                              open close hierdepth
+                              &switch
+                              tree flat)
       args
     (let (hierdepth-cmd)
       (when (or hierdepth tree flat)
-	(cond
-	  ((and tree flat)
-	     (error "you can't specify :tree and :flat simultaneously in ~%~S~%"
-		     whole))
-	  ((and hierdepth (or tree flat))
-	     (error "you can't specify :hierdepth with :tree or :flat simultaneously in ~%~S~%"
-		     whole))
-	  (flat (setq hierdepth-cmd
-		      `(SET-HIERDEPTH 0 *INDEX*)));; no tree-structure
-	  ;; MOST-POSITIVE-FIXNUM means make all trees
-	  (tree (setq hierdepth-cmd
-		      `(SET-HIERDEPTH MOST-POSITIVE-FIXNUM *INDEX*)))
-	  (hierdepth
-	     (when (not (numberp hierdepth))
-	       (error "~S is not a number in ~S~%" whole))
-	     (setq hierdepth-cmd
-		   `(SET-HIERDEPTH ,hierdepth *INDEX*))))
-	`(LET ()
-	  (markup::define-environment-methods
-	      DO-MARKUP-INDEX ((idx index:base-index))
-	    :declare ((declare (ignore idx)))
-	    :open  ,(when open  `((do-markup-string ,open)))
-	    :close ,(when close `((do-markup-string ,close))))
-	  ,hierdepth-cmd)))))
+        (cond
+          ((and tree flat)
+             (error "you can't specify :tree and :flat simultaneously in ~%~S~%"
+                     whole))
+          ((and hierdepth (or tree flat))
+             (error "you can't specify :hierdepth with :tree or :flat simultaneously in ~%~S~%"
+                     whole))
+          (flat (setq hierdepth-cmd
+                      `(SET-HIERDEPTH 0 *INDEX*)));; no tree-structure
+          ;; MOST-POSITIVE-FIXNUM means make all trees
+          (tree (setq hierdepth-cmd
+                      `(SET-HIERDEPTH MOST-POSITIVE-FIXNUM *INDEX*)))
+          (hierdepth
+             (when (not (numberp hierdepth))
+               (error "~S is not a number in ~S~%" whole))
+             (setq hierdepth-cmd
+                   `(SET-HIERDEPTH ,hierdepth *INDEX*))))
+        `(LET ()
+          (markup::define-environment-methods
+              DO-MARKUP-INDEX ((idx index:base-index))
+            :declare ((declare (ignore idx)))
+            :open  ,(when open  `((do-markup-string ,open)))
+            :close ,(when close `((do-markup-string ,close))))
+          ,hierdepth-cmd)))))
 @ %def markup-index
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -527,8 +518,7 @@ subtargets for an indexentry markup.
 (defmethod do-markup-indexentry ((idxent index-entry)
                                  (depth number))
   (when (>= (incf *current-number*) (caar *markup-percentage-list*))
-    (info " [~A%]" (cdar *markup-percentage-list*))
-    (pop *markup-percentage-list*))
+    (index:print-percent (pop *markup-percentage-list*)))
 
   (do-markup-indexentry-open depth)
 
@@ -543,21 +533,21 @@ subtargets for an indexentry markup.
   (let ((locrefs (get-locrefs idxent)))
     (unless (endp locrefs)
       (do-markup-list locrefs
-        :identifier LOCCLS-GRP
-        :open-body  (do-markup-locclass-list-open)
-        :elt-body   (do-markup-locclass LOCCLS-GRP)
-        :sep-body   (do-markup-locclass-list-sep)
-        :close-body (do-markup-locclass-list-close))))
+	:identifier LOCCLS-GRP
+	:open-body  (do-markup-locclass-list-open)
+	:elt-body   (do-markup-locclass LOCCLS-GRP)
+	:sep-body   (do-markup-locclass-list-sep)
+	:close-body (do-markup-locclass-list-close))))
 
   (let ((subentries (get-subentries idxent)))
     (unless (endp subentries)
       (let ((new-depth (1+ depth)))
-        (do-markup-list subentries
-          :identifier IDXENT
-          :open-body  (do-markup-indexentry-list-open  new-depth)
-          :elt-body   (do-markup-indexentry IDXENT     new-depth)
-          :sep-body   (do-markup-indexentry-list-sep   new-depth)
-          :close-body (do-markup-indexentry-list-close new-depth)))))
+	(do-markup-list subentries
+	  :identifier IDXENT
+	  :open-body  (do-markup-indexentry-list-open  new-depth)
+	  :elt-body   (do-markup-indexentry IDXENT     new-depth)
+	  :sep-body   (do-markup-indexentry-list-sep   new-depth)
+	  :close-body (do-markup-indexentry-list-close new-depth)))))
 
   (do-markup-indexentry-close depth))
 @ %def do-markup-indexentry
@@ -1129,6 +1119,7 @@ Their elements are simple cross-references.
 
 <<Markup definitions>>
 <<Markup primitives>>
+<<Method-defining primitives>>
 <<Index markup>>
 <<Letter group markup>>
 <<Indexentry markup>>
@@ -1149,7 +1140,10 @@ Their elements are simple cross-references.
 
 
 %% $Log$
-%% Revision 1.14  1996/07/22 15:55:27  kehr
+%% Revision 1.15  1996/08/02 14:11:59  kehr
+%% Corrected bug when printing the percentage-list.
+%%
+%% Revision 1.14  1996/07/22  15:55:27  kehr
 %% Replaced some of the oops-macros by nraw-macros. Removed apply-oops
 %% macros.
 %%
