@@ -9,6 +9,7 @@ XCOMM $Id$
 
 /* needed modules */
 #include <Project.imk>
+#include <TeX.imk>
 
 
 XCOMM ------------------------------------------------------------
@@ -19,17 +20,22 @@ all::manual.tex manual.info manual.html manual.txt
 manual.tex: manual.sgml
 	    sgml2latex manual.sgml
 
+TeXTarget(latex,manual)
+
 manual.html: manual.sgml
 	     sgml2html manual.sgml
 
 manual.info: manual.sgml
 	     sgml2info manual.sgml
 
-manual.tex: manual.sgml
+manual.txt: manual.sgml
 	    sgml2txt manual.sgml
 
-clean::
+realclean::
 	$(RM) manual*.html
+	$(RM) manual.tex
+	$(RM) manual.txt
+	$(RM) manual.info
 
 CVSAdd(*.sgml)
 CVSAdd(Imakefile)
@@ -39,9 +45,11 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.1  1996/05/29 15:29:49  kehr
- * Initial checkin of the subdirectory `Doc'.
+ * Revision 1.2  1996/05/29 15:41:15  kehr
+ * Second checkin, after the Imakefile has been completed and tested.
  *
+ * Revision 1.1  1996/05/29  15:29:49  kehr
+ * Initial checkin of the subdirectory `Doc'.
  *
 
  * ------------------------------------------------------------
