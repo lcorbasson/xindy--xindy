@@ -286,7 +286,8 @@ location-class-groups namely <bf/location-reference-groups/ and
 
 <tag/location-reference-group/ is a container for all
 <bf/location-references/ of a particular
-<bf/location-refernece-class/.
+<bf/location-reference-class/. It consists of a list of
+<bf/attribute-groups/.
 
 <label id="def locref-class">
 <tag/location-reference-class, location-reference, location/ Each
@@ -402,6 +403,27 @@ this difference. Since <sf/xindy/ needs the possible attributes before
 the indexentries are read in, the command <tt/define-attributes/ must
 be used to define a set of attributes and how they interact.
 
+<!-- ================================================================= -->
+
+<tag/attribute-groups/ Each <bf/location-reference-group/ consists of
+a list of <bf/attribute-groups/. Attribute-groups are defined by a set
+of <bf/attributes/. In the markup-phase, all location-references are
+sorted according to the group-number their attributes belong to.
+Additionally all location-references of a particular attribute-group
+appear in the index together.
+
+See command <tt/define-attribute-groups/ and section <ref
+id="sort-merge-locrefs" name="<em>Sorting location-references</em>">
+for further information about the handling of attribute-groups.
+
+An attribute-group consists of a list of <bf/location-references/
+and/or <bf/ranges/.
+
+<tag/range/ A <bf/range/ is a pair of <bf/location-references/. A
+sequence of location-references whose length exceeds a certain number
+is transformed into a range. See command <tt/define-location-class/
+for further details.
+
 </descrip>
 
 
@@ -416,7 +438,7 @@ be used to define a set of attributes and how they interact.
 
 <p>
 After the system is started, <sf/xindy/ reads in the indexstyle that
-is passed as a command-line argument. Each <tt/include/-command is
+is passed as a command-line argument. Each <tt/require/-command is
 executed and the internal data-structures representing the indexstyle
 are built up. The indexstyle must completely be read in before the
 raw-index can be read.
@@ -459,6 +481,7 @@ different for the location-classes and the crossref-classes.
   <item> The cross-references are sorted lexicographically.
 
   <label id="sort-merge-locrefs">
+
   <item> To illustrate the processing of location-references we assume
   the following list:
 
@@ -473,7 +496,7 @@ different for the location-classes and the crossref-classes.
 
    <tscreen><verb>
    (define-attribute-groups (("definition" "important")
-   			  ("default")))
+   		 	     ("default")))
 
    (merge-to "definition" "default" :drop)
    </verb></tscreen>
@@ -753,33 +776,6 @@ used location-classes when using this command.
 
 <!-- ================================================================= -->
 
-<label id="include">
-<cmddesc>
-(include filename)
-</cmddesc>
-
-This command allows to include more indexstyle files. The filename is
-searched in the directories defined in the searchpath. The file is
-read in and processing of the current file continues. The argument
-<tt/filename/ must be a string. This allows to decompose the
-indexstyle into several modules that can be included into the topmost
-indexstyle-file. Example:
-
-<tscreen><verb>
-(include "french-alphabet.xdy")
-(include "french-sort-rules.xdy")
-(include "tex-locations.xdy")
-(include "tex-markup.xdy")
-</verb></tscreen>
-
-Submodules can include other submodules as well. If a file is included
-that was already included, the <tt/include/-command issues a warning
-and continues without including this file twice. See section <ref
-id="def searchpath" name="<em>Searchpath</em>"> for more information
-about where <sf/xindy/ searches for files.
-
-<!-- ================================================================= -->
-
 <label id="merge-rule">
 <cmddesc>
 (merge-rule pattern replacement [:again])
@@ -885,27 +881,69 @@ location-references</em>">.
 
 <!-- ================================================================= -->
 
-<label id="searchpath">
+<label id="require">
 <cmddesc>
-(searchpath path-list)
+(require filename)
 </cmddesc>
 
-This directory adds the paths to the list of paths xindy searches for
-indexstyle-files. The argument <tt/path-list/ must be a
-colon-separated list of directory names. If this path ends with a
-colon the built-in path-list is added to the end of the path-list.
-Example:
+This command allows to load more indexstyle modules. The module is
+searched in the directories defined in the searchpath. The file is
+read in and processing of the current file continues. The argument
+<tt/filename/ must be a string. This allows to decompose the
+indexstyle into several modules that can be included into the topmost
+indexstyle-file. Example:
 
 <tscreen><verb>
-(searchpath ".:/usr/local/lib/xindy")
-(searchpath "/usr/local/lib/xindy/other-languages:")
+(require "french/alphabet.xdy")
+(require "french/sort-rules.xdy")
+(require "tex/locations.xdy")
+(require "tex/markup.xdy")
+</verb></tscreen>
+
+Submodules can load other submodules as well. If a file is required
+that was already loaded, the <tt/require/-command simply ignores this
+the command and continues without including this file twice. See
+section <ref id="def searchpath" name="<em>Searchpath</em>"> for more
+information about where <sf/xindy/ searches for files.
+
+<!-- ================================================================= -->
+
+<label id="searchpath">
+<cmddesc>
+(searchpath {path-string | path-list})
+</cmddesc>
+
+This command adds the given paths to the list of paths, xindy searches
+for indexstyle-files. Only one version of the command is accepted. The
+argument <tt/path-string/ must be a colon-separated string of
+directory names. If this path ends with a colon the default path-list
+is added to the end of the path-list. Example:
+
+<tscreen><verb>
+(searchpath ".:/usr/local/lib/xindy:/usr/local/lib/xindy/english:")
 </verb></tscreen>
 
 adds the specified directories to the searchpath. Since the last path
 ends with a colon, the built-in searchpath is added at the end. See
 also section <ref id="def searchpath" name="<em>Searchpath</em>"> for
-more information about the searchpath.
+more information about the searchpath. Specifying
 
+<tscreen><verb>
+(searchpath ("."
+             "/usr/local/lib/xindy"
+	     "/usr/local/lib/xindy/english"
+	     :default))
+</verb></tscreen>
+
+yields exactly the same result as the example above. Here
+<tt/path-list/ must be a list of strings and/or the keyword(s)
+<tt/:default/ and <tt/:last/. The keyword <tt/:default/ signifies that
+the default-pathnames are to be inserted at the specified position in
+the list. The keyword <tt/:last/ allows to insert the currently active
+paths at the indicated position. Since this allows to insert the
+built-in paths at any position and incrementally adding new paths to
+the searchpath, this version of the command ist more flexible than the
+first version.
 
 <!-- ================================================================= -->
 
@@ -945,7 +983,7 @@ the suffix `<tt/-list/' as part of their command name.
 
 Since the number of commands and the heavy usage of <em/default/
 and <em/specialised/ tags makes the markup somehow complex (but very
-powerful) we have included a general mechanism to trace the
+powerful) we have required a general mechanism to trace the
 markup-tags <sf/xindy/ omits during its markup-phase with the
 command <ref id="markup-trace" name="<tt>markup-trace</tt>">.
 
@@ -1463,6 +1501,15 @@ mustn't be used together with cross-references.
 
 <!-- ================================================================= -->
 
+<sect1>A sample indexstyle-file
+
+<p>
+This section is intended to give an impression of how an indexstyle
+might look like. Further examples can be found in the distribution.
+
+
+<!-- ================================================================= -->
+
 <sect>Invoking <sf/xindy/
 
 <p>
@@ -1476,7 +1523,8 @@ mustn't be used together with cross-references.
 The following command-line options are accepted
 
 <cmddesc>
-xindy  [-h] [-t] [-v] indexstyle raw-index
+xindy  [-h] [-t] [-v] { indexstyle raw-index
+		        | -c indexstyle }
 </cmddesc>
 
 The argument <tt/indexstyle/ names a file, containing the indexstyle
@@ -1484,8 +1532,7 @@ description. The argument <tt/raw-index/ names a file, containing the
 raw-index. Both commands are mandatory.
 
 <ttdesc>
-<tag/<tt/-h/,<tt/-help// gives a short summary of all command-line
-options.
+<tag/<tt/-h// gives a short summary of all command-line options.
 
 <tag/<tt/-t// enters tracing-mode of the symbolic markup-tags. The
 format of the emitted tags can be defined with the command
@@ -1493,6 +1540,7 @@ format of the emitted tags can be defined with the command
 
 <tag/<tt/-v// turns on the verbose-mode. This mode is more talkative
 and issues more information about what <sf/xindy/ is currently doing.
+
 </ttdesc>
 
 The final tagged index is written to <tt/stdout/. Errors and warnings
@@ -1507,7 +1555,7 @@ are reported to <tt/stderr/.
 The system uses the concept of a <em/searchpath/ for finding the
 indexstyle-files and -modules. The searchpath can be set with the
 environment-variable <tt/XINDY_SEARCHPATH/ which must contain a list
-of colon-separated directories. If it ends with a colon the built-in
+of colon-separated directories. If it ends with a colon, the built-in
 searchpath is added to the entire searchpath. Additionally the
 searchpath can be set with the command <tt>searchpath</tt>.
 
