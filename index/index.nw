@@ -101,7 +101,7 @@ merged with the already existing indexentry with the same key.
 This heavily creates instances of indexentries that mostly are merged
 with the already existing indexentry. Most of the time the
 indexentries are created and dropped immediately. This is a waste of
-space and time since the creation of an object ins't for free at all.
+space and time since the creation of an object isn't for free at all.
 
 The idea is to define a function at a lower level to implement the
 desired behaviour. Function [[add-indexentry]] takes an object that
@@ -109,12 +109,18 @@ must be [[eql]] to a [[entry-table]]. We will directly manipulate this
 object for efficency reasons. The other arguments are directly part of
 an indexentry.
 
+Additionally we perform the keyword substitions for the [[merge-key]]
+and the [[sort-key]] as described by the [[merge-rule]] and
+[[sort-rule]] replacements.
+
 <<Class \class{base-index}>>=
 (defun add-indexentry (entry-table idxcls locref
                                    &key
                                    (merge-key '()) (sort-key '())
                                    (main-key '()) (print-key '()))
-  (let ((old-entry (gethash merge-key entry-table)))
+#+:ORDRULES (unless merge-key (setq merge-key (gen-mergekey main-key)))
+#+:ORDRULES (unless sort-key  (setq sort-key  (gen-sortkey  merge-key)))
+  (let* ((old-entry (gethash merge-key entry-table)))
     (if old-entry
         (setf (gethash merge-key entry-table)
               (join-indexentries (gethash merge-key entry-table)
@@ -222,6 +228,13 @@ we simply markup the index and start right out of the box.
   (require "idxstyle")
   (use-package "IDXSTYLE"))
 
+;; The following construct must be separated since the definition of
+;; the *feature* :ORDRULES was added via loading the package
+;; "idxstyle" but is only active *after* reading the whole SEXP.
+
+(eval-when (compile load eval)
+  #+:ORDRULES (use-package "ORDRULES"))
+
 <<Submodule \module{idxentry}>>
 <<Submodule \module{ranges}>>
 <<Submodule \module{index}>>
@@ -249,7 +262,10 @@ we simply markup the index and start right out of the box.
 
 
 %% $Log$
-%% Revision 1.8  1996/03/13 16:53:26  kehr
+%% Revision 1.9  1996/03/28 16:47:36  kehr
+%% Changed modules to work together with the foreign package `ordrules'.
+%%
+%% Revision 1.8  1996/03/13  16:53:26  kehr
 %% Don't remember specific changes. Just time to check-in.
 %%
 %% Revision 1.7  1996/01/31  16:13:31  kehr

@@ -88,7 +88,7 @@ above.
      (print-key  :reader get-print-key  :writer set-print-key  :initarg :print-key)
      (locrefs    :reader get-locrefs    :writer set-locrefs    :initarg :locrefs)
      (idxclass   :reader get-idxclass                          :initarg :idxclass)
-     (subentries :reader set-subentries :writer set-subentries :initform '())))
+     (subentries :reader get-subentries :writer set-subentries :initform '())))
 
 (defun make-indexentry (&key (main-key '()) (merge-key '())
                              (sort-key '()) (print-key '())
@@ -873,7 +873,10 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.9  1996/03/13 16:53:22  kehr
+%% Revision 1.10  1996/03/28 16:47:33  kehr
+%% Changed modules to work together with the foreign package `ordrules'.
+%%
+%% Revision 1.9  1996/03/13  16:53:22  kehr
 %% Don't remember specific changes. Just time to check-in.
 %%
 %% Revision 1.8  1996/01/31  16:13:27  kehr
