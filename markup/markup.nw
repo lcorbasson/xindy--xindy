@@ -233,7 +233,16 @@ T
           ,(intern (string-upcase (concatenate 'string name "-close"))
                    'markup)
           ,signature ,@declare ,@close ,@body))))
-@ %def define-environment-methods
+
+(defmacro define-method (name
+			 (&whole signature)
+			 &key declare body)
+  (let ((name (stringify name)))
+    `(LET ((*ERROR-OUTPUT* *INTERNAL-ERROR-OUTPUT*))
+      (CLOS:DEFMETHOD
+          ,(intern (string-upcase name) 'markup)
+          ,signature ,@declare ,@body))))
+@ %def define-environment-methods define-method
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -244,6 +253,13 @@ T
  (warn "parameter `~S' is not a string! (ignored)~%" open))
 ((and close (not (stringp close)))
  (warn "parameter `~S' is not a string! (ignored)~%" close))
+@
+
+<<Check [[:open-head]] and [[:close-head]]>>=
+((and open-head (not (stringp open-head)))
+ (warn "parameter `~S' is not a string! (ignored)~%" open-head))
+((and close-head (not (stringp close-head)))
+ (warn "parameter `~S' is not a string! (ignored)~%" close-head))
 @
 
 <<Check [[:open]], [[:close]] and [[:sep]]>>=
@@ -394,7 +410,10 @@ the markup of the list of all indexentries.
 <<Letter group markup>>=
 (defmethod do-markup-letter-group ((letter-grp letter-group))
   (let ((group-definition (get-group-definition letter-grp)))
-    (do-markup-letter-group-open group-definition)
+    (do-markup-letter-group-open       group-definition)
+    (do-markup-letter-group-head-open  group-definition)
+    (do-markup-letter-group-head       group-definition)
+    (do-markup-letter-group-head-close group-definition)
     (do-markup-list (get-members letter-grp)
       :identifier IDXENT #| the identifier to use in the expansion |#
       :open-body  (do-markup-indexentry-list-open  0
@@ -410,21 +429,67 @@ the markup of the list of all indexentries.
           (do-markup-indent))
   :close ((do-markup-outdent)
           (do-markup-default "LETTER-GROUP:CLOSE" (get-name group))))
-@ %def do-markup-letter-group
+
+(define-environment-methods do-markup-letter-group-head
+    ((group letter-group-definition))
+  :open  ((do-markup-default "LETTER-GROUP-HEAD:OPEN"  (get-name group))
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "LETTER-GROUP-HEAD:CLOSE" (get-name group))))
+
+(define-method do-markup-letter-group-head ((group letter-group-definition))
+  :body ((do-markup-default "LETTER-GROUP-HEAD" (get-name group))))
+@ %def do-markup-letter-group do-markup-letter-group-head do-markup-letter-group-head
 
 <<Markup interface>>=
-(defmacro markup-letter-group (&key open close group)
-  (cond <<Check [[:open]] and [[:close]]>>
-        <<Check [[:group]]>>
-        (t `(markup::define-environment-methods
-             DO-MARKUP-LETTER-GROUP
-             (,(if group
-                   `(lg-def (EQL ,(lookup-letter-group-definition
-				   *indexstyle* group)))
-                   '(lg-def letter-group-definition)))
-             :declare ((declare (ignore lg-def)))
-             :open  ,(when open  `((do-markup-string ,open)))
-             :close ,(when close `((do-markup-string ,close)))))))
+(defmacro markup-letter-group (&whole whole &rest args)
+  (destructuring-switch-bind (&key
+                              open close group
+                              open-head close-head
+                              &switch
+                              upcase downcase capitalize)
+      args
+    (cond <<Check [[:open]] and [[:close]]>>
+          <<Check [[:open-head]] and [[:close-head]]>>
+          <<Check [[:group]]>>
+          ((or (and upcase downcase)
+               (and upcase capitalize)
+               (and downcase capitalize))
+             (error "more than one modifier in~%~S" whole))
+          (t `(LET ()
+               (markup::define-environment-methods
+                   DO-MARKUP-LETTER-GROUP
+                   (,(if group
+                         `(lg-def (EQL ,(lookup-letter-group-definition
+                                         *indexstyle* group)))
+                         '(lg-def letter-group-definition)))
+                 :declare ((declare (ignore lg-def)))
+                 :open  ,(when open  `((do-markup-string ,open)))
+                 :close ,(when close `((do-markup-string ,close))))
+               (markup::define-environment-methods
+                   DO-MARKUP-LETTER-GROUP-HEAD
+                   (,(if group
+                         `(lg-def (EQL ,(lookup-letter-group-definition
+                                         *indexstyle* group)))
+                         '(lg-def letter-group-definition)))
+                 :declare ((declare (ignore lg-def)))
+                 :open  ,(when open-head  `((do-markup-string ,open-head)))
+                 :close ,(when close-head `((do-markup-string ,close-head))))
+               ,(when (or open-head close-head)
+                      `(markup::define-method
+                        DO-MARKUP-LETTER-GROUP-HEAD
+                        (,(if group
+                              `(lg-def (EQL ,(lookup-letter-group-definition
+                                              *indexstyle* group)))
+                              '(lg-def letter-group-definition)))
+                        :body ((do-markup-string
+                                   ,(cond (upcase     `(string-upcase
+                                                        (get-name lg-def)))
+                                          (downcase   `(string-downcase
+                                                        (get-name lg-def)))
+                                          (capitalize `(string-capitalize
+                                                        (get-name lg-def)))
+                                          (t `(get-name lg-def))))))))))))
 @ %def markup-letter-group
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1084,7 +1149,11 @@ Their elements are simple cross-references.
 
 
 %% $Log$
-%% Revision 1.12  1996/07/16 14:06:21  kehr
+%% Revision 1.13  1996/07/18 15:54:28  kehr
+%% Checkin after all changes that resulted from the define-letter-group
+%% modification were finished.
+%%
+%% Revision 1.12  1996/07/16  14:06:21  kehr
 %% Checkin after all the changes to the `define-letter-group(s)' commands
 %% have been made.
 %%
