@@ -155,6 +155,9 @@ Here is the root chunk of this submodule.
 <<export-list of submodule \module{basetype}>>
 @
 
+<<RCS-Identifier>>=
+("basetype" . "$Id$")
+@
 
 \subsubsection{Class \class{basetype}}
 
@@ -184,7 +187,7 @@ we need the same behaviour (\look{sec:match.strings}).
 @ %def basetype
 
 <<export-list of submodule \module{basetype}>>=
-(export '(basetype prefix-match))
+(export '(basetype prefix-match get-name get-base-alphabet))
 @
 
 \no We didn't define a constructor for this class --- remember, it is only
@@ -215,7 +218,7 @@ initialize [[base-alphabet]] with the result of function
 @ %def alphabet make-alphabet
 
 <<export-list of submodule \module{basetype}>>=
-(export '(alphabet make-alphabet))
+(export '(alphabet make-alphabet get-symbols))
 @
 
 \no Here follows the implementation of the [[calculate-base-alphabet]].
@@ -313,7 +316,10 @@ constructor.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.6  1995/12/15 17:09:47  kehr
+%% Revision 1.7  1995/12/19 11:00:07  kehr
+%% Significant changes.
+%%
+%% Revision 1.6  1995/12/15  17:09:47  kehr
 %% Modified sources for the new module structure.
 %%
 %% Revision 1.5  1995/12/07  18:15:11  kehr

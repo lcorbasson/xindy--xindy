@@ -134,7 +134,7 @@ location-class must implement a method [[perform-match]]
 (\look{sec:match.strings}).
 
 <<export-list of submodule \module{locclass}>>=
-(export '(location-class perform-match))
+(export '(location-class perform-match get-name get-ordnum))
 @
 
 \no We define a relation between location-classes that is used to sort
@@ -551,8 +551,11 @@ is not an error, because we do a prefix-matching.
 <<class \class{loccls-separator}>>
 <<Matching strings with location-classes>>
 
-
 <<export-list of submodule \module{locclass}>>
+@
+
+<<RCS-Identifier>>=
+("locclass" . "$Id$")
 @
 
 \begin{TODO}
@@ -605,7 +608,10 @@ is not an error, because we do a prefix-matching.
 %% End:
 %%
 %% $Log$
-%% Revision 1.7  1995/12/15 17:09:49  kehr
+%% Revision 1.8  1995/12/19 11:00:11  kehr
+%% Significant changes.
+%%
+%% Revision 1.7  1995/12/15  17:09:49  kehr
 %% Modified sources for the new module structure.
 %%
 %% Revision 1.6  1995/12/07  18:15:13  kehr

@@ -86,7 +86,9 @@ directly derived from its abstract description.
     ((layers    :reader get-layers   :initarg :layers)
      (ordnums   :reader get-ordnums  :initarg :ordnums)
      (catattr   :reader get-catattr  :initarg :catattr)
-     (locclass  :reader get-locclass :initarg :locclass)))
+     (locclass  :reader get-locclass :initarg :locclass)
+     (state     :accessor get-state  :initform 'normal)
+     (origin    :accessor get-origin :initform 'nil)))
 @ %def location-reference
 
 \no The definition of the constructor is a little bit tricky since it
@@ -106,8 +108,39 @@ details).
 @ %def make-location-reference
 
 <<export-list of submodule \module{locref}>>=
-(export '(location-reference make-location-refrence))
+(export '(location-reference make-location-refrence
+          get-layers get-ordnums get-catattr get-locclass))
 @
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Class \class{category-attribute}}
+
+Here we define category-attributes. They currently consist of a name
+stored in slot [[name]]. Each category-attribute has a [[ordnum]] that
+is neccessary to determine the output sequence and an associated
+[[type]] that gives information if this cat-attr is declared as a
+\term{single} group or as a \term{member} of a group. The respective
+symbols are [[catattr-single]] and [[catattr-member]].
+
+<<class \class{category-attribute}>>=
+(defclass category-attribute ()
+    ((name   :reader get-name   :initarg :name)
+     (ordnum :reader get-ordnum :initarg :ordnum)
+     (type   :reader get-type   :initarg :type)))
+
+(defun make-category-attribute (attr-name ordnum type)
+  (make-instance 'category-attribute
+                 :name attr-name :ordnum ordnum :type type))
+@ %def category-attribute make-category-attribute
+
+<<export-list of submodule \module{locref}>>=
+(export '(category-attribute make-category-attribute
+          get-name get-ordnum get-type))
+@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%\subsubsection{Class \class{locref-layer}}
 %%
@@ -228,6 +261,8 @@ location-reference and a secondary attribute.
 @ %def virtual-locref make-virtual-locref
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{The module root}
 
 <<*>>=
@@ -252,18 +287,22 @@ location-reference and a secondary attribute.
 ;  (require 'ranges))
 
 <<pretty-print>>
+
+(defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
 @
 
 <<submodule \module{locref}>>=
 <<class \class{location-reference}>>
 <<class \class{vitual-locref}>>
+<<class \class{category-attribute}>>
 <<Sorting location-references>>
-
 <<markup methods>>
 <<export-list of submodule \module{locref}>>
 @
 
-
+<<RCS-Identifier>>=
+("locref" . "$Id$")
+@
 
 
 \subsubsection{Markup}
@@ -339,13 +378,23 @@ printing of the layer-string.
 (set-pprint-dispatch 'location-reference #'pprint-location-reference)
 @
 
+<<pretty-print>>=
+(set-pprint-dispatch 'category-attribute
+                     #'(lambda (s catattr)
+                         (write-string "`" s)
+                         (write-string (get-name catattr) s)
+                         (write-string "`" s)))
+@
+
 %% Local Variables:
 %% mode: latex
-%% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.8  1995/12/15 17:09:52  kehr
+%% Revision 1.9  1995/12/19 11:00:15  kehr
+%% Significant changes.
+%%
+%% Revision 1.8  1995/12/15  17:09:52  kehr
 %% Modified sources for the new module structure.
 %%
 %% Revision 1.7  1995/12/07  18:15:16  kehr
