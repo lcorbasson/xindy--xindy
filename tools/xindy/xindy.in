@@ -15,13 +15,15 @@ XINDY_BINDIR=${XINDY_BINDIR:=@XINDY_BINDIR@}
 
 usage() {
 	echo "
-`basename $0` [-t] [-v] [-o output]  indexstyle raw-index
+`basename $0` [-t] [-v] [-o output] [-l logfile]
+	       indexstyle raw-index
 
 options:
 
   -t   enters tracing-mode for markup-tags.
   -v   displays the current version of xindy.
   -o   specifies the output-file for the tagged index.
+  -l   logfile into which xindy writes useful information
 
 "
 	exit 2
@@ -41,7 +43,7 @@ check_bin() {
 }
 
 check_mem() {
-   if [ ! -f $memfile ]
+   if [ ! -f "$memfile" ]
    then
      echo "can't find \`$memfile' !"
      exit 5
@@ -70,18 +72,23 @@ do
         shift;;
     -c) compile=on
         shift;;
+    -i) interactive=on
+        shift;;
     -m) shift
 	memfile="$1"
         shift;;
     -o) shift
 	output="$1"
         shift;;
+    -l) shift
+	logfile="$1"
+        shift;;
     -*) usage;;
      *) break;;
   esac
 done
 
-if [ ! $try ]
+if [ "" != "$try" ]
 then
    check_bin
    check_mem
@@ -119,16 +126,21 @@ else
 	# append suffix ".out"
         output=`quote_string "$output.out"`
     fi
+    if [ "$logfile" != "" ]
+    then
+        logfile=":logfile  \"`quote_string "$logfile"`\""
+    fi
     xindy_cmd="-x
 (progn
    (xindy:startup :idxstyle \"$indexstyle\"
 	          :rawindex \"$rawindex\"
 		  :output   \"$output\"
+		  $logfile
 		  $version  $tracing)
    (exit))"
 fi
 
-if [ $try ]
+if [ "" != "$try" ]
 then
     echo $xindy_run "$xindy_cmd"
 else
