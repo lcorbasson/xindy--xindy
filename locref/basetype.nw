@@ -26,20 +26,20 @@
 
 This module is responsible for defining all kinds of \term{basetypes}.
 Basetypes and \term{separators} are the smallest structural part of a
-location. A location (and therefore the composition of a
-location-class) is a sequence of basetypes and separators. A basetype
-consists either of an alphabet or an enumeration.
+location. A location is the composition of of basetypes and
+separators. A basetype consists either of an alphabet or an
+enumeration.
 
-An \term{alphabet} is a sequence of symbols of limited size. Since
-\clisp uses ISO-Latin as its document alphabet, the \term{symbols} are
-words composed of letters of the ISO-Latin-alphabet. The \term{total
-  order} of an alphabet is given by the position of the symbols in the
-sequence, therefore symbols that come later in the sequence have
-higher order number. The \term{successor} of a symbol is by default
-defined as the next symbol in the sequence. The last symbol in the
-sequence has no successor. The \term{base alphabet} of an alphabet is
-the minimal set of characters that one needs to compose all symbols of
-the alphabet.
+An \term{alphabet} is a sequence of symbols with a limited limited
+size. Since \clisp uses ISO-Latin1 as its document alphabet, the
+\term{symbols} denotes words composed of letters of the
+ISO-Latin-alphabet. The \term{total order} of an alphabet is given by
+the position of the symbols in the sequence, therefore symbols that
+come later in the sequence have higher order numbern. The
+\term{successor} of a symbol is by default defined as the next symbol
+in the sequence. The last symbol in the sequence has no successor. The
+\term{base alphabet} of an alphabet is the minimal set of characters
+that one needs to compose all symbols of the alphabet.
 
 An \term{enumeration} is a unlimited sequence of symbols. The arabic
 numbers are an example for enumerations. Their base alphabet is the
@@ -88,58 +88,6 @@ follows: We need a constructor to create a basetype and the readers
 for all the components of the class.
 
 \subsection{Concrete Specification}
-
-\subsubsection{External interface}
-
-The following symbols are exported:
-
-\begin{defvcls}{basetype}{}
-  Virtual base-class for all basetypes.
-\end{defvcls}
-
-\begin{defgen}{prefix-match}%%
-  {\func{basetype} \x \func{locref-string} \res (\func{match-str} \x
-    \func{rest-str} \x \func{ordnum})\\\mbox{}} %
-  This generic function dispatches over instances of \cmd{basetype}
-  and does prefix-matching on strings. It takes \func{string} as an
-  argument and tries to match symbols of \func{basetype} with the
-  prefix of the given string. The longest possible match, the
-  remaining string without the matched string and the order number of
-  the matched symbol are returned. If no match is possible
-  [[prefix-match]] \emph{must} return the multiple value (\tnil \x
-  \tnil \x \tnil) to indicate an error. Its signature is
-  \begin{center}
-    \begin{tabbing}
-      \func{map-function} : \tstring \= \res \=(\tstring \x \tstring
-      \x \tint)\\%%
-      \> $|$ \>(\tnil \x \tnil \x \tnil)
-    \end{tabbing}
-  \end{center}
-  \label{def:prefix-match}
-  We also implement methods for other classes that do prefix-matching
-  on strings. If they can't return a number as a result for
-  \func{ordnum} they must return [[t]].
-\end{defgen}
-
-\begin{defcls}{alphabet}{}
-  Subclass of \cmd{basetype}.
-\end{defcls}
-
-\begin{defunc}{make-alphabet}%%
-  {\tstring \x \tstrlist \res \type{alphabet}} Constructor of the
-  \cmd{alphabet}-class.
-\end{defunc}
-
-\begin{defvcls}{enumeration}{}
-  Subclass of \cmd{basetype}.
-\end{defvcls}
-
-\begin{defunc}{make-enumeration}%%
-  {\tclass \x \tstring \x \tcharlist \res \type{enumeration}}
-  Constructor of \cmd{enumeration}-subclasses.
-\end{defunc}
-
-
 
 \subsubsection{Class \class{basetype}}
 
@@ -316,7 +264,13 @@ Here is the root chunk of this submodule.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.9  1996/01/10 16:47:57  kehr
+%% Revision 1.10  1996/01/15 19:17:25  kehr
+%% All files revisited and documentation improved.
+%% External specification no in the module.nw. There it is better
+%% accessible for a reader. The basic interface of the module is
+%% presented as a whole.
+%%
+%% Revision 1.9  1996/01/10  16:47:57  kehr
 %% Some modifications due to the markup-stuff. Renaming of the chunk-names.
 %%
 %% Revision 1.8  1996/01/09  14:28:33  kehr

@@ -39,24 +39,11 @@ A location-reference consists of subparts called \term{layers}. Each
 layer corresponds to a basetype.
 
 
-\subsection{Abstract Specification}
+%\subsection{Abstract Specification}
 
-\subsubsection{Definition}
+%\subsubsection{Definition}
 
-A location-reference is a set
-\begin{center}
-  $\{$ \func{layers, ordnums, catattr, locclass} $\}$
-\end{center}
-with
-\begin{deflistit}{locclassXX}
-\item [layers] is a \tstrlist
-\item [ordnums] is a \tintlist
-\item [catattr] is a \tcatattr
-\item [locclass] is a \tloccls.
-\end{deflistit}
-
-
-\subsubsection{Operation}
+%\subsubsection{Operation}
 
 
 \subsection{Concrete Specification}
@@ -68,8 +55,6 @@ extending to more complex issues. After general introduction we
 concentrate on the \term{markup} of the introduced objects. Finally we
 present pretty-printing functions and other stuff which are less
 important.
-
-\subsubsection{External interface}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -94,12 +79,13 @@ directly derived from its abstract description.
 
 <<Class \class{structured-locref}>>=
 (defclass structured-locref (location-reference)
-    ((layers   :reader get-layers                    :initarg :layers)
-     (ordnums  :reader get-ordnums                   :initarg :ordnums)
-     (catattr  :reader get-catattr                   :initarg :catattr)
-     (locclass :reader get-locclass                  :initarg :locclass)
-     (state    :reader get-state  :writer set-state  :initarg :state)
-     (origin   :reader get-origin :writer set-origin :initform 'nil)))
+    ((layers    :reader get-layers                          :initarg :layers)
+     (ordnums   :reader get-ordnums                         :initarg :ordnums)
+     (catattr   :reader get-catattr                         :initarg :catattr)
+     (locclass  :reader get-locclass                        :initarg :locclass)
+     (state     :reader get-state     :writer set-state     :initarg :state)
+     (origin    :reader get-origin    :writer set-origin    :initform 'nil)
+     (attribute :reader get-attribute :writer set-attribute :initarg :attribute)))
 @ %def structured-locref
 
 \no The definition of the constructor is a little bit tricky since it
@@ -111,27 +97,32 @@ details).
 
 <<Class \class{structured-locref}>>=
 (defun make-structured-locref (&key (layers '())  (ordnums '())
-                                     (catattr nil) (locclass nil)
-                                     &allow-other-keys)
+                                    (catattr nil) (locclass nil)
+                                    (attribute nil)
+                                    &allow-other-keys)
   (make-instance 'structured-locref
-                 :layers  layers   :ordnums  ordnums
-                 :state   'locref-state-normal
-                 :catattr catattr  :locclass locclass))
+                 :layers    layers   :ordnums  ordnums
+                 :state     'locref-state-normal
+                 :catattr   catattr  :locclass locclass
+                 :attribute attribute))
 @ %def make-structured-locref
 
 <<Class \class{structured-locref}>>=
 (defun make-virtual-structured-locref (&key (layers '())  (ordnums '())
-                                             (catattr nil) (locclass nil)
-                                             &allow-other-keys)
+                                            (catattr nil) (locclass nil)
+                                            (attribute nil)
+                                            &allow-other-keys)
   (make-instance 'structured-locref
                  :layers  layers   :ordnums  ordnums
                  :state   'locref-state-virtual
-                 :catattr catattr  :locclass locclass))
+                 :catattr catattr  :locclass locclass
+                 :attribute attribute))
 @ %def make-virtual-structured-locref
 
 \no The states a structured-locref can be in are
-[['locref-state-normal]] and [['locref-state-virtual]]. They should be
-accessed only by the following mutators and predicates.
+[['locref-state-normal]], [['locref-state-virtual]] and
+[['locref-state-deleted]]. They should be accessed only by the
+following mutators and predicates.
 
 <<Class \class{structured-locref}>>=
 (defmethod state-normal-p ((locref structured-locref))
@@ -191,7 +182,8 @@ Here we define the category-attribute-slots.
 
 <<Class \class{category-attribute}>>=
 (defclass category-attribute ()
-    ((name   :reader get-name                      :initarg :name)
+    ((name               :reader get-name
+                         :initarg :name)
      (catattr-grp-ordnum :reader get-catattr-grp-ordnum
                          :writer set-catattr-grp-ordnum
                          :initarg :ordnum)
@@ -209,7 +201,7 @@ Here we define the category-attribute-slots.
                  :name attr-name :markup markup))
 @ %def category-attribute make-category-attribute
 
-\no When spcifying the category-attribute-groups each catattr is
+\no When specifying the category-attribute-groups each catattr is
 informed about its [[ordnum]] and [[type]]. These can be set directly
 by using [[set-ordnum]] and [[set-type]].
 
@@ -260,8 +252,8 @@ possible with location-references.
   the other.
 \item The order given by the category-attribute ([[catattr<]]).
 \end{enumerate}
-%%
-We define the three predicates for their \emph{less-than}- and
+
+\no We define the three predicates for their \emph{less-than}- and
 \emph{equal}-relations. Here are the predicates for the location-class
 relation.
 
@@ -319,12 +311,11 @@ i really need it.
 
 <<*>>=
 ;; $Id$
-;;
 
 (in-package 'locref)
 (provide 'locref)
 
-(eval-when (compile load)
+(eval-when (eval compile load)
   (use-package 'clos)
   (use-package 'xp)
   (unless (find-package 'base)
@@ -390,12 +381,21 @@ A block for pretty-printing a location-reference.
                          (write-string "'" s)))
 @
 
+
 %% Local Variables:
 %% mode: latex
+%% eval: (latex-mode)
+%% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.11  1996/01/10 16:48:02  kehr
+%% Revision 1.12  1996/01/15 19:17:32  kehr
+%% All files revisited and documentation improved.
+%% External specification no in the module.nw. There it is better
+%% accessible for a reader. The basic interface of the module is
+%% presented as a whole.
+%%
+%% Revision 1.11  1996/01/10  16:48:02  kehr
 %% Some modifications due to the markup-stuff. Renaming of the chunk-names.
 %%
 %% Revision 1.10  1996/01/09  14:28:38  kehr

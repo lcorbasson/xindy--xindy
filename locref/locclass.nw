@@ -41,7 +41,7 @@ are supported:
 and \term{separators}. A standard-class has a fixed structure whereas
 a var-class actually describes a family of standard-classes.
 
-A \term{Crossreference-class} describes how cross references such as
+A \term{Cross-reference} describes how cross references such as
 \textit{see}, \textit{see also under} \etc are represented.
 
 
@@ -58,62 +58,8 @@ based on the basetypes and consists of a string and a order number. A
 
 \subsection{Concrete Specification}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{External interface}
-
-The following symbols are exported:
-
-\begin{defvcls}{location-class}{}%
-  Virtual base-class for all location-classes
-\end{defvcls}
-
-\begin{defvcls}{layered-location-class}{}
-  Virtual base-class for all layered location-classes. Subclass of
-  \class{location-class}.
-\end{defvcls}
-
-\begin{defcls}{standard-location-class}{}
-  Describes all location-classes of fixed structure.\\Subclass of
-  \cmd{layered-location-class}.
-\end{defcls}
-
-\begin{defcls}{var-location-class}{}
-  Describes all location-classes of variable structure.\\Subclass of
-  \cmd{layered-location-class}.
-\end{defcls}
-
-\begin{defunc}{checked-make-standard-location-class}
-  {\tstring \x \tstrlist \res \type{standard-location-class}}%%
-  Constructor of \class{standard-location-class}.
-\end{defunc}
-
-\begin{defunc}{checked-make-var-location-class}
-  {\tstring \x \tstrlist \res \type{var-location-class}}%%
-  Constructor of \class{var-location-class}.
-\end{defunc}
-
-\begin{defcls}{loccls-layer}{}
-  Describes the layer of a layered location-class.
-\end{defcls}
-
-\begin{defunc}{make-loccls-layer}
-  {\tstring \x \tmarkup \res \type{loccls-layer}}%%
-  Constructor of \class{loccls-layer}.
-\end{defunc}
-
-\begin{defcls}{loccls-separator}{}
-  Describes the separator of a layered location-class.
-\end{defcls}
-
-\begin{defunc}{make-loccls-separator}%%
-  {\tstring \x \tmarkup \res \type{loccls-separator}}%%
-  Constructor of \class{var-location-class}.
-\end{defunc}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsubsection{Class \sans{location-class}}
+\subsubsection{Class \class{location-class}}
 \label{sec:location-class}
 
 A location-class is the abstract base-class of all location-class
@@ -186,7 +132,7 @@ follows:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Class \sans{layered-location-class}}
+\subsubsection{Class \class{layered-location-class}}
 
 We combine Standard-classes and Var-classes to a Layered-class
 because they share multiple similiarities.
@@ -202,7 +148,7 @@ because they share multiple similiarities.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Class \sans{standard-location-class}}
+\subsubsection{Class \class{standard-location-class}}
 
 Slot [[join-length]] contains the length of a range in the last layer
 of a location-reference of a standard-location-class. If
@@ -239,9 +185,10 @@ normal instantiation without any validation.
           joining-allowed-p
           checked-make-standard-location-class))
 @
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Class \sans{var-location-class}}
+\subsubsection{Class \class{var-location-class}}
 
 <<Class \class{var-location-class}>>=
 (defclass var-location-class (layered-location-class)
@@ -257,9 +204,6 @@ normal instantiation without any validation.
   (make-var-location-class name layers))
 @ %def checked-make-var-location-class
 
-\no Here follows the list of all exported location-classes and their
-constructors.
-
 <<Export-list of submodule \module{locclass}>>=
 (export '(var-location-class
           checked-make-var-location-class))
@@ -267,7 +211,7 @@ constructors.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Class \sans{loccls-layer}}
+\subsubsection{Class \class{loccls-layer}}
 \label{sec:loccls-layer}
 
 A \term{location-class-layer} is based upon a basetype. We define this
@@ -285,7 +229,7 @@ idea, because we now store the markup-information into the class, too.)
 
 <<Export-list of submodule \module{locclass}>>=
 (export '(loccls-layer make-loccls-layer
-	  get-basetype get-markup))
+          get-basetype get-markup))
 @
 
 \no To perform matching of a string [[locstring]] against a layer
@@ -300,11 +244,11 @@ location-class layer.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Class \sans{loccls-separator}}
+\subsubsection{Class \class{loccls-separator}}
 \label{sec:loccls-separator}
 
-The separators is simply a string. We define this as an extra class
-for future extensions.
+A separators is simply a string. We define this as an extra class for
+future extensions.
 
 <<Class \class{loccls-separator}>>=
 (defclass loccls-separator ()
@@ -317,7 +261,7 @@ for future extensions.
 
 <<Export-list of submodule \module{locclass}>>=
 (export '(loccls-separator make-loccls-separator
-	  get-separator get-markup))
+          get-separator get-markup))
 @
 
 \no To perform matching of a string [[locstring]] against a separator
@@ -344,6 +288,62 @@ indicate success or a multiple value [[(nil nil nil)]] otherwise.
           (t (values nil nil nil)))))
 @ %def perform-match
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Class \class{crossref-location-class}}
+
+Cross-references are a completely different type of location-classes.
+Their purpose is to define creoss-references like `\emph{see}
+somewhere else' or `\emph{see} also under'. Their main purpose is to
+(re)direct the readers interest to related topics or to the keyword,
+that serves as the collector of similiar keywords. The indexentry a
+cross-reference points to is named \term{target}.
+
+We introduce the following base-class for the different types of
+cross-reference location-classes. Slot [[target]] is used differently
+by the subclasses. For explanation see below.
+
+<<Class \class{crossref-location-class}>>=
+(defclass crossref-location-class (location-class)
+    ((target :reader get-target :writer set-target :initarg :target)))
+
+<<Export-list of submodule \module{locclass}>>=
+(export '(crossref-location-class))
+@
+
+\subsubsection{Class \class{verified-crossref-location-class}}
+
+In general we can imagine that a cross-reference \emph{verifies} that
+its counterpart it points to is actually presented in the index.  This
+makes it possible to \emph{check} the consisteny of an index (Who
+likes to get misleaded can use the unchecked classes as well ;-) For
+instances of subclasses of this type we always check their
+consistency.
+
+For this reason slot [[target]] consists of a \tstrlist that holds the
+key (what key?) of the indexentry it points to.
+
+<<Class \class{verified-crossref-location-class}>>=
+(defclass verified-crossref-location-class (location-class)
+    ())
+
+<<Export-list of submodule \module{locclass}>>=
+(export '(verified-crossref-location-class))
+@
+
+\subsubsection{Class \class{unverified-crossref-location-class}}
+
+Here follows the unverified counterpart. Slot [[target]] is simply a
+string.
+
+<<Class \class{unverified-crossref-location-class}>>=
+(defclass unverified-crossref-location-class (location-class)
+    ())
+
+<<Export-list of submodule \module{locclass}>>=
+(export '(unverified-crossref-location-class))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -390,6 +390,7 @@ possible.
 <<Matching strings with location-classes>>=
 (defgeneric perform-match (locstring locclass))
 @ %def perform-match
+
 
 \subsubsection*{Matching strings with standard-location-classes}
 
@@ -490,13 +491,22 @@ is not an error, because we do a prefix-matching.
         (values nil nil))))
 @ %def perform-match
 
+
+
+\subsubsection*{Matching strings with crossref-location-classes}
+
+<<Matching strings with location-classes>>=
+(defmethod perform-match ((locstring string)
+                          (loccls    crossref-location-class))
+  t)
+@ %def perform-match
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{The submodule root}
 
 <<Submodule \module{locclass}>>=
 ;; $Id$
-;;
 
 <<Class \class{location-class}>>
 <<Class \class{layered-location-class}>>
@@ -504,6 +514,10 @@ is not an error, because we do a prefix-matching.
 <<Class \class{var-location-class}>>
 <<Class \class{loccls-layer}>>
 <<Class \class{loccls-separator}>>
+<<Class \class{crossref-location-class}>>
+<<Class \class{verified-crossref-location-class}>>
+<<Class \class{unverified-crossref-location-class}>>
+
 <<Matching strings with location-classes>>
 
 <<Export-list of submodule \module{locclass}>>
@@ -563,7 +577,13 @@ is not an error, because we do a prefix-matching.
 %% End:
 %%
 %% $Log$
-%% Revision 1.10  1996/01/10 16:48:00  kehr
+%% Revision 1.11  1996/01/15 19:17:28  kehr
+%% All files revisited and documentation improved.
+%% External specification no in the module.nw. There it is better
+%% accessible for a reader. The basic interface of the module is
+%% presented as a whole.
+%%
+%% Revision 1.10  1996/01/10  16:48:00  kehr
 %% Some modifications due to the markup-stuff. Renaming of the chunk-names.
 %%
 %% Revision 1.9  1996/01/09  14:28:35  kehr

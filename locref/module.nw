@@ -50,13 +50,183 @@ locclass: <base> basetype
 basetype: -
 \end{verbatim}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\section{External interface of module \module{locref}}
+
+
+\subsection{Submodule \module{basetype}}
+
+The following symbols are exported:
+
+\begin{defvcls}{basetype}{}
+  Abstract base-class for all basetypes.
+\end{defvcls}
+
+\begin{defgen}{prefix-match}%%
+  {\func{basetype} \x \func{locref-string} \res (\func{match-str} \x
+    \func{rest-str} \x \func{ordnum})\\\mbox{}} %
+  This generic function dispatches over instances of \cmd{basetype}
+  and does prefix-matching on strings. It takes \func{string} as an
+  argument and tries to match symbols of \func{basetype} with the
+  prefix of the given string. The longest possible match, the
+  remaining string without the matched string and the order number of
+  the matched symbol are returned. If no match is possible
+  [[prefix-match]] \emph{must} return the multiple value (\tnil \x
+  \tnil \x \tnil) to indicate an error. Its signature is
+  \begin{center}
+    \begin{tabbing}
+      \func{prefix-match} : \tstring \= \res \=(\tstring \x \tstring
+      \x \tint)\\%%
+      \> $|$ \>(\tnil \x \tnil \x \tnil)
+    \end{tabbing}
+  \end{center}
+  \label{def:prefix-match}
+  We also implement methods for other classes that do prefix-matching
+  on strings. If they can't return a number as a result for
+  \func{ordnum} they must return [[t]].
+\end{defgen}
+
+\begin{defcls}{alphabet}{}
+  Subclass of \cmd{basetype}. Used to create objects of type
+  [[alphabet]].
+\end{defcls}
+
+\begin{defunc}{make-alphabet}%%
+  {\tstring \x \tstrlist \res \type{alphabet}} Constructor of the
+  \cmd{alphabet}-class. It taked a name and a list of strings and
+  gives back an instance of type [[alphabet]].
+\end{defunc}
+
+\begin{defvcls}{enumeration}{}
+  Subclass of \cmd{basetype}. Used as abstract base-class of all
+  implemented enumerations.
+\end{defvcls}
+
+\begin{defunc}{make-enumeration}%%
+  {\tclass \x \tstring \x \tcharlist \res \type{enumeration}}
+  Constructor of \cmd{enumeration}-subclasses.
+\end{defunc}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Submodule \module{locclass}}
+
+The following symbols are exported:
+
+\begin{defvcls}{location-class}{}%
+  Abstract base-class of all location-classes.
+\end{defvcls}
+
+\begin{defvcls}{layered-location-class}{}
+  Abstract base-class of all layered location-classes. Subclass of
+  \class{location-class}.
+\end{defvcls}
+
+\begin{defcls}{standard-location-class}{}
+  Describes all location-classes of fixed structure.\\Subclass of
+  \cmd{layered-location-class}.
+\end{defcls}
+
+\begin{defcls}{var-location-class}{}
+  Describes all location-classes of variable structure.\\Subclass of
+  \cmd{layered-location-class}.
+\end{defcls}
+
+\begin{defunc}{checked-make-standard-location-class}
+  {\tstring \x \tstrlist \res \type{standard-location-class}}%%
+  Constructor of \class{standard-location-class}.
+\end{defunc}
+
+\begin{defunc}{checked-make-var-location-class}
+  {\tstring \x \tstrlist \res \type{var-location-class}}%%
+  Constructor of \class{var-location-class}.
+\end{defunc}
+
+\begin{defcls}{loccls-layer}{}
+  Describes the layer of a layered location-class.
+\end{defcls}
+
+\begin{defunc}{make-loccls-layer}
+  {\tstring \x \tmarkup \res \type{loccls-layer}}%%
+  Constructor of \class{loccls-layer}.
+\end{defunc}
+
+\begin{defcls}{loccls-separator}{}
+  Describes the separator of a layered location-class.
+\end{defcls}
+
+\begin{defunc}{make-loccls-separator}%%
+  {\tstring \x \tmarkup \res \type{loccls-separator}}%%
+  Constructor of \class{var-location-class}.
+\end{defunc}
+
+\begin{defvcls}{crossref-location-class}{}
+  Abstract base-class of all cross-references.
+\end{defvcls}
+
+\begin{defvcls}{verified-crossref-location-class}{}
+  Abstract base-class of all cross-references which are to be verified.
+\end{defvcls}
+
+\begin{defvcls}{unverified-crossref-location-class}{}
+  Abstract base-class of all cross-references which are not to be verified.
+\end{defvcls}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Submodule \module{locref}}
+
+\begin{defvcls}{location-reference}{}
+  Abstract base-class of all location-references.
+\end{defvcls}
+
+\begin{defcls}{structured-locref}{}
+  This is the class of all structured location-references. With
+  \emph{structure} we mean that we can sort and join them.
+\end{defcls}
+
+\begin{defunc}{make-structured-locref}{}
+
+\end{defunc}
+
+\begin{defcls}{category-attribute}{}
+  The class of category-attributes.
+\end{defcls}
+
+\begin{defunc}{make-category-attribute}{}
+  Creates instances of class \class{category-attribute}.
+\end{defunc}
+
+\begin{defunc}{locref-class<}{\type{locref} \x \type{locref}}
+  Compares the sort-ordnum of the location-classes of both
+  location-references.
+\end{defunc}
+
+\begin{defunc}{locref<}{\type{locref} \x \type{locref}}
+  Compares two location-references. Still in progress...
+\end{defunc}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 %% Local Variables:
 %% mode: latex
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.5  1996/01/09 14:28:40  kehr
+%% Revision 1.6  1996/01/15 19:17:34  kehr
+%% All files revisited and documentation improved.
+%% External specification no in the module.nw. There it is better
+%% accessible for a reader. The basic interface of the module is
+%% presented as a whole.
+%%
+%% Revision 1.5  1996/01/09  14:28:40  kehr
 %% Moved submodule `ranges' from this module to module `index'.
 %% Minor modifications in conjunction with the rewrite of module `index'.
 %%
