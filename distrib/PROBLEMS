@@ -14,20 +14,6 @@ piece of software.
 
 
 
-HP-UX 9.04 (and maybe other versions)
-=====================================
-
-binaries/hppa-hpux/Makefile:
-
-Change the following lines in the Makefile to make the system compile
-`tex2xindy' without gcc.
-
-CFLAGS     = -Ae -O
-
-Thanks to Werner Gross for reporting this problem.
-
-
-
 =====================================================================
 Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
 Computer Science Department

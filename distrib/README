@@ -8,20 +8,20 @@ does.
 This directory contains the distribution as of July 1996. It is
 organized as follows:
 
-  Doc/		contains a manual in html,dvi,ps,info,txt-formats
+  Doc/          Contains a Manual and a Tutorial in
+		html,dvi,ps,info,txt-formats
 
-  bin/          several scripts and tools forming the enviroment of xindy
+  modules/	The library of pre-defined indexstyle-modules
 
-  modules/	the library of pre-defined indexstyle-modules
-
-  binaries/     some binaries separated into machine-depended
+  binaries/     Some binaries separated into machine-depended
 	        subdirectories
 
-  src/          the source of the xindy-system
+  src/          The source of the xindy-system. Contains several
+		scripts and tools forming the environment of xindy.
 
-  tests/        contains a complete testsuite
+  tests/        Contains a complete testsuite
 
-  contrib/	contains additional programs that can be used to make
+  contrib/      Contains additional programs that can be used to make
 		xindy work with various document-formatting systems
 
 
@@ -31,7 +31,7 @@ This distribution is also available at
 
 or at our homepage at
 
-	http://www.iti.informatik.th-darmstadt.de/@@@ (not availabe yet!)
+	http://www.iti.informatik.th-darmstadt.de/xindy/
 
 which contains the most up-to-date information about xindy.
 

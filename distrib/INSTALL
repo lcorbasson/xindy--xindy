@@ -3,73 +3,91 @@ $Id$
 
 This file describes how to install xindy on your system:
 
-1. If you not have received a binary distribution for your preferred
-   platform(s), get one and unpack it in this directory with
+1. Enter the directory one level above the current one (the directory
+   this file is in) by typing
 
-	gtar -xzvf xindy-<version>-<platform>.tar.gz
+        cd ..
+
+   Now establish the following link
+
+        ln -s xindy-<version> current
+
+   with xindy-<version> being the directory where this INSTALL file is
+   stored. The following steps use this link to select the current
+   xindy-version. Thus you can keep several versions in parallel.
+
+2. If you not have received a binary distribution for your preferred
+   platform(s), get one and unpack it in the current directory with
+
+	gtar xzvf xindy-<version>-<platform>.tar.gz
 
    The binaries will be stored into the directory ./binaries/<platform>.
 
-2. Change to the directory of the binary-distribution for which you
-   want to install the system, e.g.
+3. a) Change to the directory of the binary-distribution for which you
+      want to install the system, e.g.
 
-	cd ./binaries/<platform>
+	  cd ./binaries/<platform>
 
-   Modify the Makefile to relect your system paths, etc. The directory
-   where xindy looks for ist runtime-system is
+   b) Modify the `Makefile.platform' to reflect your systema paths,
+      etc. The directory where xindy looks for its runtime-system is
 
-	LIBDIR    where the main executable `xindy.run', the dumped
-		  file `xindy.mem' and the indexstyle-modules go.
+	  LIBDIR    where the main executable `xindy.run', the dumped
+		    file `xindy.mem' and the indexstyle-modules go.
 
-   An example call might be
+   c) Generate the Makefile by running `make' on `Makefile.in'.
+      An example call might be
 
-	make LIBDIR=/usr/local/lib/xindy
+	  make -f Makefile.in
 
-   This is also the default that is specified in the Makefile.
+      If you ever change `Makefile.platform' again, simply type `make'
+      which will generate a new Makefile for you.
 
-   Note: This only compiles xindy and modifies some scripts but does
-	 *not* install anything!
+   d) Build all programs by typing
 
-   After a while (between 60 seconds and 10 minutes--depending on your
-   system) you should receive a message saying that the compilation
-   has finished. If not, see file PROBLEMS for further hints.
+          make all
 
-   This step has produced a memory-image of the xindy-system in file
-   xindy.mem. If you like, you can compress this file with gzip by
-   additionally typing
+      Note: This only compiles xindy and modifies some scripts but does
+	    *not* install anything!
 
-	make gzipped
+       After a while (between 60 seconds and 10 minutes--depending on
+       your system) you should receive a message saying that the
+       compilation has finished. If not, see file PROBLEMS for further
+       hints.
 
-   which compresses xindy.mem and stores it under the same name. This
-   saves space but can result in a longer startup-phase.
+       This step has produced a memory-image of the xindy-system in
+       file xindy.mem. This is comparable to a TeX-format file. If you
+       like, you can compress this file with gzip by additionally
+       typing
 
+	  make gzipped
 
-3. The next step would be to run the testsuite on the whole system.
+       which compresses xindy.mem and stores it under the same name.
+       This saves space but can result in a longer startup-phase.
+
+3. The next step would be to run the test suite on the whole system.
    Type
 
 	make testsuite
 
    to run all tests. This may last some minutes (go, drink a cup of
-   coffee) but will hopfully report that it has not found any errors.
+   coffee) but will hopefully report that it has not found any errors.
 
 4. After everything seems to be ok, you only need to install the
    system.
 
-   The files should be installed as follows:
+   If you have set the paths in `Makefile.platform' all files will be
+   installed properly. First type
 
-	cp xindy tex2xindy ../../bin/makeindex4  <perhaps /usr/local/bin>
-	cp xindy.run xindy.mem	XINDY_LIBDIR
-	cp -R ../../modules     XINDY_LIBDIR
-	cp ../../Doc		<where you store your docs>
+	make -n install
 
-   Its up to you to install all files properly. xindy and tex2xindy
-   are the only files that needs be reachable from the path. It
-   searches for xindy.run and xindy.mem in LIBDIR.
+   to check if everything is ok and then install them by typing
 
-5. Read the manual with your prefered viewer. Its located in the
-   Doc-directory.
+	make install
 
-6. You're finished!
+5. Read the manual and go through the tutorial with your preferred
+   viewer/browser. They can be found in the Doc-directory.
+
+6. Have fun! (very important)
 
 =====================================================================
 Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
