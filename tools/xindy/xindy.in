@@ -11,18 +11,19 @@
 #
 
 usage() {
-	echo "
-`basename $0`\t[-t] [-v] [-o output] [-l logfile]
+	echo -e "
+`basename $0`\t[-t] [-v] [-o output] [-l logfile] [-L n]
 \tindexstyle raw-index
 
 options:
 
-  -t   Enters tracing-mode for markup-tags.
-  -v   Displays the current version of xindy.
-  -o   Specifies the output-file for the tagged index. If ommited, the
-       name of the raw-index is taken, with its extension replaced by
-       \`.ind'.
-  -l   Logfile into which xindy writes useful information.
+  -t       Enters tracing-mode for markup-tags.
+  -v       Displays the current version of xindy.
+  -o       Specifies the output-file for the tagged index. If ommited, the
+           name of the raw-index is taken, with its extension replaced by
+           \`.ind'.
+  -l file  Logfile into which xindy writes useful information.
+  -L n     Enter logging level \`n' = {1,2,3}.
 
 "
 	exit 2
@@ -99,6 +100,9 @@ do
     -l) shift
 	logfile="$1"
         shift;;
+    -L) shift
+	level="$1"
+        shift;;
     -*) usage;;
      *) break;;
   esac
@@ -152,15 +156,20 @@ else
     fi
     if [ "$logfile" != "" ]
     then
-        logfile=":logfile  \"`quote_string "$logfile"`\""
+        logfile=":logfile \"`quote_string "$logfile"`\""
     fi
+    case $level in
+      1) logging=":mappings-trace t";;
+      2) logging=":mappings-trace t";;
+      3) logging=":mappings-trace t";;
+    esac
+
     xindy_cmd="-x
 (progn
    (xindy:startup :idxstyle \"$indexstyle\"
 	          :rawindex \"$rawindex\"
 		  :output   \"$output\"
-		  $logfile
-		  $version  $tracing)
+		  $logfile $version $tracing $logging)
    (exit))"
 fi
 
