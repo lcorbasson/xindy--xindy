@@ -54,11 +54,14 @@ the following diagram.
 
 <<Class \class{location-reference}>>=
 (defclass location-reference ()
-    ((locclass  :reader get-locclass :initarg :locclass)))
-@ %def location-reference
+    ((locclass :initarg :locclass)))
+
+(defmacro get-locclass (locref)
+  `(SLOT-VALUE ,locref 'LOCCLASS))
+@ %def location-reference get-locclass
 
 <<Export-list of submodule \module{locref}>>=
-(export '(location-reference get-locclass))
+(export '(location-reference get-locclass locclass))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,23 +73,36 @@ directly derived from its abstract description.
 
 <<Class \class{layered-location-reference}>>=
 (defclass layered-location-reference (location-reference)
-    ((layers    :reader get-layers                          :initarg :layers)
-     (ordnums   :reader get-ordnums                         :initarg :ordnums)
-     (catattr   :reader get-catattr                         :initarg :catattr)
+    ((layers  #|:reader get-layers|#                        :initarg :layers)
+     (string    :reader get-locref-string                   :initarg :string)
+     (ordnums #|:reader get-ordnums|#                       :initarg :ordnums)
+     (catattr                                               :initarg :catattr)
      (state     :reader get-state     :writer set-state     :initarg :state)
+     (rangeattr                                             :initform 'nil)
      (origin    :reader get-origin    :writer set-origin    :initform 'nil)
      (attribute :reader get-attribute :writer set-attribute :initarg :attribute)))
-@ %def layered-location-reference
+
+(defmacro get-catattr (locref)
+  `(SLOT-VALUE ,locref 'CATATTR))
+
+(defmacro get-ordnums (locref)
+  `(SLOT-VALUE ,locref 'ORDNUMS))
+
+(defmacro get-rangeattr (locref)
+  `(SLOT-VALUE ,locref 'RANGEATTR))
+@ %def layered-location-reference get-catattr get-ordnums get-rangeattr
 
 \no The constructor takes the additional keyword [[:virtual]] to
 distinguish between the two states a location-reference can be in
 after creation.
 
 <<Class \class{layered-location-reference}>>=
-(defun make-layered-location-reference (&key (layers '())    (ordnums '())
+(defun make-layered-location-reference (&key (string "")
+                                             (layers '())    (ordnums '())
                                              (catattr nil)   (locclass nil)
                                              (attribute nil) (virtual nil))
   (make-instance 'layered-location-reference
+                 :string    string
                  :layers    layers   :ordnums  ordnums
                  :catattr   catattr  :locclass locclass
                  :attribute attribute
@@ -99,14 +115,28 @@ after creation.
 following mutators and predicates.
 
 <<Class \class{layered-location-reference}>>=
+(defmacro rangeattr-open-p (attr)
+  `(EQL ,attr :RANGEATTR-OPEN))
+
+(defmacro rangeattr-close-p (attr)
+  `(EQL ,attr :RANGEATTR-CLOSE))
+
+(defmacro set-rangeattr-open (locref)
+  `(SETF (SLOT-VALUE ,locref 'RANGEATTR) :RANGEATTR-OPEN))
+
+(defmacro set-rangeattr-close (locref)
+  `(SETF (SLOT-VALUE ,locref 'RANGEATTR) :RANGEATTR-CLOSE))
+@ %def rangeattr-open-p rangeattr-close-p set-rangeattr-open set-rangeattr-close
+
+<<Class \class{layered-location-reference}>>=
 (defmethod state-normal-p ((locref layered-location-reference))
   (eql 'locref-state-normal (get-state locref)))
 
-(defmethod state-virtual-p ((locref layered-location-reference))
-  (eql 'locref-state-virtual (get-state locref)))
+(defmacro state-virtual-p (locref)
+  `(EQL 'LOCREF-STATE-VIRTUAL (SLOT-VALUE ,locref 'STATE)))
 
-(defmethod state-deleted-p ((locref layered-location-reference))
-  (eql 'locref-state-deleted (get-state locref)))
+(defmacro state-deleted-p (locref)
+  `(EQL 'LOCREF-STATE-DELETED (SLOT-VALUE ,locref 'STATE)))
 
 (defmethod set-state-normal ((locref layered-location-reference))
   (set-state 'locref-state-normal locref)
@@ -125,10 +155,12 @@ following mutators and predicates.
 (export '(layered-location-reference
           make-layered-location-reference
           get-layers       get-ordnums       get-catattr
-          get-origin       set-origin
+          get-rangeattr    rangeattr         get-locref-string
+          get-origin       set-origin        catattr ordnums
           state-normal-p   state-virtual-p   state-deleted-p
           set-state-normal set-state-virtual set-state-deleted
-          ))
+          set-rangeattr-open set-rangeattr-close
+          rangeattr-open-p rangeattr-close-p))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -138,10 +170,18 @@ following mutators and predicates.
 <<Class \class{crossref-location-reference}>>=
 (defclass crossref-location-reference (location-reference)
     ((target :reader get-target :writer set-target :initarg :target)))
-@ %def crossref-location-reference
+
+(defun make-crossref-location-reference (loccls target)
+  (make-instance 'crossref-location-reference
+                 :locclass loccls :target target))
+
+(defmethod create-cross-reference ((loccls crossref-location-class)
+                                   (target list))
+  (make-crossref-location-reference loccls target))
+@ %def crossref-location-reference make-crossref-location-reference create-cross-reference
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(crossref-location-reference))
+(export '(crossref-location-reference create-cross-reference))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -152,7 +192,7 @@ This section deals with the task to build location-references from a
 given string, a category-attribute and a location-class description.
 The signature of the function [[build-location-reference]] is
 described in the interface of this module. The implementatation is
-realised via methods bount to the location-classes, since the
+realised via methods bound to the location-classes, since the
 construction of a location-reference directly depends on the
 location-class.
 
@@ -166,9 +206,10 @@ Currently we support only the creation of structured location-references.
   (multiple-value-bind (layers ordnums)
       (perform-match locref-str locclass)
     (and layers ordnums
-         (make-layered-location-reference :locclass  locclass :layers  layers
-                                          :ordnums   ordnums  :catattr catattr
-                                          :attribute attribute))))
+         (make-layered-location-reference
+          :locclass  locclass  :layers  layers
+          :ordnums   ordnums   :catattr catattr
+          :attribute attribute :string locref-str))))
 @ %def build-location-reference
 
 <<Export-list of submodule \module{locclass}>>=
@@ -201,8 +242,7 @@ Here we define the category-attribute-slots.
 (defclass category-attribute ()
     ((name               :reader get-name
                          :initarg :name)
-     (catattr-grp-ordnum :reader get-catattr-grp-ordnum
-                         :writer set-catattr-grp-ordnum
+     (catattr-grp-ordnum :writer set-catattr-grp-ordnum
                          :initarg :ordnum)
      (sort-ordnum        :reader get-sort-ordnum
                          :writer set-sort-ordnum
@@ -214,6 +254,9 @@ Here we define the category-attribute-slots.
                          :writer set-type
                          :initarg :type)))
 
+(defmacro get-catattr-grp-ordnum (catattr)
+  `(SLOT-VALUE ,catattr 'CATATTR-GRP-ORDNUM))
+
 (defun make-category-attribute (attr-name)
   (make-instance 'category-attribute :name attr-name))
 @ %def category-attribute make-category-attribute
@@ -224,7 +267,7 @@ by using [[set-ordnum]] and [[set-type]].
 
 <<Export-list of submodule \module{locref}>>=
 (export '(category-attribute make-category-attribute
-          get-name
+          get-name               catattr-grp-ordnum
           get-catattr-grp-ordnum set-catattr-grp-ordnum
           get-sort-ordnum        set-sort-ordnum
           get-processing-ordnum  set-processing-ordnum
@@ -257,29 +300,31 @@ relation.
 
 <<Sorting location-references>>=
 (defun locref-class< (locref-1 locref-2)
-  (< (get-locclass locref-1) (get-locclass locref-2)))
+  (declare (inline))
+  (< (get-ordnum (get-locclass locref-1))
+     (get-ordnum (get-locclass locref-2))))
 
 (defun locref-class= (locref-1 locref-2)
-  (= (get-locclass locref-1) (get-locclass locref-2)))
+  (declare (inline))
+  (eql (get-locclass locref-1) (get-locclass locref-2)))
 @ %def locref-class< locref-class=
 
 \no Here follows the implementation of the ordnum-relation.
 
 <<Sorting location-references>>=
-(defun locref-ordnum< (ordnum-list-1 ordnum-list-2)
-  (declare (inline))
-  (cond ((equal ordnum-list-1 ordnum-list-2) nil)
-        (t (do ((rest-1 ordnum-list-1 (cdr rest-1))
-                (rest-2 ordnum-list-2 (cdr rest-2)))
-               ((or (endp rest-1) (endp rest-2)
-                    (/= (first rest-1) (first rest-2)))
-                  (cond ((endp rest-1) t)
-                        ((endp rest-2) nil)
-                        (t (< (first rest-1) (first rest-2)))))))))
+(defmacro locref-ordnum< (ordnum-list-1 ordnum-list-2)
+  `(COND
+    ((EQUAL ,ordnum-list-1 ,ordnum-list-2) NIL)
+    (T (DO ((REST-1 ,ordnum-list-1 (CDR REST-1))
+            (REST-2 ,ordnum-list-2 (CDR REST-2)))
+           ((OR (ENDP REST-1) (ENDP REST-2)
+                (/= (FIRST REST-1) (FIRST REST-2)))
+              (COND ((ENDP REST-1) T)
+                    ((ENDP REST-2) NIL)
+                    (T (< (FIRST REST-1) (FIRST REST-2)))))))))
 
-(defun locref-ordnum= (ordnum-list-1 ordnum-list-2)
-  (declare (inline))
-  (equal ordnum-list-1 ordnum-list-2))
+(defmacro locref-ordnum= (ordnum-list-1 ordnum-list-2)
+  `(EQUAL ,ordnum-list-1 ,ordnum-list-2))
 @ %def locref-ordnum< locref-ordnum=
 
 \no Finally we define a combined version of both. I'm not yet sure if
@@ -291,10 +336,25 @@ i really need it.
            (locref-ordnum< locref-1 locref-2))
         (t (locref-class< locref-1 locref-2))))
 
-(defun locref= (locref-1 locref-2)
-  (and (eql (get-catattr locref-1) (get-catattr locref-2))
+(defmethod locref= ((locref-1 crossref-location-reference)
+                    (locref-2 layered-location-reference))
+  nil)
+
+(defmethod locref= ((locref-1 layered-location-reference)
+                    (locref-2 crossref-location-reference))
+  nil)
+
+(defmethod locref= ((locref-1 crossref-location-reference)
+                    (locref-2 crossref-location-reference))
+  (and (locref-class= locref-1 locref-2)
+       (equal (get-target locref-1) (get-target locref-2))))
+
+(defmethod locref= ((locref-1 layered-location-reference)
+                    (locref-2 layered-location-reference))
+  (and (locref-class= locref-1 locref-2)
        (eql (get-catattr locref-1) (get-catattr locref-2))
-       (locref-ordnum= (get-ordnums locref-1) (get-ordnums locref-2))))
+       (locref-ordnum= (get-ordnums locref-1) (get-ordnums locref-2))
+       (eql (get-rangeattr locref-1) (get-rangeattr locref-2))))
 @ %def locref< locref=
 
 <<Export-list of submodule \module{locref}>>=
@@ -351,9 +411,13 @@ A block for pretty-printing a location-reference.
   (pprint-logical-block
    (s nil :prefix "[" :suffix "]")
                                         ;(pprint-indent :block 2 s)
-   (cond ((state-normal-p  locref) (write-string "N:" s))
-         ((state-virtual-p locref) (write-string "V:" s))
-         (t (write-string "D:" s)))
+   (cond ((state-normal-p  locref) (write-string "Nor:" s))
+         ((state-virtual-p locref) (write-string "Vir:" s))
+         (t (write-string "Del:" s)))
+   (cond ((rangeattr-open-p  (get-rangeattr locref)) (write-string "OPEN:" s))
+         ((rangeattr-close-p (get-rangeattr locref)) (write-string "CLOSE:" s)))
+   (write-string (get-locref-string locref) s)
+   (write-string "=" s)
    (write (get-layers locref) :stream s)
    (write-string "=" s)
    (write (get-ordnums locref) :stream s)
@@ -382,7 +446,10 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.18  1996/05/09 11:49:54  kehr
+%% Revision 1.19  1996/05/20 08:49:31  kehr
+%% Some modifications due to performance improvement.
+%%
+%% Revision 1.18  1996/05/09  11:49:54  kehr
 %% Changes in all submodules, due to macro-expansion problems during
 %% compilation.
 %%

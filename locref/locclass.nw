@@ -66,10 +66,13 @@ all location-classes.
 
 <<Class \class{location-class}>>=
 (defclass location-class ()
-    ((name   :reader get-name   :initarg :name)
-     (ordnum :reader get-ordnum :writer set-ordnum :type number
+    ((name   :reader get-name :type string :initarg :name)
+     (ordnum :writer set-ordnum :type number
              :initform (gen-next-loccls-ordnum))))
-@ %def location-class
+
+(defmacro get-ordnum (loccls)
+  `(SLOT-VALUE ,loccls 'ORDNUM))
+@ %def location-class get-ordnum
 
 \no Every derived class must define a constructor-function
 [[checked-make-name-location-class]] that makes some validation-checks
@@ -81,7 +84,7 @@ location-class must implement a method [[perform-match]]
 
 <<Export-list of submodule \module{locclass}>>=
 (export '(location-class perform-match
-          get-name get-ordnum))
+          get-name get-ordnum ordnum))
 @
 
 \no We define a relation between location-classes that is used to sort
@@ -137,11 +140,14 @@ because they share multiple similiarities.
 
 <<Class \class{layered-location-class}>>=
 (defclass layered-location-class (location-class)
-    ((layers :reader get-layers :initarg :layers)))
+    ((layers #|:reader get-layers|# :initarg :layers)))
+
+(defmacro get-layers (locref)
+  `(SLOT-VALUE ,locref 'LAYERS))
 @ %def layered-location-class
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(layered-location-class get-layers))
+(export '(layered-location-class get-layers layers))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -164,8 +170,8 @@ location-class.
 @ %def standard-location-class make-standard-location-class
 
 <<Class \class{standard-location-class}>>=
-(defmethod joining-allowed-p ((loccls standard-location-class))
-  (or (get-join-length loccls)))
+(defmacro joining-allowed-p (loccls)
+  `(OR (SLOT-VALUE ,loccls 'JOIN-LENGTH)))
 @ %def joining-allowed-p
 
 \no We add a function for a checked creation of a location-class, that
@@ -180,7 +186,7 @@ normal instantiation without any validation.
 <<Export-list of submodule \module{locclass}>>=
 (export '(standard-location-class
           get-join-length set-join-length
-          joining-allowed-p
+          joining-allowed-p join-length
           checked-make-standard-location-class))
 @
 
@@ -312,7 +318,7 @@ by the subclasses. For explanation see below.
 \subsubsection{Class \class{verified-crossref-location-class}}
 
 In general we can imagine that a cross-reference \emph{verifies} that
-its counterpart it points to is actually presented in the index.  This
+its counterpart it points to is actually present in the index.  This
 makes it possible to \emph{check} the consisteny of an index (Who
 likes to get misleaded can use the unchecked classes as well ;-) For
 instances of subclasses of this type we always check their
@@ -574,7 +580,10 @@ is not an error, because we do a prefix-matching.
 
 
 %% $Log$
-%% Revision 1.14  1996/05/07 08:59:27  kehr
+%% Revision 1.15  1996/05/20 08:49:29  kehr
+%% Some modifications due to performance improvement.
+%%
+%% Revision 1.14  1996/05/07  08:59:27  kehr
 %% Added CVS support for xfig-pictures.
 %%
 %% Revision 1.13  1996/05/06  10:01:46  kehr
@@ -669,7 +678,7 @@ is not an error, because we do a prefix-matching.
 
 
 %% Local Variables:
-%% mode: latex
+%% mode: lisp
 %% TeX-master: t
 %% End:
 %%
