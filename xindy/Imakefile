@@ -47,7 +47,8 @@ XCOMM continue in Imakefile
 
       ALL_NOWEB_SRC= intro.nw
 
-NowebLaTeXDocTarget(intro)
+
+NowebLaTeXDocTargetWrap(intro,$(NW_HEADER),$(NW_TRAILER))
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_NOWEB_SRC))
 
@@ -59,7 +60,10 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.3  1995/11/19 18:39:14  kehr
+ * Revision 1.4  1995/12/05 18:53:14  kehr
+ * Forgot to check-in some files...
+ *
+ * Revision 1.3  1995/11/19  18:39:14  kehr
  * Introduced packages base and locref.
  *
  * Revision 1.2  1995/11/06  16:47:42  kehr
