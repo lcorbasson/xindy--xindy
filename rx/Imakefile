@@ -1,0 +1,50 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Imakefile for Source of the xindy-Project
+ *
+ * (history at end)
+ */
+
+
+/* needed modules */
+#include <Project.imk>
+#include <noweb-wrap.imk>
+
+#include <Lisp-mod.imk>
+/* This must be included after the redefinition of the above rule(s) */
+#include <Lisp.imk>
+
+/* Absolutely necessary, entire distribution is based on gcc */
+#define UseGcc
+#include <StandardC.imk>
+
+
+XCOMM ------------------------------------------------------------
+XCOMM continue in Imakefile
+
+CDependFiles(ordrules.c)
+
+CObjectTarget(rxsub,-I.)
+CObjectTarget(ordrules,-I.)
+
+CVSAdd(rxsub.h rxsub.c)
+CVSAdd(ordrules.h ordrules.c)
+CVSAdd(*.nw)
+CVSAdd(Imakefile)
+CVSCommentLeader("%% ", *.nw)
+CVSCommit()
+
+/* ============================================================
+ *
+ * $Log$
+ * Revision 1.1  1996/03/26 17:30:56  kehr
+ * First check-in of the rx-support for clisp.
+ *
+ *
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */
