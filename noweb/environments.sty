@@ -27,7 +27,7 @@
 
 \newenvironment{deflistgeneric}[3]{%
   \begin{list}{#1\hfill}{%
-      \settowidth{\labelwidth}{\bf #1}
+      \settowidth{\labelwidth}{#1}
       \setlength{\leftmargin}{#2}
       \addtolength{\leftmargin}{\labelwidth}
       \addtolength{\leftmargin}{\labelsep}
@@ -93,7 +93,7 @@
   \begin{deflistgeneric}{#1}{1em}{\Deflistlabelsf}}
   {\end{deflistgeneric}}
 \newenvironment{deflisttt}[1]{%
-  \begin{deflistgeneric}{#1}{1em}{\Deflistlabeltt}}
+  \begin{deflistgeneric}{\texttt{#1}}{1em}{\Deflistlabeltt}}
   {\end{deflistgeneric}}
 
 
@@ -291,13 +291,20 @@
   \item[Note]\mbox{}\ignorespaces}
   {\end{genericlist}}
 
+\newenvironment{slots}[1]{%
+  \begin{deflisttt}{#1}}
+  {\end{deflisttt}}
+
 %% Local Variables:
 %% mode: latex
 %% End:
 
 %%
 %% $Log$
-%% Revision 1.1  1995/12/05 18:52:47  kehr
+%% Revision 1.2  1996/01/09 14:29:03  kehr
+%% Minor additions.
+%%
+%% Revision 1.1  1995/12/05  18:52:47  kehr
 %% Forgot to check-in some files...
 %%
 %% Revision 1.2  1995/10/20  11:57:33  kehr
