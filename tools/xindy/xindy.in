@@ -77,6 +77,16 @@ fi
 memfile="$XINDY_LIBDIR/xindy.mem"
 runfile="$XINDY_LIBDIR/xindy.run"
 
+# Set initial searchpath
+SEARCHPATH="(searchpath \".:@XINDY_MODULEDIR@\")"
+
+# Add/replace (depends on the specification) the search path according
+# to the environment variable
+if [ "$XINDY_SEARCHPATH" != "" ]
+then
+    SEARCHPATH="$SEARCHPATH (searchpath \"$XINDY_SEARCHPATH\")"
+fi
+
 # Parse all arguments.
 
 while true
@@ -179,6 +189,7 @@ else
     fi
     xindy_cmd="-x
 (progn
+   $SEARCHPATH
    (xindy:startup :idxstyle \"$indexstyle\"
 	          :rawindex \"$rawindex\"
 		  :output   \"$output\"
