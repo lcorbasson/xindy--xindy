@@ -5,12 +5,14 @@
 
 =head1 NAME
 
-texindy - create sorted and tagged index from raw LaTeX index
+xindy - create sorted and tagged index from raw index
 
 =head1 SYNOPSIS
 
- texindy [-V?h] [-qv] [-iglr] [-d magic] [-o outfile.ind] [-t log] \
-         [-L lang] [-C codepage] [-M module] [idx0 idx1 ...]
+ xindy [-V?h] [-qv] [-d magic] [-o outfile.ind] [-t log] \
+       [-L lang] [-C codepage] [-M module] [-I input] \
+       [--interactive] [--mem-file=xindy.mem] \
+       [idx0 idx1 ...]
 
 =head2 GNU-Style Long Options for Short Options:
 
@@ -18,39 +20,33 @@ texindy - create sorted and tagged index from raw LaTeX index
  -? / -h / --help
  -q / --quiet
  -v / --verbose
- -i / --stdin
- -g / --german
- -l / --letter-ordering
- -r / --no-ranges
  -d / --debug          (multiple times)
  -o / --out-file
  -t / --log-file
  -L / --language
  -C / --codepage
  -M / --module         (multiple times)
+ -I / --input-markup   (supported: latex, xindy)
 
 
 =head1 DESCRIPTION
 
-B<texindy> is the LaTeX-specific command of xindy, the flexible
+B<xindy> is the formatter-indepedent command of xindy, the flexible
 indexing system. It takes a raw index as input, and produces a merged,
 sorted and tagged index. Merging, sorting, and tagging is controlled
-by xindy modules, with a convenient set already preloaded.
+by xindy style files.
 
 Files with the raw index are passed as arguments. If no arguments are
 passed, the raw index will be read from standard input.
 
-A good introductionary description of B<texindy> appears in the
-indexing chapter of the LaTeX Companion (2nd ed.)
+B<xindy> is completely described in its manual that you will find on
+its Web Site, http://www.xindy.org/. A good introductionary
+description appears in the indexing chapter of the LaTeX Companion
+(2nd ed.)
 
-If you want to produce an index for LaTeX documents with special index
-markup, the command xindy(1) is probably more of interest for you.
-
-B<texindy> is an approach to merge support for the I<make-rules>
-framework, own xindy modules (e.g., for special LaTeX commands in the
-index), and a reasonable level of MakeIndex compatibility. There are
-other older approaches, eventually they will get a description on the
-xindy Web Site, http://www.xindy.org/.
+If you want to produce an index for LaTeX documents, the command
+texindy(1) is probably more of interest for you. It is a wrapper for
+B<xindy> that turns on many LaTeX conventions by default.
 
 
 =head1 OPTIONS
@@ -118,6 +114,28 @@ Load the xindy module F<module.xdy>. This option may be specified
 multiple times. The modules are searched in the xindy search path that
 can be changed with the environment variable C<XINDY_SEARCHPATH>.
 
+=item C<--input-markup> I<input> / B<-I> I<input>
+
+Specifies the input markup of the raw index. Supported values for
+I<input> are C<latex> and C<xindy>.
+
+C<latex> input markup is the one that is emmitted by default from the
+LaTeX kernel, or by the C<index> macro package of David Jones.
+
+C<xindy> input markup is specified in the xindy manual.
+
+=item C<--interactive>
+
+Start xindy in interactive mode. You will be in a xindy read-eval-loop
+where xindy language expressions are read and evaluated interactively.
+
+=item C<--mem-file> I<xindy.mem>
+
+This option is only usable for developers or in very rare situations.
+The compiled xindy kernel is stored in a so-called I<memory file>,
+canonically named F<xindy.mem>, and located in the xindy library
+directory. This option allows to use another xindy kernel.
+
 =back
 
 
@@ -176,75 +194,40 @@ and C<traditional>, etc.)
    LaTeX inputenc >
 
 
-=head1 TEXINDY STANDARD MODULES
-
-There is a set of B<texindy> standard modules that help to process
-LaTeX index files. Some of them are automatically loaded. Some of them
-are loaded by default, this can be turned off with a B<texindy>
-option. Others may be specified as C<--module> argument to achieve a
-specific effect.
-
- xindy Module    Category  Description
-
-=head2 Sorting
-
- word-order      Default   A space comes before any letter in the
-                           alphabet: ``index style'' is listed before
-                           ``indexing''. Turn it off with option -l.
- letter-order    Add-on    Spaces are ignored: ``index style''
-                           is sorted after ``indexing''.
- keep-blanks     Add-on    Leading and trailing white space (blanks
-                           and tabs) are not ignored; intermediate
-                           white space is not changed.
- ignore-hyphen   Add-on    Hyphens are ignored:
-			   ``ad-hoc'' is sorted as ``adhoc''.
- ignore-punctuation Add-on All kinds of punctuation characters are
-			   ignored: hyphens, periods, commas, slashes,
-			   parentheses, and so on.
- numeric-sort    Auto      Numbers are sorted numerically, not like
-			   characters: ``V64'' appears before ``V128''.
-
-=head2 Page Numbers
-
- page-ranges     Default   Appearances on more than two consecutive
-			   pages are listed as a range: ``1--4''.
-			   Turn it off with option -r.
- ff-ranges       Add-on    Uses implicit ``ff'' notation for ranges
-			   of three pages, and explicit ranges
-			   thereafter: 2f, 2ff, 2--6.
- ff-ranges-only  Add-on    Uses only implicit ranges: 2f, 2ff.
- book-order      Add-on    Sorts page numbers with common book numbering
-			   scheme correctly -- Roman numerals first, then
-			   Arabic numbers, then others: i, 1, A.
-
-=head2 Markup and Layout
-
- tex             Auto      Handles basic TeX conventions.
- latex-loc-fmts  Auto	   Provides LaTeX formatting commands
-		    	   for page number encapsulation.
- latex           Auto	   Handles LaTeX conventions, both in raw
-		    	   index entries and output markup; implies
-		    	   tex.
- makeindex       Auto	   Emulates the default MakeIndex input syntax
-			   and quoting behavior.
- latin-lettergroups Auto   Layout contains a single Latin letter
-			   above each group of words starting with the
-			   same letter.
- german-sty      Add-on	   Handles umlaut markup of babel's german
-			   and ngerman options.
-
-
 
 =head1 ENVIRONMENT
 
 =over
 
-=item C<TEXINDY_AUTO_MODULE>
+=item C<XINDY_SEARCHPATH>
 
-This is the name of the xindy module that loads all auto-loaded
-modules. The default is C<texindy>.
+A list of directories where the xindy modules are searched in. No
+subtree searching is done (as in TDS-conformant TeX).
+
+If this environment variable is not set, the default is used:
+C<.:>I<modules_dir>C<:>I<modules_dir>C</base>. I<modules_dir> is
+determined at run time, relative to the B<xindy> command location:
+Either it's F<../modules>, that's the case for F<opt>-installations. Or
+it's F<../lib/xindy/modules>, that's the case for F<usr>-installations.
 
 =back
+
+
+=head1 KNOWN BUGS
+
+Option B<-q> also prevents output of error messages. Error messages
+should be output on stderr, progress messages on stdout.
+
+There should be a way to output the final index to stdout. This would
+imply B<-q>, of course.
+
+Codepage C<utf8> should be supported for all languages, and should be
+used as internal codepage for LaTeX inputenc re-encoding.
+
+
+=head1 SEE ALSO
+
+texindy(1)
 
 
 =head1 AUTHOR
@@ -254,7 +237,7 @@ Joachim Schrod
 
 =head1 LEGALESE
 
-B<texindy> is free software; you can redistribute it and/or modify it
+B<xindy> is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
 Free Software Foundation; either version 2 of the License, or (at your
 option) any later version.
@@ -263,7 +246,6 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 
 =for Emacs
 #'
@@ -285,25 +267,54 @@ BEGIN {
 # Determine environment. Where is our library directory, and our modules?
 
 use File::Basename;
-our ($cmd_dir, $cmd);
+our ($cmd_dir, $cmd, $lib_dir, $modules_dir);
 BEGIN {
     $cmd_dir = dirname($0);
     $cmd = basename($0);
+
+    # library directory
+    if ( $ENV{XINDY_LIBDIR} ) {
+	$lib_dir = $ENV{XINDY_LIBDIR};
+    } elsif ( -f "$cmd_dir/../lib/xindy.run" ) { # /opt style
+	$lib_dir = "$cmd_dir/../lib";
+    } elsif ( -d "$cmd_dir/../lib/xindy" ) { # /usr or /usr/local style
+	$lib_dir = "$cmd_dir/../lib/xindy";
+    } else {
+	die "Cannot locate xindy library directory";
+    }
+
+    # modules directory
+    if ( -d "$cmd_dir/../modules" ) {	# /opt style
+	$modules_dir = "$cmd_dir/../modules";
+    } elsif ( -d "$lib_dir/modules" ) {	# /usr or /usr/local style
+	$modules_dir = "$lib_dir/modules";
+    } else {
+	die "Cannot locate xindy modules directory";
+    }
 }
 
 
 # Used modules.
 
 use Getopt::Long qw(:config bundling);
+use File::Temp qw(tempfile tmpnam);
+use File::Spec;
 
 
 # Check arguments, store them in proper variables.
+#
+# Do also something for backward compatibility: Check if this is an
+# old-style call. If it is, we have two arguments at the end, and the
+# second-to-last has the extension ".xdy". Then, call the old driver
+# script with the original arguments...
 
 sub usage ()
 {
     print STDERR <<_EOT_
-usage: $cmd [-V?h] [-qv] [-iglr] [-d magic] [-o outfile.ind] [-t log] \\
-            [-L lang] [-C codepage] [-M module] [idx0 idx1 ...]
+usage: $cmd [-V?h] [-qv] [-d magic] [-o outfile.ind] [-t log] \\
+            [-L lang] [-C codepage] [-M module] [-I input] \\
+            [--interactive] [--mem-file xindy.mem] \\
+	    [idx0 idx1 ...]
 
 GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
 
@@ -311,49 +322,71 @@ GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
  -? / -h / --help
  -q / --quiet
  -v / --verbose
- -i / --stdin
- -g / --german
- -l / --letter-ordering
- -r / --no-ranges
  -d / --debug          (multiple times)
  -o / --out-file
  -t / --log-file
  -L / --language
  -C / --codepage
  -M / --module         (multiple times)
+ -I / --input-markup   (supported: latex, xindy)
 
 _EOT_
   ;
     exit 1;
 }
 
-our ($output_version, $quiet, $verbose, $stdin, @debug,
-     $outfile, $logfile, $language, $codepage, @modules);
-$language = 'general';
-$codepage = 'latin';
+our ($output_version, $quiet, $verbose, %debug,
+     $outfile, $logfile, $language, @codepages, @modules, $input_markup,
+     $interactive, $mem_file);
+$input_markup = 'latex';
 
+my @orig_argv = @ARGV;
 parse_options();
 output_version()  if $output_version;	# will not return
-usage()  if ( ! $stdin && @ARGV == 0 );	# brain damaged, but like makeindex
+
+if ( @ARGV == 2 ) {
+    if ( $ARGV[0] =~ /\.xdy$/ ) {
+	exec "$cmd_dir/xindy.v2", @orig_argv;
+    }
+}
 
 
-# Reconstruct xindy options, and eventually switch to it.
+# This script creates temporary files. Whenever a file is created, its
+# name is added to @temp_files. In an END handler, the temporary files
+# are deleted. Signal handlers are set up to get proper program
+# termination on user-induced signals. During program calls with
+# system, SIGINT and
 
-unshift (@ARGV, '-q')  if $quiet;
-unshift (@ARGV, '-v')  if $verbose;
-unshift (@ARGV, map { ('-d', $_) } @debug)  if @debug;
-unshift (@ARGV, '-o', $outfile)  if $outfile;
-unshift (@ARGV, '-t', $logfile)  if $logfile;
-unshift (@ARGV, '-L', $language);
-unshift (@ARGV, '-C', $codepage)  if $codepage;
-unshift (@ARGV, map { ('-M', $_) } ("tex/inputenc/$codepage",
-				    $ENV{TEXINDY_AUTO_MODULE} || 'texindy',
-				    @modules));
-unshift (@ARGV, '-I', 'latex');
+our @temp_files = ();
+handle_signals();
+END {
+    unlink (@temp_files)  if ( @temp_files  &&  ! $debug{keep_tmpfiles} );
+}
 
-print "Calling xindy as: $cmd_dir/xindy @ARGV\n"  if (grep /^script$/, @debug);
 
-exec "$cmd_dir/xindy", @ARGV;
+# Raw index handling: xindy is not able (yet?) to handle arguments
+# Perl-style, so we do it instead. We gather the raw index in a
+# temporary file. We also process it by the filter program it if
+# wanted. Signal handlers will discard temporary files if necessary.
+
+our $raw_index = File::Spec->devnull;
+unless ( $interactive ) {
+    $raw_index = create_raw_index();	# processes @ARGV
+    $raw_index = filter_index ("$cmd_dir/tex2xindy", $raw_index)
+      if ( $input_markup eq 'latex' );
+}
+
+
+# Execution: Obey environment variables, create xindy start
+# expression, and eventually call it.
+
+my $xindy_expression = xindy_expression(); # accesses global option vars
+my $exit_code = call_xindy ($mem_file, $xindy_expression);
+
+
+# Finished: exit, clean up in END handler.
+
+exit ($exit_code);
 
 
 # ------------------------------------------------------------
@@ -361,36 +394,278 @@ exec "$cmd_dir/xindy", @ARGV;
 
 sub parse_options() {
 
-    my ($german, $letter_ordering, $no_ranges);
+    my (@debug);
     GetOptions(
-	       'version|V'          => \$output_version,
-	       'help|h|?'           => \&usage,
-	       'quiet|q'            => \$quiet,
-	       'verbose|v'          => \$verbose,
-	       'stdin|i'            => \$stdin,
-	       'german|g'           => \$german,
-	       'letter-ordering|l'  => \$letter_ordering,
-	       'no-ranges|r'        => \$no_ranges,
-	       'debug|d=s'          => \@debug,
-	       'out-file|o=s'       => \$outfile,
-	       'log-file|t=s'       => \$logfile,
-	       'language|L=s'       => \$language,
-	       'codepage|C=s'       => \$codepage,
-	       'module|M=s'         => \@modules,
+		'version|V'          => \$output_version,
+		'help|h|?'           => \&usage,
+		'quiet|q'            => \$quiet,
+		'verbose|v'          => \$verbose,
+		'debug|d=s'          => \@debug,
+		'out-file|o=s'       => \$outfile,
+		'log-file|t=s'       => \$logfile,
+		'language|L=s'       => \$language,
+		'codepage|C=s'       => \@codepages,
+		'module|M=s'         => \@modules,
+		'input-markup|I=s'   => \$input_markup,
+		'interactive'        => \$interactive,
+		'mem-file=s'         => \$mem_file,
 	      );
 
-    if ( $german ) {
-	unshift (@modules, 'german-sty');
-	if ( $language eq 'general' ) {
-	    $language = 'german-din';
-	} elsif ( $language !~ /^german/ ) {
-	    print STDERR "You cannot specify -g and -L at the same time.\n";
-	    #print STDERR "NOTE: -g is obsolete anyhow.\n";
+    # Debug option values are easier to test in a hash. Clean up trace
+    # level options, too.
+
+    %debug = map { $_ => 1 } @debug;
+    my @trace_level = grep /^level=/, @debug;
+    if ( @trace_level > 1 ) {
+	print STDERR "You can only specify one trace level.\n\n";
+	exit (1);
+    }
+    delete $debug{$trace_level[0]};
+    $trace_level[0] =~ s/^level=// ;
+    $debug{trace_level} = $trace_level[0];
+
+
+    # Default for the output file: first argument, with extension replaced
+    # by ".ind".
+
+    unless ( $outfile  ||  $output_version || $interactive ) {
+	if ( @ARGV == 0 ) {
+	    print STDERR
+"You need to specify --out-file if the raw index is read from standard input.\n\n";
+	    usage();
+	}
+	my ($name, $path, $suffix) = fileparse ($ARGV[0], '\.[^\.]+');
+	$outfile = "$path$name.ind";
+    }
+
+
+    # FIXME: xindy wants a log file. Really?
+
+    $logfile = File::Spec->devnull  unless $logfile;
+
+
+    # Modules fixup: If they have no .xdy suffix, they get one.
+    @modules = map { /\.xdy$/ ? $_ : "$_.xdy" } @modules;
+
+
+    # FIXME: Must cleanup the *-markup and filter option mess. These are
+    # currently fake options, and must be evolved into real multi-markup
+    # support.
+
+    if ( $input_markup  &&
+	 $input_markup ne 'latex' && $input_markup ne 'xindy' ) {
+	print STDERR "Unsupported input markup $input_markup.\n\n";
+	usage();
+    }
+
+
+    # Default memory file is xindy.mem, of course.
+
+    $mem_file = "$lib_dir/xindy.mem"  unless $mem_file;
+}
+
+
+
+#
+# SIGNAL HANDLING
+#
+# FIXME: This is not good enough. We also need to kill subprocesses,
+# i.e., filter or xindy, if they are running.
+
+# Our signal handler function just exits. Temporary files are deleted
+# by the END section above. Actually, the exit code looses the
+# information about the received signal, that's not good but shouldn't
+# hurt either...
+
+sub signal_exit() {
+    exit (2);
+}
+
+sub handle_signals () {
+    $SIG{'HUP'}  = \&signal_exit; # 1
+    $SIG{'INT'}  = \&signal_exit; # 2
+    $SIG{'QUIT'} = \&signal_exit; # 3
+    $SIG{'TERM'} = \&signal_exit; # 15
+}
+
+
+
+#
+# CREATION OF RAW XINDY INDEX
+#
+
+# Handle input files Perl-style. Returns file name that contains
+# concatenated input file contents.
+
+sub create_raw_index () {
+    my ($output, $outfile) = tempfile();
+    push (@temp_files, $outfile);
+    while ( <> ) {
+	print $output $_;
+    }
+    close ($output);
+    print "concatenated xindy input file: $outfile\n"  if $debug{script};
+    return $outfile;
+}
+
+
+# Run a filter over raw index. Returns file name with filtered raw
+# index, supposed to be in xindy input format.
+#
+# We assume the file names to be safe from shell meta characters since
+# they were computed by File::Temp.
+
+sub filter_index ( $$ ) {
+    my ($filter, $input) = @_;
+    my $output = tmpnam();
+    push (@temp_files, $output);
+    print "Running filter: $filter <$input >$output\n"  if $verbose;
+    system "$filter <$input >$output";
+    print "filtered xindy input file: $output\n"  if $debug{script};
+    return $output;
+}
+
+
+
+#
+# XINDY EXECUTION
+#
+
+# Construct final xindy expression, from options.
+
+sub xindy_expression () {
+    my ($logging, $tracing, $trace_level);
+
+    # Determine language module of make-rules framework. Part of the
+    # complexity below is from compatibility with the TLC2
+    # description. We need to support the language names listed there,
+    # even though they are not current. In addition, the codepage
+    # option was introduced later and we need to guess it. This
+    # guesswork will often be wrong, sadly.
+    #
+    # FIXME: I didn't see all languages. What's on with gypsy and
+    # hausa?
+    if ( $language ) {
+	my $ld = "$modules_dir/lang";
+	my $variant;
+	# If there is no language directory, this might be a variant.
+	# Language names and variants are separated by hyphens. The
+	# variant name "din" is an abbreviation for "din5007". The
+	# variant name "iso" is ignored, that is actually a codepage
+	# name.
+	#
+	# FIXME: Or is "iso" the variant "translit"?!
+	if ( ! -d "$ld/$language" ) {
+	    $language =~ /^([^-]*)-(.*)/ ; # language name ends with 1st hyphen
+	    if ( $2 && -d "$ld/$1" ) { # $2 is not set if the regex didn't match
+		$language = $1;
+		$variant = "$2-"  unless ( $2 eq 'iso' );
+		$variant =~ s/din/din5007/ ;
+	    }
+	}
+	# Let's guess the codepage. We take any that starts with
+	# "latin", "cp", "iso8859", or "ascii".
+	@codepages = qw(latin cp iso8859 ascii)  unless @codepages;
+	my @styles;
+	foreach my $cp ( @codepages ) {
+	    @styles = glob("$ld/$language/$variant$cp*-lang.xdy");
+	    last  if @styles;
+	}
+	unless ( @styles ) {
+	    print STDERR "Cannot locate xindy module for language $language";
+	    print STDERR " in codepage $codepages[0]"  if ( @codepages == 1 );
+	    print STDERR ".\n";
 	    exit (1);
 	}
+	# Extract language module name: It's the relative part after
+	# the module directory. Put it at the front of the list of
+	# needed modules. It's important that the language module is
+	# loaded first, it defines the sort rulesets, and subsequent
+	# modules shall be able to add sort rules.
+	unshift (@modules, substr($styles[0], length("$modules_dir/")));
+	print "Found language module $styles[0]\n"  if $debug{script};
     }
-    unshift (@modules, ($letter_ordering ? 'letter-order' : 'word-order'));
-    unshift (@modules, 'page-ranges')  unless $no_ranges;
+
+    # If there is more than one xindy module, construct a style file.
+    # This is bad, of course; xindy should handle a list of style
+    # files itself.
+    my $style_file = $modules[0];	# will be undef if @modules is not set
+    if ( @modules > 1 ) {
+	my $sf;
+	($sf, $style_file) = tempfile();
+	push (@temp_files, $style_file);
+	foreach my $module ( @modules ) {
+	    print $sf "(require \"$module\")\n";
+	}
+	close ($sf);
+    }
+
+    $style_file = quotify($style_file);
+    $outfile = quotify($outfile);
+    $logging = ':logfile ' . quotify($logfile)  if $logfile;
+    $tracing = ':markup-trace :on'  if $debug{markup};
+    $trace_level = ":trace-level $debug{trace_level}"  if $debug{trace_level};
+
+    my $exp = <<_EOT_
+(progn
+  (searchpath ".:$modules_dir:$modules_dir/base")
+  (xindy:startup
+    :idxstyle $style_file
+    :rawindex "$raw_index"
+    :output $outfile
+    $logging
+    $tracing
+    $trace_level)
+  (exit))
+_EOT_
+  ;
+
+    return $exp;
+}
+
+
+# Actual xindy call. Returns exit code.
+
+sub call_xindy ( $$ ) {
+    my ($mem_file, $xindy_exp) = @_;
+
+    my @command = ("$lib_dir/xindy.run", '-q', '-B', $lib_dir, '-M', $mem_file);
+    if ( $interactive ) {
+	print "Proposed xindy expression:\n\n$xindy_exp\n"  unless $quiet;
+    } else {
+	push (@command, '-x', $xindy_exp);
+    }
+
+    if ( $debug{script} ) {
+	print "modules directory: $modules_dir.\n";
+	print "command: @command\n";
+    }
+
+    if ( $quiet && ! $interactive ) {
+	open (STDOUT, '>', File::Spec->devnull);
+    }
+    system @command;
+    if ( $? & 127 ) {
+	return 4;
+    } else {
+	return $? >> 8;
+    }
+}
+
+sub output_version () {
+    print "Script version: $VERSION\n";
+    my $exit_code = call_xindy($mem_file,
+			   "(progn (xindy:startup :show-version t) (exit))");
+    exit ($exit_code);
+}
+
+
+# Helper function: Make a proper quoted Lisp string.
+
+sub quotify ( $ ) {
+    my $s = shift;
+    $s =~ s:[\\\"]:\\&1:g ;		# quote double-quote and backslash
+    return "\"$s\"";
 }
 
 
@@ -398,10 +673,12 @@ sub parse_options() {
 #======================================================================
 #
 # $Log$
-# Revision 1.3  2004/07/25 14:53:07  jschrod
+# Revision 1.4  2004/08/05 14:10:54  jschrod
 #     Language variant names may have hyphens now. Language names must
 # not have hyphens -- the first hyphen of the -L option argument
 # separates language and variant name.
+#     Revision 1.3 was completely off -- I committed a copy of texindy.
+# I really don't know what happened there.
 #
 # Revision 1.2  2004/05/26 21:30:11  jschrod
 #     Added POD documentation.
