@@ -33,6 +33,7 @@ raw-index.
 The module is separated into the following parts:
 \begin{deflist}{XXXXXXX}
 \item [idxentry]
+\item [ranges]
 \item [index]
 \end{deflist}
 
@@ -40,8 +41,10 @@ The module is separated into the following parts:
 as follows:
 
 \begin{verbatim}
-index:
-indexentry
+<index>: <locref> <idxstyle>
+index: indexentry
+indexentry: ranges
+ranges:
 \end{verbatim}
 
 \noindent This module needs all neccessary information properly set up
@@ -50,13 +53,22 @@ location-classes---system- or user-defined---are available, all
 sorting- and merging-rules are known, \etc\ We need all information to
 process every indexentry.
 
+\newpage
+\section*{Chunk-Index of LISP-Symbols}
+\nowebindex
+\newpage
+
 %% Local Variables:
 %% mode: latex
 %% TeX-master: t
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1995/12/19 10:59:46  kehr
+%% Revision 1.3  1996/01/09 14:27:28  kehr
+%% Moved submodule `ranges' from module `locref' to this module.
+%% Nearly complete rewrite of all submodules. See ChangeLog for further details.
+%%
+%% Revision 1.2  1995/12/19  10:59:46  kehr
 %% Changes Imakefile.
 %%
 %% Revision 1.1  1995/12/05  18:46:34  kehr

@@ -26,7 +26,7 @@ XCOMM continue in Imakefile
       NW_HEADER  = $(TOPDIR)/noweb/header.tex
       NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
 
-      ALL_NOWEB_SRC = idxentry.nw index.nw
+      ALL_NOWEB_SRC = idxentry.nw index.nw ranges.nw
       ALL_DOC_SRC= module.nw $(ALL_NOWEB_SRC)
 
 NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_DOC_SRC))
@@ -48,7 +48,11 @@ DejaGnuTarget(index,$(TESTDIR))
 /* ============================================================
  *
  * $Log$
- * Revision 1.2  1995/12/19 10:59:41  kehr
+ * Revision 1.3  1996/01/09 14:27:22  kehr
+ * Moved submodule `ranges' from module `locref' to this module.
+ * Nearly complete rewrite of all submodules. See ChangeLog for further details.
+ *
+ * Revision 1.2  1995/12/19  10:59:41  kehr
  * Changes Imakefile.
  *
  * Revision 1.1  1995/12/05  18:46:27  kehr

@@ -21,41 +21,66 @@
 \ModuleTitle{}
 
 
-\section{Module \sans{Index}}
+\section{Submodule \module{index}}
 
 \subsection{Introduction}
-
-An index is simply a list of indexentries. The main aspect of this
-module is to manage all neccessary work that should be done on the
-index.
 
 \subsection{Abstract Specification}
 
 \subsubsection{Definition}
 
-An index is a list of indexentries.
-
 \subsubsection{Operation}
-
 
 
 \subsection{Concrete Specification}
 
-\subsubsection{Class \sans{index}}
+\subsubsection{Class \class{base-index}}
 
-<<class index>>=
-(defclass index ()
-    ((entries  :accessor get-entries  :initform '())))
+Indexentries consist of a set of keys and a set of
+location-references. An index is a data-structure that is empty on
+creation and filled afterwards with indexentries. Indexentries that
+own the same \term{merge-key} are merged together meaning that the
+location-reference-sets are merged together. Usually the indexentries
+are read in an unsorted sequence, so we can collect all indexentries
+in a list an sort it afterwards. This is a waste of space since for
+each indexentry we separately store all keys. Instead we can merge
+indexentries with the same key directly when they are read.
 
-(defun make-index ()
-  (make-instance 'index))
+The idea is to store the indexentries in a large hash-table with the
+merge-key as its key. We are then able to directly merge new
+indexentries with the old one with reasonable performance since we
+share all indexentry-keys. Later we need to sort the elements of the
+hash-table to markup the index.
 
-(defmethod show ((idx index))
-  (show (get-entries idx)))
+Class \class{base-index} implements an index. It contains the
+following slots:
+\begin{slots}{entry-table}
+  \item [entry-table] is the hash-table just described. We use
+    [[#'equal]] as the tables test-function since the keys are of type
+    \tstrlist.
+  \item [entry-list] After the hash-table is filled, we need to sort
+    and process the indexentries in an order defined by the
+    indexentries \term{sort-keys}. This slot keeps this list.
+  \item [idxclass] is a reference to the indexclass used to
+    parametrize this index. Especally markup-information is contained here.
+\end{slots}
+
+<<Class \class{base-index}>>=
+(defclass base-index ()
+    ((entry-table :accessor get-entry-table :initform (make-hash-table :test #'equal))
+     (entry-list  :reader get-entry-list :writer set-entry-list :initform '())
+     (idxclass    :reader get-idxclass                          :initarg :idxclass)))
+
+(defun make-base-index (idxclass)
+  (make-instance 'base-index :idxclass idxclass))
+@ %def base-index make-base-index
+
+<<Export-list of submodule \module{index}>>=
+(export '(base-index make-base-index))
 @
 
 <<markup methods>>=
-(defmethod markup-object ((idx index)
+(defmethod markup-object ((idx base-index)
                           (markup-list  list)
                           (context-list list)
                           (env-stack    list))
@@ -68,149 +93,150 @@ An index is a list of indexentries.
       (setq context-list (get-print-key idxent)))))
 @
 
-This is the interface to insert an indexentry into an index. The
-required indexclass is determined by its name [[idxclass-name]]. If it
-is ommitted, the name of the default-class [[*active-idxcls-name*]] is
-used.
+\no We are now interested in filling the index with indexentries. The
+first idea was to define a method [[add]] bound to an index and an
+indexentry that looks if the indexentry is already in the table. If
+not it is directly stored into the table, otherwise the indexentry is
+merged with the already existing indexentry with the same key.
 
-Adding an indexentry to an indexclass can be done by immediately
-inserting the indexentry in the correct order specified by its
-merge-key and merging it directly with existing entries of the same
-merge-key. This is less space-consuming because we don't need to hold
-an indexentiy for every location that is used in the index. We
-therefore define a clever function [[merge-indexentry-to-index]] that
-hides insertion details to be free with further optimization.
+This heavily creates instances of indexentries that mostly are merged
+with the already existing indexentry. Most of the time the
+indexentries are created and dropped immediately. This is a waste of
+space and time since the creation of an object ins't for free at all.
 
-<<external interface>>=
-(defun add-indexentry (idxent &key (idxcls-name *active-idxcls-name*))
-  (let ((idxcls (find-indexclass idxcls-name)))
-    (when (null idxcls)
-      (error "add-an-indexentry: unknown indexclass `~A' !" idxcls-name))
-    (let ((idx (get-index idxcls)))
-      (setf (get-entries idx)
-            (merge-indexentry-to-index idxent idx)))))
-@
+The idea is to define a function at a lower level to implement the
+desired behaviour. Function [[add-indexentry]] takes an object that
+must be [[eql]] to a [[entry-table]]. We will directly manipulate this
+object for efficency reasons. The other arguments are directly part of
+an indexentry.
 
-\subsubsection{Merging of indexentries}
+<<Class \class{base-index}>>=
+(defun add-indexentry (entry-table idxcls locref
+                                   &key
+                                   (merge-key '()) (sort-key '())
+                                   (main-key '()) (print-key '()))
+  (let ((old-entry (gethash merge-key entry-table)))
+    (if old-entry
+        (setf (gethash merge-key entry-table)
+              (join-indexentries (gethash merge-key entry-table)
+                                 main-key sort-key print-key locref))
+        (setf (gethash merge-key entry-table)
+              (make-indexentry :main-key  main-key  :sort-key   sort-key
+                               :merge-key merge-key :print-key  print-key
+                               :locrefs   locref    :indexclass idxcls)))))
+@ %def add-indexentry
 
-We need the following functions to merge and sort an index. Therefore
-we define functions that help ist to compare indexkeys. An indexkey is
-simply a list of strings. We use [[equal]] to compare lists of strings
-for equality. Function [[join-precedence]] is used to find the best
-match out of two items. If the first item is empty, then it chooses
-the second one, otherwise the first one. This is for giving precedence
-to set elements over empty elements.
+\no Function [[join-indexentries]] implements a
+\emph{default-behaviour} when joining indexentries. The
+indexentry-keys are joined by the [[join-with-precedence]]-function
+which is defined as $\lambda x,y.(if x x y)$.
 
-<<functions for merging indexentries>>=
-(defun merge-indexentry-to-index (idxent idx)
-  (let ((merge-key (get-merge-key idxent))
-        (merge-ent (find idxent (get-entries idx) :test #'indexentry=)))
-    (if (null merge-ent)
-        (setf (get-entries idx) (cons idxent (get-entries idx)))
-      (setf (get-entries idx)
-            (nsubstitute (merge-indexentries idxent merge-ent)
-                         merge-ent (get-entries idx))))))
+<<Class \class{base-index}>>=
+(defun join-indexentries (idxent main-key sort-key print-key locref)
+  (set-main-key  (join-with-precedence (get-main-key  idxent) main-key) idxent)
+  (set-sort-key  (join-with-precedence (get-sort-key  idxent) sort-key) idxent)
+  (set-print-key (join-with-precedence (get-print-key idxent) print-key) idxent)
+  (set-locrefs   (cons locref (get-locrefs idxent)) idxent))
 
-(defun indexkey= (idxkey-1 idxkey-2)
-  (equal idxkey-1 idxkey-2))
+(defun join-with-precedence (x y)
+  (declare (inline))
+  (if x x y))
+@ %def merge-indexentries join-with-precedence
 
-(defun indexentry= (idxent-1 idxent-2)
-  (indexkey= (get-merge-key idxent-1) (get-merge-key idxent-2)))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-(defun merge-indexentries (idxent-1 idxent-2)
-  (make-indexentry
-   :main-key  (join-precedence (get-main-key idxent-1)
-                               (get-main-key idxent-2))
-   :sort-key  (join-precedence (get-sort-key idxent-1)
-                               (get-sort-key idxent-2))
-   :print-key (join-precedence (get-print-key idxent-1)
-                               (get-print-key idxent-2))
-   :merge-key (get-merge-key idxent-1)
-   :locrefs (append (get-locrefs idxent-1) (get-locrefs idxent-2))))
+\subsubsection{Sorting an index}
 
-(defun join-precedence (x y)
-  (if (null x) y x))
-@
+Sorting an index is the task to transform the
+hash-table-representation of an index into a sorted
+list-representation.  We iterate with [[maphash]] over all the
+hash-tables elements and prepend the [[temp-list]] with a
+[[cons]]-cell (\emph{key}~.~\emph{idxent}). Afterwards we sort this
+list by comparing the first elements of the cons-cells and store the
+result into slot [[entry-list]].
 
-\subsubsection{Sorting the index}
+<<Sorting an index>>=
+(defmethod sort-indexentries ((index base-index))
+  (let ((temp-list '()))
+    (maphash #'(lambda (key idxent)
+                 (setq temp-list (cons (cons key idxent) temp-list)))
+             (get-entry-table index))
+    (set-entry-list (sort temp-list
+                          #'(lambda (element-1 element-2)
+                              (strlist< (car element-1) (car element-2))))
+                    index)))
 
-The following code manages sorting of a named index. String comparison
-is done by comparing the list of words from the beginning to the end.
-If two words are equal we compare the next wordpair until we find a
-difference or one of the wordlists ends.
-
-<<functions for sorting indexentries>>=
 (defun strlist< (string-list-1 string-list-2)
+  (declare (inline))
   (do ((rest-1 string-list-1 (cdr rest-1))
        (rest-2 string-list-2 (cdr rest-2)))
       ((or (endp rest-1) (endp rest-2)
            (string/= (first rest-1) (first rest-2)))
-           (or (endp rest-1)
-               (if (endp rest-2)
-                   'nil
+         (or (endp rest-1)
+             (if (endp rest-2)
+                 'nil
                  (string< (first rest-1) (first rest-2)))))))
+@ %def sort-index strlist<
 
-(defun indexkey< (idxkey-1 idxkey-2)
-  (strlist< idxkey-1 idxkey-2))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-(defun indexentry< (idxent-1 idxent-2)
-  (indexkey< (get-sort-key idxent-1) (get-sort-key idxent-2)))
+\subsubsection{Processing an index}
 
-(defun sort-indexentries (idxcls)
-  (let ((index (get-index idxcls)))
-    (setf (get-entries index) (sort (get-entries index) #'indexentry<))))
-@
+After the index is filled with indexentries our first task is to sort the index.
+Additionally we need to process all indexentries. Because we decide to
+make the processing of the indexentries directly driven by the markup,
+we simply markup the index and start right out of the box.
 
+<<Processing an index>>=
+(defmethod process-index ((index base-index))
+  (sort-indexentries index)
+  ;(markup index)
+  )
+@ %def process-index
 
-\subsubsection{Index-processing}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To process a whole index we need to do a little bit of work. First we
-sort all indexentries in lexicographic order. Then we process all
-indexentries to do all the neccessary work on each indexentry. It
-doesn't matter which of those two operations comes first. Afterwards
-we do the output-tagging.
-
-<<process index>>=
-(defun process-index (&optional (idxcls-name *active-idxcls-name*))
-  (let ((idxcls (find-indexclass idxcls-name)))
-    (sort-indexentries idxcls)
-    (process-indexentries idxcls)
-;    (output-tagging idxcls))
-    ))
-
-(defun output-tagging (idxcls)
-  (markup-object (get-index idxcls) (get-keyword-markup idxcls) '() '()))
-@
-
-After we sorted the whole list of indexentries we call function
-[[process-indexentry]] on all indexentries. This function is intended
-to do all neccessary work on an indexentry and return a modified
-version of that indexentry.
-
-<<process index>>=
-(defun process-indexentries (idxcls)
-  (let ((index (get-index idxcls)))
-    (setf (get-entries index)
-        (mapcar #'process-indexentry (get-entries index)))))
-@
-
-<<internal functions>>=
-<<functions for merging indexentries>>
-<<functions for sorting indexentries>>
-<<process index>>
-@
+\subsubsection{The module root}
 
 <<*>>=
-(provide 'index)
-(require 'base)
-(require 'idxentry)
-(require 'locclass)
-(use-package 'clos)
+;; $Id$
 
-<<class index>>
-<<external interface>>
-<<internal functions>>
-<<markup methods>>
+(in-package 'index)
+(provide 'index)
+
+(eval-when (compile load eval)
+  (use-package 'clos)
+  (use-package 'xp)
+  (unless (find-package 'locref)
+    (load 'locref))
+  (use-package 'locref)
+  (unless (find-package 'idxstyle)
+    (load 'idxstyle))
+  (use-package 'idxstyle))
+
+<<Submodule \module{idxentry}>>
+<<Submodule \module{ranges}>>
+<<Submodule \module{index}>>
+
+<<Pretty-printing>>
+
+(defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The submodule root}
+
+<<Submodule \module{index}>>=
+<<Class \class{base-index}>>
+<<Export-list of submodule \module{index}>>
+
+<<Sorting an index>>
+<<Processing an index>>
+@
+
+<<RCS-Identifier>>=
+("index" . "$Id$")
 @
 
 %% Local Variables:
@@ -219,7 +245,11 @@ version of that indexentry.
 %% End:
 %%
 %% $Log$
-%% Revision 1.2  1995/12/11 17:37:04  kehr
+%% Revision 1.3  1996/01/09 14:27:27  kehr
+%% Moved submodule `ranges' from module `locref' to this module.
+%% Nearly complete rewrite of all submodules. See ChangeLog for further details.
+%%
+%% Revision 1.2  1995/12/11  17:37:04  kehr
 %% Added semi-formal description of the location-refernce handling.
 %%
 %% Revision 1.1  1995/12/05  18:46:32  kehr

@@ -1,0 +1,428 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Submodule: ranges
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Submodule \module{ranges}}
+
+\subsection{Introduction}
+
+\subsection{Abstract Specification}
+
+\subsubsection{Definition}
+
+
+\subsubsection{Operation}
+
+
+
+\subsection{Concrete Specification}
+
+
+\subsubsection{Class \sans{location-range}}
+
+Class \textsf{location-range} contains the following slots.
+\begin{slots}{xxxxxxx}
+\item [length] specifies the length of the current range. The initial
+  value of the range-length is set to~[[2]] because we assume that a
+  range is only created with two successive-objects that are joinable
+  and therefore successors. In this case the range-length is
+  exactly~2.
+\item [first] and [[last]] contain location-references that
+  are used for markup purposes.
+\item [loccls] contains the location-class this range belongs to.  We
+  need this to get easy access to the minimum range-length.
+\item [catattr] contains the category-attribute this range belongs to.
+  We need this to get easy access to the ordnum of a range. This
+  allows equal dispatching for location-references and
+  location-ranges.
+\item [ordnums] contains the ordnum of the location-referene stored in
+  [[first]]. Only to define a [[get-ordnum]]-method.
+\item [inner] keeps a list of all collected locref-lists
+  \texttt{(~(~)\ldots(~)~)} that were eaten up by this
+  location-reference.
+\end{slots}
+
+\no The arguments [[first]] and [[last]] of the constructor
+[[make-location-range]] must be lists.
+
+<<Class \class{location-range}>>=
+(defclass location-range ()
+    ((length   :accessor get-length                     :initform 2)
+     (first    :reader   get-first                      :initarg :first)
+     (last     :reader   get-last    :writer set-last   :initarg :last)
+     (inner    :reader   get-inner   :writer set-inner  :initarg :inner)
+     (ordnums  :reader   get-ordnums                    :initarg :ordnums)
+     (locclass :reader   get-locclass                   :initarg :locclass)
+     (catattr  :reader   get-catattr                    :initarg :catattr)))
+
+(defun make-location-range (first last)
+  (let ((first-locref (car first)))
+    (make-instance 'location-range
+                   :first first-locref :last (car last)
+                   :inner (cons last (list first))
+                   :ordnums (get-ordnums first-locref)
+                   :locclass (get-locclass first-locref)
+                   :catattr  (get-catattr first-locref))))
+@ %def location-range length first last inner locclass catattr make-location-range
+
+\no We now need to define how we join objects together to get a range.
+The following methods join together two locref-lists and a range with
+a locref-list. They both return the resulting range.
+
+<<Class \class{location-range}>>=
+(defmethod join ((locrange location-range) (locref-list list))
+  (set-inner (cons locref-list (get-inner locrange)) locrange)
+  (set-last  (car locref-list) locrange)
+  (incf (get-length locrange))
+  locrange)
+
+(defmethod join ((locref-list-1 list) (locref-list-2 list))
+  (make-location-range locref-list-1 locref-list-2))
+@ %def join
+
+<<Export-list of submodule \module{ranges}>>=
+(export '(location-range
+          get-first get-last))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Building of ranges}
+
+\paragraph*{Precondition}
+
+Given is a list $L$ of location-references. All elements of $L$ belong
+to the same location-class and own the same category-attribute.
+
+\paragraph*{Task}
+
+\begin{enumerate}
+\item Build all possible ranges. Ignore all already \emph{dropped}
+  location-references.
+\item If a range was build and contains location-references that are
+  \emph{dropable} since they are first part of a
+  \irule{drop-if-merged}-rule \emph{drop} them. This can mean to
+  actually delete them.
+\end{enumerate}
+
+\paragraph*{Postcondition}
+
+Return a list $L$ of location-references and ranges. All
+\term{unnecessary} (i.e.\ deleted or virtual location-references
+should be removed.
+
+\paragraph*{Implementation}
+
+Because we distinguish between standard- and var-classes the
+generic-function [[build-ranges]] dispatches with its third argument
+over \class{standard-} or \class{var-location-class}. The method bound
+to [[var-location-class]] currently does nothing at all.
+
+Returned is a list $L$ whose elements are
+single-element-lists of location-ranges or lists of
+location-references
+%%
+\begin{center}
+  ( \{(\emph{locrefs}\ldots) $|$ (\emph{locrange})\}$*$\ldots \ldots
+  () ) .
+\end{center}
+%%
+This structure is left to allow better testing. It may be cleaned up
+in further steps.
+
+<<Building of location-reference-ranges>>=
+(defmethod build-ranges ((catattr-list list)
+                         (idxcls indexclass)
+                         (loccls var-location-class))
+  catattr-list)
+@ %def build-ranges
+
+\no How does it work? For standard-location-classes we first test if
+the location-class all these location-references (passed by
+[[locref-list]]) belong to allows a range-building at all. If not we
+exit immediately and return the given list as it is.
+
+Otherwise we remove all location-references from the list whose state
+is `deleted'. This occurs in a situation when already applied
+\irule{drop-if-merged}-rules set their state to `deleted'. These
+location-references mustn't be used anymore. The resulting list is now
+split into sublists with location-references that share the same
+ordnum.
+
+We initialise [[result-list]] which is used to collect the results of
+our process, [[prev-ordnum]] contains the ordnum of the previously
+processed location-reference(s), [[prev-object]] contains the
+previously processed object which can be a location-range or a list of
+location-references, [[drop-function]] calculates the drop-function
+which is needed later. Because it may be applied several times we
+calculated it right now for performance reasons.
+
+We then iterate over the sublists containing location-references with
+the same ordnum. For each of these sublists we calcuate the ordnum
+(stored in the [[ordnum]]-slot of one of its members (we take the
+first one by using [[car]]).
+
+We then check if this ordnum is a successor of the previously
+processed object. In this case we join the [[previous-object]] with
+the [[curr-locref-grp]]. Method [[join]] is defined for both
+possilities (\emph{range locref-list}) and (\emph{locref-list
+  locref-list}) and returns a location-range which is stored in
+[[prev-object]]. In the other case we [[post-process]] the
+[[prev-object]] and append it to the [[result-list]]. Additionally the
+[[curr-locref-grp]] becomes the new [[prev-object]]. All cases
+[[curr-ordnum]] becomes the new [[prev-ordnum]].
+
+At the end of the process mustn't forget to [[post-process]] the last
+[[prev-object]] because the [[do]]-loop was left before this action
+could be performed.
+
+<<Building of location-reference-ranges>>=
+(defmethod build-ranges ((locref-list list)
+                         (idxcls indexclass)
+                         (loccls standard-location-class))
+  (cond ((joining-allowed-p loccls)
+           (let ((same-ordnum-list
+                  (split-same-locrefs
+                   (mapcan #'(lambda (locref)
+                               (unless (state-deleted-p locref)
+                                 (list locref)))
+                           locref-list)))
+                 (result-list '())
+                 (prev-ordnum '())
+                 (prev-object 'nil)
+                 (drop-function (get-merge-drop-hook idxcls)))
+             (do ((locref-list same-ordnum-list (cdr locref-list)))
+                 ((endp locref-list))
+               (let* ((curr-locref-grp (car locref-list))
+                      (curr-ordnum (get-ordnums (car curr-locref-grp))))
+                 (if (ordnum-successor-p prev-ordnum curr-ordnum)
+                     (progn
+                       (setq prev-object
+                             (join prev-object curr-locref-grp)))
+                     (progn
+                       (when prev-object
+                         (setq result-list
+                               (cons (post-process prev-object
+                                                   drop-function)
+                                     result-list)))
+                       (setq prev-object curr-locref-grp)))
+                 (setq prev-ordnum curr-ordnum)))
+             (cons (post-process prev-object drop-function) result-list)))
+        (t locref-list)))
+@ %def build-ranges
+
+\no What for do we need a \term{post-processing}? Our approach is to
+build ranges even if their length may be too short that they are
+allowed to exist. Therefore we need the post-processing to check if
+the range-building is allowed at all. If it's not allowed, we simply
+return the list as it was before and drop the range. Otherwise we
+iterate over all location-references that were eaten up (they are
+stored in the [[inner]]-slot) and apply the [[drop-function]] on their
+parents if they have parents. This may result in the situtation that a
+parents state is reset to `deleted' or `virtual'.
+
+The post-processing for a locref-list simply returns that list.
+
+<<Building of location-reference-ranges>>=
+(defmethod post-process ((locrange location-range) (drop-function function))
+  (let ((locref-list (apply #'nconc (get-inner locrange))))
+    (cond ((>= (get-length locrange)
+               (get-join-length (get-locclass locrange)))
+             (mapc #'(lambda (locref)
+                       (let ((origin (get-origin locref)))
+                         (when origin
+                           (funcall drop-function origin))))
+                   locref-list)
+             (set-inner '() locrange)
+             (list locrange))
+          (t locref-list))))
+
+(defmethod post-process ((locref-list list) x)
+  (declare (ignore x))
+  locref-list)
+@ %def post-process
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Successor-handling}
+
+The predicate \emph{successor-p}$(l_1,l_2)$ with $l_1,l_2$
+location-references, defines if $l_2$ is a \emph{successor} of $l_1$
+and they are therefore joinable to a range. The following rules are
+neccessary to fulfill the predicate.
+\begin{enumerate}
+\item $l_1$ and $l_2$ belong to the same location-class.
+  \label{enum:same-locclass}
+\item The category-attribute of $l_1$ is equal to the
+  category-attribute of $l_2$.
+  \label{enum:catattr-eq}
+\item They are not marked explicitely in the \emph{not-successor-table}.
+  \label{enum:not-succ-table}
+\item Additionally one of the following rules must be true.
+  \begin{enumerate}
+  \item They are explicitely marked in the successor-table as
+    successors.
+    \label{enum:succ-table}
+  \item The following conditions must be true:
+    \begin{enumerate}
+    \item $n_1\ldots n_{d-1}$ of both ordnums are equal, the ordnum of
+      layer $d$ of $l_2$ is successor of layer~$d$ of~$l_1$.
+      \label{enum:ordnum-succ}
+    \item Joining on the given layer-depth is permitted my the
+      location-class description.
+      \label{enum:joining-allowed}
+    \end{enumerate}
+  \end{enumerate}
+\end{enumerate}
+%%
+Method [[build-range]] is called with a list of location-references
+with equal location-classes and category-attributes. Therefore
+conditions~\ref{enum:same-locclass} and~\ref{enum:catattr-eq} are
+already satisfied. Currently we don't support successor tables and
+therefore conditions~\ref{enum:not-succ-table}
+and~\ref{enum:succ-table} are not considered. For
+standard-location-classes condition~\ref{enum:joining-allowed} is
+checked in the [[post-process]]-method. The implementation of
+condition~\ref{enum:ordnum-succ} is as follows:
+
+We define a function that scans the ordnum-lists of two
+location-references. If the ordnums match for all higher levels
+excluding the last one and the last level fulfills the
+successor-predicate on numbers then [[ordnums-2]] is successor of
+[[ordnums-1]].
+
+<<Successor handling>>=
+(defun ordnum-successor-p (ordnums-1 ordnums-2)
+  (declare (inline))
+  (and (equal (butlast ordnums-1) (butlast ordnums-2))
+       (equal (1+ (car (last ordnums-1)))
+              (car (last ordnums-2)))))
+@ %def ordnum-successor-p
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The submodule root}
+
+<<Submodule \module{ranges}>>=
+;; $Id$
+
+<<Class \class{location-range}>>
+<<Successor handling>>
+<<Building of location-reference-ranges>>
+
+<<Export-list of submodule \module{ranges}>>
+@
+
+<<RCS-Identifier>>=
+("ranges" . "$Id$")
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Pretty-printing}
+
+<<Pretty-printing>>=
+(defun pprint-location-range (s range)
+  (pprint-logical-block
+   (s nil :prefix "[" :suffix "]")
+   (format s "range: ~D " (get-length range))
+   (pprint-newline :fill s)
+   (write-string " loccls: " s)
+   (write (get-locclass range) :stream s)
+   (pprint-newline :fill s)
+   (write-string " catattr: " s)
+   (write (get-catattr range) :stream s)
+   (format s "/~D" (get-sort-ordnum (get-catattr range)))
+   (pprint-newline :fill s)
+   (format s " ordnums: ~A " (get-ordnums range))
+   (pprint-newline :fill s)
+   (pprint-logical-block
+    (s nil :prefix "<" :suffix ">")
+    (write-string "first " s)
+    (pprint-newline :miser s)
+    (write (get-first range) :stream s))
+   (pprint-newline :mandatory s)
+   (pprint-logical-block
+    (s nil :prefix "<" :suffix ">")
+    (write-string "inner " s)
+    (pprint-newline :linear s)
+    (write (get-inner range) :stream s))
+   (pprint-newline :mandatory s)
+   (pprint-logical-block
+    (s nil :prefix "<" :suffix ">")
+    (write-string "last " s)
+    (pprint-newline :miser s)
+    (write (get-last range) :stream s))
+   (pprint-newline :mandatory s)))
+
+(set-pprint-dispatch 'location-range #'pprint-location-range)
+@
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1996/01/09 14:27:30  kehr
+%% Moved submodule `ranges' from module `locref' to this module.
+%% Nearly complete rewrite of all submodules. See ChangeLog for further details.
+%%
+%% Revision 1.5  1995/12/19  11:00:18  kehr
+%% Significant changes.
+%%
+%% Revision 1.4  1995/12/15  17:09:54  kehr
+%% Modified sources for the new module structure.
+%%
+%% Revision 1.3  1995/12/05  18:47:13  kehr
+%% Minor changes (nreverse etc.)
+%%
+%% Revision 1.2  1995/11/29  16:53:30  kehr
+%% Changed class hierarchy below class `location-class'. Defined a
+%% location-class< predicate and wrote several regression tests. Wrote a
+%% lot of documentation for submodule `locclass'.
+%%
+%% Revision 1.1  1995/11/08  16:13:29  kehr
+%% Initial checkin.
+%%
+%% Revision 1.5  1995/07/28  10:41:19  kehr
+%% Added simple markup for location-references and ranges. Currently
+%% exists no support for differen layer-markup. A location-reference is
+%% always printed as a whole.
+%%
+%% Revision 1.4  1995/07/27  14:36:45  kehr
+%% Added support for joining of locref-separated-groups.
+%%
+%% Revision 1.3  1995/07/26  16:19:56  kehr
+%% Added support for the pretty-printer module. Output of data-structures
+%% now looks more readable.
+%%
+%% Revision 1.2  1995/07/25  11:03:19  kehr
+%% Added separation of location-references into seprated/mixed-groups.
+%% Modified debug-output of locref-groups to reflect the real class-type
+%% of the groups. Verified the process of generating these groups.
+%%
+%% Revision 1.1  1995/07/23  20:48:36  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%

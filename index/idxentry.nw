@@ -77,16 +77,17 @@ The following symbols are exported:
 
 \subsubsection{Class \class{indexentry}}
 
-An indexentry consists of the following elements:
+Class \class{indexentry} is directly derived from the specification
+above.
 
-<<class \class{indexentry}>>=
+<<Class \class{indexentry}>>=
 (defclass indexentry ()
-    ((main-key   :reader   get-main-key   :initarg :main-key)
-     (merge-key  :reader   get-merge-key  :initarg :merge-key)
-     (sort-key   :reader   get-sort-key   :initarg :sort-key)
-     (print-key  :reader   get-print-key  :initarg :print-key)
-     (locrefs    :accessor get-locrefs    :initarg :locrefs)
-     (idxclass   :reader   get-idxclass   :initarg :idxclass)))
+    ((main-key  :reader get-main-key  :writer set-main-key  :initarg :main-key)
+     (merge-key :reader get-merge-key                       :initarg :merge-key)
+     (sort-key  :reader get-sort-key  :writer set-sort-key  :initarg :sort-key)
+     (print-key :reader get-print-key :writer set-print-key :initarg :print-key)
+     (locrefs   :reader get-locrefs   :writer set-locrefs   :initarg :locrefs)
+     (idxclass  :reader get-idxclass                        :initarg :idxclass)))
 
 (defun make-indexentry (&key (main-key '()) (merge-key '())
                              (sort-key '()) (print-key '())
@@ -97,12 +98,24 @@ An indexentry consists of the following elements:
                              :locrefs  locrefs  :idxclass  idxclass))
 @ %def indexentry make-indexentry
 
-<<Export-list of submodule \module{index}>>=
+\no To add a location-reference to an indexentry we use the generic
+function [[add]]. (For a detailed description see
+\look{sec:precondition})
+
+<<Class \class{indexentry}>>=
+(defmethod add ((idxent indexentry) (locref location-reference))
+  (unless (some #'(lambda (lref) (locref= locref lref))
+                (get-locrefs idxent))
+    (set-locrefs (cons locref (get-locrefs idxent)) idxent))
+  idxent)
+@ %def add
+
+<<Export-list of submodule \module{idxentry}>>=
 (export '(indexentry make-indexentry
           get-main-key get-merge-key get-sort-key get-print-key
-          get-locrefs get-idxclass))
+          get-locrefs set-locrefs get-idxclass
+          add))
 @
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -139,7 +152,7 @@ indexentries) mustn't be set.
     (multiple-value-bind (layers ordnums)
         (match-locclass-by-string locref-str loccls)
       (unless (or (endp layers) (endp ordnums))
-        (let ((locref (apply #'make-location-reference
+        (let ((locref (apply #'make-structured-locref
                              :layers   layers :ordnums ordnums
                              :locclass (get-name loccls)
                              keyword-arguments)))
@@ -166,32 +179,30 @@ context is the [[print-key]] of the previous printed indexentry.
          (markups  markup-list            (cdr markups))
          (contexts context-list           (cdr contexts)))
         ((or (endp key-list) (endp markups))
-           (markup-object (get-locrefs idxent) '() '() '()))  ;; for now
+           (markup-object (get-locrefs idxent) '() '() '())) ;; for now
       (if (equal pass-mode 'find-starting-point)
           (if (and (equal (car key-list) (car contexts))
                    (eql (get-force-print (car markups)) 'nil))
               (incf layer-counter)
-            (progn
-              (setq pass-mode 'printing-mode)
-              (setq env-stack (close-environments env-stack layer-counter))
-              (push (markup-keyword-layer (car key-list)
-                                          (car markups)
-                                          (equal (car key-list)
-                                                 (car context-list)))
-                    env-stack)))
-        (push (markup-keyword-layer (car key-list)
-                                    (car markups)
-                                    (equal (car key-list)
-                                           (car context-list)))
-              env-stack))))
+              (progn
+                (setq pass-mode 'printing-mode)
+                (setq env-stack (close-environments env-stack layer-counter))
+                (push (markup-keyword-layer (car key-list)
+                                            (car markups)
+                                            (equal (car key-list)
+                                                   (car context-list)))
+                      env-stack)))
+          (push (markup-keyword-layer (car key-list)
+                                      (car markups)
+                                      (equal (car key-list)
+                                             (car context-list)))
+                env-stack))))
   env-stack)
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Processing an indexentry}
-
-\subsubsection{Semi-formal description}
+\subsection{Processing an indexentry ---  a semi-formal description}
 
 Processing an indexentry is one of the central parts of the system.
 Since a lot of different rules parametrize this process, the
@@ -215,8 +226,6 @@ slots that appear in the description of class
   \item [\fcatattr{$l$}] returns the category-attribute of $l$.
   \item [\floccls{$l$}] returns the location-class $l$ belongs to.
   \item [\fordnum{$l$}] returns the list of ordnums of $l$.
-  \item [\fvcatattr{$l$}] returns the virtual category-attribute of
-    $l$. Initially this value is empty.
   \item [\fstat{$l$}] returns the state of $l$ with
     $\fstat{l}\in\{\Real,\Virt\}$. This slot is initially set to
     \Real.
@@ -233,15 +242,29 @@ called \term{inheritance-operator}.\footnote{The idea is simply
   borrowed from similar notations which are used with variable
   substitutions in denotational semantics and unification.}
 
-\paragraph{Initially accessible data}
+<<Processing an indexentry>>=
+<<Separating into location-class-groups>>
+<<Processing location-reference-groups>>
+<<Separation into category-attribute-groups>>
+@
+
+\subsubsection{Precondition}
+\label{sec:precondition}
 
 \no We start with an initial set $R$ of location-references such that
 \[\forall l,k\in R: l\not=k\Rightarrow\fcatattr{l}\not=\fcatattr{k}\vee
 \fordnum{l}\not=\fordnum{k}\vee \floccls{l}\not=\floccls{k}.\] So we
 can assume that there exist no \term{duplicates} in $R$.
 
+\begin{note}
+  Method [[add]]~\emph{idxent}~\emph{locref} already assures that this
+  condition is always satisfied.
+\end{note}
 
-\paragraph{Separating into location-classes}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Separating into location-class-groups}
 
 Divide $R$ into equivalence-classes of location-references based on
 the location-classes. We receive a set of disjoint sets of
@@ -251,15 +274,193 @@ location-references holds \func{loccls}($l$)=\func{loccls}($k$).
 Additionally holds $\forall x\in~L_j,\forall y\in~L_k,
 j\not=k\Rightarrow\func{loccls}(j)\not=\func{loccls}(k)$.
 
-\bigskip\noindent Process the following steps for each subset $L_i$
-separately:
+\smallskip
+
+\noindent The process itself is more or less a operation of refinement
+on the underlying structure. For example, we subgroup the list of
+location-references into location-class-groups. Later we need to
+subgroup the location-class-groups into separated/mixed--groups, \etc.
+This process continues until we reach ranges of location-references.
+
+The idea is to define a generally usable function [[split-list]] that
+may be used to subgroup and sort a list with a [[split-function]] and
+a [[sort-function]]. Additionally we define a conversion-function
+[[convert-sublists-to-group-object]] that can be used to turn the
+generated sublists into \emph{group-objects}. A more flexible function
+[[convert-sublists-to-specialized-groups]] is used to create instances
+of different classes of group-objects. The idea of group-objects is to
+easily bind action-methods with them to simplify overall work.
+
+At first I started with working on highly nested lists in which every
+sublist has a special meaning. Because I must concentrate on managing
+those lists more than giving new features the idea of groups was born.
+It is also easier to maintain for future extensions.
+
+The resulting code is now:
+
+<<Separating into location-class-groups>>=
+<<Splitting lists into sublists --- [[split-list]]>>
+<<Convert sublists into group objects --- [[convert-sublists-to-group-objects]]>>
+<<Class \class{locref-group}>>
+<<Class \class{locref-class-group}>>
+<<Separating the location-references by using [[split-list]] and [[convert-sublists-to-group-objects]]>>
+@
 
 
+\paragraph{Splitting into sublists}
+
+This is a function that operates on lists. It takes a list and groups
+its elements into new subgroups. The given function [[split-function]]
+must return the same value for all elements that belong to the same
+group. These values are compared with the [[#'equal]]-predicate. Its
+meaning is to create \emph{equivalence-classes} of elements. The
+resulting sublists are sorted by function [[sort-function]] which must
+define a \emph{less-than}-predicate of the values [[split-function]]
+delivers. The result is a list containing the sorted sublists.
+
+<<Splitting lists into sublists --- [[split-list]]>>=
+(defun split-list (split-function sort-function list)
+  (let ((split-table (make-hash-table :test #'equal))
+        (sorted-keys '()))
+    (mapcar #'(lambda (x)
+                (let ((split-value (funcall split-function x)))
+                  (setf (gethash split-value split-table)
+                        (cons x (gethash split-value split-table)))))
+            list)
+    (maphash #'(lambda (key element)
+                 (declare (ignore element))
+                 (setq sorted-keys (cons key sorted-keys)))
+             split-table)
+    (mapcar #'(lambda (x) (gethash x split-table))
+            (sort sorted-keys sort-function))))
+@ %def split-list
+
+\paragraph{Converting sublists into group-objects}
+
+This conversion-routine iterates over a list containing sublists and
+returns for every sublist an instance of class [[object-type]] and
+stores the original sublist into the [[member]]-slot of the instance.
+We need it, for instance, to generate the list separated/mixed-groups
+in the location-reference-processing.
+
+<<Convert sublists into group objects --- [[convert-sublists-to-group-objects]]>>=
+(defun convert-sublists-to-group-objects (list-of-sublists object-type)
+  (mapcar #'(lambda (sublist)
+              (make-locref-group object-type sublist))
+          list-of-sublists))
+@ %def convert-sublists-to-group-objects
+
+This slightly modified conversion-routine behaves like
+[[convert-sublists-to-fixed-group]] but takes a function [[convert-func]]
+instead of the object-type. This function takes as its argument the
+sublist and must return an appropriate object-type. It is possible to
+convert different sublists into different object-types.
+
+<<convert-sublists-to-group>>=
+(defun convert-sublists-to-specialized-groups (list-of-sublists convert-func)
+  (declare (special convert-func))
+  (mapcar #'(lambda (sublist)
+              (make-locref-group (funcall convert-func sublist) sublist))
+          list-of-sublists))
+@ %def convert-sublists-to-specialized-groups
+
+
+\paragraph{Location-reference groups}
+
+Location-reference-groups are used to simplify processing the
+location-references. We define the abstract base-class
+[[locref-groups]] which can be used to define other subclasses and
+bind methods to them. The \emph{elements} of a group are stored in
+slot [[members]]. We define a generic function [[process-group]] that
+specifies the work that needs to be done on every kind of group.
+
+<<Class \class{locref-group}>>=
+(defclass locref-group ()
+    ((members :reader get-members :writer set-members :initarg :members)))
+
+(defun make-locref-group (group-class members)
+  (make-instance group-class :members members))
+
+(defgeneric process-group (group-object indexclass))
+@ %def locref-group make-locref-group process-group
+
+\no This method is intended to operate on an indexentry. The work to
+be done on the indexentries' location-references is to separate them
+into groups of different location-classes. This is done by calling
+[[split-list]] with a function that returns the order number of the
+corresponding location-class a reference belongs to. Every created
+subgroup is turned into an object of type [[locref-class-group]].
+After creation of those objects we call [[process-group]] on them.
+
+
+\paragraph{Class \class{locref-class-group}}
+
+An object of type [[locref-class-group]] contains location-references
+which belong the same location-class. The method
+[[process-indexentry]] creates these objects for us.
+
+<<Class \class{locref-class-group}>>=
+(defclass locref-class-group (locref-group)
+    ())
+@ %def locref-class-group
+
+<<Separating the location-references by using [[split-list]] and [[convert-sublists-to-group-objects]]>>=
+(defmethod process-indexentry ((idxent indexentry))
+  (set-locrefs (convert-sublists-to-group-objects
+                (split-list #'(lambda (locref)
+                                (get-ordnum (get-locclass locref)))
+                            #'<
+                            (get-locrefs idxent))
+                'locref-class-group)
+               idxent)
+  )
+@ %def process-indexentry
+
+<<Export-list of submodule \module{idxentry}>>=
+(export '(locref-group make-locref-group process-group process-indexentry))
+@
+
+\paragraph*{Further processing}
+
+Process the following steps for each subset $L_i$ separately.
+
+<<Processing location-reference-groups>>=
+(defmethod process-group ((locref-cls-grp locref-class-group)
+                          (idxcls indexclass))
+  (apply-substitution-and-merge-rules locref-cls-grp idxcls)
+  (build-ranges locref-cls-grp idxcls t)
+  (cleanup locref-cls-grp)
+  (separate-into-catattr-groups locref-cls-grp)
+  locref-cls-grp)
+
+<<Apply substitution- and merge-rules>>
+<<Building of ranges>>
+@ %def process-group
+
+
+\paragraph*{Implementation cleanup}
+
+To cleanup the funny-looking-list that is returned by [[build-range]]
+we need to iterate over its elements.
+
+<<Processing location-reference-groups>>=
+(defmethod cleanup ((locref-cls-grp locref-class-group))
+  (set-members
+   (delete-if #'(lambda (object)
+                  (and (typep object 'location-reference)
+                       (state-virtual-p object)))
+              (apply #'nconc
+                     (apply #'nconc
+                            (get-members locref-cls-grp))))
+   locref-cls-grp))
+@ %def cleanup
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\Sid}{\irule{substitute-if-double}\xspace}
 \newcommand{\sid}{\irule{subs-if-dbl}\xspace}
 
-\paragraph{Apply all \Sid-rules}
+\subsubsection{Apply all \Sid-rules}
 \label{sec:subs-if-dbl}
 
 This application operates on a set $L_i$ of location-references. All
@@ -291,22 +492,26 @@ transitive-hull operator with an appended star ($*$).  The resulting
 relation $C_R$ can now be calculated in several ways:
 \begin{enumerate}
 \item $C_R:=C_U\cup C_V$$*$, defined as the default.
-\item $C_R:=C_U$$*\cup C_V$$*$, if the user wants the transitive
+\item $C_R:=C_U$$*$$\cup C_V$. (seems very meaningless to me)
+\item $C_R:=C_U$$*$$\cup C_V$$*$, if the user wants the transitive
   hull also be generated over his specification.
 \item $C_R:=(C_U\cup C_V)*$, if the user wants a global transitive
   hull generation.
 \end{enumerate}
 %%
 We conclude that we probably need three separate hooks for the
-transitive-hull-calculation of $C_U,C_V$ and $C_U\cup C_V$. The user
-is then free to do whatever (more or less) she/he wants.
-
-Additionally we could include a check to see if some of the relations
-are \term{refexive} what actually doesn't make any sense, since no
+transitive-hull-calculation of $C_U,C_V$ and $C_U\cup C_V$. The users
+are then free to do whatever (more or less) they want. The application
+of these hooks is done in submodule \module{idxclass}. Additionally we
+could include a check to see if some of the relations are
+\term{refexive} what actually doesn't make any sense, since no
 location-reference wants to substitute itself.
 
-Until now we didn't define what \term{substitution} actually means.
-There are two ways.
+\medskip
+
+After the definition of the substitution-relation we continue to
+process the location-references. Until now we havent't defined what
+\term{substitution} actually means. There are two ways.
 \begin{enumerate}
 \item To substitute means to \term{remove} in a way that the
   substituted location-reference will be removed.
@@ -329,15 +534,114 @@ of \emph{real} location-references into the set of \emph{virtual}
 location-references. This happens only in the case that there really
 exists a location-reference $k$ which is \Real.
 
+The general idea for processing the location-references is to
+separate them into sublists that contain location-references with the
+same \term{ordnum}. For each of these sublists we call
+[[apply-substitution-rules]]. This function returns a list of the
+modified location-references without those being removed (if there
+were some). Immediately we apply [[apply-merge-rules]] on this list
+which will be described in the next section. This is the simplest way,
+since the list ist in the exact form we need for optimal processing.
 
-\paragraph{Apply all \irule{merge-to}- and \irule{drop-if-merged}-rules}
+The resulting list is stored back into the [[member]]-slot
+of the group.
+\begin{note}
+  Afterwards the list is in the form
+  \begin{center}
+    (\emph{ordnum-list}$_1$\ldots\emph{ordnum-list}$_n$) with
+    \emph{ordnum}$_i$ =
+    (\emph{locref}$_{i,1}$\ldots\emph{locref}$_{i,n}$).
+  \end{center}
+  This form is used in further steps.
+\end{note}
 
-Initialize the set of new location-references $L_i^+:=\{\}$. For all
-$l\in{}L_i$ (virtual or not) if exists a rule
-`$\irule{merge-to}~\fcatattr{l}~x$' then $L_i^+:=L_i^+\cup{}l_+$ with
+<<Apply substitution- and merge-rules>>=
+(defmethod apply-substitution-and-merge-rules ((locref-cls-grp locref-class-group)
+                                               (idxcls         indexclass))
+  (let ((locref-same-ordnum-grps
+         (split-same-locrefs (get-members locref-cls-grp))))
+    (set-members
+     (mapcan #'(lambda (locref-same-ordnum-grp)
+                 (apply-merge-rules
+                  idxcls
+                  (apply-substitution-rules idxcls
+                                            locref-same-ordnum-grp)))
+             locref-same-ordnum-grps)
+     locref-cls-grp))
+  locref-cls-grp)
+
+<<Apply substitution-rules>>
+<<Apply merge-rules>>
+@ %def process-group apply-substitution-and-merge-rules
+
+\no This function splits the location-references into sublists with
+the same ordnums.
+
+<<Apply substitution-rules>>=
+(defmethod split-same-locrefs ((locrefs list))
+  (split-list #'(lambda (locref) (get-ordnums locref))
+              #'locref-ordnum<
+              locrefs))
+@ %def split-same-locrefs
+
+\no The next function takes a list of location-references with the
+same ordnum and applies the substitution-rules on them. It returns a
+list of the remaining (if some have been removed) or modified (if
+their state has been changed) location-references.
+
+<<Apply substitution-rules>>=
+(defmethod apply-substitution-rules ((idxcls indexclass)
+                                     (locrefs list))
+  (let ((substitute-locref (get-substitution-subst-hook idxcls)))
+    (delete-if #'null
+               (mapcar #'(lambda (test-locref)
+                           (cond ((some #'(lambda (against-locref)
+                                            (substitutable-p idxcls test-locref
+                                                             against-locref))
+                                        locrefs)
+                                    (funcall substitute-locref test-locref))
+                                 (t test-locref)))
+                       locrefs))))
+@ %def apply-substitution-rules-on-locref-list
+
+\no To test if [[test-locref]] can be substituted by
+[[against-locref]] we first test for equality in which case it is not
+substitutable. Afterwards we check if the state of the
+[[against-locref]] is normal and if they are in relation according to
+the indexstyle. Otherwise no substitution may occur.
+
+<<Apply substitution-rules>>=
+(defmethod substitutable-p ((idxcls         indexclass)
+                            (test-locref    structured-locref)
+                            (against-locref structured-locref))
+  (cond ((eql test-locref against-locref)
+           nil)
+        ((and (state-normal-p against-locref)
+              (relation-p (get-implicit-subst-rules idxcls)
+                          (get-catattr against-locref)
+                          (get-catattr test-locref))))
+        (t nil)))
+@ %def substitutable-p
+
+<<Export-list of submodule \module{idxentry}>>=
+(export '(process-group split-same-locrefs
+          apply-substitution-rules substitutable-p))
+@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Apply all \irule{merge-to}- and \irule{drop-if-merged}-rules}
+
+The formal description says: Initialize the set of new
+location-references $L_i^+:=\{\}$. For all $l\in{}L_i$ (virtual or
+not) if exists a rule `$\irule{merge-to}~\fcatattr{l}~x$' then
+$L_i^+:=L_i^+\cup{}l_+$ with
 \[l_+:=l\,[\Fstat{}:=\Virt,\Fcatattr{}:=x].\]
 or if additionally holds `\irule{drop-if-merged}~\fcatattr{l}~x'
 \[l_+:=l\,[\Fstat{}:=\Virt,\Fcatattr{}:=x,\Fparent:=\fparent{l}].\]
+After applying the last steps we first need to union $L_i$ and $L^+_i$
+to receive the extended set $L_i:=L_i\cup L_i^+$.
 
 \noindent The basic idea is to generate new location-references that
 are equal to their parents but with \Fstat{} set to \Virt and if there
@@ -345,160 +649,231 @@ exists an applicable \irule{drop-if-merged}-rule additionally
 \Fparent{} holds a reference to the parent location-reference, since
 we must be able to actually \emph{drop} the parent, if necessary.
 
+The implementation performs the creation of new location-references as
+needed but does not check for duplicates. Duplicates can occur when we
+don't use the \irule{drop-if-merged}-rule and equal
+location-references are generated from different category-attributes.
+Additionally there can exist \term{virtual} location-references for
+which also exists their \term{normal} counterpart. We do not worry
+about too much location-references. In the ramaining steps this will
+not cause any problems (hopefully).
 
+<<Apply merge-rules>>=
+(defmethod apply-merge-rules ((idxcls indexclass) (locrefs list))
+  (let ((merge-rules          (get-merge-rules idxcls))
+        (drop-if-merged-rules (get-drop-if-merged-rules idxcls)))
+    (nconc locrefs
+           (mapcan #'(lambda (locref)
+                       (mapcan #'(lambda (catattr)
+                                   (let ((new-locref
+                                          (make-virtual-structured-locref
+                                           :catattr  catattr
+                                           :ordnums  (get-ordnums locref)
+                                           :layers   (get-layers locref)
+                                           :locclass (get-locclass locref))))
+                                     (when (relation-p drop-if-merged-rules
+                                                       (get-catattr locref)
+                                                       catattr)
+                                       (set-origin locref new-locref))
+                                     (list new-locref)))
+                               (relation-set merge-rules (get-catattr locref))))
+                   locrefs))))
+@ %def apply-merge-rules
 
-\paragraph{Cleaning up}
-
-We do the following clean-up steps:
-\begin{itemize}
-\item After applying the last steps we first need to union $L_i$ and
-  $L^+_i$ to receive the extended set $L_i:=L_i\cup L_i^+$.
-
-\item Then we need to remove all duplicate location-references (there
-  exist only virtual ones) from $L_i$ (they may have been created by
-  appling several \irule{merge-to}-rules).
-
-\item Then we should remove all virtual location-references that are
-  \term{shadowed} by a normal one. These lref's are the ones for which
-  holds
-  \[\begin{array}{rl}
-    l\in L_i~\fstat{l}=\Virt\wedge\exists k:&\fstat{k}=\Real\wedge%%
-    \\&\fcatattr{k}=\fcatattr{l}\wedge\fordnum{k}=\fordnum{k}.
-  \end{array}\]
-\end{itemize}
-After this clean-up the following holds:%
-\[\forall l,k\in L_i:
-l\not=k\Rightarrow\fcatattr{l}\not=\fcatattr{k}\vee
-\fordnum{l}\not=\fordnum{k}.\]
-
-
-\paragraph{Generate virtual catattrs}
-
-The virtual category-attributes (vca's) are described by a injective
-function $\phi$ from the set $C$ of category-attributes to the set $V$
-of virtual ca's. Since $\phi$ is somehow we do $\forall l\in L_i:
-\fvcatattr{l}:=\phi(\fcatattr{l})$.
-
-\smallskip
-
-\noindent Divide $L_i$ into equivalence-classes $K_1,\ldots,K_m$ that
-for each pair $l,k\in{}K_j$ holds: $\fvcatattr{l}=\fvcatattr{k}$.
-Additionally holds $\forall x\in K_j,\forall y\in
-K_k,j\not=k\Rightarrow\fvcatattr{j}\not=\fvcatattr{k}$.
-
-
-
-
-\paragraph{Building ranges in all $K_j$}
-
-This is separated into two stages:
-  \begin{enumerate}
-  \item Process all $K_{\phi(j)}$ for which exists a
-    `$\irule{merge-to}~x~j$'-rule.
-
-    Build ranges (will be described later) and for all
-    location-references $l$ that will be merged into a range check, if
-    condition $\fparent{l}\not=\fnil{}$ is true in which case
-    $\fstat{\fparent{l}}:=\Virt$ achieves that the state of $l$'s
-    parent is set to virtual.
-
-  \item Continue to process all $K_{\phi(j)}$ for which does not exist
-    a `$\irule{merge-to}~x~j$'-rule.
-  \end{enumerate}
-  These steps must be done in the described order because the
-  \irule{drop-if-merged}-rule.
-
-
-\subsubsection{Building of ranges}
-
+<<Export-list of submodule \module{idxentry}>>=
+(export '(apply-merge-rules))
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
-\subsubsection{OLD}
+\subsubsection{Building of ranges}
 
-Processing an indexentry is mainly a work that relates to the
-location-references an indexentry contains. First of all we need to
-apply the defined indexstyle-rules. This may create virtual attributes
-and change order- and successor-neighbourship and may even remove some
-entries because of substitution-rules. Afterwards the indexentries
-will be sorted.  Then we step over all references and compare
-neighbours to their successor-relationship. If it is possible, we
-build ranges by joining two references. Afterwards we need to step
-over again to remove some location-references if some appropriate
-rules were specified.
+Building of ranges the next job to be done. In general we have to
+solve two problems:
+\begin{itemize}
+\item The application of the \irule{drop-if-merged}-rule is somewhat
+  problematic. The notion of \term{dropping} a location-reference
+  needs an exact definition. We can say, that dropping simply means to
+  reset the state of a location-reference to virtual. This works well
+  and doesn't cause any trouble. But when it is intended to actually
+  \term{remove} a dropped location-reference the order in which the
+  category-attribute-groups are processed is significant. Since we
+  must delay the building of ranges inside a category-attribute until
+  we know which location-references aren't removed we need to know the
+  \term{order} in which the category-attributes must be processed.
+  This can easily determined by sorting the
+  \irule{drop-if-merged}-relation topologically and start with a
+  category-attribute $c$ such there doesn't exist a rule
+  `\irule{drop-if-merged}~$c~x$' which means that this catattr can't
+  be dropped. The problem is to ensure that there exists a topological
+  sort on the category-attributes. Otherwise it is possible that a
+  circular droping may occur which is an error. In this case the user
+  must be advised to correct his erroneus specification. Function
+  [[make-ready]] in submodule \module{idxclass} calculates for a given
+  category-attribute its position in the topological sorting of all
+  \irule{drop-if-merged}-rules and stores the resulting value into the
+  [[processing-ordnum]]-slot of the catattr. For all
+  category-attributes that are not involved in these rules we can put
+  them in any order (this is done by setting the initial value to 0).
 
-The process itself is more or less a operation of refinement on the
-underlying structure. For example, we subgroup the list of
-location-references into location-class-groups. Later we need to
-subgroup the location-class-groups into separated/mixed--groups, \etc.
-This process continues until we reach ranges of location-references.
+  We start by splitting the location-references into
+  category-attribute-subgroups (ordered by their processing-number)
+  and process each of those subgroups.
 
-The idea is to define a generally usable function [[split-list]] that
-may be used to subgroup and sort a list with a [[split-function]] and
-a [[sort-function]]. Additionally we define a conversion-function
-[[convert-sublists-to-fixed-group]] that can be used to turn the
-generated sublists into \emph{group-objects}. A more flexible function
-[[convert-sublists-to-specialized-groups]] is used to create instances
-of different classes of group-objects. The idea of group-objects is to
-easily bind action-methods with them to simplify overall work.
+\item The second problem deals with the range-building of
+  \term{var-classes}. Currently we don't support bulding of ranges for
+  var-classes because we want to make some experience with the
+  standard-classes first.
+\end{itemize}
 
-At first I started with working on highly nested lists in which every
-sublist has a special meaning. Because I must concentrate on managing
-those lists more than giving new features the idea of groups was born.
-It is also easier to maintain for future extensions.
+\subsubsection*{Separation into sublists with the same category-attribute}
 
-Now let's start with the definition of the location-class-groups.
+We now come closer to the building of ranges and we need a different
+view on the location-references. In the last sections we processed
+location-references with equal ordnums in general. Now we must focus
+on location-references that have to the same category-attribute.
 
+<<Building of ranges>>=
+(defmethod build-ranges ((locref-cls-grp locref-class-group)
+                         (idxcls indexclass)
+                         x)
+  (declare (ignore x))
+  (let ((locref-same-catattr-grps
+         (split-list #'(lambda (locref) (get-catattr locref))
+                     #'(lambda (x y)
+                         (< (get-processing-ordnum x)
+                            (get-processing-ordnum y)))
+                     (get-members locref-cls-grp))))
+    (set-members (mapcar #'(lambda (catattr-sublist)
+                             (build-ranges catattr-sublist
+                                           idxcls
+                                           (get-locclass (car catattr-sublist))))
+                         locref-same-catattr-grps)
+                 locref-cls-grp)
+    ))
+@ %def build-ranges
 
-\subsubsection{Location-reference groups}
+\no The implementation of [[build-ranges]] is continued in submodule
+\module{ranges}.
 
-Groups are used to simplify processing the location-references. We
-define the base-class [[locref-groups]] which can be used to define
-other subclasses and binding methods to it. The \emph{elements} of a
-group a named [[members]]. We define a generic function [[do-group]]
-that specifies the work that needs to be done on every kind of group.
-Marco [[show-group]] is a wrapper to define [[show]]--methods for all
-of those classes. It is meant as an abbreviation for defining lots of
-similiar methods.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-<<class locref-group>>=
-(defclass locref-group ()
-    ((members :accessor get-members :initarg :members)))
+\subsubsection{Separation into category-attribute-groups}
 
-(defun make-locref-group (group-class members)
-  (make-instance group-class :members members))
+At the end we must separate the location-references and ranges into
+the category-attribute-groups. Now we must focus on
+location-references that belong to the same category-attribute-group.
+We introduce a new class for easy dispatching during the
+markup-processing.
 
-(defgeneric do-group (group-object))
+The category-attribute-groups (cag's) are described by a injective
+function $\phi$ from the set $C$ of category-attributes to the set $G$
+of cag's. Since $\phi$ is given we do $\forall l\in L_i:
+\fcag{l}:=\phi(\fcatattr{l})$. Divide $L_i$ into equivalence-classes
+$K_1,\ldots,K_m$ that for each pair $l,k\in{}K_j$ holds:
+$\fcag{l}=\fcag{k}$. Additionally holds $\forall x\in K_j,\forall
+y\in K_k,j\not=k\Rightarrow\fcag{j}\not=\fcag{k}$.
+
+\smallskip\noindent%%
+A category-attribute contains an additional slot [[ordnum]] that keeps its
+ordnum. Currently this slot is initialized but unused.
+
+Method [[separate-into-catattr-groups]] takes a location-class-group
+whose [[members]]-slot contains a list of location-references and
+location-ranges. It splits this list into the catattr-groups by
+calling [[get-catattr-grp-ordnum]] with the catattr of all objects. Method
+[[get-catattr]] is defined for location-references and location-ranges
+so we don't need to distinguish between them explicitly.
+
+Finally we fill the [[ordnum]]-slot of all catattr-groups (maybe we
+don't need it at all).
+
+<<Separation into category-attribute-groups>>=
+(defclass category-attribute-group (locref-group)
+    ((ordnum :reader get-ordnum :writer set-ordnum :initform 'nil)))
+
+(defmethod separate-into-catattr-groups ((locref-cls-grp locref-class-group))
+  (set-members (convert-sublists-to-group-objects
+                (split-list #'(lambda (object)
+                                (get-catattr-grp-ordnum (get-catattr object)))
+                            #'<
+                            (get-members locref-cls-grp))
+                'category-attribute-group)
+               locref-cls-grp)
+  (mapc #'(lambda (catattr-grp)
+            (set-ordnum (get-catattr-grp-ordnum (get-catattr (car (get-members catattr-grp))))
+                        catattr-grp)
+            (set-members
+             (sort (get-members catattr-grp)
+                   #'(lambda (object-1 object-2)
+                       (let ((ordnum-1 (get-ordnums object-1))
+                             (ordnum-2 (get-ordnums object-2)))
+                         (or (locref-ordnum< ordnum-1 ordnum-2)
+                             (and (locref-ordnum= ordnum-1 ordnum-2)
+                                  (< (get-sort-ordnum (get-catattr object-1))
+                                     (get-sort-ordnum (get-catattr object-2))))))))
+             catattr-grp))
+        (get-members locref-cls-grp))
+  locref-cls-grp)
+@ %def category-attribute-group separate-into-catattr-groups
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The submodule root}
+
+<<Submodule \module{idxentry}>>=
+;; $Id$
+
+<<Class \class{indexentry}>>
+<<Processing an indexentry>>
+
+<<Export-list of submodule \module{idxentry}>>
 @
 
-The markup of location-reference-groups is generally just a forwarding
-to the markup of its members. We can define the markup of objects just
-with one method applicable for all classes except the
-[[locref-same-ordnum-group]].
+<<RCS-Identifier>>=
+("idxentry" . "$Id$")
+@ %def RCS-Identifier
 
-<<markup methods>>=
-(defmethod markup-object ((locref-grp locref-group)
-                          (dummy-markup-list  list)
-                          (context-list list)
-                          (dummy-env-stack    list))
-  (declare (ignore dummy-makup-list dummy-env-stack))
-  (dolist (member (get-members locref-grp))
-    (markup-object member '() '(", ") '())))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Pretty-printing}
+
+<<Pretty-printing>>=
+(set-pprint-dispatch 'indexentry
+                     #'(lambda (s idxent)
+                         (pprint-logical-block
+                          (s nil :suffix "}")
+                          (pprint-indent :block 2 s)
+                          (write-string "Indexentry {" s)
+                          (pprint-newline :mandatory s)
+                          (write-string "main-key: " s)
+                          (write (get-main-key idxent) :stream s)
+                          (pprint-newline :mandatory s)
+                          (pprint-logical-block
+                           (s nil :suffix "}")
+                           (write-string "Locrefs {" s)
+                           (pprint-indent :block 2)
+                           (pprint-newline :mandatory s)
+                           (pprint-linear s (get-locrefs idxent)))
+                          (pprint-newline :mandatory s))
+                         ))
 @
 
-Here we define a function that is used to specify the pretty-print of
-locref-groups. Function [[pprint-locref-group]] prints [[grp]] on
+\no Here we define a function that is used to specify the pretty-print
+of locref-groups. Function [[pprint-locref-group]] prints [[grp]] on
 stream [[s]]. It uses [[name]] to add the name of the group into the
 pretty-print-stream. Function [[set-pprint-locref-group-dispatch]] is
 needed to add the class-types into the dispatch-table for the
 pretty-printer.
 
-<<pretty-print>>=
+<<Pretty-printing>>=
 (defun pprint-locref-group (s grp name)
   (pprint-logical-block
-   (s nil :prefix "{" :suffix "}")
+   (s nil :prefix "(" :suffix ")")
    (write-string name s)
+   (write-string ":" s)
+   (when (typep grp 'category-attribute-group)
+     (write (get-ordnum grp) :stream s))
    (pprint-indent :block 2 s)
    (pprint-newline :mandatory s)
    (pprint-fill s (get-members grp) nil)
@@ -510,11 +885,11 @@ pretty-printer.
                        #'(lambda (s grp)
                            (pprint-locref-group s grp name))
                        rank))
-@
+@ %def pprint-locref-group set-pprint-locref-group-dispatch
 
-When adding types is is absolutely necessary to add a rank into the
-dispatch-table, that describes the inheritance-relations between the
-classes. For examplem class [[locref-group]] is base-class of all
+\no When adding types is is absolutely necessary to add a rank into
+the dispatch-table, that describes the inheritance-relations between
+the classes. For example, class [[locref-group]] is base-class of all
 other locref-groups. Therefore the other classes need a higher rank to
 explicitely define a precedence during the pretty-printer-dispatching
 (This took me quite a while to work it out\ldots uff!). As can be seen
@@ -524,297 +899,26 @@ sort of the class-relationships.
 
 This section is placed here before the definition of all classes.
 
-<<pretty-print>>=
+<<Pretty-printing>>=
 (set-pprint-locref-group-dispatch 'locref-group
-                                  "locref-group"               0)
-(set-pprint-locref-group-dispatch 'locref-list-group
-                                  "locref-list-group"          1)
+                                  "LOCREF-GROUP"               0)
 (set-pprint-locref-group-dispatch 'locref-class-group
-                                  "locref-class-group"         1)
-(set-pprint-locref-group-dispatch 'locref-sep-mixed-group
-                                  "locref-sep-mixed-group"     1)
-(set-pprint-locref-group-dispatch 'locref-separated-group
-                                  "locref-separated-group"     2)
-(set-pprint-locref-group-dispatch 'locref-mixed-group
-                                  "locref-mixed-group"         2)
-(set-pprint-locref-group-dispatch 'locref-same-ordnum-group
-                                  "locref-same-ordnum-group"   1)
+                                  "LOCREF-CLASS-GROUP"         1)
+(set-pprint-locref-group-dispatch 'category-attribute-group
+                                  "CATEGORY-ATTRIBUTE-GROUP"   2)
 @
 
-\subsubsection{Splitting into sublists}
-
-This is a highlevel-function that operates on lists. It takes a list
-and groups its elements into new subgroups. The given function
-[[split-function]] must return the same value for all elements that
-belong to the same group. Its meaning is to create create
-\emph{equivalence-classes} of elements. The resulting sublists are
-sorted by function [[sort-function]] which must define a
-\emph{less-than}-predicate of the values [[split-function]] delivers.
-The result is a list containing the sorted sublists.
-
-<<split-list>>=
-(defun split-list (split-function sort-function list)
-  (let ((split-table (make-hash-table :test #'equal))
-        (sorted-keys '()))
-    (mapcar #'(lambda (x)
-                (let ((split-value (funcall split-function x)))
-                  (setf (gethash split-value split-table)
-                        (append (gethash split-value split-table) (list x)))))
-            list)
-    (maphash #'(lambda (key element)
-                 (declare (ignore element))
-                 (setq sorted-keys (cons key sorted-keys)))
-             split-table)
-    (mapcar #'(lambda (x) (gethash x split-table))
-            (sort sorted-keys sort-function))))
-@
-
-\subsubsection{Converting sublists into group-objects}
-
-This conversion-routine iterates over a list containing sublists and
-returns for every sublist an instance of class [[object-type]] and
-stores the original sublist into the [[member]]-slot of the instance.
-We need it, for instance, to generate the list separated/mixed-groups
-in the location-reference-processing.
-
-<<convert-sublists-to-group>>=
-(defun convert-sublists-to-fixed-group (list-of-sublists object-type)
-  (mapcar #'(lambda (sublist)
-              (make-locref-group object-type sublist))
-          list-of-sublists))
-@
-
-This slightly modified conversion-routine behaves like
-[[convert-sublists-to-fixed-group]] but takes a function [[convert-func]]
-instead of the object-type. This function takes as its argument the
-sublist and must return an appropriate object-type. It is possible to
-convert different sublists into different object-types.
-
-<<convert-sublists-to-group>>=
-(defun convert-sublists-to-specialized-groups (list-of-sublists convert-func)
-  (declare (special convert-func))
-  (mapcar #'(lambda (sublist)
-              (make-locref-group (funcall convert-func sublist) sublist))
-          list-of-sublists))
-@
-
-
-\subsubsection{Work all location-classes}
-
-This function is used to process every list of location-references
-belonging to the same loccation-class. It processes as folows:
-\begin{enumerate}
-\item apply specified \textsf{merge-to}--rules on every
-  location-reference.
-\item sorts the location-references by the given order
-\item subgroups the references into \textsf{separated/mixed}-groups
-\item builds up equivalence-classes of all location-references that
-  have the same order
-\item builds ranges by joining the constructed equivalence-classes
-\item removes unnecessary location-references.
-\end{enumerate}
-
-The general idea is to use the generic function [[do-group]] to
-subgroup a list of location-references, tuning them into new objects
-and call [[do-group]] itself on every newly created object. This makes
-us more independend from future extensions and the process itself is
-more data-driven and less process-oriented.
-
-The following function turns the list of location-references of an
-indexentry into a locref-list-group--object that simply contains one
-member. After conversion we start processing by calling [[do-group]]
-on that object. We return the modified indexentry.
-
-<<process indexentry>>=
-<<locref-groups>>
-
-(defun process-indexentry (idxent)
-  (setf (get-locrefs idxent)
-        (make-locref-group 'locref-list-group
-                           (get-locrefs idxent)))
-  (do-group (get-locrefs idxent))
-  idxent)
-
-<<application of merge-to--rules>>
-@
-
-\subsubsection{Definition of location-class-groups}
-
-\paragraph{locref-list-group}
-
-This class is intended to operate on an unstructured list of
-location-references. The work to be done on such a list is to separate
-the location-references into groups of different location-classes.
-This is done by calling [[split-list]] with a function that returns
-the order number of the corresponding location-class a reference
-belongs to. Every created subgroup is turned into an object of type
-[[locref-class-group]]. After creation of those objects we call
-[[do-group]] on them.
-
-<<class locref-list-group>>=
-(defclass locref-list-group (locref-group)
-    ())
-
-(defmethod do-group ((locref-grp locref-list-group))
-  (setf (get-members locref-grp)
-        (convert-sublists-to-fixed-group
-         (split-list #'(lambda (locref)
-                         (get-ordnum (find-location-class
-                                      (get-locclass locref))))
-                     #'<
-                     (get-members locref-grp))
-         'locref-class-group))
-  (mapcar #'do-group (get-members locref-grp)))
-@
-
-
-\paragraph{locref-class-group}
-
-An object of type [[locref-class-group]] now must be refined into the
-separeted- and mixed-groups. As defined in the separated-mixed-rule,
-every optical attribute belongs to either a separate-group or a
-mixed-group. We use predicate [[sepmix-type-mixed-p]] applied to
-optical attribute of the first location-reference to determine the
-resulting type of the
-[[convert-sublists-to-specialized-groups]]--function.
-
-<<class locref-class-group>>=
-(defclass locref-class-group (locref-group)
-    ())
-
-(defmethod do-group ((locref-cls-grp locref-class-group))
-  (setf (get-members locref-cls-grp)
-        (convert-sublists-to-specialized-groups
-           (apply-separated-mixed-rule
-            (apply-merge-to-rules-on-locref-list
-             (get-members locref-cls-grp)))
-           #'(lambda (sublist)
-               (if (sepmix-type-mixed-p (get-optattr (car sublist)))
-                   'locref-mixed-group 'locref-separated-group))))
-  (mapcar #'do-group (get-members locref-cls-grp))
-  (setf (get-members locref-cls-grp)
-        (mapcar #'build-ranges (get-members locref-cls-grp))))
-@
-
-\subsubsection{Application of rules --- pre-processing}
-
-Application of rules is a process that is separated into different
-stages. The environment we are located during this process are the
-locref-class-groups that were built in the previous separation-process.
-
-To apply the \textsf{merge-to}--rules on an indexentry the need to
-apply all rules successively to each location-reference we encounter.
-
-Function [[apply-merge-to-rules-on-locref-list]] must return a list
-containing the original location-references and the newly created
-virtual location-references.
-
-<<application of merge-to--rules>>=
-(defun apply-merge-to-rules-on-locref-list (locref-list)
-  (append locref-list
-          (mapcan #'(lambda (locref)
-                      (apply-merge-to-rules-on-locref locref))
-                  locref-list)))
-@
-
-This function now applies all \textsf{merge-to}--rules on on
-location-reference. It works as follows. We apply all existing
-\textsf{merge-to}--rules on the given location-reference [[locref]]
-and if we receive a virtual location-reference we add it to list
-[[vlocref-list]]. We finally return this list as the result of the
-rule application.
-
-<<application of merge-to--rules>>=
-(defun apply-merge-to-rules-on-locref (locref)
-  (let ((vlocref-list '()))
-    (forall-merge-to-rules
-     #'(lambda (idxcls merge-to-rule arguments)
-         (declare (ignore idxcls arguments))
-         (let ((vlocref (apply-merge-to-rule-on-locref merge-to-rule
-                                                       locref)))
-           (when vlocref
-             (setq vlocref-list (cons vlocref vlocref-list))))))
-    vlocref-list))
-@
-
-This class is used to hold all subgroups that belong to the same
-separated- or mixed-group. It itself is intended as a base-class of
-the two classes [[locref-separated-group]] and [[locref-mixed-group]].
-We are free to bind methods to [[locref-sep-mixed-group]] that are
-common to both of its subclasses, or directly to each of those classes
-when we need distinct behaviour for both subclasses.
-
-<<class locref-sep-mixed-group>>=
-(defclass locref-sep-mixed-group (locref-group)
-    ())
-
-(defmethod do-group ((locref-sepmix-grp locref-sep-mixed-group))
-  (setf (get-members locref-sepmix-grp)
-        (convert-sublists-to-fixed-group
-         (split-list #'(lambda (locref)
-                         (get-ordnums locref))
-                     #'numberlist<
-                     (get-members locref-sepmix-grp))
-         'locref-same-ordnum-group)))
-@
-
-<<class locref-separated-group>>=
-(defclass locref-separated-group (locref-sep-mixed-group)
-    ())
-@
-
-<<class locref-mixed-group>>=
-(defclass locref-mixed-group (locref-sep-mixed-group)
-    ())
-@
-
-The next class defines all location-references that have the same
-[[ordnum]].
-
-<<class locref-same-ordnum-group>>=
-(defclass locref-same-ordnum-group (locref-group)
-    ())
-@
-
-<<markup methods>>=
-(defmethod markup-object ((locref-grp locref-same-ordnum-group)
-                          (dummy-markup-list  list)
-                          (context-list list)
-                          (dummy-env-stack    list))
-  (declare (ignore dummy-makup-list dummy-env-stack))
-  (dolist (member (get-members locref-grp))
-    (markup-object member '() context-list '())))
-@
-
-
-<<locref-groups>>=
-<<split-list>>
-<<convert-sublists-to-group>>
-<<class locref-group>>
-<<class locref-list-group>>
-<<class locref-class-group>>
-<<class locref-sep-mixed-group>>
-<<class locref-separated-group>>
-<<class locref-mixed-group>>
-<<class locref-same-ordnum-group>>
-<<pretty-print>>
-@
-
-
-<<*>>=
-
-<<class indexentry>>
-<<generate indexentries>>
-<<process indexentry>>
-<<markup methods>>
-@
 
 %% Local Variables:
 %% mode: latex
 %% End:
 %%
 %% $Log$
-%% Revision 1.6  1995/12/19 10:59:44  kehr
+%% Revision 1.7  1996/01/09 14:27:24  kehr
+%% Moved submodule `ranges' from module `locref' to this module.
+%% Nearly complete rewrite of all submodules. See ChangeLog for further details.
+%%
+%% Revision 1.6  1995/12/19  10:59:44  kehr
 %% Changes Imakefile.
 %%
 %% Revision 1.5  1995/12/15  17:09:07  kehr
