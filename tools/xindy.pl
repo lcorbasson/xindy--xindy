@@ -5,15 +5,250 @@
 
 =head1 NAME
 
-xindy  -  XXX
+xindy - create sorted and tagged index from raw index
 
 =head1 SYNOPSIS
 
-XXX
+ xindy [-V?h] [-qv] [-d magic] [-o outfile.ind] [-t log] \
+       [-L lang] [-C codepage] [-M module] [-I input] \
+       [--interactive] [--mem-file=xindy.mem] \
+       [idx0 idx1 ...]
+
+=head2 GNU-Style Long Options for Short Options:
+
+ -V / --version
+ -? / -h / --help
+ -q / --quiet
+ -v / --verbose
+ -d / --debug          (multiple times)
+ -o / --out-file
+ -t / --log-file
+ -L / --language
+ -C / --codepage
+ -M / --module         (multiple times)
+ -I / --input-markup   (supported: latex, xindy)
+
 
 =head1 DESCRIPTION
 
-XXX
+B<xindy> is the formatter-indepedent command of xindy, the flexible
+indexing system. It takes a raw index as input, and produces a merged,
+sorted and tagged index. Merging, sorting, and tagging is controlled
+by xindy style files.
+
+Files with the raw index are passed as arguments. If no arguments are
+passed, the raw index will be read from standard input.
+
+B<xindy> is completely described in its manual that you will find on
+its Web Site, http://www.xindy.org/. A good introductionary
+description appears in the indexing chapter of the LaTeX Companion
+(2nd ed.)
+
+If you want to produce an index for LaTeX documents, the command
+texindy(1) is probably more of interest for you. It is a wrapper for
+B<xindy> that turns on many LaTeX conventions by default.
+
+
+=head1 OPTIONS
+
+=over
+
+=item C<--version> / B<-V>
+
+output version numbers of all relevant components and exit.
+
+=item C<--help> / B<-h> / B<-?>
+
+output usage message with options explanation.
+
+=item C<--quiet> / B<-q>
+
+Don't output progress messages. Output only error messages.
+
+=item C<--version> / B<-v>
+
+Output verbose progress messages.
+
+=item C<--debug> I<magic> / B<-d> I<magic>
+
+Output debug messages, this option may be specified multiple times.
+I<magic> determines what is output:
+
+ magic          remark
+ ------------------------------------------------------------
+ script         internal progress messages of driver scripts
+ keep_tmpfiles  don't discard temporary files
+ markup         output markup trace, as explained in xindy manual
+ level=n        log level, n is 0 (default), 1, 2, or 3
+
+=item C<--out-file> F<outfile.ind> / B<-o> F<outfile.ind>
+
+Output index to file F<outfile.ind>. If this option is not passed, the
+name of the output file is the base name of the first argument and the
+file extension F<ind>. If the raw index is read from standard input,
+this option is mandatory.
+
+=item C<--log-file> F<log.ilg> / B<-t> F<log.ilg>
+
+Output log messages to file F<log.ilg>. These log messages are
+independent from the progress messages that you can influence with
+C<--debug> or C<--verbose>.
+
+=item C<--language> I<lang> / B<-L> I<lang>
+
+The index is sorted according to the rules of language I<lang>. These
+rules are encoded in a xindy module created by I<make-rules>.
+
+If no input encoding is specified via C<--codepage>, a xindy module
+for that language is searched with a latin, a cp, an iso, or ascii
+encoding, in that order.
+
+=item C<--codepage> I<enc> / B <-C> I<enc>
+
+The raw input is in input encoding I<enc>. This information is used to
+select the correct xindy sort module.
+
+=item C<--module> I<module> / B<-M> I<module>
+
+Load the xindy module F<module.xdy>. This option may be specified
+multiple times. The modules are searched in the xindy search path that
+can be changed with the environment variable C<XINDY_SEARCHPATH>.
+
+=item C<--input-markup> I<input> / B<-I> I<input>
+
+Specifies the input markup of the raw index. Supported values for
+I<input> are C<latex> and C<xindy>.
+
+C<latex> input markup is the one that is emmitted by default from the
+LaTeX kernel, or by the C<index> macro package of David Jones.
+
+C<xindy> input markup is specified in the xindy manual.
+
+=item C<--interactive>
+
+Start xindy in interactive mode. You will be in a xindy read-eval-loop
+where xindy language expressions are read and evaluated interactively.
+
+=item C<--mem-file> I<xindy.mem>
+
+This option is only usable for developers or in very rare situations.
+The compiled xindy kernel is stored in a so-called I<memory file>,
+canonically named F<xindy.mem>, and located in the xindy library
+directory. This option allows to use another xindy kernel.
+
+=back
+
+
+=head1 SUPPORTED LANGUAGES / CODEPAGES
+
+The following languages are supported:
+
+=head2 Latin scripts
+
+ albanian      gypsy             portuguese
+ croatian      hausa		 romanian
+ czech	       hungarian 	 russian-iso
+ danish	       icelandic	 slovak-small
+ english       italian		 slovak-large
+ esperanto     kurdish-bedirxan  slovenian
+ estonian      kurdish-turkish	 spanish-modern
+ finnish       latin		 spanish-traditional
+ french	       latvian		 swedish
+ general       lithuanian	 turkish
+ german-din    lower-sorbian	 upper-sorbian
+ german-duden  norwegian	 vietnamese
+ greek-iso     polish
+
+German recognizes two different sorting schemes to handle umlauts:
+normally, C<ä> is sorted like C<ae>, but in phone books or
+dictionaries, it is sorted like C<a>. The first scheme is known as
+I<DIN order>, the second as I<Duden order>.
+
+C<*-iso> language names assume that the raw index entries are in ISO
+8859-9 encoding.
+
+C<gypsy> is a northern Russian dialect.
+
+=head2 Cyrillic scripts
+
+ belarusian    mongolian  	 serbian
+ bulgarian     russian    	 ukrainian
+ macedonian
+
+=head2 Other scripts
+
+ greek         klingon
+
+=head2 Available Codepages
+
+This is not yet written. You can look them up in your xindy
+distribution, in the F<modules/lang/language/> directory (where
+I<language> is your language). They are named
+F<variant-codepage-lang.xdy>, where F<variant-> is most often empty
+(for german, it's C<din5007> and C<duden>; for spanish, it's C<modern>
+and C<traditional>, etc.)
+
+ < Describe available codepages for each language >
+
+ < Describe relevance of codepages (as internal representation) for
+   LaTeX inputenc >
+
+
+
+=head1 ENVIRONMENT
+
+=over
+
+=item C<XINDY_SEARCHPATH>
+
+A list of directories where the xindy modules are searched in. No
+subtree searching is done (as in TDS-conformant TeX).
+
+If this environment variable is not set, the default is used:
+C<.:>I<modules_dir>C<:>I<modules_dir>C</base>. I<modules_dir> is
+determined at run time, relative to the B<xindy> command location:
+Either it's F<../modules>, that's the case for F<opt>-installations. Or
+it's F<../lib/xindy/modules>, that's the case for F<usr>-installations.
+
+=back
+
+
+=head1 KNOWN BUGS
+
+Option B<-q> also prevents output of error messages. Error messages
+should be output on stderr, progress messages on stdout.
+
+There should be a way to output the final index to stdout. This would
+imply B<-q>, of course.
+
+Codepage C<utf8> should be supported for all languages, and should be
+used as internal codepage for LaTeX inputenc re-encoding.
+
+
+=head1 SEE ALSO
+
+texindy(1)
+
+
+=head1 AUTHOR
+
+Joachim Schrod
+
+
+=head1 LEGALESE
+
+B<xindy> is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+=for Emacs
+#'
 
 =cut
 
@@ -78,7 +313,7 @@ sub usage ()
     print STDERR <<_EOT_
 usage: $cmd [-V?h] [-qv] [-d magic] [-o outfile.ind] [-t log] \\
             [-L lang] [-C codepage] [-M module] [-I input] \\
-            [--interactive] [--mem-file=xindy.mem] \\
+            [--interactive] [--mem-file xindy.mem] \\
 	    [idx0 idx1 ...]
 
 GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
@@ -438,6 +673,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.2  2004/05/26 21:30:11  jschrod
+#     Added POD documentation.
+#
 # Revision 1.1  2004/05/24 19:47:13  jschrod
 #     Introduce new driver script, as part of the "Companion Release".
 #
