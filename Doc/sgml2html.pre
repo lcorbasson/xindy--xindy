@@ -1,0 +1,7 @@
+#!/bin/sh
+
+sed -e "s/^@begin-html//g" -e "s/^@end-html//g" |
+awk '
+/^@begin-comment/,/^@end-comment/ { next; }
+				  { print }
+'
