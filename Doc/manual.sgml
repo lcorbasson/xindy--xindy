@@ -16,7 +16,7 @@
 
 <author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
 
-<date>Manual, Edition January 1997 for xindy version 1.1
+<date>Manual, Edition February 1997 for xindy version 1.1
 
 <abstract>
 <em>This is the manual of the indexing system <sf/xindy/. <sf/xindy/
@@ -143,15 +143,15 @@ are often organized in a way that new index entries beginning with a
 new letter are separated by a specific markup. The following example
 illustrates this style.
 
-<tscreen><verb>
- B
+<verb>
+  B
     bread      25, 27
     butter     26
 
- M
+  M
     marmalade  19
     milk       21
-</verb></tscreen>
+</verb>
 
 Here we have two letter groups for the letters `B' and `M' because the
 keywords `bread' and `butter' share the same prefix `b' and
@@ -165,11 +165,11 @@ them. See command <tt/define-letter-group/ for further details.
 <sf/keyword/ and optionally the list of <sf/location-class-groups/ and
 the sub-<sf/indexentries/. An example:
 
-<tscreen><verb>
+<verb>
   bread   25-30
      brown   26
      white   27
-</verb></tscreen>
+</verb>
 
 This index entry consists of the keyword `bread', the
 location class list `25-30' and the sub-entries `brown 26' and `white
@@ -184,11 +184,11 @@ our model the keyword constists of a list of strings, since indexes
 are often organized hierarchically with different layers. In the
 example
 
-<tscreen><verb>
+<verb>
   bread         25-30
   bread, brown     26
   bread, white     27
-</verb></tscreen>
+</verb>
 
 we have keywords `bread', `bread, brown' and `bread, white'.
 
@@ -317,8 +317,8 @@ separators. The location class of the example <tt/"A-I"/ can be
 defined as follows
 
 <verb>
-(define-location-class "appendix"
-		       (ALPHA "-" roman-numerals-uppercase))
+  (define-location-class "appendix"
+	                 (ALPHA "-" roman-numerals-uppercase))
 </verb>
 
 This is a list that completely describes all possible instances of
@@ -379,10 +379,10 @@ the index style. The symbol <tt/name/ always refers to a string. We
 separate the commands into the <em/processing/ and
 <em/markup/ commands. The commands are listed in alphabetical order.
 
-Braces <tt/[/ and <tt/]/ denote optional parts of the syntax and
-<tt/{/ and <tt/}/ denote the grouping of elements. A vertical bar
-indicates alternatives. However, the enclosing round braces <em/are/
-part of the syntax and must be supplied.
+The parenthesis `<tt/[/' and `<tt/]/' denote optional parts of the
+syntax and `<tt/{/' and `<tt/}/' denote the grouping of elements. A
+vertical bar indicates alternatives. However, the enclosing round
+braces <em/are/ part of the syntax and must be supplied.
 
 <!-- ================================================================= -->
 
@@ -399,7 +399,7 @@ Defines <tt/name/ to be the alphabet consisting of all elements of the
 <tt/string-list/. Examples:
 
 <verb>
-(define-alphabet "example-alphabet" ("An" "Example" "Alphabet"))
+  (define-alphabet "example-alphabet" ("An" "Example" "Alphabet"))
 </verb>
 
 defines an alphabet consisting of exactly three symbols. For the
@@ -408,8 +408,8 @@ successor relationship holds: <tt/succ("An")="Example"/ and
 defined as follows:
 
 <verb>
-(define-alphabet "digits"
-                 ("0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
+  (define-alphabet "digits"
+                   ("0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
 </verb>
 
 
@@ -473,13 +473,13 @@ a string value, grouping all index entries that have a <em/sort key/
 beginning with the prefix <tt/name/. The command
 
 <verb>
-(define-letter-group "a")
+  (define-letter-group "a")
 </verb>
 
 is equivalent to the command
 
 <verb>
-(define-letter-group "a" :prefixes ("a"))
+  (define-letter-group "a" :prefixes ("a"))
 </verb>
 
 Using the latter form one can associate more than one prefix with a
@@ -491,21 +491,21 @@ currently defined prefixes.
 Example:
 
 <verb>
-(define-letter-group "a")
+  (define-letter-group "a")
 </verb>
 
 defines a letter group containing all index entries beginning with the
 string <tt/"a"/.
 
 <verb>
-(define-letter-group "c" :after "a")
+  (define-letter-group "c" :after "a")
 </verb>
 
 defines a letter group containing all index entries beginning with the
 string <tt/"c"/. The letter group appears behind the letter group "a"
 
 <verb>
-(define-letter-group "b" :after "a" :before "c")
+  (define-letter-group "b" :after "a" :before "c")
 </verb>
 
 inserts letter group "b" between letter group "a" and "c". This allows
@@ -525,15 +525,15 @@ simply an abbreviation for a sequence of
 the ordering given by the list. Example:
 
 <verb>
-(define-letter-groups ("a" "b" "c")
+  (define-letter-groups ("a" "b" "c")
 </verb>
 
 equals the definitions
 
 <verb>
-(define-letter-group "a")
-(define-letter-group "b" :after "a")
-(define-letter-group "c" :after "b")
+  (define-letter-group "a")
+  (define-letter-group "b" :after "a")
+  (define-letter-group "c" :after "b")
 </verb>
 
 See also commands <tt>markup-letter-group-list</tt> and
@@ -568,8 +568,8 @@ layers the hierarchy does contain. See command
 <tt>markup-locref-list</tt> for more information. Examples:
 
 <verb>
-(define-location-class "page-numbers" ("arabic-numbers")
-		       :minimum-range-length 3)
+  (define-location-class "page-numbers" ("arabic-numbers")
+	                 :minimum-range-length 3)
 </verb>
 
 Defines the location class <tt/page-numbers/ consisting of one layer
@@ -580,10 +580,10 @@ a range because the range length is only 2. But the references 6, 7,
 class are <tt/0/, <tt/1/, ... <tt/2313/, etc.
 
 <verb>
-(define-location-class "sections" :var
-   ("arabic-numbers" :sep "."
-    "arabic-numbers" :sep "."
-    "arabic-numbers"))
+  (define-location-class "sections" :var
+     ("arabic-numbers" :sep "."
+      "arabic-numbers" :sep "."
+      "arabic-numbers"))
 </verb>
 
 defines a variable location class. Valid instances are <tt/1/,
@@ -604,8 +604,8 @@ output file. The parameter <tt/list/ is a list of names of
 location classes. Examples:
 
 <verb>
-(define-location-class-order
-    ("page-numbers" "sections" "xrefs"))
+  (define-location-class-order
+      ("page-numbers" "sections" "xrefs"))
 </verb>
 
 tells the system that the page numbers should appear before the
@@ -621,47 +621,63 @@ used location classes when using this command.
 
 <label id="merge-rule">
 <cmddesc>
-(merge-rule pattern replacement [:again])
+(merge-rule pattern replacement [:again]
+				[:bregexp | :eregexp | :string])
 </cmddesc>
 
 Defines a keyword mapping rule that can be used to generate the
 <em/merge key/ from the <em/main key/ of an index entry. This mapping
 is necessary to map all keywords that are differently written but
-belong to the same keyword to the same canonical keyword. The
-parameter <tt/pattern/ can be a POSIX-compliant regular expression.
-The parameter <tt/replacement/ must be a string possibly containing
-the special characters <tt/&amp;/ (substitutes for the complete match)
-and <vb>\1</vb>,...,<vb>\9</vb> (substituting for the <em/n/-th
-submatch. Examples:
+belong to the same keyword to the same canonical keyword.
+
+The parameter <tt/pattern/ can be a POSIX-compliant regular expression
+or an ordinary string. The implementation uses the GNU Rx regular
+expression library which implements the POSIX regular expressions.
+Regular expressions (REs) can be specified as <em/basic regular
+expressions/ (BREs) or <em/extended regular expressions/ (EREs). You
+can use the switch <tt/:bregexp/ to force the interpretation of the
+pattern as a BRE, or <tt/:eregexp/ to interpret it as an ERE. If you
+want <sf/xindy/ to interpret the pattern literally, use the switch
+<tt/:string/. If none of these switches is selected, <sf/xindy/ uses
+an auto-detection mechanism to decide, if the pattern is a regular
+expression or not. If it recognizes the pattern as a RE, it interprets
+it as an ERE by default.
+
+The parameter <tt/replacement/ must be
+a string possibly containing the special characters <tt/&amp;/
+(substitutes for the complete match) and <vb>\1</vb>,...,<vb>\9</vb>
+(substituting for the <em/n/-th submatch. Examples:
 
 <verb>
-(merge-rule "A" "a")
+  (merge-rule "A" "a")
 </verb>
 replaces each occurrence of the uppercase letter `<tt/A/' with its
 lowercase counterpart.
 
 <verb>
-(merge-rule "\\"([AEOUaeou])" "\1")
+  (merge-rule "\~"([AEOUaeou])" "\1")
 </verb>
 transforms the &TeX; umlaut-letters into their stripped counterparts,
 such that `<vb>\"A</vb>' is treated as an `<tt/A/' afterwards.
 
-Backslash is used as an escape symbol for the specification of rules.
 The following sequences have a special meaning:
 
 `<vb>~n</vb>' : End of line symbol (<em/linefeed/).
 
-`<vb>~b</vb>' : The ISO-Latin character with the least ordinal number.
+`<vb>~b</vb>' : The ISO-Latin character with the lowest ordinal number.
 
-`<vb>~e</vb>' : The ISO-Latin character with the highest ordinal
-number.
+`<vb>~e</vb>' : The ISO-Latin character with the highest ordinal number.
 
-Backslashes and double quotes have to be quoted themselves with a
-backslash. The special characters `<vb>~b</vb>' and `<vb>~e</vb>'
-allow the definition of arbitrary sorting orders by rules. In
-connection with an additional character every position in the alphabet
-can be described. E.g. `<vb>m~e</vb>' is lexicographically placed
-between `<tt/m/' and `<tt/n/'.
+`<vb>~~</vb>' : The tilde character.
+
+`<vb>~"</vb>' : The double quote character.
+
+Tilde characters and double quotes have to be quoted themselves with a
+tilde character. The special characters `<vb>~b</vb>' and
+`<vb>~e</vb>' allow the definition of arbitrary sorting orders by
+rules. In connection with an additional character every position in
+the alphabet can be described. E.g. `<vb>m~e</vb>' is
+lexicographically placed between `<tt/m/' and `<tt/n/'.
 
 Due to efficiency, rules that just exchange characters or substitute
 constant character sequences are not treated as regular expressions.
@@ -706,8 +722,6 @@ See also command <tt>sort-rule</tt>.
 
 <!-- ================================================================= -->
 
-@begin-comment
-
 <label id="merge-to">
 <cmddesc>
 (merge-to attr-from attr-to [:drop])
@@ -721,7 +735,6 @@ location reference with attribute <tt/attr-from/ has to be dropped
 attribute <tt/attr-to/. A detailed description is given in the section
 about processing phases.
 
-@end-comment
 
 <!-- ================================================================= -->
 
@@ -737,12 +750,12 @@ read in and processing of the current file continues. The argument
 index style into several modules that can be included into the topmost
 index style file. Example:
 
-<tscreen><verb>
-(require "french/alphabet.xdy")
-(require "french/sort-rules.xdy")
-(require "tex/locations.xdy")
-(require "tex/markup.xdy")
-</verb></tscreen>
+<verb>
+  (require "french/alphabet.xdy")
+  (require "french/sort-rules.xdy")
+  (require "tex/locations.xdy")
+  (require "tex/markup.xdy")
+</verb>
 
 Submodules can load other submodules as well. If a file is required
 that was already loaded, the <tt/require/ command is simply ignored
@@ -764,7 +777,7 @@ colon the default search path is added to the end of the path list.
 Example:
 
 <tscreen><verb>
-(searchpath ".:/usr/local/lib/xindy:/usr/local/lib/xindy/english:")
+  (searchpath ".:/usr/local/lib/xindy:/usr/local/lib/xindy/english:")
 </verb></tscreen>
 
 adds the specified directories to the search path. Since the last path
@@ -772,10 +785,10 @@ ends with a colon, the built-in search path is added at the end.
 Specifying
 
 <tscreen><verb>
-(searchpath ("."
-             "/usr/local/lib/xindy"
-	     "/usr/local/lib/xindy/english"
-	     :default))
+  (searchpath ("."
+               "/usr/local/lib/xindy"
+	       "/usr/local/lib/xindy/english"
+	       :default))
 </verb></tscreen>
 
 yields exactly the same result as the example above. Here
@@ -856,13 +869,13 @@ with the keyword argument <tt/:group/ which must be an integer number.
 E.g., given are the groups <tt/("definition" "theorem")/ and
 <tt/("default")/ with group numbers 0 and 1, then
 
-<tscreen><verb>
-(markup-attribute-group :open "<group0>" :close "&lt;/group0>"
-			:group 0)
+<verb>
+  (markup-attribute-group :open "<group0>" :close "&lt;/group0>"
+			  :group 0)
 
-(markup-attribute-group :open "<group1>" :close "&lt;/group1>"
-			:group 1)
-</verb></tscreen>
+  (markup-attribute-group :open "<group1>" :close "&lt;/group1>"
+			  :group 1)
+</verb>
 
 can be used to assign different markup for both groups in a SGML-based
 language.
@@ -901,13 +914,13 @@ specialize on the class of the reference, like all other commands.
 A suitable markup for a cross reference class <tt/see/ within &LaTeX;2e
 could look like that:
 
-<tscreen><verb>
-(markup-crossref-list :class "see" :open "\emph{see} "
-                        	   :sep  "; ")
-(markup-crossref-layer-list :class "see" :sep ",")
-(markup-crossref-layer :class "see"
-		       :open "\textbf{" :close "}")
-</verb></tscreen>
+<verb>
+  (markup-crossref-list :class "see" :open "\emph{see} "
+				     :sep  "; ")
+  (markup-crossref-layer-list :class "see" :sep ",")
+  (markup-crossref-layer :class "see"
+				     :open "\textbf{" :close "}")
+</verb>
 
 An example output could look like
 
@@ -926,10 +939,10 @@ An example output could look like
 Defines the markup tags that enclose the whole index via the
 <tt/:open/ and <tt/:close/ parameters. Examples:
 
-<tscreen><verb>
-(markup-index :open  "Here comes the index~n"
-              :close "That's all folks!~n")
-</verb></tscreen>
+<verb>
+  (markup-index :open  "Here comes the index~n"
+                :close "That's all folks!~n")
+</verb>
 
 defines that the <tt/:open/ string is printed before the rest of the
 index and the <tt/:close/ string appears after the index is printed.
@@ -944,36 +957,36 @@ is an abbrevation of <tt/:hierdepth 0/ and <tt/:tree/ is an
 abbrevation of <tt/:hierdepth max-depth/, with <tt/max-depth/ being
 the maximum number of layers a keyword has. An example: the keywords
 
-<tscreen><verb>
-("tree" "binary" "AVL")
-("tree" "binary" "natural")
-</verb></tscreen>
+<verb>
+  ("tree" "binary" "AVL")
+  ("tree" "binary" "natural")
+</verb>
 
 can be transformed in the following ways:
 
 A flat index (<tt/:flat/ or <tt/:hierdepth 0/)
 
-<tscreen><verb>
-tree binary AVL
-tree binary natural
-</verb></tscreen>
+<verb>
+  tree binary AVL
+  tree binary natural
+</verb>
 
 with <tt/:hierdepth 1/
 
-<tscreen><verb>
-tree
-    binary  AVL
-    binary  natural
-</verb></tscreen>
+<verb>
+  tree
+     binary  AVL
+     binary  natural
+</verb>
 
 and a tree (<tt/:tree/ or <tt/:hierdepth/ &gt; 1)
 
-<tscreen><verb>
-tree
-    binary
+<verb>
+  tree
+     binary
         AVL
         natural
-</verb></tscreen>
+</verb>
 
 Most often one will create tree-like indexes or ones that are flat.
 
@@ -994,21 +1007,21 @@ Letter groups consists of a list of index entries. The command
 markup can be specialized on the depth if the index is hierarchically
 organized. The command
 
-<tscreen><verb>
-(markup-indexentry-list :open  "\begin{IdxentList}"
-			:close "\end{IdxentList}"
-			:sep   "~n")
-</verb></tscreen>
+<verb>
+  (markup-indexentry-list :open  "\begin{IdxentList}"
+			  :close "\end{IdxentList}"
+			  :sep   "~n")
+</verb>
 
 defines that the index entries of all layers are wrapped into the
 given markup tags. If additionally
 
-<tscreen><verb>
-(markup-indexentry-list :open  "\begin{IdxentListII}"
-			:close "\end{IdxentListII}"
-			:sep   "~n"
-			:depth 2)
-</verb></tscreen>
+<verb>
+  (markup-indexentry-list :open  "\begin{IdxentListII}"
+			  :close "\end{IdxentListII}"
+			  :sep   "~n"
+			  :depth 2)
+</verb>
 
 is defined, all index entry lists of all layers (except layer 2) are
 tagged according to the first specification, and the index entry list
@@ -1022,19 +1035,19 @@ markup for different layers. If depth is ommited the default markup
 for all possible depths is defined. The top-most index entries have
 depth 0.
 
-<tscreen><verb>
-(markup-indexentry :open  "\begin{Indexentry}"
-		   :close "\end{Indexentry}")
-</verb></tscreen>
+<verb>
+  (markup-indexentry :open  "\begin{Indexentry}"
+		     :close "\end{Indexentry}")
+</verb>
 
 defines that the index entries of all layers are wrapped into the
 given markup tags. If additionally
 
-<tscreen><verb>
-(markup-indexentry :open  "\begin{IndexentryII}"
-		   :close "\end{IndexentryII}"
-		   :depth 2)
-</verb></tscreen>
+<verb>
+  (markup-indexentry :open  "\begin{IndexentryII}"
+		     :close "\end{IndexentryII}"
+		     :depth 2)
+</verb>
 
 is defined, all index entries of all layers (except layer 2) are tagged
 according to the first specification, and the index entries with depth
@@ -1081,27 +1094,21 @@ The first command defines the markup of the letter group with name
 <tt/group-name/. Since the markup of letter groups often contains the
 name of the letter group as a part of it, the other keyword arguments
 allow an additional markup for this group name. If one of the
-parameters <tt/:open-head/ and <tt/:close-head/ is specified the
-markup sequence that is generated is
+parameters <tt/:open-head/ and <tt/:close-head/ is specified
+additional markup is added as can be described as follows:
 
 <verb>
-<OPEN>
-   <OPEN-HEAD>
-     transformer-of(<GROUP-NAME>)
-   <CLOSE-HEAD>
-   <INDEXENTRIES...>
-<CLOSE>
+  <OPEN>
+     IF (:open-head OR :close-head)
+       <OPEN-HEAD>
+         transformer-of(<GROUP-NAME>)
+       <CLOSE-HEAD>
+     FI
+     <INDEXENTRIES...>
+  <CLOSE>
 </verb>
 
-compared to the default sequence
-
-<verb>
-<OPEN>
-   <INDEXENTRIES...>
-<CLOSE>
-</verb>
-
-with <tt/transformer-of/ being a function that possibly transforms the
+Here, <tt/transformer-of/ is a function that possibly transforms the
 string representing the group name into another string. The
 transformers we currently support can be specified with the switches
 <tt/:upcase/, <tt/:downcase/ and <tt/:capitalize/ which result in the
@@ -1144,8 +1151,8 @@ valid definition, suitable for a usage within HTML, could look like
 this.
 
 <verb>
-(markup-locref :open "&lt;B>" :close "&lt;/B>" :attr "definition")
-(markup-locref :open "&lt;I>" :close "&lt;/I>" :attr "default")
+  (markup-locref :open "&lt;B>" :close "&lt;/B>" :attr "definition")
+  (markup-locref :open "&lt;I>" :close "&lt;/I>" :attr "default")
 </verb>
 
 <!-- ================================================================= -->
@@ -1193,9 +1200,9 @@ location references with sub-references.
 Given is a list of location references that have the class description
 
 <verb>
-(define-location-class "Appendix"
-		       ("ALPHA" :sep "-" "arabic-numbers")
-		       :hierdepth 2)
+  (define-location-class "Appendix"
+		         ("ALPHA" :sep "-" "arabic-numbers")
+		         :hierdepth 2)
 </verb>
 
 This location class has instances like <tt/A-1/, <tt/B-5/, etc. The
@@ -1203,17 +1210,17 @@ keyword argument <tt/:hierdepth 2/ informs <sf/xindy/ to markup these
 location references in a hierarchical form. With the commands
 
 <verb>
-(markup-locref-list           :sep "; "
-		    :depth 0  :class "Appendix")
-(markup-locref-list :open " " :sep ","
-                    :depth 1  :class "Appendix")
+  (markup-locref-list           :sep "; "
+		      :depth 0  :class "Appendix")
+  (markup-locref-list :open " " :sep ","
+                      :depth 1  :class "Appendix")
 </verb>
 
 we obtain a markup sequence for some example data that could look like
 
-<tscreen><verb>
-A 1,2,5; B 5,6,9; D 1,5,8; ...
-</verb></tscreen>
+<verb>
+  A 1,2,5; B 5,6,9; D 1,5,8; ...
+</verb>
 
 
 <!-- ================================================================= -->
@@ -1222,28 +1229,50 @@ A 1,2,5; B 5,6,9; D 1,5,8; ...
 <cmddesc>
 (markup-range [:open string] [:close string] [:sep string]
               [:class locref-class]
+	      [:length num] [:ignore-end])
 </cmddesc>
 
-A range consists of two location references. Therefore, we need the
-<tt/:open/ and <tt/:close/ arguments and one separator given by the
-argument <tt/:sep/. Since both location references are tagged with the
-tags given by the commands <tt/markup-locref/ a specialization on
-attributes or depth is not necessary. The only specialization allowed
-is the class they belong to, because the separator between two
-location refences may be different for each location class. The
-following tags can be used to define a range of page numbers (given in
-a location class <tt/page-numbers/) without considering the open  and
-close parameters:
+A range consists of two location references. Markup can be specified
+with the <tt/:open/ and <tt/:close/ arguments and one separator given
+by the argument <tt/:sep/.
 
-<tscreen><verb>
-(markup-range :sep "-" :class "page-numbers")
-</verb></tscreen>
+Since both location references are tagged with markup defined by the
+command <tt/markup-locref/ a specialization on attributes or depth is
+not necessary. Specialization is allowed on the class they belong to,
+because the separator between two location refences may be different
+for each location class. Argument <tt/:length/ can be used to define
+different markup for different lengths. In conjunction with
+<tt/:length/ is may be useful not to print the second location
+reference at all. For example, one wishes to markup ranges of length 1
+in the form <em/Xf./ instead of <em/X--Y/. This can be accomplished
+with the switch <tt/:ignore-end/.
+
+The markup tags for a range <em/(X,Y)/ can be described as follows:
+
+<verb>
+  <OPEN>
+    Markup of location reference X
+  <SEP>
+    IF (not :ignore-end)
+       Markup of location reference Y
+    FI
+  <CLOSE>
+</verb>
+
+
+The following tags can be used to define a range of page numbers
+(given in a location class <tt/page-numbers/) without considering the
+open and close parameters:
+
+<verb>
+  (markup-range :sep "-" :class "page-numbers")
+</verb>
 
 Location ranges then appear separated by a hyphen in a form like this:
 
-<tscreen><verb>
- ..., 5-8, 19-23, ...
-</verb></tscreen>
+<verb>
+   ..., 5-8, 19-23, ...
+</verb>
 
 <!-- ================================================================= -->
 
@@ -1261,24 +1290,24 @@ the commands that must be used to define this tag. The defaults for
 the keyword argument <tt/:open/ is `<tt/&lt;/' and for <tt/:close/ is
 `<tt/>/'. The beginning of an example output could look like:
 
-<tscreen><verb>
-<INDEX:OPEN>
-  <LETTER-GROUP-LIST:OPEN>
-    <LETTER-GROUP:OPEN ["a"]>
-      <INDEXENTRY-LIST:OPEN [0]>
-        <INDEXENTRY:OPEN [0]>
-          <KEYWORD-LIST:OPEN [0]>
-            <KEYWORD:OPEN [0]>
- ...
-</verb></tscreen>
+<verb>
+  <INDEX:OPEN>
+    <LETTER-GROUP-LIST:OPEN>
+      <LETTER-GROUP:OPEN ["a"]>
+        <INDEXENTRY-LIST:OPEN [0]>
+          <INDEXENTRY:OPEN [0]>
+            <KEYWORD-LIST:OPEN [0]>
+              <KEYWORD:OPEN [0]>
+   ...
+</verb>
 
 We use a simple indentation scheme to make the structure of the tags
 visible. The symbolic tag <tt/&lt;LETTER-GROUP:OPEN ["a"]>/ for example
 indicates that the tag that can be specified with the command
 
-<tscreen><verb>
-(markup-letter-group :open "XXX" :group "a" ... )
-</verb></tscreen>
+<verb>
+  (markup-letter-group :open "XXX" :group "a" ... )
+</verb>
 
 is emitted at this point in the markup process. By incrementally
 adding markup commands to the index, more and more tags can be defined
@@ -1289,21 +1318,21 @@ whole index. Additionally one can enclose the symbolic tags into an
 environment that is neutral to the document preparation system, such
 as a comment. For &TeX; this could be
 
-<tscreen><verb>
-(markup-trace :open "%%" :close "~n")
-</verb></tscreen>
+<verb>
+  (markup-trace :open "%%" :close "~n")
+</verb>
 
 or a definition in the &TeX; document like
 
-<tscreen><verb>
-\def\ignore#1{}
-</verb></tscreen>
+<verb>
+  \def\ignore#1{}
+</verb>
 
 combined with the command
 
-<tscreen><verb>
-(markup-trace :open "\ignore{" :close "}")
-</verb></tscreen>
+<verb>
+  (markup-trace :open "\ignore{" :close "}")
+</verb>
 
 
 <!-- ================================================================= -->
@@ -1341,9 +1370,9 @@ follows:
 The pseudo variable <em/string/ is a sequence of characters
 surrounded by double quotes, e.g.
 
-<tscreen><verb>
-"Hi, it's me"  "one"  "a string with two \"double quotes\""
-</verb></tscreen>
+<verb>
+  "Hi, it's me"  "one"  "a string with two \"double quotes\""
+</verb>
 
 are three examples of valid strings. If you need to include a
 double quote as a literal character, you must quote it itself with a
@@ -1351,9 +1380,9 @@ backslash as shown in the third example. A <em/string list/ is simply
 a list of strings separated by whitespaces and surrounded by round
 braces. An example of a string list is
 
-<tscreen><verb>
-("This" "is" "a" "list" "of" "strings")
-</verb></tscreen>
+<verb>
+  ("This" "is" "a" "list" "of" "strings")
+</verb>
 
 So far about the syntax. The semantics of the different elements are
 described here.
@@ -1377,16 +1406,16 @@ or two strings. The first string will be interpreted as the main key,
 whereas the second one will become the print key. If the print key is
 ommited, the main key is taken instead. So the definition
 
-<tscreen><verb>
-:tkey (("This") ("is") ("a") ("bang" "BANG !!!"))
-</verb></tscreen>
+<verb>
+  :tkey (("This") ("is") ("a") ("bang" "BANG !!!"))
+</verb>
 
 is equivalent to
 
-<tscreen><verb>
-:key   ("This" "is" "a" "bang")
-:print ("This" "is" "a" "BANG !!!")
-</verb></tscreen>
+<verb>
+  :key   ("This" "is" "a" "bang")
+  :print ("This" "is" "a" "BANG !!!")
+</verb>
 
 
 <tag/<tt/:locref//The reference an index entry describes can be a
@@ -1419,24 +1448,24 @@ empty string, the indexentry is declared to have the attribute
 
 Some examples:
 
-<tscreen><verb>
-(indexentry :key ("airplane") :locref "25" :attr "default")
-</verb></tscreen>
+<verb>
+  (indexentry :key ("airplane") :locref "25" :attr "default")
+</verb>
 
 defines an index entry with the key `airplane' indexed on page '25'.
 This index entry has the attribute <tt/default/.
 
-<tscreen><verb>
-(indexentry :key ("house") :xref ("building") :attr "see")
- </verb></tscreen>
+<verb>
+  (indexentry :key ("house") :xref ("building") :attr "see")
+</verb>
 
 defines a cross reference with the key 'house' pointing to the term
 'building'. This cross reference belongs to the cross reference class
 <tt/see/.
 
-<tscreen><verb>
-(indexentry :key ("house") :xref ("building") :open-range)
-</verb></tscreen>
+<verb>
+  (indexentry :key ("house") :xref ("building") :open-range)
+</verb>
 
 is an invalid specification, since <tt/:open-range/ mustn't be used
 together with cross references.
@@ -1496,7 +1525,6 @@ different for the location classes and the crossref classes.
   <item> Cross references are sorted lexicographically based on
   the ISO-Latin alphabet.
 
-@begin-comment
   <label id="sort-merge-locrefs">
   <item> To illustrate the processing of location references we assume
   the following list:
@@ -1504,10 +1532,10 @@ different for the location classes and the crossref classes.
   <quote> <em/13/, <em/14/, <em/15/, <em/18/, <bf/12/, <bf/13/,
   <bf/14/, <bf/16/, 14, 16 </quote>
 
-   The location references without quotes own the attribute `default',
-   those with braces have attribute `important' and those with
-   double quotes have attribute `definition'. Imagine, the
-   attribute groups were defined with the commands
+   The location references in italics own the attribute `important,
+   those with in boldface have attribute `definition', and all others
+   are own the attribute `default'. Imagine, the attribute groups were
+   defined with the commands
 
    <tscreen><verb>
    (define-attribute-groups (("definition" "important")
@@ -1547,7 +1575,8 @@ different for the location classes and the crossref classes.
    <quote> <em/13/, <em/14/, <em/15/, <em/18/, <bf/12/, <bf/16/, (13),
    14, (15), 16, (18) </quote>
 
-   The childs are braced since they may only be used to build up ranges.
+   The childs are put in parenthesis since they may only be used to
+   build up ranges.
 
    For each attribute we now try to build ranges. Since the switch
    <tt/:drop/ was specified we must start with the attribute
@@ -1572,8 +1601,8 @@ different for the location classes and the crossref classes.
    <quote>
    (<bf/12/, <em/14/, <bf/16/, <em/18/) (13--16)
    </quote>
-@end-comment
 
+@begin-comment
   <label id="sort-merge-locrefs">
   <item> To illustrate the processing of location references we assume
   the following list:
@@ -1626,13 +1655,15 @@ different for the location classes and the crossref classes.
    group <tt/("default")/. The braces are only used to emphasize the
    analogy to the attribute groups.
 
+@end-comment
+
 </itemize>
 
 </enum>
 
-Finally the letter groups are formed and the index entries and
-location references are transformed into tree like structures as
-defined in the index style.
+After all index entries have been processed the letter groups are
+formed and the index entries and location references are transformed
+into tree like structures as defined in the index style.
 
 
 <!-- ================================================================= -->
@@ -1660,7 +1691,8 @@ This phase can be traced by using the command line option <tt/-t/.
 The following command line options are accepted:
 
 <cmddesc>
-xindy  [-h] [-t] [-v] [-l logfile] [-o outfile] [-L n]
+xindy  [-h] [-t] [-v] [-l logfile] [-o outfile]
+       [-L n] [-f filterprog]
        indexstyle raw-index
 </cmddesc>
 
@@ -1685,6 +1717,11 @@ format of the emitted tags can be defined with the command
 <tt>markup-trace</tt>.
 
 <tag/<tt/-L// Set the <sf/xindy/ logging-level to <em/n/.
+
+<tag/<tt/-f// Run <tt/filterprog/ on <tt/raw-index/ before reading.
+The program must act as a filter reading from stdin and writing to
+stdout.
+
 
 <tag/<tt/-v// Shows the version number of <sf/xindy/.
 
@@ -1770,10 +1807,8 @@ searchpath is added to the entire searchpath. See the command
 <newline>
 <ref id="merge-rule" name="<tt>merge-rule</tt>">
 <newline>
-@begin-comment
 <ref id="merge-to" name="<tt>merge-to</tt>">
 <newline>
-@end-comment
 <ref id="require" name="<tt>require</tt>">
 <newline>
 <ref id="searchpath" name="<tt>searchpath</tt>">

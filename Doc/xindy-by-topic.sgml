@@ -35,16 +35,6 @@ the necessary steps that are needed to solve the problem.
 
 <sect>How to ...
 
-
-<sect1>Was mir gerade so einfällt:
-<p>
-
-xindy -f filter processed raw-index mittels filter, und sieht das
-ergebnis als filter an.
-
-stdin wäre auch eine möglichkeit zu akzeptieren, falls kei rawindex
-angegeben wurde.
-
 <sect1>I don't want to write style files. How can I proceed?
 <p>
 
@@ -57,7 +47,7 @@ index style. Its easy!
 <sect1>Eventually, I decided to write my first index style. How can I start?
 <p>
 
-Congratulation! You have made a good decision, indeed.
+Congratulations! You have made a good decision, indeed.
 
 For a first impression, how a style file can be written from scratch
 reference the tutorial that comes with this distribution. It is
@@ -87,6 +77,8 @@ friends will be jealous of.
 
 <sect1>I want to process an index for my native language. What must I do?
 <p>
+
+XXX
 
 What makes <tt/makeindex/ hardly usable in non-English speaking
 countries is its lack for supporting language specific alphabets and
@@ -266,8 +258,8 @@ If for some reason you have the same word appears more than once in the
 index, each time having another markup tag as in the following example
 
 <tscreen><verb>
-  index
-  {\tt index}
+index
+{\tt index}
 </verb></tscreen>
 
 you must be warned that a rule like
@@ -339,7 +331,7 @@ By default, <sf/xindy/ uses word ordering. To use letter ordering
 include the appropriate module with the following command:
 
 <tscreen><verb>
-(require "misc/letorder.xdy")
+(require "ord/letorder.xdy")
 </verb></tscreen>
 
 It actually defines the following command:
@@ -356,36 +348,44 @@ desired behaviour.
 <sect1>My document does not have page numbers, but a different scheme. What must I do?
 <p>
 
-  Location classes, Alphabets.
+XXX  Location classes, Alphabets.
 
 
 <sect1>I want do mark some page numbers in boldface, others in italics. What must I do?
 <p>
 
-Attrubutes, Attribute Groups.
+XXX Attrubutes, Attribute Groups.
 
 
 <sect1>I have several successive pages numbers I want to join together. What can I do?
 <p>
 
-Ranges definieren und deren Markup.
+XXX Ranges definieren und deren Markup.
 
 
 
-<sect1>I want to tag ranges of diffent length differently. How do I accomplish this?
+<sect1>I want to markup ranges of different length differently. How do I accomplish this?
 <p>
 
 A common way of tagging ranges is as follows: a range of length 1 is
 printed with the starting page number and the suffix `f.', those of
 length 2 with suffix `ff.', and all others in the form `<em/X--Y/'.
 
-Assume we want to do this for the location class <em/page numbers/ we
-can specify the markup as follows:
+Assume we want to do this for the location class <em/pagenums/ we can
+specify the markup as follows:
 
 <tscreen><verb>
-(markup-range :class "page-numbers"....
-XXX hier fehlt noch der Rest)
+(markup-range :class "pagenums" :close "f."  :length 1 :ignore-end)
+(markup-range :class "pagenums" :close "ff." :length 2 :ignore-end)
+(markup-range :class "pagenums" :sep "--")
 </verb></tscreen>
+
+The first command indicates that a range <em/(X,Y)/ of length 1 should
+be printed in the form <em/Xf./, a range of length 2 as <em/Xff./ and
+all others in the form <em/X--Y/. The switch <tt/:ignore-end/ causes
+the end of range location reference Y to be suppressed in the
+resulting output.
+
 
 <sect1>I need to suppress some of the markup tags. How can I do this?
 <p>
@@ -412,7 +412,7 @@ real pity!
 <sect1>Whats it all about those cross references?
 <p>
 
-
+XXX
 
 <sect>Practical Tips
 
@@ -448,13 +448,13 @@ file:
 ;; End:
 </verb></tscreen>
 
-The <tt/^L/ (Control-L) can be entered with <tt/C-q C-l/.
+The <vb>^L</vb> (Control-L) can be entered with <tt/C-q C-l/.
 
 
-<sect1>I have written a useful module for processing language <em/foolandic/. What must I do?
+<sect1>I have written a module for processing language <em/foolandic/. What must I do?
 <p>
 
-Send it to us! It will become a part of the system in the next
+Great! Send it to us! It will become a part of the system in the next
 release.
 
 

@@ -1,6 +1,6 @@
 .\" Copyright (c) 1996,1997 Roger Kehr
 .\" See section COPYING for conditions for redistribution
-.TH xindy 1L "January 1997" "Roger Kehr" ""
+.TH xindy 1L "February 1997" "Roger Kehr" ""
 .de BP
 .sp
 .ti \-.2i
@@ -18,8 +18,9 @@ xindy \- a fle\fBx\fPible \fBind\fPexing s\fBy\fPstem
 .RB "[\|" \-t "\|]"
 .RB "[\|" \-l\ \fIlogfile\fP "\|]"
 .RB "[\|" \-o\ \fIoutfile\fP "\|]"
+.RB "[\|" \-f\ \fIfilterprog\fP "\|]"
 .RB "[\|" \-L\ \fIn\fP "\|]"
-.RB "[\|" \-v\ "\|]"
+.RB "[\|" \-v "\|]"
 .I indexstyle rawindex
 
 .SH DESCRIPTION
@@ -35,6 +36,11 @@ the \fIrawindex\fP is used with its extension changed to \fB.ind\fP.
 .TP
 .B "\-l \fIlogfile"
 Writes logging information into the specified file.
+
+.TP
+.B "\-f \fInfilterprog"
+Run \fIfilterprog\fP on \fIrawindex\fP before reading. The program
+must act as a filter reading from stdin and writing to stdout.
 
 .TP
 .B "\-L \fIn"
