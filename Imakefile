@@ -18,7 +18,7 @@ ProjectTop()
  *     Presentation     A set of presentation slides
  */
 
-#define submodules base locref idxstyle index markup xindy
+#define submodules base locref idxstyle index markup xindy rx
 
 /* ATTN: modules are made in list order! */
 BuildProjectModules(Report Presentation\
@@ -27,12 +27,16 @@ BuildProjectModules(Report Presentation\
 CVSAdd(ChangeLog Imakefile)
 CVSAdd(Report Presentation)
 CVSAdd(noweb src testsuite)
+CVSAdd(rx)
 CVSAdd(submodules)
 
 /*======================================================================
  *
  * $Log$
- * Revision 1.10  1996/01/31 16:18:49  kehr
+ * Revision 1.11  1996/04/29 08:36:27  kehr
+ * Nothing important.
+ *
+ * Revision 1.10  1996/01/31  16:18:49  kehr
  * Changed Imakefile.
  *
  * Revision 1.9  1996/01/10  16:45:37  kehr

@@ -1,3 +1,32 @@
+Sun Apr 28 21:31:44 1996    <kehr@eliade.hrz.th-darmstadt.de>
+
+	* Ok, I'm back again. The second exam now passed as well. The
+	  Semester started already, but I've got some time to continue
+	  working on it. During the week I fixed some errors in the
+	  testsuite. Today I worked on the `markup'-module and it works
+	  really fine. I included a debugging of the macros and made some
+	  manual tests so far.
+
+Wed Mar 27 21:29:27 1996  Roger Kehr  <kehr@spock>
+
+	* Long, long ago I wrote my last ChangeLog. I passed one exam some
+	  days ago---the next one comes soon....
+
+	  Ok, I spent most of the time with clisp, its compilation and the
+	  handling of the foreign function interface. After experimenting
+	  with the regexp library from the clisp distibution I decided to
+	  move to the newer GNU Rx library. I wrote a regsub function in
+	  Lisp (the funtion was built by the program and evaluated later)
+	  I took one more look into the old makeindex3-project and
+	  discovered, that it might be better to include some parts of the
+	  source (written in C) into my project. The reasons were simple.
+	  First these parts were well tested and only minor modifications
+	  (that's a lie) were neccessary to get it running under the Rx
+	  library. Additionally I wrote a `rxsub' routine (now in C) that
+	  implements the desired features im a more efficient way (it's
+	  damn fast!). Now I have a bunch of C-modules that are directly
+	  reachable from clisp.
+
 Wed Jan 31 16:11:50 1996  Roger Kehr  <kehr@spock>
 
 	* Made minor modifications to some parts of the source. Wrote some
