@@ -31,10 +31,47 @@ AllTarget(module)                                                       @@\
 module:: LispModuleObjects(module)
 #endif /* LispModuleTarget */
 
+/* Some convenience Macros for use with noweb */
+
+#ifndef NowebLispTarget
+#define NowebLispTarget(source)     	                                @@\
+src:: source.lsp							@@\
+NowebTarget(source,lsp,)						@@\
+ReleaseLispObjects(LispModuleObjects(source))
+#endif
+
+#ifndef NowebLispModuleTarget
+#define NowebLispModuleTarget(target,sources)                           @@\
+LispModuleTarget(source)					       	@@\
+ReleaseLispObjects(LispModuleObjects(target))
+#endif
+
+/* In conjunction with the modified LispModuleTarget()-macro, we
+   append the target `source' to all sources in the project (this is
+   somewhat stupid, but works for now). Now the sources will be
+   generated before clisp starts to compile anything.
+*/
+#ifndef NowebFullLispTarget
+#define NowebFullLispTarget(target,sources)                             @@\
+src:: source.lsp							@@\
+source:: sources							@@\
+NowebLispTarget(source)							@@\
+LispModuleTarget(source)					       	@@\
+ReleaseLispObjects(LispModuleObjects(source))
+#endif
+
 /* ============================================================
 
 $Log$
-Revision 1.1  1995/11/21 14:58:34  kehr
+Revision 1.2  1995/12/15 17:05:35  kehr
+Rewrote module handling. Now the module source is generated from all
+dependend submodules. So there exists only one final source .lsp and
+one final Lisp-library (.fas and .lib). Had to many problems with
+inconsistencies during the compilation of submodules. The new
+generation mechanism is clearer but a little bit slower. (I'm working
+on a rs6000--so it doesn't matter at all :-)
+
+Revision 1.1  1995/11/21  14:58:34  kehr
 Initial checkin.
 
 
