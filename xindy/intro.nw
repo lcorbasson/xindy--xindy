@@ -16,10 +16,31 @@
 \RCS $State$%
 \RCS $Date$%
 %
+
+\chapter{The \Xindy-project}
+
 \ModuleTitle{}
 
 
 \section{Introduction}
+
+How to introduce a piece of software that is intended to process
+indexes?
+
+\subsection{History of index processing systems}
+
+\subsubsection{The original {\normalfont\makeidx}-system}
+
+\subsubsection{How to index non-english documents}
+
+\subsubsection{Who wants to index a the Bible?}
+
+
+\subsection{The \Xindy-approach}
+
+
+
+\section{Project realization}
 
 In the next few sections we will give a short introduction to the
 project and its realization. We will concentrate on the structure of
@@ -123,7 +144,10 @@ following extensions may accour:
 \begin{deflist}{XXXX}
 \item[\cmd{.nw}] the \noweb source files.
 \item[\cmd{.tex}] the weaved \LaTeX{} files.
+\item[\cmd{.dvi}] the \TeX{}ed documents.
 \item[\cmd{.lsp}] the tangled \CL files.
+\item[\cmd{.fas}] the compiled \CL sources.
+\item[\cmd{.lib}] the compiled \CL libraries.
 \end{deflist}
 
 We did not exceed filename length beyond 8 + 3~characters to be able
@@ -138,6 +162,27 @@ to create an easy port to MS-DOS filesystems.
 
 \subsubsection*{Slot methods}
 
+\subsubsection*{Type specifiers in the documentation}
+
+We use the following abbreviated type-names in the \noweb-source:
+%%
+\begin{deflist}{XX\tstrlist}
+  \item [\tint] is the type of integer numbers.
+  \item [\tchar] is the type of ISO-Latin characters.
+  \item [\tstring] is the type of strings composed of ISO-Latin
+    characters.
+  \item [\tlist] is the type of a list.
+  \item [\tintlist] is the type of a list of integer numbers.
+  \item [\tcharlist] is the type of a list of characters.
+  \item [\tstrlist] is the type of lists containing strings.
+  \item [\tclass] is the type of classes.
+  \item [\tgenfunc] is the type of generic functions.
+  \item [\terror] is the type of an error.
+\end{deflist}
+%%
+Generally, if a type name has the form \textit{type}\type{-list} we
+talk about a type of a list that only contains elements of type
+\textit{type}.
 
 \subsubsection{\noweb}
 
@@ -152,11 +197,13 @@ by expanding the so-called \term{root chunk}. This expansion to the
 real source makes it easy so define a portion of code everywhere in
 the document. We use the following naming scheme for chunks of code:
 
-\begin{deflist}{pretty print}
-\item[interface] This chunk is used to define the package interface.
-\item[module] Root chunk for a given module
-\item[class name] Definition of a class
-\item[pretty print] Everything that belongs to pretty-printing. It
+\begin{deflist}{export interface}
+\item[export interface] This chunk is used to define the package
+  interface.
+\item[module \emph{name}] Root chunk for a given module.
+\item[part \emph{name}] Root chunk for a given part.
+\item[class \emph{name}] Definition of a class.
+\item[pretty-print] Everything that belongs to pretty-printing. It
   allows us to disable PP in a distributable environment.
 \item[root] Root of the whole source
 \end{deflist}
@@ -168,7 +215,10 @@ the document. We use the following naming scheme for chunks of code:
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/11/06 16:46:09  kehr
+%% Revision 1.2  1995/11/08 16:18:46  kehr
+%% Minor modifications.
+%%
+%% Revision 1.1  1995/11/06  16:46:09  kehr
 %% Initial checkin.
 %%
 %%
