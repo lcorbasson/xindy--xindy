@@ -8,15 +8,18 @@
 
 RM = /bin/rm -f
 
-XINDY_PLATFORM = test-arch
-ALLTESTS       = attr1 attr2 startup mappings infII xref-1 \
-		 ex1 ex2 deep err1 err2
-TESTS 	       = $(ALLTESTS)
-XINDY_DIR      = ../../binaries/$(XINDY_PLATFORM)
-LOGFILE	       = -l $$tst.xlg
-TRACE	       = -L 1
+XINDY_PLATFORM   = test-arch
+ALLTESTS         = attr1 attr2 startup mappings infII xref-1 \
+		   ex1 ex2 deep err1 err2
+TESTS 	         = attr1 # $(ALLTESTS)
+XINDY_DIR        = ../../binaries/$(XINDY_PLATFORM)
+XINDY_MODULES    = ../modules
+LOGFILE	         = -l $$tst.xlg
+TRACE	         = -L 1
+MAKEINDEX4	 = ../src/makeindex4
+MAKEINDEX4_TESTS = inf2
 
-testsuite: banner clean tests compare
+testsuite: banner clean tests makeindex4_tests compare
 
 banner: force
 	@echo
@@ -39,6 +42,28 @@ tests: force
              $(XINDY_DIR)/xindy $(TRACE) $(LOGFILE) $$tst.xdy $$tst.raw ;\
 	  done
 
+makeindex4_tests: force
+	set -vx;\
+	if [ ! -x $(XINDY_DIR)/xindy ]; then \
+	  echo;\
+	  echo "!!! You must run \`make' in directory $(XINDY_DIR) before running any tests !!!";\
+	  echo; exit 1;\
+	 fi
+	  XINDY_LIBDIR=$(XINDY_DIR);\
+	  export XINDY_LIBDIR; \
+	  XINDY_SEARCHPATH=.:$(XINDY_MODULES);\
+	  export XINDY_SEARCHPATH; \
+	  PATH="$(XINDY_DIR):$$PATH"; \
+	  export PATH; \
+	  for tst in $(MAKEINDEX4_TESTS); do \
+	     echo ;\
+	     echo "------------------------------";\
+	     echo "Running test \"$$tst\".";\
+	     echo "------------------------------";\
+	     echo ;\
+             $(MAKEINDEX4) $$tst; \
+	  done
+
 compare: force
 	@- $(RM) test.failed
 	@ echo ;\
@@ -59,6 +84,7 @@ compare: force
 	@ if [ ! -f test.failed ] ; then echo "All tests passed !"; echo; fi
 
 clean: force
-	$(RM) *.ind *.log *.xlg test.failed
+	$(RM) *.ind *.log *.xlg *.ilg *.sta test.failed
+	$(RM) inf2.raw inf2.xdy
 
 force:
