@@ -1,0 +1,5 @@
+#!/bin/sh
+
+sed -e "s#''#'#g" -e 's#``#`#g' |
+sed -e "s|^@item \+\`\(.*\)'|@item \1|g"
+

@@ -17,7 +17,7 @@ XCOMM continue in Imakefile
 
 DISTRIBDIR = ../distrib/Doc
 DOCS       = manual.html manual.dvi manual.info manual.txt manual.ps
-MOREDOCS   = manual-*.* *.gif manual.sgml
+MOREDOCS   = manual-*.* *.gif manual.sgml README
 
 all:: $(DOCS)
 
@@ -26,42 +26,42 @@ Distrib: distrib
 distrib: all
 	cp $(DOCS) $(MOREDOCS) $(DISTRIBDIR)
 
-manual.tex: manual.sgml
-	sgml2latex -2e manual.sgml
+#define SGMLTarget(file)						@@\
+file.tex: file.sgml							@@\
+	sgml2latex -2e file.sgml					@@\
+TeXTarget(latex,file)							@@\
+file.html: file.sgml						       	@@\
+	sgml2html -img file.sgml					@@\
+file.info: file.sgml							@@\
+	sgml2info file.sgml						@@\
+file.txt: file.sgml							@@\
+	sgml2txt file.sgml						@@\
+file.ps: file.dvi							@@\
+	dvips -o file.ps file.dvi					@@\
+file.ps.2: file.ps							@@\
+	psnup -2 file.ps > file.ps.2					@@\
+realclean::								@@\
+        $(RM) file.info	file.tex file.txt file*.html file.ps file.ps.2
 
-TeXTarget(latex,manual)
-
-manual.html: manual.sgml
-	sgml2html -img manual.sgml
-
-manual.info: manual.sgml
-	sgml2info manual.sgml
-
-manual.txt: manual.sgml
-	sgml2txt manual.sgml
-
-manual.ps: manual.dvi
-	dvips -o manual.ps manual.dvi
-
-realclean::
-	$(RM) manual*.html
-	$(RM) manual.tex
-	$(RM) manual.dvi
-	$(RM) manual.txt
-	$(RM) manual.info
-	$(RM) manual.ps
+SGMLTarget(manual)
+SGMLTarget(tutorial)
 
 CVSAdd(*.sgml)
 CVSAdd(*.gif)
+CVSAdd(*.1)
 CVSAdd(linuxdoc-sgml-a4.sty)
+CVSAdd(sgml2info.backend)
 CVSAdd(Imakefile)
-CVSAdd(manual.sgml)
+CVSAdd(tutorial)
 CVSCommit()
 
 /* ============================================================
  *
  * $Log$
- * Revision 1.6  1996/07/11 14:15:25  kehr
+ * Revision 1.7  1996/07/24 12:11:39  kehr
+ * Check-in of a bunch of new files in this directory.
+ *
+ * Revision 1.6  1996/07/11  14:15:25  kehr
  * Complete Major checkin before changing the letter-groups.
  *
  * Revision 1.5  1996/06/24  08:58:28  kehr

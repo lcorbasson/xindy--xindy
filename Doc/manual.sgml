@@ -10,9 +10,13 @@
 
 <!-- Title information -->
 
-<title>Manual of the <sf/xindy/ indexing system
+<title><sf/xindy/
+
+<subtitle>A Flexible Indexing System
 
 <author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
+
+<date>Edition July 1996 for xindy version 0.9
 
 <abstract>
 This document describes the indexing system <sf/xindy/. It is a
@@ -20,8 +24,7 @@ powerful and flexible framework for generating indexes for many kinds
 of documents. This is edition June 1996 and describes the features of
 <sf/xindy/ version 0.9. Please email comments, suggestions and
 bug-reports to the following address:
-<tt/xindy@iti.informatik.th-darmstadt.de/. You can also visit our
-homepage at <tt>www://www.iti.informatik.th-darmstadt.de/~xindy</tt>
+<tt/xindy@iti.informatik.th-darmstadt.de/.
 
 </abstract>
 
@@ -152,9 +155,9 @@ user-definable rules.
 But there were still a lot of wishes and it turned out, that the old
 system was not extensible enough to allow major rewrites of the
 source. In 1994, we started a project to reimplement the old
-<tt/makeindex/-system and to introduce a bunch of new features. They
-are described in section <ref id="why xindy">. So <sf/xindy/ can be
-viewed as the third step in the tradition of <tt/makeindex/.
+<tt/makeindex/-system and to introduce a bunch of new features. So
+<sf/xindy/ can be viewed as the third step in the tradition of
+<tt/makeindex/.
 
 
 
@@ -384,6 +387,7 @@ possibly build ranges.
 
 <!-- ================================================================= -->
 
+<label id="def crossref-class">
 <tag/cross-reference-class, cross-reference/ A <bf/cross-reference/ is
 an unstructured reference. <bf/Cross-reference-classes/ are used
 define different classes of cross-references. All elements of a
@@ -680,15 +684,58 @@ name="<em>Cross-reference classes</em>"> for more information.
 <!-- ================================================================= -->
 
 <label id="define-letter-group">
-<cmddesc>(define-letter-group prefix group-number)</cmddesc>
+<cmddesc>
+(define-letter-group name [:before lgname] [:after lgname]
+			  [:prefixes list-of-prefixes])
 
-This command defines a letter group with number <tt/group-number/,
-which must be an integer value, grouping all indexentries that have a
-<em/sort-key/ beginning with the prefix <tt/prefix/, which must be a
-string. Example:
+(define-letter-groups list-of-letter-groups)
+</cmddesc>
 
-<tt/(define-letter-group "a" 10)/ defines a letter-group with number
-`10' containing all indexentries beginning with the string <tt/"a"/.
+This command defines a letter group with name <tt/name/, which must be
+string value, grouping all indexentries that have a <em/sort-key/
+beginning with the prefix <tt/name/. The command
+<tt/(define-letter-group "a")/ is equivalent to the command
+<tt/(define-letter-group "a" :prefixes ("a"))/. In the latter form one
+can associate more prefixes with a given letter-group. Also further
+prefixes can be added to an already existing letter group by simply
+define the same letter group again. This results not in a redefinition
+but in adding prefixes to the currently defined prefixes.
+
+Example:
+
+<tt/(define-letter-group "a")/ defines a letter-group containing all
+indexentries beginning with the string <tt/"a"/.
+
+<tt/(define-letter-group "c" :after "a")/ defines a letter-group
+containing all indexentries beginning with the string <tt/"c"/. The
+letter group appears behind the letter group "a"
+
+<tt/(define-letter-group "b" :after "a" :before "c")/ inserts
+letter-group "b" between letter group "a" and "c". This allows modular
+definition of letter groups by extending already defined letter
+groups.
+
+The definitions of the <tt/:after/ and <tt/:before/ define a partial
+order on the letter groups. The algorithm tries to convert this
+partial order into a total one. If this is impossible due to circular
+definitions, an error is reported. If more than one possible total
+orderings can result, it is left open which one is used, so one should
+always define a correct total order.
+
+The command <tt/define-letter-groups/ (with an `s' at the end) is
+simply an abbreviation for a sequence of
+<tt/define-letter-group/-definitions where the elements are ordered in
+the ordering given by the list. Example:
+
+<tt/(define-letter-groups ("a" "b" "c")/
+
+equals the definitions
+
+<verb>
+(define-letter-group "a")
+(define-letter-group "b" :after "a")
+(define-letter-group "c" :after "b")
+</verb>
 
 See section <ref id="def letter-group" name="<em>Letter group</em>">
 for a description of letter groups and see also commands
@@ -1232,17 +1279,46 @@ specialise this markup for some depth.
 (markup-letter-group-list [:open string] [:close string]
                           [:sep string])
 
-(markup-letter-group      [:open string] [:close string]
-                          [:group group-number])
+(markup-letter-group  [:open string] [:close string] [:group group-name]
+                      [:open-head string] [:close-head string]
+		      [:upcase | :downcase | :capitalize])
 </cmddesc>
 
-The first command defines the markup of the letter-group with number
-<tt/group-number/.
+The first command defines the markup of the letter-group with name
+<tt/group-name/. Since the marup of letter-groups often contains the
+name of the letter-group as a part of it, the other keyword-arguments
+allow an additional markup for this group-name. If one of the
+parameters <tt/:open-head/ and <tt/:close-head/ is specified the
+markup-sequence that is generated is
 
-The command <tt/markup-letter-group/ defines the markup of the list of
-letter groups. See also section <ref id="def letter-group"
-name="<em>Letter group</em>"> for a description of letter groups and
-the associated sort-rules.
+<verb>
+<OPEN>
+   <OPEN-HEAD>
+     transformer-of(<GROUP-NAME>)
+   <CLOSE-HEAD>
+   <INDEXENTRIES...>
+<CLOSE>
+</verb>
+
+compared to the default sequence
+
+<verb>
+<OPEN>
+   <INDEXENTRIES...>
+<CLOSE>
+</verb>
+
+with <tt/transformer-of/ being a function that possibly transforms the
+string representing the group-name into another string. The
+transformers we currently support can be specified with the switches
+<tt/:upcase/, <tt/downcase/ and <tt/:capitalize/ which result in the
+corresponding string-conversions. If none of them is specified no
+transformation is done at all.
+
+The command <tt/markup-letter-group/
+defines the markup of the list of letter groups. See also section <ref
+id="def letter-group" name="<em>Letter group</em>"> for a description
+of letter groups and the associated sort-rules.
 
 <!-- ================================================================= -->
 
@@ -1565,15 +1641,6 @@ pointing to the term 'building'.
 <tscreen><verb> (indexentry :key ("house") :xref ("building") :open-range)
 </verb></tscreen> is an invalid specification, since <tt/:open-range/
 mustn't be used together with cross-references.
-
-
-<!-- ================================================================= -->
-
-<sect1>A sample indexstyle-file
-
-<p>
-This section is intended to give an impression of how an indexstyle
-might look like. Further examples can be found in the distribution.
 
 
 <!-- ================================================================= -->
