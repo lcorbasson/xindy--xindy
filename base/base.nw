@@ -101,7 +101,16 @@ The error message system distinguished the following kind of errors:
     (WHEN *LOGGING-ON*
       (FORMAT *LOGGING-STREAM* BASE::*OOPS-ERROR-MESSAGE*)
       (APPLY #'FORMAT *LOGGING-STREAM* MSG))))
-@ %def oops
+
+(defmacro oops* (fmt args)
+  `(LET ((FMT  ,fmt)
+	 (ARGS ,args))
+    (FORMAT *ERROR-OUTPUT* BASE::*OOPS-ERROR-MESSAGE*)
+    (APPLY #'FORMAT *ERROR-OUTPUT* FMT ARGS)
+    (WHEN *LOGGING-ON*
+      (FORMAT *LOGGING-STREAM* BASE::*OOPS-ERROR-MESSAGE*)
+      (APPLY #'FORMAT *LOGGING-STREAM* FMT ARGS))))
+@ %def oops oops*
 
 <<Error message system>>=
 (defparameter *nraw-error-message* "~&WARNING: ")
@@ -131,7 +140,7 @@ on logging''.
 @ %def gol
 
 <<Export-list of module \module{base}>>=
-(export '(oops nraw info gol
+(export '(oops oops* nraw info gol
           *logging-stream* *logging-on*))
 @
 
@@ -155,6 +164,9 @@ The following macro can be used to declare assertions.
 @
 
 %% $Log$
+%% Revision 1.15  1997/01/23 19:04:12  kehr
+%% Added (oops*)-function.
+%%
 %% Revision 1.14  1997/01/17 16:41:35  kehr
 %% Minor changes.
 %%
