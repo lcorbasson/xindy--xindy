@@ -40,8 +40,9 @@ XCOMM $Id$
 
 TeXSpreadTarget(latex,xindy, SRC EPS STY BIB)
 TeXSpreadTarget(latex,techrep, techrep.tex STY BIB)
+TeXSpreadTarget(latex,cb-markup, cb-markup.tex STY BIB)
 
-CVSAdd(SRC EPS STY BIB Imakefile techrep.tex)
+CVSAdd(SRC EPS STY BIB Imakefile techrep.tex cb-markup.tex)
 CVSCommentLeader("%% ", SRC STY)
 
 clean::
@@ -50,6 +51,9 @@ clean::
 /* ============================================================
 
 $Log$
+Revision 1.7  1997/02/19 18:41:42  kehr
+Check in after Klaus' corrections.
+
 Revision 1.6  1997/02/14 09:10:18  kehr
 New checkin for xindy.
 
