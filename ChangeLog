@@ -1,3 +1,21 @@
+Mon Dec 11 18:18:20 1995  Roger Kehr  <kehr@spock>
+
+	* Today I extended the semi-formal description of the
+	  location-reference handling. Had a short talk with Joachim about
+	  the transitive-hull-problem with substitute-if-double-rules.
+	  (2 hrs)
+
+
+Sun Dec 10 23:18:16 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* This weekend I worked on the the problem of processing the list
+	  of location-references belonging to an indexentry. I wrote down
+	  some ideas on paper and it seems to work (at least
+	  theoretically). Today I now added a semi-formal description of
+	  the process into submodule `idxentry'. The task is now to think
+	  about some implementation details and to code the whole stuff.
+	  All in all I feel comfortable with it. (5 hrs)
+
 Thu Dec  7 19:16:05 1995  Roger Kehr  (kehr@spock)
 
 	* I renamed the module `idxclass' to `idxstyle'. Restructured the
@@ -10,7 +28,7 @@ Tue Dec  5 19:37:04 1995  Roger Kehr  (kehr@spock)
 
 	* Set up the new modules `index' and `idxclass'. Got a first sight
 	  and restructured great parts of them. Added some description to
-	  the intro.nw by describing the reagression tests. It is now time
+	  the intro.nw by describing the regression tests. It is now time
 	  to restructure the whole system. We'll see. (5 hrs)
 
 Sat Dec  2 20:24:53 1995    (kehr@eliade.hrz.th-darmstadt.de)
@@ -47,15 +65,15 @@ Sun Nov 19 19:30:22 1995  Roger Kehr  (kehr@spock)
 	  tried to figure out, how their interaction works. I compiled
 	  DejaGnu for rs6000-platform. I want to use it for intensive
 	  regression tests. The module structure seems to work well right
-	  now and I hope to make further progress in the next week.
+	  now and I hope to make further progress in the next week. (6 hrs)
 
 Tue Oct 17 16:50:45 1995  Roger Kehr  (kehr@spock)
 
-	* Today I continued to set up the Imake-environment. I had to
-	  add some Imake-templates for correct interaction of noweb and
-	  clisp. This took me quite a while but now everything works quiet
-	  fine for me. The sources are completely checked in an I can
-	  start to hack :-)
+	* Today I continued to set up the Imake-environment. I had to add
+	  some Imake-templates for correct interaction of noweb and clisp.
+	  This took me quite a while but now everything works fine for me.
+	  The sources are completely checked in an I can start to hack :-)
+	  (5 hrs)
 
 Mon Oct 16 17:49:43 1995  Roger Kehr  (kehr@spelunke)
 
@@ -67,7 +85,7 @@ Fri Oct 13 17:58:06 1995  Roger Kehr  (kehr@spelunke)
 	* Today I started setting up a completely new imake-environment
  	  for the xindy-project. After finally choosing the project-name
  	  and just before the theoretical project-presentation some
- 	  housekeeping was absolutely neccessary to keep everything under
+ 	  housekeeping was absolutely necessary to keep everything under
  	  control.
 
 	  The complete project will be checked into CVS next week and I'll
