@@ -363,7 +363,7 @@ FIXME
 (lisp:in-package "LOCREF")
 (lisp:provide "locref")
 
-(lisp:require "base"))
+(lisp:require "base")
 (lisp:use-package "BASE")
 #+(and :XP CLISP) (lisp:use-package "XP")
 (lisp:use-package "CLOS")
@@ -457,6 +457,9 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
+%% Revision 1.28  1997/03/18 15:00:30  kehr
+%% Fixed a bug caused bu a closing parenthesis.
+%%
 %% Revision 1.27  1997/03/18 14:50:20  kehr
 %% Checkin after the several changes. a) the definition of slot-accessor
 %% macros in the whole source, b) the modifications suggested by Bernd
