@@ -1,21 +1,23 @@
 $Id$
 ------------------------------------------------------------
 
-This directory contains some utilities that can be use to make xindy
-compatible with TeX. Since xindy uses a completely new
-indexstyle-scheme we can't be 100% compatible. makeindex-3 made a
-bunch of assumptions about the index which don't hold for xindy. Due
-to this fact we must make some workarounds. The programs herein are
-made for these purposes.
+This directory contains some utilities that convert LaTeX idx files to
+xindy raw index format.
 
-The files in this directory are under development. If you find bugs or
-can give us hints to improve some of the programs, mail us and we will
-incorporate your ideas. If you also have written useful frontends to
-xindy, send us. We'll add them to our collection.
+tex2xindy is the program that's currently used.
+I.e., the xindy script wrapper knows about tex2xindy and uses it as
+LaTeX index reader.
 
-Enjoy, Roger.
+aux2lisp.pl is not used anymore, but kept for reference. You can use
+it as an example script if you want to write some other input
+converters. Roger Kehr found it more convenient to re-implement that
+task as an FSA, using lex. It is actually not known why he made that
+change, and didn't use Parse::RecDescent or something similar
+powerful.
 
-=====================================================================
-Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
-Computer Science Department
-Technical University of Darmstadt, Germany
+Usage of makeindex4 is depreciated as well; it's superseded by
+texindy. It does one thing better as texindy: It supports arbitrary
+cross-reference classes and instantiates them dynamically. In fact, it
+parses LaTeX idx files for cross reference classes and outputs
+according xindy clauses to a temporary xindy style file. For that
+reason and because it's used, it's not removed from distribution yet.
