@@ -57,10 +57,13 @@ the project.
 <<Useful macros>>=
 (defmacro ifnot (expr then-body else-body)
   `(IF (NOT ,expr) ,then-body ,else-body))
+
+(defmacro error-exit ()
+  `(EXIT 1))
 @ %def ifnot
 
 <<Export-list of module \module{base}>>=
-(export 'ifnot)
+(export '(ifnot error-exit))
 @
 
 
@@ -101,7 +104,7 @@ The error message system distinguished the following kind of errors:
 @ %def oops
 
 <<Error message system>>=
-(defparameter *nraw-error-message* "~&ERROR: ")
+(defparameter *nraw-error-message* "~&WARNING: ")
 
 (defmacro nraw (&rest msg)
   `(PROGN
@@ -152,7 +155,10 @@ The following macro can be used to declare assertions.
 @
 
 %% $Log$
-%% Revision 1.13  1996/07/22 15:52:28  kehr
+%% Revision 1.14  1997/01/17 16:41:35  kehr
+%% Minor changes.
+%%
+%% Revision 1.13  1996/07/22  15:52:28  kehr
 %% Changed the error-system-macros.
 %%
 %% Revision 1.12  1996/07/11  14:15:36  kehr
