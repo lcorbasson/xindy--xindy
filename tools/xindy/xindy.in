@@ -193,7 +193,7 @@ if ( ! $try ) {
     &check_mem;
 }
 
-$xindy_run = "$runfile -q -M $memfile";
+$xindy_run = "$runfile -B $XINDY_LIBDIR -q -M $memfile";
 print "xindy_run = $xindy_run\n" if $debug;
 
 # Run xindy interactive if this was specified via -i.
@@ -268,6 +268,11 @@ if ( $try ) {
 
 #
 # $Log$
+# Revision 1.13  2004/05/24 19:52:02  jschrod
+#     Pass -B option to CLISP.
+# Change might be from Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>,
+# made at 1999-12-22.
+#
 # Revision 1.12  2004/05/24 19:47:13  jschrod
 #     Introduce new driver script, as part of the "Companion Release".
 #
