@@ -1,6 +1,6 @@
-.\" Copyright (c) 1996 Roger Kehr
+.\" Copyright (c) 1996,1997 Roger Kehr
 .\" See section COPYING for conditions for redistribution
-.TH xindy 1L "July 1996" "Roger Kehr" ""
+.TH xindy 1L "January 1997" "Roger Kehr" ""
 .de BP
 .sp
 .ti \-.2i
@@ -18,6 +18,8 @@ xindy \- a fle\fBx\fPible \fBind\fPexing s\fBy\fPstem
 .RB "[\|" \-t "\|]"
 .RB "[\|" \-l\ \fIlogfile\fP "\|]"
 .RB "[\|" \-o\ \fIoutfile\fP "\|]"
+.RB "[\|" \-L\ \fIn\fP "\|]"
+.RB "[\|" \-v\ "\|]"
 .I indexstyle rawindex
 
 .SH DESCRIPTION
@@ -27,12 +29,16 @@ is a general purpose index processor.
 .SH OPTIONS
 .TP
 .B "\-o \fIoutfile"
-Writes the tagged index to the specified file. If ommited, the name of
-the \fIrawindex\fP is used with the extension changed to \fB.ind\fP.
+Writes the tagged index to the specified file. If omitted, the name of
+the \fIrawindex\fP is used with its extension changed to \fB.ind\fP.
 
 .TP
 .B "\-l \fIlogfile"
 Writes logging information into the specified file.
+
+.TP
+.B "\-L \fIn"
+Sets the logging level to \fIn\fI with  \fIn\fI one of {1,2,3}
 
 .TP
 .B "\-t"
@@ -41,10 +47,12 @@ markup-tags to the final index which can be used to trace the markup
 process.
 
 .TP
+.B \-v
+Display the version number.
+
+.TP
 .B \-help
-Show a summary of the options to
-.B xindy
-and exit.
+Show a summary of the command-line options.
 
 .SH "SEE ALSO"
 tex2xindy(1L),
@@ -58,7 +66,7 @@ the \fIrawindex\fP refer to the documentation that comes with \fBxindy\fP.
 Roger Kehr, Institut fuer Theoretische Informatik, TH-Darmstadt
 
 .SH COPYING
-Copyright (c) 1996 Roger Kehr.
+Copyright (c) 1996,1997 Roger Kehr.
 .PP
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice

@@ -16,18 +16,23 @@
 
 <author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
 
-<date>Manual Edition August 1996 for xindy version 1.0
+<date>Manual, Edition January 1997 for xindy version 1.1
 
 <abstract>
 <em>This is the manual of the indexing system <sf/xindy/. <sf/xindy/
 is a powerful and flexible framework for generating indexes for many
-kinds of documents. This is Edition August 1996 and describes the
-features of <sf/xindy/ version 1.0.
+kinds of documents. This is Edition January 1997 and describes the
+features of <sf/xindy/ version 1.1.
 </em>
 </abstract>
 
 <!-- Table of contents -->
 <toc>
+
+@begin-html
+<p>
+<ref id="INDEX" name="<b>Index of all xindy commands</b>">
+@end-html
 
 <!-- ================================================================= -->
 
@@ -35,8 +40,8 @@ features of <sf/xindy/ version 1.0.
 <p>
 We assume that the reader is already familiar with the task of an
 index processor and has basic experience in using a markup-based
-document preparation systems such as &TeX;/&LaTeX;, the roff-family or
-SGML-based systems (e.g. its instance HTML).
+document preparation systems such as &TeX;/&LaTeX; &lsqb;1, 2&rsqb;,
+the roff-family or SGML-based systems (e.g. its instance HTML).
 
 For a basic introduction into the handling and using of <sf/xindy/
 refer to the tutorial that comes with this distribution.
@@ -54,7 +59,6 @@ through.
 
 
 <!-- ================================================================= -->
-
 
 <sect>How the Index Processor Works
 <label id="how-works">
@@ -1407,7 +1411,9 @@ index entry should point to.
 <tag/<tt/:attr//This parameter may be used to tag a location reference
 with a certain attribute or it names the class of a cross reference.
 It may also used to associate different markup for different
-attributes in the markup phase.
+attributes in the markup phase. If this parameter is omitted or is the
+empty string, the indexentry is declared to have the attribute
+<tt/default/.
 
 </descrip>
 
@@ -1654,7 +1660,7 @@ This phase can be traced by using the command line option <tt/-t/.
 The following command line options are accepted:
 
 <cmddesc>
-xindy  [-h] [-t] [-v] [-l logfile] [-o outfile]
+xindy  [-h] [-t] [-v] [-l logfile] [-o outfile] [-L n]
        indexstyle raw-index
 </cmddesc>
 
@@ -1677,6 +1683,8 @@ changed to `<tt/.ind/' (or added, if it had no extension at all).
 <tag/<tt/-t// Enters tracing mode of the symbolic markup tags. The
 format of the emitted tags can be defined with the command
 <tt>markup-trace</tt>.
+
+<tag/<tt/-L// Set the <sf/xindy/ logging-level to <em/n/.
 
 <tag/<tt/-v// Shows the version number of <sf/xindy/.
 
@@ -1701,6 +1709,7 @@ searchpath is added to the entire searchpath. See the command
 @begin-html
 
 <sect>Index
+<label id="INDEX">
 <p>
 
 <bf/List of Commands/
@@ -1773,6 +1782,31 @@ searchpath is added to the entire searchpath. See the command
 
 @end-html
 
+<sect>References
+<p>
+
+The following books and papers were referenced in this document.
+
+<enum>
+<item> D. E. Knuth, <em/The &TeX;book/, Addison-Wesley, 1984
+
+<item> Leslie Lamport, &LaTeX; <em/A Document Preparation System/,
+Addison-Wesley, 1986
+
+<item> Joachim Schrod, <em/An International Version of MakeIndex/,
+Cahiers GUTenberg, 10, p81-90, 1991
+
+<item> Pehong Chen and Michael A. Harrison, <em/Automating Index
+Preparation/, TR-87/347, University of California Berkeley, 1987
+<label id="makeindex">
+
+<item> Roger Kehr, <sf/xindy/, <em/Ein Flexibles Indexierungssystem/,
+Studienarbeit FB Informatik, TH-Darmstadt, November 1995.
+
+<item> Joachim Schrod and Gabor Herr, <em/MakeIndex Version 3.0/,
+Technical University Darmstadt, 1991
+
+</enum>
 
 </article>
 

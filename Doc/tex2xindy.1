@@ -1,6 +1,6 @@
-.\" Copyright (c) 1996 Roger Kehr
+.\" Copyright (c) 1996,1997 Roger Kehr
 .\" See section COPYING for conditions for redistribution
-.TH tex2xindy 1L "July 1996" "Roger Kehr" ""
+.TH tex2xindy 1L "January 1997" "Roger Kehr" ""
 .de BP
 .sp
 .ti \-.2i
@@ -14,15 +14,21 @@ tex2xindy \- a frontend to the \fBxindy\fP index processor
 .hy 0
 .na
 .TP
-.B tex2xindy
+.B tex2xindy [file]
 
 .SH DESCRIPTION
 .B tex2xindy
-is a filter that reads from \fIstdin\fP a file in the format of the
-\fBmakeindex\fP index processor. This format is usually located in a
-file with the extension \fB.idx\fP. \fBtex2xindy\fP now reads in this
-format and converts it to a format suitable for the use with
+is a filter that reads from \fIstdin\fP a file in the input-format of
+the \fBmakeindex\fP index processor. This format is usually located in
+a file with the extension \fB.idx\fP. \fBtex2xindy\fP reads in
+this format and converts it to a format suitable for the use with
 \fBxindy\fP.
+
+If the optional argument `file' is specified, tex2xindy puts some
+information into this file which is further processed by the
+makeindex4(1L) program. For more information have a look at the
+"Compatibility Guide" which explains this format. It is part of the
+xindy distribution.
 
 .SH "SEE ALSO"
 xindy(1L),
@@ -36,8 +42,8 @@ products.
 .SH "AUTHOR"
 Roger Kehr, Institut fuer Theoretische Informatik, TH-Darmstadt
 
-.SH COPYING
-Copyright (c) 1996 Roger Kehr.
+.SH "COPYING"
+Copyright (c) 1996,1997 Roger Kehr.
 .PP
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice

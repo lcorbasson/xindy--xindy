@@ -17,7 +17,7 @@ XCOMM continue in Imakefile
 
 DISTRIBDIR = ../distrib/Doc
 DOCS       = *.html *.dvi *.info *.txt *.ps
-MOREDOCS   = *.gif *.sgml README tutorial/
+MOREDOCS   = *.gif *.sgml README tutorial
 
 Distrib: distrib
 
@@ -27,31 +27,32 @@ distrib: all
 #define SGMLTarget(file)						@@\
 all:: file.sgml file.html file.dvi file.info file.txt file.ps		@@\
 file.tex: file.sgml							@@\
-	sgml2latex -2e file.sgml					@@\
+	-./sgml2latex -2e file.sgml					@@\
 TeXTarget(latex,file)							@@\
 file.html: file.sgml						       	@@\
-	./sgml2html -img file.sgml					@@\
+	-./sgml2html -img file.sgml					@@\
 file.info: file.sgml							@@\
-	sgml2info file.sgml						@@\
+	-./sgml2info file.sgml						@@\
 file.txt: file.sgml							@@\
-	sgml2txt file.sgml						@@\
+	-./sgml2txt file.sgml						@@\
 file.ps: file.dvi							@@\
 	dvips -o file.ps file.dvi					@@\
 file.ps.2: file.ps							@@\
 	psnup -2 file.ps > file.ps.2					@@\
 realclean::								@@\
-        $(RM) file.info	file.tex file.txt file*.html file.ps file.ps.2  @@\
-        $(RM) *.xbm *.pbm
+	$(RM) file.info	file.tex file.txt file*.html file.ps file.ps.2  @@\
+	$(RM) *.xbm *.pbm
 
 SGMLTarget(manual)
 SGMLTarget(tutorial)
+SGMLTarget(compatibility-guide)
 
 CVSAdd(*.sgml)
 CVSAdd(*.gif)
 CVSAdd(*.fig)
 CVSAdd(*.1)
 CVSAdd(linuxdoc-sgml-a4.sty)
-CVSAdd(sgml2info.backend)
+CVSAdd(sgml2*)
 CVSAdd(Imakefile)
 CVSAdd(tutorial)
 CVSCommit()
@@ -59,7 +60,10 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.8  1996/08/02 16:09:26  kehr
+ * Revision 1.9  1997/01/17 16:08:55  kehr
+ * Committed new changes.
+ *
+ * Revision 1.8  1996/08/02  16:09:26  kehr
  * Check-in before the release of version 1.0.
  *
  * Revision 1.7  1996/07/24  12:11:39  kehr
