@@ -12,16 +12,17 @@
 
 usage() {
 	echo -e "
-`basename $0`\t[-t] [-v] [-o output] [-l logfile] [-L n]
+`basename $0`\t[-t] [-v] [-o output] [-l logfile] [-f filtprg] [-L n]
 \tindexstyle raw-index
 
 options:
 
   -t       Enters tracing-mode for markup-tags.
   -v       Displays the current version of xindy.
-  -o       Specifies the output-file for the tagged index. If ommited, the
-           name of the raw-index is taken, with its extension replaced by
-           \`.ind'.
+  -o       Specifies the output-file for the tagged index. If omitted, the
+           name of the raw-index is taken, with its extension
+           substituted by \`.ind'.
+  -f filt  Preprocess raw-index with \`filtprg' before reading.
   -l file  Logfile into which xindy writes useful information.
   -L n     Enter logging level \`n' = {1,2,3}.
 
@@ -97,6 +98,9 @@ do
     -o) shift
 	output="$1"
         shift;;
+    -f) shift
+	filtprg="$1"
+        shift;;
     -l) shift
 	logfile="$1"
         shift;;
@@ -125,7 +129,7 @@ then
 fi
 
 quote_string() {
-   echo $1 | sed -e 's/"/\\\"/g' -e 's/\\/\\\\/g'
+   echo "$1" | sed -e 's/"/\\\"/g' -e 's/\\/\\\\/g'
 }
 
 if [ "" != "$compile" ]
@@ -154,11 +158,25 @@ else
 	# append suffix ".ind"
         output=`quote_string "$output.ind"`
     fi
+    if [ "" != "$filtprg" ]
+    then
+	# create tmpfile
+	echo "Running filter: $filtprg ..."
+	tmpfile=/tmp/xindy.$$
+	# make ordinary exit and interruptions to remove $tmpfile
+	trap "/bin/rm $tmpfile" 0
+	trap "exit 4" 1 2 3 15
+	$filtprg < "$rawindex" > "$tmpfile"
+	echo "Finished running filter."
+	rawindex=`quote_string "$tmpfile"`
+    fi
     if [ "$logfile" != "" ]
     then
         logfile=":logfile \"`quote_string "$logfile"`\""
     fi
-    logging=":trace-level $level"
+    if [ "" != "$level" ]; then
+	logging=":trace-level $level"
+    fi
     xindy_cmd="-x
 (progn
    (xindy:startup :idxstyle \"$indexstyle\"
