@@ -21,7 +21,7 @@
 \ModuleTitle{}
 
 
-\section{Part \module{location-reference}}
+\section{Submodule \module{location-reference}}
 
 \subsection{Introduction}
 
@@ -29,7 +29,7 @@ A \term{location-reference} is a reference to an object in a document.
 These objects are named \term{location}. Examples of locations are
 pages, chapters, sections, paragraphs, glossaries, verses \etc{}
 
-An index is structured into indexentries which own usually a list of
+An index is structured into indexentries which usually own a list of
 location-references. This part implements location-references and is
 responsible for their construction and management.
 
@@ -109,7 +109,9 @@ details).
 \subsubsection{Class \class{locref-layer}}
 
 A \term{location-reference-layer} layer is a \tstring. It is the
-smallest entity in the location-reference data hierarchy.
+smallest entity in the location-reference data hierarchy. It consists
+only of the string that matched with the corresponding layer during
+the input-parsing of raw location-references.
 
 <<class \class{locref-layer}>>=
 (defclass locref-layer ()
@@ -126,25 +128,49 @@ smallest entity in the location-reference data hierarchy.
 
 During parsing the input stream of raw-index entries one of the tasks
 to be done is the matching of the location reference strings against
-a location-class description. The following function tries to match
-the given \tstring [[locstring]] on the given location-class [[loccls]].
+a location-class description. As mentioned in the technical
+description we must distiguish between standard- and var-classes.
+Standard-classes are of fixed structure and the matching succeeds only
+if \emph{all} layers and separators together matched completely the
+given string. Var-classes are a set of different classes and we must
+perform so-called \emph{prefix-matching}.
 
-This is achieved by successively matching all layers and separators
-against the string. It returns a multiple-value of the form
+One remaining problem is the matching of separators in var-classes. It
+is not yet stated if separators must match always or not. If the
+strings `[[1]]', `[[1.]]' and `[[1.2]]' are compared to var-class
+`[[num.num]]' the first and third should always match, but is not yet
+clear if the second alternative should be valid or not.  Strictly
+spoken we must declare if the separator acts as a \emph{prefix} to
+hierarchy No.~2 or if it acts like a \emph{postfix} to hierarchy
+No.~1.
+
+To implement those two strategies we define a generic function
+[[match-object]] that dispatches over all kinds of location-classes.
+The corresponding methods implement the described matching technique.
+
+<<Matching strings with location-classes>>=
+(defgeneric match-object (string loccls))
+@ %def match-object
+
+\no It tries to match the given \tstring [[locstring]] on the given
+location-class [[loccls]].  This is achieved by successively matching
+all layers and separators against the string. It returns a
+multiple-value of the form
+%%
 \begin{center}
   (\emph{layer-separator-list}, \emph{ordnum-list} : \tintlist).
 \end{center}
-
-It is split into several functions, that can only be used in
-conjunction because we use [[special]] bindings to make some variables
-visible for all functions. I didn't want to have a large function, so
-I split it into three small pieces. I could also make use of noweb's
-facilities to insert chunks into code, but this prevents me from
-testing the whole function in the [[emacs]]-editor.
-
-Indeed, it looks very ugly and I should rewrite it once more.
-
-\medskip
+%%
+%It is split into several functions, that can only be used in
+%conjunction because we use [[special]] bindings to make some variables
+%visible for all functions. I didn't want to have a large function, so
+%I split it into three small pieces. I could also make use of noweb's
+%facilities to insert chunks into code, but this prevents me from
+%testing the whole function in the [[emacs]]-editor.
+%
+%Indeed, it looks very ugly and I should rewrite it once more.
+%
+%\medskip
 
 \no So what is the way of success? Ok, at first we iterate over all
 layers of the locclass description until no more elements are left
@@ -185,6 +211,7 @@ or the multiple value [[(nil nil nil)]]. We only check the value of
 
 <<Matching strings with location-classes>>=
 (defun match-loccls-layer ()
+  (declare (special layer-list ordnum-list finished locstring curr-layer))
   (multiple-value-bind (matched-string rest-string ordnum)
       (prefix-match locstring (get-basetype curr-layer))
     (if (null ordnum)
@@ -203,6 +230,7 @@ strings.
 
 <<Matching strings with location-classes>>=
 (defun match-loccls-separator ()
+  (declare (special curr-layer locstring))
   (let* ((sepstr    (get-separator curr-layer))
          (seplen    (length sepstr))
          (match-len (string/= sepstr locstring)))
@@ -387,7 +415,11 @@ printing of the layer-string.
 %% End:
 %%
 %% $Log$
-%% Revision 1.4  1995/11/29 16:53:30  kehr
+%% Revision 1.5  1995/12/05 13:53:41  kehr
+%% Complete restructuring of submodule `locclass'. New generic functions
+%% introduced and separation of standard- and var-classes implemented.
+%%
+%% Revision 1.4  1995/11/29  16:53:30  kehr
 %% Changed class hierarchy below class `location-class'. Defined a
 %% location-class< predicate and wrote several regression tests. Wrote a
 %% lot of documentation for submodule `locclass'.

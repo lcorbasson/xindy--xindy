@@ -8,7 +8,7 @@
 %%
 %% History at end
 %%
-%% Module: idxentry
+%% Submodule: basetype
 %%
 %%
 \RCS $Id$%
@@ -20,7 +20,7 @@
 %
 \ModuleTitle{}
 
-\section{Part \module{basetype}}
+\section{Submodule \module{basetype}}
 
 \subsection{Introduction}
 
@@ -30,10 +30,10 @@ location. A location (and therefore the composition of a
 location-class) is a sequence of basetypes and separators. A basetype
 consists either of an alphabet or an enumeration.
 
-An \term{alphabet} is a sequence of symbols of limited size. Since \CL
-uses ISO-Latin as document alphabet, the \term{symbols} are words
-composed of letters of the ISO-Latin-alphabet. The \term{total order}
-of an alphabet is given by the position of the symbols in the
+An \term{alphabet} is a sequence of symbols of limited size. Since
+\clisp uses ISO-Latin as its document alphabet, the \term{symbols} are
+words composed of letters of the ISO-Latin-alphabet. The \term{total
+  order} of an alphabet is given by the position of the symbols in the
 sequence, therefore symbols that come later in the sequence have
 higher order number. The \term{successor} of a symbol is by default
 defined as the next symbol in the sequence. The last symbol in the
@@ -116,6 +116,9 @@ The following symbols are exported:
     \end{tabbing}
   \end{center}
   \label{def:prefix-match}
+  We also implement methods for other classes that do prefix-matching
+  on strings. If they can't return a number as a result for
+  \func{ordnum} they must return [[t]].
 \end{defgen}
 
 \begin{defcls}{alphabet}{}
@@ -136,7 +139,6 @@ The following symbols are exported:
   Constructor of \cmd{enumeration}-subclasses.
 \end{defunc}
 
-@
 
 \subsubsection{The root}
 
@@ -170,14 +172,18 @@ definition of a generic function [[prefix-match]] which is bound to
 its specific basetype instead of a function that is stored in a slot
 of the class. This allows easier dispatching over all basetypes. Apart
 from this, its signature is equivalent to the above description.
+We also use this generic function in other parts of our system, where
+we need the same behaviour (\look{sec:match.strings}).
+
+<<class \class{basetype}>>=
+(defgeneric prefix-match (str object))
+@ %def prefix-match
 
 <<class \class{basetype}>>=
 (defclass basetype ()
     ((name          :reader get-name          :initarg :name)
      (base-alphabet :reader get-base-alphabet :initarg :base-alphabet)))
-
-(defgeneric prefix-match (str object))
-@ %def basetype prefix-match
+@ %def basetype
 
 <<export-list of module \module{basetype}>>=
 (export '(basetype prefix-match))
@@ -237,9 +243,10 @@ initialize [[base-alphabet]] with the result of function
           #'char<)))
 @ %def calculate-base-alphabet
 
-This functionis only used by [[make-alphabet]] so we don't export it.
+\no This functionis only used by [[make-alphabet]] so we don't export
+it.
 
-\bigskip
+\subsubsection*{Alphabet Matching}
 
 Now follows the standard-method that should be used to match
 alphabets. It uses the global function [[prefix-match-stringlist]]
@@ -319,7 +326,11 @@ constructor.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.3  1995/11/29 16:53:29  kehr
+%% Revision 1.4  1995/12/05 13:53:36  kehr
+%% Complete restructuring of submodule `locclass'. New generic functions
+%% introduced and separation of standard- and var-classes implemented.
+%%
+%% Revision 1.3  1995/11/29  16:53:29  kehr
 %% Changed class hierarchy below class `location-class'. Defined a
 %% location-class< predicate and wrote several regression tests. Wrote a
 %% lot of documentation for submodule `locclass'.

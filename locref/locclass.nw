@@ -8,7 +8,7 @@
 %%
 %% History at end
 %%
-%% Part: location-class
+%% Submodule: location-class
 %%
 %%
 \RCS $Id$%
@@ -21,7 +21,7 @@
 
 \ModuleTitle{}
 
-\section{Part \module{locclass}}
+\section{Submodule \module{locclass}}
 
 \subsection{Introduction}
 
@@ -38,8 +38,8 @@ are supported:
 \end{center}
 %%
 \term{Standard}- and \term{Var-classes} consist of \term{basetypes}
-and \term{separators}. A Standard-class has a fixed structure whereas
-a a Var-class actually describes a family of Standard-classes.
+and \term{separators}. A standard-class has a fixed structure whereas
+a var-class actually describes a family of standard-classes.
 
 A \term{Crossreference-class} describes how cross references such as
 \textit{see}, \textit{see also under} \etc are represented.
@@ -64,7 +64,7 @@ based on the basetypes and consists of a string and a order number. A
 
 The following symbols are exported:
 
-\begin{defvcls}{location-class}{}
+\begin{defvcls}{location-class}{}%
   Virtual base-class for all location-classes
 \end{defvcls}
 
@@ -83,13 +83,13 @@ The following symbols are exported:
   \cmd{layered-location-class}.
 \end{defcls}
 
-\begin{defunc}{checked-make-standard-location-class}%%
-  {\\\hfill\tstring \x \tstrlist \res \type{standard-location-class}}%%
+\begin{defunc}{checked-make-standard-location-class}
+  {\tstring \x \tstrlist \res \type{standard-location-class}}%%
   Constructor of \class{standard-location-class}.
 \end{defunc}
 
-\begin{defunc}{checked-make-var-location-class}%%
-  {\\\hfill\tstring \x \tstrlist \res \type{var-location-class}}%%
+\begin{defunc}{checked-make-var-location-class}
+  {\tstring \x \tstrlist \res \type{var-location-class}}%%
   Constructor of \class{var-location-class}.
 \end{defunc}
 
@@ -97,7 +97,7 @@ The following symbols are exported:
   Describes the layer of a layered location-class.
 \end{defcls}
 
-\begin{defunc}{make-loccls-layer}%%
+\begin{defunc}{make-loccls-layer}
   {\tstring \x \tmarkup \res \type{loccls-layer}}%%
   Constructor of \class{loccls-layer}.
 \end{defunc}
@@ -125,17 +125,17 @@ types. The only common slot to all subclasses is [[name]].
      (ordnum  :accessor get-ordnum :initform (gen-next-loccls-ordnum))))
 @ %def location-class
 
-<<export-list of module \module{locref}>>=
-(export '(location-class))
-@
-
 \no Every derived class must define a constructor-function
 [[checked-make-name-location-class]] that makes some validation-checks
 and returns an instance of the specific class. Its signature may vary
 due to the different possibilities but its first argument must be a
-name that is stored in the [[name]]-slot.
+name that is stored in the [[name]]-slot. Additionally every derived
+location-class must implement a method [[perform-match]]
+(\look{sec:match.strings}).
 
-\smallskip
+<<export-list of module \module{locref}>>=
+(export '(location-class perform-match))
+@
 
 \no We define a relation between location-classes that is used to sort
 instances of location-references due to the order of their
@@ -199,6 +199,7 @@ because they share multiple similiarities.
 (defun make-standard-location-class (name layers join-layers)
   (make-instance 'standard-location-class
                  :name name :layers layers :join-layers join-layers))
+
 (defmethod show ((loccls layered-location-class))
   (format t "[LocCls `~A': (" (get-name loccls))
   (show (get-layers loccls))
@@ -258,7 +259,7 @@ constructors.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Other stuff --- a lot of kluges}
+\subsubsection{Other stuff --- still a lot of kluges}
 
 This function counts the number of basetypes in a layer-list. It is
 used to initialize the [[join-layers]]-value of a location-class.
@@ -300,6 +301,7 @@ should never be valid.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \sans{loccls-layer}}
+\label{sec:loccls-layer}
 
 A \term{location-class-layer} is based upon a basetype. We define this
 as an extra class to be free for future additions. (Later on... Great
@@ -323,9 +325,21 @@ idea, because we now store the markup-information into the class, too.)
 (export '(loccls-layer make-loccls-layer))
 @
 
+\no To perform matching of a string [[locstring]] against a layer
+[[layer]] we just forward the result to the basetype of thar
+location-class layer.
+
+<<class \class{loccls-layer}>>=
+(defmethod prefix-match ((locstring string)
+                         (layer     loccls-layer))
+  (prefix-match locstring (get-basetype layer)))
+@ %def prefix-match
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Class \sans{loccls-separator}}
+\label{sec:loccls-separator}
 
 The separators is simply a string. We define this as an extra class
 for future extensions.
@@ -340,7 +354,7 @@ for future extensions.
 
 (defmethod show ((separator loccls-separator))
   (write-string (get-separator separator))
-;;  (show (get-markup separator))
+  ;;  (show (get-markup separator))
   (values))
 @ %def loccls-separator make-loccls-separator
 
@@ -348,7 +362,180 @@ for future extensions.
 (export '(loccls-separator make-loccls-separator))
 @
 
+\no To perform matching of a string [[locstring]] against a separator
+[[separator]] we must decide, if [[sepstr]] is a prefix of
+[[locstring]]. If this is true we return the matched string---which is
+then equal to [[locstring]]--the rest-string and the value [[t]] to
+indicate success or a multiple value [[(nil nil nil)]] otherwise.
+
+\begin{note}
+  [[(string/= sepstr locstring)]] returns [[nil]] if [[sepstr]] equals
+  [[locstring]] and $n$ if they share a common prefix of length $n$.
+  [[(subseq locstring seplen)]] returns the rest-string of
+  [[locstring]] starting from position [[seplen]].
+\end{note}
+
+<<class \class{loccls-separator}>>=
+(defmethod prefix-match ((locstring string)
+                         (separator loccls-separator))
+  (let* ((sepstr (get-separator separator))
+         (seplen (length sepstr))
+         (match-len (string/= sepstr locstring)))
+    (cond ((or (null match-len) (eql seplen match-len))
+             (values locstring (subseq locstring seplen) t))
+          (t (values nil nil nil)))))
+@ %def perform-match
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Matching strings with location-classes}
+\label{sec:match.strings}
+
+During parsing the input stream of raw-index entries one of the tasks
+to be done is the matching of the location-reference strings against a
+location-class description. As mentioned in the technical description
+we must distiguish between standard- and var-classes.
+Standard-classes are of fixed structure and the matching succeeds only
+if \emph{all} layers and separators together match completely the
+given string. Var-classes are a set of different classes and we must
+perform so-called \emph{prefix-matching}.
+
+One remaining problem is the matching of separators in var-classes. It
+is not yet stated if separators must match always or not. If the
+strings `[[1]]', `[[1.]]' and `[[1.2]]' are compared to var-class
+`[[num.num]]' the first and third should always match, but is not yet
+clear if the second alternative should be valid or not.  Strictly
+spoken we must declare if the separator acts as a \emph{prefix} to
+hierarchy No.~2 or if it acts like a \emph{postfix} to hierarchy
+No.~1.
+\begin{quote}
+  As a solution solve this problem we declare all three possibilities
+  as valid matches. A separator may be both, a prefix or a postfix.
+  This is generally more flexible and less restrictive.
+\end{quote}
+We implement those two strategies by defining a generic function
+[[perform-match]] that dispatches over all kinds of location-classes.
+The corresponding methods implement the described matching techniques.
+
+This function tries to match the given [[locstring]] against the given
+location-class [[loccls]]. This is achieved by successively matching
+all layers and separators against the string. It returns a
+multiple-value of the form
+\begin{center}
+  (\emph{layer-string-list}, \emph{ordnum-list} : \tintlist) \quad
+  or \quad ([[nil nil]]).
+\end{center}
+The second alternative is used to indicate that a match was not
+possible.
+
+<<Matching strings with location-classes>>=
+(defgeneric perform-match (locstring locclass))
+@ %def perform-match
+
+\subsubsection*{Matching strings with standard-location-classes}
+
+We start with matching against standard-classes. So what is the way of
+success? Ok, at first we iterate over all layers of the locclass
+description until one of the following conditions occurs:
+\begin{enumerate}
+\item [[layers]] and [[locstring]] are both completely eaten up. This
+  indicates a correct and complete match.
+\item only one of [[layers]] and [[locstring]] is completely eaten up.
+  This indicates an error.
+\item [[give-up]] is true which indicates that a match failed.
+\end{enumerate}
+Inside the loop we match [[locstring]] against each layer by calling
+[[prefix-match]] dispatching over objects of type \type{locref-layer}
+or \type{loccls-separator}. If the resulting [[ordnum]] is [[nil]]
+indicating a mismatch we set the [[give-up]]-flag, otherwise the
+[[ordnum]] is appended to [[layer-list]]. If we dispatched over a
+separator we just continue.
+
+Finally we must check if there was no giving up and if not we return
+the appropriate multiple value, otherwise we return the multiple value
+[[(nil nil)]] indicating an error.
+
+<<Matching strings with location-classes>>=
+(defmethod perform-match ((locstring string)
+                          (loccls    standard-location-class))
+  (let ((layer-list  '())
+        (ordnum-list '())
+        (give-up        nil)
+        (matched-string nil)
+        (rest-string    nil)
+        (ordnum         nil))
+    (do ((layers (get-layers loccls) (cdr layers)))
+        ((or give-up
+             (let ((empty-string (= 0 (length locstring)))
+                   (empty-list   (endp layers)))
+               (cond ((and empty-string empty-list) t)
+                     ((or  empty-string empty-list) (setq give-up t))
+                     (t nil)))))
+      (let ((curr-layer (car layers)))
+        (multiple-value-setq (matched-string rest-string ordnum)
+          (prefix-match locstring curr-layer))
+        (cond ((eq ordnum nil) (setq give-up t))
+              ((numberp ordnum)
+                 (setq locstring rest-string)
+                 (setq layer-list
+                       (append layer-list (list matched-string)))
+                 (setq ordnum-list (append ordnum-list (list ordnum))))
+              (t (setq locstring rest-string)))
+        ))
+    (if (not give-up)
+        (values layer-list ordnum-list)
+        (values nil nil))))
+@ %def perform-match
+
+
+\subsubsection*{Matching strings with var-location-classes}
+
+Matching with var-classes is similar with standard-classes but the
+mechanism must behave differently when the locstring runs out. Here it
+is not an error, because we do a prefix-matching.
+\begin{note}
+  We could share the code between both methods, because they only
+  differ in the termination-expression of the [[do]]-loop. For now we
+  will stay with this solution.
+\end{note}
+
+<<Matching strings with location-classes>>=
+(defmethod perform-match ((locstring string)
+                          (loccls    var-location-class))
+  (let ((layer-list  '())
+        (ordnum-list '())
+        (give-up        nil)
+        (matched-string nil)
+        (rest-string    nil)
+        (ordnum         nil))
+    (do ((layers (get-layers loccls) (cdr layers)))
+        ((or give-up
+             (let ((empty-string (= 0 (length locstring)))
+                   (empty-list   (endp layers)))
+               (cond (empty-string t)
+                     (empty-list (setq give-up t))
+                     (t nil)))))
+      (let ((curr-layer (car layers)))
+        (multiple-value-setq (matched-string rest-string ordnum)
+          (prefix-match locstring curr-layer))
+        (cond ((eq ordnum nil) (setq give-up t))
+              ((numberp ordnum)
+                 (setq locstring rest-string)
+                 (setq layer-list
+                       (append layer-list (list matched-string)))
+                 (setq ordnum-list (append ordnum-list (list ordnum))))
+              (t (setq locstring rest-string)))
+        ))
+    (if (not give-up)
+        (values layer-list ordnum-list)
+        (values nil nil))))
+@ %def perform-match
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Markup}
 
 <<markup methods>>=
 (defmethod markup-object ((separator loccls-separator)
@@ -377,6 +564,7 @@ for future extensions.
 <<class \class{var-location-class}>>
 <<class \class{loccls-layer}>>
 <<class \class{loccls-separator}>>
+<<Matching strings with location-classes>>
 <<markup methods>>
 
 <<export-list of module \module{locref}>>
@@ -395,7 +583,11 @@ for future extensions.
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1995/11/29 16:53:29  kehr
+%% Revision 1.4  1995/12/05 13:53:39  kehr
+%% Complete restructuring of submodule `locclass'. New generic functions
+%% introduced and separation of standard- and var-classes implemented.
+%%
+%% Revision 1.3  1995/11/29  16:53:29  kehr
 %% Changed class hierarchy below class `location-class'. Defined a
 %% location-class< predicate and wrote several regression tests. Wrote a
 %% lot of documentation for submodule `locclass'.
