@@ -1,0 +1,102 @@
+# $Id$
+#----------------------------------------------------------------------
+#
+# This makefile is intended to be used only in a <platform>-directory.
+#
+# The following targets are supported:
+#
+#   compile    :  compiles the xindy-system
+#   xindy.mem  :  creates the dumped version of xindy
+#   xindy      :  created the defaults startup-script
+#   gzipped    :  created a gzipped version of the mem-file
+#   clean      :  cleans unnecessary stuff
+#
+
+# Do not change the following section!
+
+TOPDIR     = ../../current
+
+SRCDIR     = $(TOPDIR)/src
+FAS        = base.fas locref.fas idxstyle.fas index.fas markup.fas
+DEFAULTS   = defaults.xdy
+MEMFILE    = xindy.mem
+XINDY_RUN  = ./xindy.run -q -M ./base.mem
+TEST_DIR   = $(TOPDIR)/tests
+
+# End of section
+
+
+# Target section
+
+
+Makefile: Makefile.in Makefile.platform $(SRCDIR)/Makefile.in
+	cat Makefile.in Makefile.platform $(SRCDIR)/Makefile.in > Makefile
+
+all:: xindy.mem
+
+xindy.mem: $(DEFAULTS) $(FAS)
+	$(RM) $(MEMFILE)
+	$(XINDY_RUN) -x '(load "dump-xindy.xdy")'
+
+$(DEFAULTS): PLATFORM dump-xindy.xdy
+	@$(RM) $(DEFAULTS)
+	@echo "Creating file $(DEFAULTS)..."
+	@echo "(setq *load-paths* (list "     > $(DEFAULTS)
+	@echo "  (pathname \".\")"           >> $(DEFAULTS)
+	@echo "  (pathname \"$(LIBDIR)\")))" >> $(DEFAULTS)
+	@echo "(setq xindy:*xindy-platform*" >> $(DEFAULTS)
+	@echo " \"`cat PLATFORM`\" )"        >> $(DEFAULTS)
+	@echo "Finished $(DEFAULTS)."
+
+base.fas: $(SRCDIR)/base.lsp
+	$(XINDY_RUN) -c $(SRCDIR)/base.lsp -o base.fas
+locref.fas: $(SRCDIR)/locref.lsp
+	$(XINDY_RUN) -c $(SRCDIR)/locref.lsp -o locref.fas
+idxstyle.fas: $(SRCDIR)/idxstyle.lsp
+	$(XINDY_RUN) -c $(SRCDIR)/idxstyle.lsp -o idxstyle.fas
+index.fas: $(SRCDIR)/index.lsp
+	$(XINDY_RUN) -c $(SRCDIR)/index.lsp -o index.fas
+markup.fas: $(SRCDIR)/markup.lsp
+	$(XINDY_RUN) -c $(SRCDIR)/markup.lsp -o markup.fas
+
+gzipped: force
+	@ if gzip -t xindy.mem 2>/dev/null; \
+	     then echo "!!! xindy.mem is already gzipped !!!"; exit 1\
+	     else make xindy.mem; fi
+	gzip xindy.mem
+	mv xindy.mem.gz xindy.mem
+
+testsuite: PLATFORM
+	@ (PLATFORM=`cat PLATFORM`; cd $(TEST_DIR); \
+	   make XINDY_PLATFORM=$$PLATFORM testsuite)
+
+PLATFORM:
+	@! if [ ! -f PLATFORM ] ; then \
+		echo "Missing PLATFORM file ! (aborting)" 1>&2 ;\
+	   fi
+
+install: install-bin install-lib install-doc
+
+install-lib:: xindy.mem force
+	cp xindy.run xindy.mem $(INSTLIBDIR)
+	cp -R $(TOPDIR)/modules $(INSTLIBDIR)
+
+install-doc: force
+	cp -R $(TOPDIR)/Doc     $(INSTDOCDIR)
+
+clean::
+	$(RM) *.fas *.lib
+	$(RM) $(DEFAULTS) $(MEMFILE)
+
+realclean: clean
+	$(RM) Makefile
+
+finish: force
+	@echo ""
+	@echo "Compilation finished!"
+	@echo ""
+	@echo "You can run the testsuite by typing \`make testsuite'."
+	@echo ""
+
+force:
+

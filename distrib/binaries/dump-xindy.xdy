@@ -19,6 +19,10 @@
 (lisp:import markup:*markup-user-interface-definitions*)
 (lisp:import index:*raw-index-interface-definitions*)
 
+;; Install the break-driver if its feature exists.
+#+:BREAK-DRIVER-OFF
+(setq *break-driver* #'xindy:*break-driver*)
+
 (gc)
 
 (saveinitmem "xindy.mem" :quiet t)
