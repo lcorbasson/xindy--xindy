@@ -1,3 +1,10 @@
+Tue Dec  5 19:37:04 1995  Roger Kehr  (kehr@spock)
+
+	* Set up the new modules `index' and `idxclass'. Got a first sight
+	  and restructured great parts of them. Added some description to
+	  the intro.nw by describing the reagression tests. It is now time
+	  to restructure the whole system. We'll see. (5 hrs)
+
 Sat Dec  2 20:24:53 1995    (kehr@eliade.hrz.th-darmstadt.de)
 
 	* Today I finished the complete restructuring of submodule
