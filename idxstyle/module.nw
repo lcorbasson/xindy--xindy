@@ -1,0 +1,60 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: idxclass
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+
+\chapter{Module \module{idxclass}}
+
+%\ModuleTitle{}
+
+\section{Introduction}
+
+This module implements the abstract data type \type{idxclass}. An
+indexclass describes the environment in which indexentries are
+processed. It serves as a `database' that keeps all the neccessary
+information about the index processing. It keeps definitions of
+location-classes, the rule-based substitution scheme for indexkeys,
+the processing rules \etc. It implements \emph{built-in} definitions
+and reads in the user-defined indexstyle-definitions.
+
+The module is separated into the following parts:
+\begin{deflist}{idxclass}
+\item [idxclass]
+\item [idxstyle]
+\end{deflist}
+
+\noindent The representation of the dependencies of all submodules is
+as follows:
+
+\begin{verbatim}
+idxclass:
+idxstyle:
+\end{verbatim}
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/12/05 18:46:13  kehr
+%% Added module `idxclass' and restructured some parts.
+%%
+%%

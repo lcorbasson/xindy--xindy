@@ -1,0 +1,320 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Submodule: indexclass
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+\ModuleTitle{}
+
+
+\section{Submodule \module{indexclass}}
+
+\subsection{Introduction}
+
+Indexclasses serve as a container for indexstyle-information. They
+hold information about configured basetypes, location-classes, rules,
+and the successor-tables. The indexclass [[default]] is predefined in
+module [[idxstyle]]. The user may or may not define additional
+classes. If a user wants to generate an index for a specific class the
+working-scope is defined as the union of indexclass [[default]] and
+the selected class. Userdefined indexclasses have precedence over the
+default indexclass.
+
+The global variable [[*active-idxcls-name*]] keeps track of the
+currently active indexclass.
+
+\subsection{Abstract Specification}
+
+\subsubsection{Definition}
+
+A indexclass is a set
+\begin{center}
+  $\{$ \emph{name, basetypes, locclasses, rules, succ-table,
+    not-succ-table, keyword-markup} $\}$
+\end{center}
+with
+\begin{deflistit}{indexclass}
+\item [name] is a \tstring containing the name of the indexclass.
+\item [basetypes] is a list of \type{basetype}.
+\item [locclasses] is a list of \type{locclass}.
+\item [rules] is a list of \type{rule}.
+\item [succ-table]
+\item [not-succ-table]
+\item [markup]
+\end{deflistit}
+
+
+\subsubsection{Operation}
+
+
+\subsection{Concrete Specification}
+
+\subsubsection{External interface}
+
+The following symbols are exported:
+
+\begin{defcls}{indexclass}{}
+  Decribes indexclasses.
+\end{defcls}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Class \class{indexclass}}
+
+The following class is a straightforward implementation of the
+abstract specification. When specifying new location-classes we need a
+fast lookup for bastypes via their names. Therefore we sort in slot
+[[basetypes]] a hash-table that allows easy lookup by name. It
+specifies all already defined basetypes. New basetypes are added to
+the hash-table, when reading the indexstyle. Slot [[locclasses]] is a
+association list whose key is the location-class name and its datum is
+the location-class itself. We will hide the access to both sets with
+adequate functions to be free with further modifications.
+
+After instantiation the indexclass will be incrementally filled with
+information.
+
+<<class indexclass>>=
+(defclass indexclass ()
+    ((name           :reader   get-name           :initarg :name)
+     (basetypes      :accessor get-basetypes
+                     :initform (make-hash-table   :test #'equal))
+     (locclasses     :accessor get-locclasses     :initform '())
+     (succ-table     :accessor get-succ-table     :initform (make-hash-table))
+     (not-succ-table :accessor get-not-succ-table :initform (make-hash-table))
+     (keyword-markup :accessor get-keyword-markup :initform '())
+     (merge-to-rules :accessor get-merge-to-rules :initform '())
+     (sep-mix-rule   :accessor get-sep-mix-rule   :initform '())
+     ))
+
+(defun make-indexclass (name)
+  (make-instance 'indexclass :name name))
+@ %def indexclass make-indexclass
+
+<<export-list of module \module{idxclass}>>=
+(export '(indexclass make-indexclass))
+@
+
+<<class indexclass>>=
+(defmethod show ((idxcls indexclass))
+  (format t "Indexclass `~A':" (get-name idxcls))
+  (format t "~%Basetypes:  ")
+  (show (get-basetypes idxcls))
+  (format t "~%LocClasses: ")
+  (show (get-locclasses idxcls))
+  (format t "~%Merge-to-Rules: ")
+  (show (get-merge-to-rules idxcls))
+  (format t "~%Sep-Mix-Rule: ")
+  (show (get-sep-mix-rule idxcls))
+  (format t "~%Entries:      ")
+  (show (get-index idxcls))
+  (format t "~%Markup:      ")
+  (show (get-keyword-markup idxcls))
+  (format t "~%")
+  (values))
+@ %def indexclass make-indexclass
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Mutators for \class{indexclass}}
+
+We now need to define the interface how an indexclass may be modified.
+After creation of an indexclass we need appropriate modifiers. The
+idea is to define a set of generic functions with their methods that
+allow setting and appending of entries to an existing indexclass
+instance.
+
+We define a generic function [[set-indexclass]] that allows setting of
+a special value of information into an indexclass and
+[[add-indexclass]] to somehow add some information to an indexclass.
+We just dispatch over the types of the second argument and achieve a
+reasonable simplicity.
+
+The reason we use names of indexclasses instead of the
+indexclass-objects theirselves lies in the available information when
+parsing the indexstyle. At this point of time the user actually deals
+with names and has no knowledge about real \Lisp-objects.
+
+<<Mutators for \class{indexclass}>>=
+(defgeneric add-indexclass (idxcls-name element))
+
+(defgeneric set-indexclass (idxcls-name element))
+
+(defmethod add-indexclass ((idxcls-name string)
+                           (basetype basetype))
+  (let ((idxcls (find-indexclass idxcls-name)))
+    (setf (gethash (get-name basetype) (get-basetypes idxcls)) basetype)))
+
+(defmethod add-indexclass ((idxcls-name string)
+                           (loccls location-class))
+  (let ((idxcls (find-indexclass idxcls-name)))
+    (setf (get-locclasses idxcls)
+          (acons (get-name loccls) loccls (get-locclasses idxcls)))))
+
+(defmethod add-indexclass ((idxcls-name string)
+                           (keyword-markup markup))
+  (let ((idxcls (find-indexclass idxcls-name)))
+    (setf (get-keyword-markup idxcls)
+          (append (get-keyword-markup idxcls) (list keyword-markup)))))
+
+(defmethod add-indexclass ((idxcls-name string)
+                           (merge-to-rule rule-merge-to))
+  (let ((idxcls (find-indexclass idxcls-name)))
+    (setf (get-merge-to-rules idxcls)
+          (append (get-merge-to-rules idxcls) (list merge-to-rule)))))
+
+(defmethod set-indexclass ((idxcls-name string)
+                           (sep-mix-rule rule-separated-mixed))
+  (let ((idxcls (find-indexclass idxcls-name)))
+    (setf (get-sep-mix-rule idxcls) sep-mix-rule)))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{The hierarchy of indexclasses}
+
+To have read-access to the currently active scope of indexclasses we
+define functions that give back already stored information. These
+functions are prefixed with [[find-]] analogous to the \Lisp-function
+[[find]].
+
+<<external interface>>=
+(defun find-basetype (basetype-name)
+  (gethash basetype-name
+           (get-basetypes (find-indexclass *active-idxcls-name*))))
+
+(defun find-location-class (loccls-name)
+  (assoc loccls-name
+         (get-locclasses (find-indexclass *active-idxcls-name*))))
+@ %def find-basetype find-location-class
+
+The following function iterates over all location-classes in the
+current scope\footnote{currently it only supports the currently active
+  indexclass} and calls the given function [[apply-func]] for all
+existing location-classes. Function [[apply-func]] takes three
+arguments: the current indexclass, the current location-class and the
+[[&rest]] arguments given to [[forall-location-classes]].
+
+<<external interface>>=
+(defun forall-location-classes (apply-func
+                                &rest arguments)
+  (let ((idxcls (find-indexclass *active-idxcls-name*)))
+    (maphash #'(lambda (key loccls)
+                 (declare (ignore key))
+                 (funcall apply-func idxcls loccls arguments))
+             (get-locclasses idxcls))))
+@
+
+The following function iterates over all \textsf{merge-to}--rules in
+the current indexclass-scope.
+
+<<external interface>>=
+(defun forall-merge-to-rules  (apply-func
+                               &rest arguments)
+  (let ((idxcls (find-indexclass *active-idxcls-name*)))
+    (dolist (merge-to-rule (get-merge-to-rules idxcls))
+      (funcall apply-func idxcls merge-to-rule arguments))))
+@
+
+<<external interface>>=
+(defun get-separate-mixed-rule ()
+  (get-sep-mix-rule (find-indexclass *active-idxcls-name*)))
+@
+
+<<external interface>>=
+(defun find-indexclass (idxcls-name)
+  (cdr (assoc idxcls-name *indexclasses* :test #'equal)))
+
+(defun create-indexclass (idxcls-name)
+  (unless (find-indexclass idxcls-name)
+    (setf *indexclasses*
+          (acons idxcls-name (make-indexclass idxcls-name) *indexclasses*)))
+  (setq *active-idxcls-name* idxcls-name))
+@
+
+
+<<*>>=
+;; $Id$
+;;
+
+(in-package 'idxclass)
+
+(use-package 'clos)
+(use-package 'xp)
+
+(require 'base)
+(use-package 'base)
+
+(require 'locref)
+(use-package 'locref)
+
+<<class \class{indexclass}>>
+<<Mutators for \class{indexclass}>>
+@
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/12/05 18:46:11  kehr
+%% Added module `idxclass' and restructured some parts.
+%%
+%% Revision 1.9  1995/07/23  20:48:32  kehr
+%% Major changes in the location-reference-processing. Full support for
+%% merge-to and separate-mixed--rules. The whole processing of
+%% location-refernces is more structured now and can be easier maintained.
+%%
+%% Revision 1.8  1995/07/23  14:14:08  kehr
+%% Added support for merge-to--rule. Now works and creates
+%% virtual-attributes as expected.
+%%
+%% Revision 1.7  1995/07/15  20:50:22  kehr
+%% Added markup-support for location-references, sorting of indexentries
+%% and separation of location-reference-lists into location-class
+%% subgroups.
+%%
+%% Revision 1.6  1995/07/11  23:33:07  kehr
+%% Added indexclass-structure as assoc-list. Completed
+%% indexentry-inserting with merge-insert-feature. Now we are nearlx
+%% finished with the data-setup and can start to handle the
+%% location-references.
+%%
+%% Revision 1.5  1995/07/11  15:14:15  kehr
+%% Today I finished the definition of indexentries. They now will be
+%% inserted into the index when a appropriate location-class was finished.
+%%
+%% Revision 1.4  1995/07/11  00:47:43  kehr
+%% Now starting to work on a full index. Detection of indexclasses is
+%% nearly finished an we can start to define indexentries to make that
+%% thing work.
+%%
+%% Revision 1.3  1995/07/10  19:08:16  kehr
+%% Now corrected setup of location-classes. The was a bug in the
+%% add-indexclass methods and some wrong reader-functions.
+%%
+%% Revision 1.2  1995/07/10  00:58:16  kehr
+%% Completed noweb-support. Current version must be debugged to correct
+%% some minor errors.
+%%
+%% Revision 1.1  1995/07/09  18:14:27  kehr
+%% Initial checkin.
+%%

@@ -1,0 +1,84 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Imakefile for source of the xindy-Project
+ *
+ * (history at end)
+ */
+
+#define NotangleStandardOptions -L';; line %L "%F"%N'
+#define NoweaveStandardOptions -n # -index # -delay
+
+/* needed modules */
+#include <Project.imk>
+#include <noweb-wrap.imk>
+#include <DejaGnu.imk>
+
+#include <Lisp-mod.imk>
+/* This must be included after the redefinition of the above rule(s) */
+#include <Lisp.imk>
+
+/* Some convenience Macros */
+
+#ifndef NowebLispTarget
+#define NowebLispTarget(program)     	                                @@\
+NowebTarget(program,lsp,)
+#endif
+
+/* In conjunction with the modified LispModuleTarget()-macro, we
+   append the target `source' to all sources in the project (this is
+   somewhat stupid, but works for now). Now the sources will be
+   generated before clisp starts to compile anything.
+*/
+#ifndef NowebFullLispTarget
+#define NowebFullLispTarget(source) 	                                @@\
+src:: source.lsp							@@\
+source:: $(ALL_LISP_SRC)						@@\
+NowebLispTarget(source)							@@\
+LispModuleTarget(source)					       	@@\
+ReleaseLispObjects(LispModuleObjects(source))				@@\
+/*NowebLaTeXDocTargetWrap(source,$(NW_HEADER),$(NW_TRAILER))*/
+#endif
+
+
+XCOMM ------------------------------------------------------------
+XCOMM continue in Imakefile
+
+      NW_HEADER  = $(TOPDIR)/noweb/header.tex
+      NW_TRAILER = $(TOPDIR)/noweb/trailer.tex
+
+      ALL_LISP_SRC = idxclass.lsp
+
+      ALL_NOWEB_SRC= module.nw idxclass.nw
+
+NowebFullLispTarget(idxclass)
+
+NowebLaTeXDocTargetsWrap(module,$(NW_HEADER),$(NW_TRAILER),$(ALL_NOWEB_SRC))
+
+CVSAdd(*.nw)
+CVSAdd(Imakefile)
+CVSCommentLeader("%% ", *.nw)
+CVSCommit()
+
+clean::
+	$(RM) modules.tex
+
+   TESTDIR     = $(TOPDIR)/testsuite
+#   RUNTEST_OPT = --outdir $(TESTDIR)
+
+DejaGnuTarget(idxclass,$(TESTDIR))
+
+/* ============================================================
+ *
+ * $Log$
+ * Revision 1.1  1995/12/05 18:46:09  kehr
+ * Added module `idxclass' and restructured some parts.
+ *
+ *
+
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */
