@@ -24,11 +24,11 @@
 
 #include <stdio.h>
 
-FILE* stat = NULL;
+static FILE* stat = NULL;
 
-int lineno    = 1;
-int braces    = 0;
-int xref_mode = 0;
+static int lineno    = 1;
+static int braces    = 0;
+static int xref_mode = 0;
 
 #define err( msg ) fprintf(stderr, "line %d: %s\n", lineno, msg)
 
@@ -36,7 +36,7 @@ int xref_mode = 0;
 #define OPEN_RANGE   1
 #define CLOSE_RANGE  2
 
-int range = NO_RANGE;
+static int range = NO_RANGE;
 
 /* This function quotes a character, if necessary. */
 
@@ -102,7 +102,7 @@ ARGCLOSE \}
 <encap>{RCLOSE}        { range = CLOSE_RANGE; }
 <encap>{ARGOPEN}       { /* close :attr "... */
                          printf("\" :xref (\"");
-			 fprintf(stat, "\txref\n");
+			 if (stat) { fprintf(stat, "\txref\n"); }
 		         braces++;
 		         BEGIN(xref);
                        }
@@ -110,7 +110,7 @@ ARGCLOSE \}
                            {ECHO; braces--;}
                          else {
 			   putchar('"');
-			   fprintf(stat, "\tlocref\n");
+			   if (stat) { fprintf(stat, "\tlocref\n"); }
 			   switch (range) {
 			     case OPEN_RANGE : printf(" :open-range");
 			       break;
@@ -121,9 +121,7 @@ ARGCLOSE \}
 			 }
                        }
 <encap>.              { ECHO;
-                        if (stat) {
-			  fwrite(yytext, sizeof(char), 1, stat);
-			}
+                        if (stat) { fwrite(yytext, sizeof(char), 1, stat); }
 	              }
 
 
@@ -172,11 +170,14 @@ main(int argc, char* argv[])
     stat = fopen(argv[1], "w");
   }
   yylex();
-  fclose(stat);
+  if (stat) { fclose(stat); }
 }
 
 /*
   $Log$
+  Revision 1.7  1999/04/27 08:56:59  kehr
+  Another checkin.
+
   Revision 1.6  1997/02/13 14:42:50  kehr
   Minor changes.
 

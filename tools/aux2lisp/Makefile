@@ -13,7 +13,7 @@ LEXLIB = -ll
 # Usual stuff
 #
 RM     = /bin/rm -f
-CFLAGS = -O2
+CFLAGS = # -O2
 
 # here we go
 
