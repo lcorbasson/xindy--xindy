@@ -72,8 +72,9 @@ expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 xsend {(mapc #'(lambda (x) (add ic (make-category-attribute x))) '("bold" "italic" "slanted" "default" "typewriter"))}
 expect -re ".*bold.*typewriter.*$prompt$" { pass "$test" }
 
-xsend {(initialize-category-attributes '(("bold" "italic" "slanted") "default" "typewriter") (get-cat-attrs ic) (get-implicit-subst-rules ic))}
+xsend {(initialize-category-attributes '(("bold" "italic" "slanted") ("default") ("typewriter")) ic)}
 expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }
+
 
 xsend {(setq ca-bold (lookup (get-cat-attrs ic) "bold"))}
 expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
