@@ -816,14 +816,27 @@ The following chunks implement the searchpath.
 
 (defun set-searchpath-by-string (searchpath-str)
   (set-searchpath (string-to-searchlist searchpath-str)))
+@
 
+\noindent the [[CLISP]] OS/2-features are
+
+<<CLISP OS/2-features>>=
+> *features*
+(CLOS LOOP COMPILER CLISP CLTL1 COMMON-LISP INTERPRETER CLISP2
+  LOGICAL-PATHNAMES FFI PC386 OS/2
+)
+@
+
+<<Setting the searchpath>>=
 (defun string-to-searchlist (str)
   (let ((paths '())
         pos)
     (nreverse
      (loop (when (equalp str "")
              (return (push :default paths)))
-           (setq pos (position #\: str))
+           (setq pos (position #+UNIX #\:
+                               #+OS/2 #\;
+                               str))
            (if pos
                (progn
                  (push (subseq str 0 pos) paths)
@@ -861,8 +874,9 @@ pathname.
   (let* ((pn     (pathname pathname-str))
          (fname  (file-namestring pn)))
     (if (string/= fname "")
-        (make-pathname :directory
-                       (append (pathname-directory pn) (list fname)))
+        (make-pathname :device (pathname-device pn)
+                       :directory (append (pathname-directory pn)
+                                          (list fname)))
         pn)))
 @
 
@@ -891,7 +905,8 @@ return it immediately.
   (let ((dir-dir (pathname-directory pn-dir))
         (dir-sub (pathname-directory pn-sub)))
     (cond ((not (eq :relative (car dir-sub))) pn-sub)
-          (t (make-pathname :directory (append dir-dir (cdr dir-sub))
+          (t (make-pathname :device (pathname-device pn-dir)
+                            :directory (append dir-dir (cdr dir-sub))
                             :name (pathname-name pn-sub)
                             :type (pathname-type pn-sub))))))
 @ %def append-pathnames
@@ -1079,6 +1094,10 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.29  1997/04/18 14:08:41  kehr
+%% Added OS/2-specific changes into the source. Modifications have been
+%% written by Joerg Diederich.
+%%
 %% Revision 1.28  1997/03/27 17:16:29  kehr
 %% Modifications that make Allegro CL now be able to find files, too.
 %%
