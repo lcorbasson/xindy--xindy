@@ -34,27 +34,35 @@
 ;; We merge all words containing uppercase letters into the lowercase
 ;; letters. This is TeX-specific stuff for german documents.
 
-(merge-rule "\\\"a" "ae")
-(merge-rule "\\\"o" "oe")
-(merge-rule "\\\"u" "ue")
-(merge-rule "\\ss"  "ss")
-(merge-rule "\\\"A" "AE")
-(merge-rule "\\\"O" "OE")
-(merge-rule "\\\"U" "UE")
-(merge-rule "\\SS"  "SS")
+(merge-rule "\~"a" "ae")
+(merge-rule "\~"o" "oe")
+(merge-rule "\~"u" "ue")
+(merge-rule "\ss"  "ss")
+(merge-rule "\~"A" "AE")
+(merge-rule "\~"O" "OE")
+(merge-rule "\~"U" "UE")
+(merge-rule "\SS"  "SS")
 
 ;; Additionally we must ignore the discretionaty hyphens for the
 ;; merging-process, the input-encoding for the german sharp `s' and
 ;; remove reading hyphens at in the keywords.
 
 (merge-rule "\\discretionary.*{.*}{.*}{.*}" "")
-(merge-rule "\\IeC  {\\ss }" "ss")
+(merge-rule "\IeC  {\ss }" "ss" :string)
 (merge-rule "-" "")
 
 ;; Finally we removed some mathematical symbolr from the keywords such
 ;; that the keyword `$(n+{1\over 2})$' was sorted like `n+over2'.
+;; We use the :string switch to indicate that these are not regular
+;; expressions.
 
-(merge-rule "[-$(){}\\]" "")
+(merge-rule "-" "" :string)
+(merge-rule "$" "" :string)
+(merge-rule "(" "" :string)
+(merge-rule ")" "" :string)
+(merge-rule "{" "" :string)
+(merge-rule "}" "" :string)
+(merge-rule "\" "" :string)
 
 ;;
 ;; Sort-rules
@@ -97,24 +105,24 @@
 
 ;; The following markup is similar to the way makeindex tags an index:
 
-(markup-index :open  "\\begin{theindex}\n\n"
-              :close "\n\n\\end{theindex}\n"
+(markup-index :open  "\begin{theindex}~n~n"
+              :close "~n~n\end{theindex}~n"
               :tree)
 
-(markup-letter-group-list :sep "\n\n  \\indexspace\n\n")
+(markup-letter-group-list :sep "~n~n  \indexspace~n~n")
 
-(markup-letter-group :open       "{\\large"
-                     :open-head  "\\textbf{"
-                     :close-head "}}\n\\nopagebreak\\vskip 2pt\\nopagebreak\n"
+(markup-letter-group :open       "{\large"
+                     :open-head  "\textbf{"
+                     :close-head "}}~n\nopagebreak\vskip 2pt\nopagebreak~n"
                      :upcase)
 
 ;; The list of indexentries
 
 (markup-indexentry-list)
 
-(markup-indexentry :open "\n  \\item "           :depth 0)
-(markup-indexentry :open "\n    \\subitem "      :depth 1)
-(markup-indexentry :open "\n      \\subsubitem " :depth 2)
+(markup-indexentry :open "~n  \item "           :depth 0)
+(markup-indexentry :open "~n    \subitem "      :depth 1)
+(markup-indexentry :open "~n      \subsubitem " :depth 2)
 
 ;; We do not use any explicit tags around keywords
 
@@ -123,11 +131,10 @@
 
 ;; Location-references
 
-(markup-locclass-list :open "\\enspace" :sep ", ")
+(markup-locclass-list :open "\enspace" :sep ", ")
 (markup-locref-list   :sep ", ")
 
-(markup-locref  :open "\\textbf{" :close "}"
-                :attr "textbf")
+(markup-locref  :open "\textbf{" :close "}" :attr "textbf")
 
 ;; Turn on tracing-mode...
 

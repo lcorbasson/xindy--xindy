@@ -13,22 +13,22 @@
 
 #+STEP2
 (progn
-  (markup-index :open  "\n\\begin{theindex}\n"
-		:close "\n\n\\end{theindex}\n"
+  (markup-index :open  "~n\begin{theindex}~n"
+		:close "~n~n\end{theindex}~n"
 		:tree)
 
   (markup-locref :class "page-numbers" :attr "definition"
-		 :open  "{\\bf " :close "}")
+		 :open  "{\bf " :close "}")
 
   (markup-locref-list :sep ", ")
-  (markup-locclass-list :open "\\quad{}")
+  (markup-locclass-list :open "\quad{}")
   )
 
 #+STEP3
 (progn
-  (markup-indexentry :open "\n \\item "            :depth 0)
-  (markup-indexentry :open "\n    \\subitem "      :depth 1)
-  (markup-indexentry :open "\n      \\subsubitem " :depth 2)
+  (markup-indexentry :open "~n \item "            :depth 0)
+  (markup-indexentry :open "~n    \subitem "      :depth 1)
+  (markup-indexentry :open "~n      \subsubitem " :depth 2)
 
   (markup-range :class "page-numbers" :sep "--")
   )
@@ -42,7 +42,7 @@
   (sort-rule "é" "e")
   (sort-rule "ç" "c")
 
-  (sort-rule "\\texttt{(.*)}" "\\1" :again)
+  (sort-rule "\\texttt{\(.*\)}" "\1" :again :bregexp)
   )
 
 #+STEP5
@@ -51,5 +51,5 @@
       ("a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m"
 	   "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z"))
 
-  (markup-letter-group-list :sep "\n\n \\indexspace\n")
+  (markup-letter-group-list :sep "~n~n \indexspace~n")
   )

@@ -29,7 +29,7 @@
 
 ;; The markup (no letter groups)
 
-(markup-indexentry-list :sep "\n")
+(markup-indexentry-list :sep "~n")
 (markup-locclass-list :open " ")
 (markup-range :sep "-")
 (markup-locref-list :sep ", ")

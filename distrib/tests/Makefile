@@ -9,11 +9,11 @@
 RM = /bin/rm -f
 
 XINDY_PLATFORM = test-arch
-ALLTESTS       = startup mappings infII xref-1 ex1 ex2 deep
+ALLTESTS       = attr1 startup mappings infII xref-1 ex1 ex2 deep err1 err2
 TESTS 	       = $(ALLTESTS)
-XINDY_DIR      = ../binaries/$(XINDY_PLATFORM)
+XINDY_DIR      = ../../binaries/$(XINDY_PLATFORM)
 LOGFILE	       = -l $$tst.xlg
-TRACE	       = # -t
+TRACE	       = -L 1 # -t
 
 testsuite: banner clean tests compare
 
@@ -27,7 +27,7 @@ tests: force
 	  echo "!!! You must run \`make' in directory $(XINDY_DIR) before running any tests !!!";\
 	  echo; exit 1;\
 	 fi
-	@ XINDY_LIBDIR=$(XINDY_DIR);\
+	-@ XINDY_LIBDIR=$(XINDY_DIR);\
 	  export XINDY_LIBDIR; \
 	  for tst in $(TESTS); do \
 	     echo ;\
@@ -45,7 +45,7 @@ compare: force
 	  echo "Checking tests";\
 	  echo "--------------";\
 	  echo
-	@-for tst in $(TESTS); do \
+	-@for tst in $(TESTS); do \
 	     if [ -x $$tst.sh ] ; then \
 	        $$tst.sh ; \
 	     else \
