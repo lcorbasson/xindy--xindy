@@ -1,3 +1,13 @@
+Wed Jul 24 14:18:03 1996  Roger Kehr  <kehr@spock>
+
+	* Added support for IRIX-machines.
+	* Wrote a tutorial for xindy. Fixed some subtle bug when running
+	  the examples from the tutorial.
+	* Recompiled the binaries for Linux since the keyword-mappings did
+	  not always work correctly. Bug was caused due to an incorrect
+	  linking procedure which included parts of the GNU libc
+	  regexp-stuff.
+
 Thu Jul 18 18:08:39 1996  Roger Kehr  <kehr@spock>
 
 	* Some weeks later. The pre-release is finished. I don't want to

@@ -23,7 +23,7 @@ ProjectTop()
 
 /* ATTN: modules are made in list order! */
 BuildProjectModules(Report Presentation Doc\
-		    submodules testsuite tools)
+		    submodules testsuite tools packages)
 
 CVSAdd(ChangeLog Imakefile)
 CVSAdd(Report Presentation)
@@ -34,29 +34,11 @@ CVSAdd(rx)
 CVSAdd(tools)
 CVSAdd(submodules)
 
-Distrib : Release force
-	@ for subdir in Doc tools;\
-          do\
-           (echo; echo "changing to $$subdir"; cd $$subdir; make Distrib);\
-          done
+commit-src: force
+	    cvs commit submodules
 
-/* Make the packages */
-
-BINDIR  = ./distrib/binaries
-VERSION = 0.9
-GTAR    = gtar -czv --dereference -f
-
-#define Package(version,platform)					@@\
-Packages:: xindy-version-platform.tar.gz				@@\
-xindy-version-platform.tar.gz: force					@@\
-	$(GTAR) xindy-version-platform.tar.gz $(BINDIR)/platform
-
-Package($(VERSION),rs6000-aix)
-Package($(VERSION),hppa-hpux)
-Package($(VERSION),sun4-solaris)
-
-clean::
-	$(RM) xindy-$(VERSION)-*.tar.gz
+tag: force
+     @ echo "cvs rtag release-02-August-1996 xindy"
 
 force:
 
@@ -64,7 +46,10 @@ force:
 /*======================================================================
  *
  * $Log$
- * Revision 1.14  1996/07/11 14:15:16  kehr
+ * Revision 1.15  1996/08/02 17:52:16  kehr
+ * .
+ *
+ * Revision 1.14  1996/07/11  14:15:16  kehr
  * Complete Major checkin before changing the letter-groups.
  *
  * Revision 1.13  1996/06/24  09:08:30  kehr

@@ -7,8 +7,8 @@ set timeout 20
 xsend "(use-package 'clos)"
 expect_T
 
-xsend "(use-package 'xp)"
-expect_T
+#xsend "(use-package 'xp)"
+#expect_T
 
 #
 # this loads the idxstyle package

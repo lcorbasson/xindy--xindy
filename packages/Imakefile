@@ -12,37 +12,48 @@ XCOMM continue in Imakefile
 
 /* Make the packages */
 
-MAJOR	   = 0.9
-BINMINOR   =
-SRCMINOR   =
-BINVERSION = $(MAJOR)$(BINMINOR)
-SRCVERSION = $(MAJOR)$(SRCMINOR)
-XINDYDIR = ./xindy-$(MAJOR)
-BINDIR   = $(XINDYDIR)/binaries
-TESTDIR  = $(XINDYDIR)/tests
 GTAR     = gtar -czv --dereference -f
 
-#define Package(version,platform)					@@\
+#define BinPackage(version,platform)					@@\
 all:: xindy-version-platform.tar.gz					@@\
-packages:: xindy-version-platform.tar.gz				@@\
-build-clean::								@@\
-	(cd ../$(BINDIR)/platform; make clean)				@@\
+bin-packages:: xindy-version-platform.tar.gz				@@\
+bin-clean::								@@\
+	(cd $(TOPDIR)/distrib/binaries/platform; make -f Makefile.in; make clean; rm Makefile)	@@\
 xindy-version-platform.tar.gz:	   					@@\
-	(cd $(TOPDIR); $(GTAR) ./packages/xindy-version-platform.tar.gz $(BINDIR)/platform)
+	(cd $(TOPDIR)/distrib; $(GTAR) ../packages/xindy-version-platform.tar.gz ./binaries/platform)
 
-Package($(BINVERSION),rs6000-aix)
-Package($(BINVERSION),hppa-hpux)
-Package($(BINVERSION),sun4-solaris)
-Package($(BINVERSION),i386-linux-elf)
 
-SRCPACKDIRS = ./xindy-$(SRCVERSION)/[I-Z]* ./xindy-$(SRCVERSION)/Doc ./xindy-$(SRCVERSION)/bin ./xindy-$(SRCVERSION)/modules ./xindy-$(SRCVERSION)/src ./xindy-$(SRCVERSION)/tests
+#define BasePackage(version)		   				@@\
+base-packages:: xindy-version.tar.gz					@@\
+xindy-version.tar.gz:							@@\
+	(cd $(TOPDIR)/..; $(GTAR) ./xindy/packages/xindy-version.tar.gz	./xindy/xindy-version/[I-Z]* ./xindy/xindy-version/Doc	./xindy/xindy-version/modules ./xindy/xindy-version/src ./xindy/xindy-version/tests )
 
-all:: xindy-$(SRCVERSION).tar.gz
-xindy-$(SRCVERSION).tar.gz:
-	(cd $(TOPDIR); $(GTAR) ./packages/xindy-$(SRCVERSION).tar.gz $(SRCPACKDIRS))
+#define DocPackage(version,name)					@@\
+all:: xindy-version-name.dvi.gz xindy-version-name.ps.gz		@@\
+doc-packages:: xindy-version-name.dvi.gz xindy-version-name.ps.gz	@@\
+xindy-version-name.dvi.gz:	   					@@\
+	gzip < $(TOPDIR)/xindy-version/Doc/name.dvi > xindy-version-name.dvi.gz	@@\
+xindy-version-name.ps.gz:	   					@@\
+	gzip < $(TOPDIR)/xindy-version/Doc/name.ps > xindy-version-name.ps.gz
 
-clean::
-	$(RM) xindy-*.tar.gz
+
+/* Now comes real stuff */
+
+BinPackage(1.0,rs6000-aix)
+BinPackage(1.0,hppa-hpux)
+BinPackage(1.0,sun4-solaris)
+BinPackage(1.0,i386-linux-elf)
+BinPackage(1.0,mips-irix)
+
+BasePackage(1.0)
+
+DocPackage(1.0,manual)
+DocPackage(1.0,tutorial)
+
+
+all:: xindy.tar.gz
+xindy.tar.gz:
+	(cd $(TOPDIR); $(GTAR) ./packages/xindy.tar.gz $(SRCPACKDIRS))
 
 DISTRIB = ../distrib
 
@@ -52,15 +63,22 @@ distrib : force
            (echo; echo "changing to $$subdir"; cd $$subdir; make Distrib);\
           done
 
-build-clean::
+all-clean: bin-clean test-clean
+
+test-clean::
 	(cd ../$(TESTDIR); make clean)
+
+Release:
 
 force:
 
 /* ============================================================
  *
  * $Log$
- * Revision 1.1  1996/07/18 15:38:39  kehr
+ * Revision 1.2  1996/08/02 17:52:56  kehr
+ * .
+ *
+ * Revision 1.1  1996/07/18  15:38:39  kehr
  * The managing of packages is now in a separate subdirectory.
  *
  *
