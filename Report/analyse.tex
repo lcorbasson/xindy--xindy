@@ -1021,6 +1021,8 @@ formulieren analog:
 
 \newcommand{\TotOrdLokRefLe}{%
   \mbox{$<_{\mbox{\scriptsize\textit{loc}}}$}\xspace}%
+\newcommand{\TotOrdLokRefLeq}{%
+  \mbox{$\leq_{\mbox{\scriptsize\textit{loc}}}$}\xspace}%
 \newcommand{\TotOrdLokRefEq}{%
   \mbox{$=_{\mbox{\scriptsize\textit{loc}}}$}\xspace}%
 
@@ -1113,44 +1115,67 @@ Nach der Definition des direkten Nachfolgers wollen wir noch kurz eine
 formale Beschreibung der \emph{Bereichsbildung} hinzufügen.
 
 \begin{Def}
-  Ein \emph{Bereich} ist ein Paar
-  \begin{center}
-    $\range = ( \locref_1, \locref_2 )$
-  \end{center}
-  von Lokationsreferenzen gleicher Klasse, für die gilt: \
-  $\locref_1\,\TotOrdLokRefLe\,\locref_2$. Die beiden
-  Lokationsreferenzen bilden die untere und obere Grenze des Bereichs.
-  Wie bereits eingeführt notieren wir Bereiche in der Form
-  \Range{x}{y}.
+  Seien $l_1,\ldots,l_n$ Lokationsreferenzen gleicher Lokationsklasse
+  mit \Succp({$l_i$}) = $l_{i+1}$ mit $i=0,\ldots,n-1$;
+  \textit{catattr\/}($l_i$)=\textit{catattr\/}($l_j$), $\forall
+  i,j=0,\ldots,n$; so ist \Range{$l_1$}{$l_n$} ein \emph{Bereich}.
 \end{Def}
+
+\noindent Wir sagen, da"s $l_1$ die \emph{untere} oder \emph{linke}
+Bereichsgrenze ist, und $l_n$ die \emph{obere} oder \emph{rechte}
+Bereichsgrenze ist.
+
 
 \newcommand{\joinrange}[1]{\mbox{\textit{join-range\/}(\mbox{#1})}}
 
 \begin{Def}
   Eine Operation \joinrange{} für die Bereichsbildung ist
-  folgendermaßen definiert. Seien $l_1, l_2$ Lokationsreferenzen mit
-  gleichem Kategorieattribut; $P = \Range{$p_1$}{$p_2$}$ und $Q =
-  \Range{$q_1$}{$q_2$}$ Bereiche, so gilt:
+  folgendermaßen definiert. Seien $L = \Range{$l_l$}{$l_r$}$, $K =
+  \Range{$k_l$}{$k_r$}$ Bereiche mit gleichem Kategorieattribut, so
+  gilt:
 
-  \smallskip
-  \raggedright
-  \begin{tabular}{l@{ }l@{= }lll}
-    1.& \joinrange{$l_1,l_2$} & \Range{$l_1$}{$l_2$} & falls
-    \Succp($l_1,l_2$).\\%%
-    2.& \joinrange{$Q$,$l_2$} &
-    \Range{$q_1$}{$l_2$} & falls  \Succp({$q_2,l_2$}).\\%%
-    3.& \joinrange{$l_1$,$P$} & \Range{$l_1$}{$p_2$} & falls
-    \Succp({$l_1,p_1$}).\\%%
-    4.& \joinrange{$P,Q$} & \Range{$p_1$}{$q_2$} & falls $q_1$
-    \TotOrdLokRefLe $p_2$ \ $\vee$ \ \Succp({$p_2,q_1$}).
-  \end{tabular}
+  \newcommand{\tleq}[1]{\TotOrdLokRefLeq{#1}}
+
+  \[
+  \joinrange{L,K} = \left\{
+    \begin{array}{ll}
+      \Range{\textit{min}($l_l,k_l$)\,}{\,\textit{max}($l_r,k_r$)} &
+      {\normalfont\textrm{falls}} \quad \left\{
+      \begin{array}{l}
+        l_l\ \tleq\ k_l\ \tleq\ l_r \ \hfill \vee\\
+        l_l\ \tleq\ k_r\ \tleq\ l_r \ \hfill \vee\\
+        k_l\ \tleq\ l_l\ \tleq\ k_r \ \hfill \vee\\
+        k_l\ \tleq\ l_r\ \tleq\ k_r \ \hfill \vee\\
+        \Succp(l_r) = k_l \hfill \vee\\
+        \Succp(k_r) = l_l
+      \end{array} \right.\\
+    \textit{undefiniert} & {\normalfont\textrm{sonst}}.
+    \end{array}
+  \right.\]
 \end{Def}
-%
-Regel~1 trifft keine Aussage darüber, ab wievielen aufeinander
-folgenden Nachfolgern eine Bereichsbildung zulässig ist (hier:
-2~Nachfolger).
 
-Wir lassen bei der Bereichsbildung nur Lokationsreferenzen mit
+%\begin{Def}
+%  Eine Operation \joinrange{} für die Bereichsbildung ist
+%  folgendermaßen definiert. Seien $l_1, l_2$ Lokationsreferenzen mit
+%  gleichem Kategorieattribut; $P = \Range{$p_1$}{$p_2$}$ und $Q =
+%  \Range{$q_1$}{$q_2$}$ Bereiche, so gilt:
+%
+%  \smallskip
+%  \raggedright
+%  \begin{tabular}{l@{ }l@{= }lll}
+%    1.& \joinrange{$l_1,l_2$} & \Range{$l_1$}{$l_2$} & falls
+%    \Succp($l_1,l_2$).\\%%
+%    2.& \joinrange{$Q$,$l_2$} &
+%    \Range{$q_1$}{$l_2$} & falls  \Succp({$q_2,l_2$}).\\%%
+%    3.& \joinrange{$l_1$,$P$} & \Range{$l_1$}{$p_2$} & falls
+%    \Succp({$l_1,p_1$}).\\%%
+%    4.& \joinrange{$P,Q$} & \Range{$p_1$}{$q_2$} & falls $q_1$
+%    \TotOrdLokRefLe $p_2$ \ $\vee$ \ \Succp({$p_2,q_1$}).
+%  \end{tabular}
+%\end{Def}
+%
+
+\noindent Wir lassen bei der Bereichsbildung nur Lokationsreferenzen mit
 gleichem Kategorieattribut zu. Würden wir die Bereichsgrenzen mit
 unterschiedlichen Attributen wie \zB \quasi{\textbf{14}--17}
 kennzeichnen, so ist nicht einsichtig klar, welche semantische
@@ -1679,9 +1704,12 @@ in Abschnitt~\ref{sec:lokationsverarbeitung:regeln} durchgeführt wird.
 
 %%
 %% $Log$
-%% Revision 1.3  1995/10/26 16:05:36  kehr
-%% Ver"anderung des Titels und Hinzunahme des Abstracts und der Danksagung.
+%% Revision 1.4  1995/11/03 15:53:16  kehr
+%% Neuformulierung der join-range()-Funktion.
 %%
+Revision 1.3  1995/10/26  16:05:36  kehr
+Ver"anderung des Titels und Hinzunahme des Abstracts und der Danksagung.
+
 %% Revision 1.2  1995/10/20  11:57:32  kehr
 %% Korrektur nach Klaus' Durchsicht.
 %%
