@@ -42,6 +42,395 @@ interface of the indexstyle.
 
 \subsection{Concrete Specification}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{A specialized exporting mechanism}
+
+We need a mechanism for importing only interface-definitions from this
+package to other packages. Using [[export]] wouldn't be a good iead
+since it imports too many symbols to the package running the indexer.
+We define a symbol [[*user-interface-definitions*]] which is a
+importable list of symbols.
+
+It can be imported by other packages by calling
+\begin{center}
+  \texttt{(import idxstyle:*idxstyle-user-interface-definitions*)} .
+\end{center}
+
+<<User-interface-definitions>>=
+(defparameter *idxstyle-user-interface-definitions*
+  '(*indexstyle*
+    *default-minimum-range-length*
+    define-alphabet
+    define-alphabet*
+    define-enumeration
+    define-location-class
+    define-crossref-class
+    define-location-class-order
+    define-attributes
+    define-letter-group
+    merge-rule
+    sort-rule
+    ))
+@ %def *idxstyle-user-interface-definitions*
+
+<<Export-list of submodule \module{intface}>>=
+(export '*idxstyle-user-interface-definitions*)
+(export *idxstyle-user-interface-definitions*)
+@
+
+\subsubsection{Helpers}
+
+The following functions help the macros to test for syntactic errors.
+Since in the submodule \module{idxstyle} we start to define the
+default indexstyle which is expressed via macros that use the
+following function [[stringify]], this function must be evaluable
+during the compilation process. This is assured through the
+[[eval-when]] special form.
+
+<<Helpers>>=
+(eval-when (compile load eval)
+  (defun stringify (name)
+    (declare (inline))
+    (etypecase name
+      (symbol (symbol-name name))
+      (string name)
+      (number (write-to-string name)))))
+
+(defun list-of-strings-p (x)
+  (cond ((not (listp x)) nil)
+        ((every #'(lambda (elt)
+                    (or (stringp elt) (symbolp elt) (numberp elt)))
+                x))))
+@ %def stringify list-of-strings-p
+
+\no Here we introduce a well-formed-list. In this term a well-formed
+list is a list containing only non-empty lists as elements. All
+elements of the latter lists must be strings. The input list must be a
+list containing symbols, strings, numbers and lists. The latter lists
+may only consist of symbols, strings and numbers. Function
+[[make-well-formed-list]] transforms ist argument into a well-formed
+list if possible and signals an error, if its argument is of wrong
+type or structure.
+
+<<Helpers>>=
+(defun make-well-formed-list (attr-list)
+  (mapcar #'(lambda (x)
+              (cond ((null x)
+                       (error "empty lists are not allowed !"))
+                    ((or (symbolp x) (stringp x) (numberp x))
+                       (list (stringify x)))
+                    ((listp x)
+                       (map-to-strings x))))
+          attr-list))
+
+(defun map-to-strings (slist)
+  (mapcar #'(lambda (x)
+              (cond ((null x)
+                       (error "empty lists are not allowed !"))
+                    ((or (symbolp x) (stringp x) (numberp x))
+                       (stringify x))
+                    ((listp  x)
+                       (error "nesting level too deep !"))
+                    (t (error "~A is not a string !" x))))
+          slist))
+
+(export '(stringify list-of-strings-p
+          make-well-formed-list map-to-strings))
+@ %def make-well-formed-list map-to-strings
+
+
+\subsubsection{Alphabets}
+
+We introduce two different forms of alphabet definitions. The first
+macro does \emph{not} expand the [[string-list]]-argument, whereas the
+second form \emph{does} so. The second form is intended to define
+alphabets via \Lisp-expressions and should only be used by an
+experienced user.
+
+<<Defining alphabets>>=
+(defmacro define-alphabet (&optional name string-list)
+  (cond ((null name)
+           (error "missing argument <name> !"))
+        ((not (or (symbolp name) (stringp name)))
+           (error "~A is not a symbol or a string" name))
+        ((not (listp string-list))
+           (error "missing argument <string-list> !"))
+        ((not (list-of-strings-p string-list))
+           (error "~A is not a list of strings" string-list))
+        (t `(LET ((NAME (STRINGIFY ',name)))
+             (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
+               (WARN "redefining alphabet `~A'" NAME))
+             (ADD *indexstyle* (MAKE-ALPHABET NAME ',string-list))))))
+
+(defmacro define-alphabet* (&optional name string-list)
+  (cond ((null name)
+           (error "missing argument <name> !"))
+        ((not (or (symbolp name) (stringp name)))
+           (error "~A is not a symbol or a string" name))
+        ((not (listp string-list))
+           (error "missing argument <string-list> !"))
+        (t (let ((scar (car string-list)))
+             (if (and (symbolp scar) (fboundp scar))
+                 `(LET ((NAME (STRINGIFY ',name))
+                        (STRING-LIST ,string-list)) #| evaluates string-list |#
+                   (UNLESS (LIST-OF-STRINGS-P STRING-LIST)
+                     (ERROR "~A is not a list of strings" STRING-LIST))
+                   (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
+                     (WARN "redefining alphabet `~A'" NAME))
+                   (ADD *indexstyle* (MAKE-ALPHABET NAME STRING-LIST))))))))
+@ %def define-expand-alphabet define-expand-alphabet*
+
+
+\subsubsection{Enumerations}
+
+<<Defining enumerations>>=
+(defmacro define-enumeration (&optional name prefix-match-func base-alphabet)
+  (cond ((null name)
+           (error "missing argument <name> !"))
+        ((not (or (symbolp name) (stringp name)))
+           (error "~A is not a symbol or a string" name))
+        ((null prefix-match-func)
+           (error "missing argument <prefix-match-function> !"))
+        (t (let* ((name   (stringify name))
+                  (symbol (make-symbol
+                           (concatenate 'string "ENUMERATION-" name))))
+             `(LET () #| PROGN instead of LET () yields a runtime error !? |#
+               (IF (LOOKUP-BASETYPE *indexstyle* ,name)
+                   (WARN "redefining alphabet `~A'" ,name)
+                   (PROGN
+                     (DEFCLASS ,symbol (ENUMERATION) ())
+                     (ADD *indexstyle*
+                          (MAKE-ENUMERATION ',symbol ,name ,base-alphabet))))
+               (DEFMETHOD PREFIX-MATCH ((STR STRING) (ENUM ,symbol))
+                 (FUNCALL ,prefix-match-func STR)))))))
+@ %def define-enumeration
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Location-classes}
+
+\paragraph{Structured location-classes}
+
+<<Defining location-classes>>=
+(defmacro define-location-class (&rest args)
+  (destructuring-switch-bind (name
+                              layer-list
+                              &key (min-range-length
+                                    *default-minimum-range-length*)
+                              &switch (var :var))
+      args
+    (cond
+      ((null name)
+	 (error "missing argument <name> !"))
+      ((null layer-list)
+	 (error "missing argument <layer-list> !"))
+      ((not (list-of-strings-p layer-list))
+	 (error "~A is not a list of strings" layer-list))
+      (t `(LET ((NAME (STRINGIFY ',name))
+		(LAYERS (MAPCAR #'(LAMBDA (X)
+				    (LET* ((LAYER (STRINGIFY X))
+					   (BASETYPE
+					    (LOOKUP-BASETYPE *indexstyle*
+							     LAYER)))
+				      (IF BASETYPE
+					  (MAKE-LOCCLS-LAYER BASETYPE)
+					  (MAKE-LOCCLS-SEPARATOR LAYER))))
+				',layer-list)))
+	   (COND ((LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
+		    (WARN "replacing cross-reference-class `~A' is not allowed !"
+			  NAME))
+		 (t (WHEN (LOOKUP-LOCATION-CLASS *indexstyle* NAME)
+		      (WARN "redefining location-reference-class `~A' !" NAME))
+		    (ADD *indexstyle*
+			 ,(if var
+			      `(CHECKED-MAKE-VAR-LOCATION-CLASS NAME LAYERS
+				,min-range-length)
+			      `(CHECKED-MAKE-STANDARD-LOCATION-CLASS NAME LAYERS
+				,min-range-length))))
+		 ))))))
+@ %def define-location-class
+
+
+\paragraph{Cross-reference location-classes}
+
+<<Defining location-classes>>=
+(defmacro define-crossref-class (&rest args)
+  (destructuring-switch-bind (name
+                              &switch (verified :unverified))
+      args
+    (cond
+      ((null name)
+	 (error "missing argument <name> !"))
+      (t `(LET ((NAME (STRINGIFY ',name)))
+	   (cond ((LOOKUP-LOCATION-CLASS *indexstyle* NAME)
+		    (WARN "replacing location-reference-class `~A' is not allowed !"
+			  NAME))
+		 (t (WHEN (LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
+		      (WARN "redefining crossref-location-class `~A'" NAME))
+		    (ADD *indexstyle*
+			 ,(if verified
+			      `(MAKE-UNVERIFIED-CROSSREF-LOCATION-CLASS NAME)
+			      `(MAKE-VERIFIED-CROSSREF-LOCATION-CLASS NAME))))))))))
+@ %def define-crossref-class
+
+
+\paragraph{Defininig the order of location-classes}
+
+<<Defining location-classes>>=
+(defmacro define-location-class-order (olist)
+  (cond ((not (listp olist))
+           (error "missing argument <list> !"))
+        ((not (list-of-strings-p olist))
+           (error "~A is not a list of strings" olist))
+	(t `(LET ((CTR 1))
+	     (MAPC #'(LAMBDA (NAME)
+		       (LET* ((NEW-NAME (STRINGIFY NAME))
+			      (LOCCLS
+			       (CDR (LOOKUP-LOCATION-CLASS *indexstyle*
+							   NEW-NAME))))
+			 (INCF CTR)
+			 (COND (LOCCLS (SET-ORDNUM CTR LOCCLS))
+			       (t (WARN "unknown location-class `~A'"
+					NEW-NAME)))))
+	      ',olist)))))
+@ %def define-location-class-order
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Attributes}
+\label{sec:intface:attributes}
+
+<<Defining attributes>>=
+(defmacro define-attributes (&optional attr-list)
+  (cond ((null attr-list)
+           (error "missing argument <attribute-list> !"))
+        (t (let* ((wf-attr-list (make-well-formed-list attr-list))
+                  (plain-list (apply #'concatenate 'list wf-attr-list))
+                  )
+             `(PROGN
+               (MAPCAR #'(LAMBDA (CATATTR)
+                           (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
+                               (WARN "ignoring redefinition of attribute `~A' !"
+                                     CATATTR)
+                               (ADD *indexstyle*
+                                    (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
+                ',plain-list)
+               (INITIALIZE-CATEGORY-ATTRIBUTES ',wf-attr-list *indexstyle*))
+             ))))
+@ %def define-attributes
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Keyword sort- and merge-rules}
+\label{sec:keyword-rules}
+
+We have three different forms of keyword rules which can be described by
+a pair (\term{pattern}, \term{replacement}). The first one is the
+so-called \term{string-substitution} and is expressed by a pair of
+strings. If the pattern string matches the substring is substituted by
+its replacement.
+
+The second form is described as a character substitution. If the given
+pattern and replacement string are both of length 1, we assume that a
+general character substitution is wanted.
+
+The last form is defined by a regular expression and a replacement
+template. The regexp describes the pattern that should be replaced by
+the replacement if a valid match was found.
+
+For the implementation of the latter We use the GNU
+regular-expression-library [[rx]] for our implementation. This library
+is used by the library [[ordrules]], which is a foreign library
+implemented in C. The \Lisp-system must be extended by both libraries.
+The feature form [[#+:ORDRULES]] is used to include the regular
+expression support. Since the user-interface defined in the standard
+distribution allows no low-level access we need to explicitly import
+the neccessary functions ourselves. The following chunk is included in
+the root-chunk of module \module{idxstyle}.
+
+<<Use [[ordrules]]-package if available>>=
+(eval-when (eval load compile)
+  (when (member "ORDRULES"
+                (mapcar #'package-name
+                        (list-all-packages))
+                :test #'equal)
+    (pushnew ':ORDRULES *features*)))
+@
+%%
+\begin{arguments}{replacement}
+  \item[pattern] describes the pattern of the substitution rule. It
+    must be specified as a string.
+  \item[replacement] describes the replacement. It is also a string.
+  \item[isreject] is a boolean value that describes if the matching is
+    also possible on substituted patterns.
+\end{arguments}
+%%
+For more information see the description of the [[ordrules]]-package.
+
+<<Defining keyword rules>>=
+#+:ORDRULES
+(defmacro merge-rule (&rest args)
+  (destructuring-switch-bind (pattern
+                              replacement
+                              &switch (again :again))
+      args
+    (cond ((null pattern)
+             (error "missing argument <pattern> !"))
+          ((null replacement)
+             (error "missing argument <replacement> !"))
+          (t `(ORDRULES:ADD-KEYWORD-MERGE-RULE ,pattern ,replacement
+               ,(if again 1 0))))))
+
+#-:ORDRULES
+(defmacro merge-rule (&rest args)
+  (declare (ignore args))
+  (warn "merge-rule not supported! ignoring definition"))
+@ %def merge-rule
+
+<<Defining keyword rules>>=
+#+:ORDRULES
+(defmacro sort-rule (&rest args)
+  (destructuring-switch-bind (pattern
+                              replacement
+                              &switch (again :again))
+      args
+    (cond ((null pattern)
+             (error "missing argument <pattern> !"))
+          ((null replacement)
+             (error "missing argument <replacement> !"))
+          (t `(ORDRULES:ADD-KEYWORD-SORT-RULE ,pattern ,replacement
+               ,(if again 1 0))))))
+
+#-:ORDRULES
+(defmacro sort-rule (&rest args)
+  (declare (ignore args))
+  (warn "sort-rule not supported! ignoring definition"))
+@ %def sort-rule
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Letter groups}
+
+<<Defining letter groups>>=
+(defmacro define-letter-group (letter group)
+  (cond ((null letter)
+           (error "missing argument <letter> !"))
+	((null group)
+           (error "missing argument <group> !"))
+	((not (stringp letter))
+           (error "argument <letter> must be a string !"))
+	((not (integerp group))
+           (error "argument <group> must be a integer number !"))
+	(t `(LET ()
+	     (ADD-LETTER-GROUP *INDEXSTYLE* ,letter ,group)))))
+@ %def define-letter-group
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsubsection{Destructuring-switch-bind --- from Gabor Herr}
 
 The following code was borrowed from Gabor Herr which he used in his
@@ -166,309 +555,6 @@ NIL in cases where no switch keyword was found in EXPR.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{A specialized exporting mechanism}
-
-We need a mechanism for importing only interface-definitions from this
-package to other packages. Using [[export]] wouldn't be a good iead
-since it imports too many symbols to the package running the indexer.
-We define a symbol [[*user-interface-definitions*]] which is a
-importable list of symbols.
-
-It can be imported by other packages by calling
-\begin{center}
-  \texttt{(import idxstyle:*user-interface-definitions*)} .
-\end{center}
-
-<<User-interface-definitions>>=
-(defparameter *user-interface-definitions*
-  '(*indexstyle*
-    *default-minimum-range-length*
-    define-alphabet
-    define-enumeration
-    define-expand-alphabet
-    define-location-class
-    define-attributes
-    ))
-@ %def *user-interface-definitions*
-
-<<Export-list of submodule \module{intface}>>=
-(export '*user-interface-definitions*)
-(export *user-interface-definitions*)
-@
-
-\subsubsection{Helpers}
-
-The following functions help the macros to test for syntactic errors.
-Since in the submodule \module{idxstyle} we start to define the
-default indexstyle which is expressed via macros that use the
-following function [[stringify]], this function must be evaluable
-during the compilation process. This is assured through the
-[[eval-when]] special form.
-
-<<Helpers>>=
-(eval-when (compile load eval)
-  (defun stringify (name)
-    (declare (inline))
-    (etypecase name
-      (symbol (symbol-name name))
-      (string name)
-      (number (write-to-string name)))))
-
-(defun list-of-strings-p (x)
-  (cond ((not (listp x)) nil)
-        ((every #'(lambda (elt)
-                    (or (stringp elt) (symbolp elt) (numberp elt)))
-                x))))
-@ %def stringify list-of-strings-p
-
-\no Here we introduce a well-formed-list. In this term a well-formed
-list is a list containing only non-empty lists as elements. All
-elements of the latter lists must be strings. The input list must be a
-list containing symbols, strings, numbers and lists. The latter lists
-may only consist of symbols, strings and numbers. Function
-[[make-well-formed-list]] transforms ist argument into a well-formed
-list if possible and signals an error, if its argument is of wrong
-type or structure.
-
-<<Helpers>>=
-(defun make-well-formed-list (attr-list)
-  (mapcar #'(lambda (x)
-              (cond ((null x)
-                       (error "empty lists are not allowed !"))
-                    ((or (symbolp x) (stringp x) (numberp x))
-                       (list (stringify x)))
-                    ((listp x)
-                       (map-to-strings x))))
-          attr-list))
-
-(defun map-to-strings (slist)
-  (mapcar #'(lambda (x)
-              (cond ((null x)
-                       (error "empty lists are not allowed !"))
-                    ((or (symbolp x) (stringp x) (numberp x))
-                       (stringify x))
-                    ((listp  x)
-                       (error "nesting level too deep !"))
-                    (t (error "~A is not a string !" x))))
-          slist))
-
-(export '(stringify list-of-strings-p
-          make-well-formed-list map-to-strings))
-@ %def make-well-formed-list map-to-strings
-
-
-\subsubsection{Alphabets}
-
-We introduce two different forms of alphabet definitions. The first
-macro does \emph{not} expand the [[string-list]]-argument, wheras the
-second form \emph{does} so. Which of the two forms is chosen depends
-on the first symbol in the argument [[string-list]], which is assumed
-an expression if its [[car]] is a symbol which is [[fboundp]]. I'm not
-experienced enough with \Lisp to decide if this is a good idea. Any
-comments are helpful.
-
-<<Defining alphabets>>=
-(defmacro define-alphabet (&optional name string-list)
-  (cond ((null name)
-           (error "missing argument <name> !"))
-        ((not (or (symbolp name) (stringp name)))
-           (error "~A is not a symbol or a string" name))
-        ((not (listp string-list))
-           (error "missing argument <string-list> !"))
-        ((let ((scar (car string-list)))
-           (and (symbolp scar) (fboundp scar)))
-           `(LET ((NAME (STRINGIFY ',name))
-                  (STRING-LIST ,string-list))
-             (UNLESS (LIST-OF-STRINGS-P STRING-LIST)
-               (ERROR "~A is not a list of strings" STRING-LIST))
-             (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
-               (WARN "redefining alphabet `~A'" NAME))
-             (ADD *indexstyle* (MAKE-ALPHABET NAME STRING-LIST))))
-        ((not (list-of-strings-p string-list))
-           (error "~A is not a list of strings" string-list))
-        (t `(LET ((NAME (STRINGIFY ',name)))
-             (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
-               (WARN "redefining alphabet `~A'" NAME))
-             (ADD *indexstyle* (MAKE-ALPHABET NAME ',string-list))))))
-@ %def define-expand-alphabet
-
-
-\subsubsection{Enumerations}
-
-<<Defining enumerations>>=
-(defmacro define-enumeration (&optional name prefix-match-func base-alphabet)
-  (cond ((null name)
-           (error "missing argument <name> !"))
-        ((not (or (symbolp name) (stringp name)))
-           (error "~A is not a symbol or a string" name))
-        ((null prefix-match-func)
-           (error "missing argument <prefix-match-function> !"))
-        (t (let* ((name   (stringify name))
-                  (symbol (make-symbol
-                           (concatenate 'string "ENUMERATION-" name))))
-             `(LET () #| PROGN instead of LET () yields a runtime error !? |#
-               (IF (LOOKUP-BASETYPE *indexstyle* ,name)
-                   (WARN "redefining alphabet `~A'" ,name)
-                   (PROGN
-                     (DEFCLASS ,symbol (ENUMERATION) ())
-                     (ADD *indexstyle*
-                          (MAKE-ENUMERATION ',symbol ,name ,base-alphabet))))
-               (DEFMETHOD PREFIX-MATCH ((STR STRING) (ENUM ,symbol))
-                 (FUNCALL ,prefix-match-func STR)))))))
-@ %def define-enumeration
-
-
-\subsubsection{Location-classes}
-
-<<Defining location-classes>>=
-(defmacro define-location-class (&rest args)
-  (destructuring-switch-bind (name
-                              layer-list
-                              &key (min-range-length
-                                    *default-minimum-range-length*)
-                              &switch (var :var))
-      args
-    (cond ((null name)
-             (error "missing argument <name> !"))
-          ((null layer-list)
-             (error "missing argument <layer-list> !"))
-          ((not (list-of-strings-p layer-list))
-             (error "~A is not a list of strings" layer-list))
-          (t `(LET ((NAME (STRINGIFY ',name))
-                    (LAYERS (MAPCAR #'(LAMBDA (X)
-                                        (LET* ((LAYER (STRINGIFY X))
-                                               (BASETYPE
-                                                (LOOKUP-BASETYPE *indexstyle*
-                                                                 LAYER)))
-                                          (IF BASETYPE
-                                              (MAKE-LOCCLS-LAYER BASETYPE)
-                                              (MAKE-LOCCLS-SEPARATOR LAYER))))
-                                    ',layer-list)))
-               (WHEN (LOOKUP-LOCATION-CLASS *indexstyle* NAME)
-                 (WARN "redefining location-class `~A'" NAME))
-               (ADD *indexstyle*
-                ,(if var
-                     `(CHECKED-MAKE-VAR-LOCATION-CLASS NAME LAYERS
-                       ,min-range-length)
-                     `(CHECKED-MAKE-STANDARD-LOCATION-CLASS NAME LAYERS
-                       ,min-range-length)))
-               )))))
-@ %def define-location-class
-
-
-\subsubsection{Attributes}
-\label{sec:intface:attributes}
-
-<<Defining attributes>>=
-(defmacro define-attributes (&optional attr-list)
-  (cond ((null attr-list)
-           (error "missing argument <attribute-list> !"))
-        (t (let* ((wf-attr-list (make-well-formed-list attr-list))
-                  (plain-list (apply #'concatenate 'list wf-attr-list))
-                  )
-             `(PROGN
-               (MAPCAR #'(LAMBDA (CATATTR)
-                           (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
-                               (WARN "ignoring redefinition of attribute `~A' !"
-                                     CATATTR)
-                               (ADD *indexstyle*
-                                    (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
-                ',plain-list)
-               (INITIALIZE-CATEGORY-ATTRIBUTES ',wf-attr-list *indexstyle*))
-             ))))
-@ %def define-attributes
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsubsection{Keyword sort- and merge-rules}
-\label{sec:keyword-rules}
-
-We have three different forms of keyword rules which can be described by
-a pair (\term{pattern}, \term{replacement}). The first one is the
-so-called \term{string-substitution} and is expressed by a pair of
-strings. If the pattern string matches the substring is substituted by
-its replacement.
-
-The second form is described as a character substitution. If the given
-pattern and replacement string are both of length 1, we assume that a
-general character substitution is wanted.
-
-The last form is defined by a regular expression and a replacement
-template. The regexp describes the pattern that should be replaced by
-the replacement if a valid match was found.
-
-For the implementation of the latter We use the GNU
-regular-expression-library [[rx]] for our implementation. This library
-is used by the library [[ordrules]], which is a foreign library
-implemented in C. The \Lisp-system must be extended by both libraries.
-The feature form [[#+:ORDRULES]] is used to include the regular
-expression support. Since the user-interface defined in the standard
-distribution allows no low-level access we need to explicitly import
-the neccessary functions ourselves. The following chunk is included in
-the root-chunk of module \module{idxstyle}.
-
-<<Use [[ordrules]]-package if available>>=
-(eval-when (eval load compile)
-  (when (member "ORDRULES"
-                (mapcar #'package-name
-                        (list-all-packages))
-                :test #'equal)
-    (pushnew ':ORDRULES *features*)))
-@
-%%
-\begin{arguments}{replacement}
-  \item[pattern] describes the pattern of the substitution rule. It
-    must be specified as a string.
-  \item[replacement] describes the replacement. It is also a string.
-  \item[isreject] is a boolean value that describes if the matching is
-    also possible on substituted patterns.
-\end{arguments}
-%%
-For more information see the description of the [[ordrules]]-package.
-
-<<Defining keyword rules>>=
-#+:ORDRULES
-(defmacro merge-rule (&rest args)
-  (destructuring-switch-bind (pattern
-                              replacement
-                              &switch (again :again))
-      args
-    (cond ((null pattern)
-             (error "missing argument <pattern> !"))
-          ((null replacement)
-             (error "missing argument <replacement> !"))
-          (t `(ADD-KEYWORD-MERGE-RULE ,pattern ,replacement
-               ,(if again 1 0))))))
-
-#-:ORDULES
-(defmacro merge-rule (&rest args)
-  (declare (ignore args))
-  (warn "merge-rule not supported! ignoring definition"))
-@ %def merge-rule
-
-<<Defining keyword rules>>=
-#+:ORDRULES
-(defmacro sort-rule (&rest args)
-  (destructuring-switch-bind (pattern
-                              replacement
-                              &switch (again :again))
-      args
-    (cond ((null pattern)
-             (error "missing argument <pattern> !"))
-          ((null replacement)
-             (error "missing argument <replacement> !"))
-          (t `(ADD-KEYWORD-SORT-RULE ,pattern ,replacement
-               ,(if again 1 0))))))
-
-#-:ORDULES
-(defmacro sort-rule (&rest args)
-  (declare (ignore args))
-  (warn "sort-rule not supported! ignoring definition"))
-@ %def sort-rule
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \subsubsection{The submodule root}
 
 <<Submodule \module{intface}>>=
@@ -481,6 +567,7 @@ For more information see the description of the [[ordrules]]-package.
 <<Defining location-classes>>
 <<Defining attributes>>
 <<Defining keyword rules>>
+<<Defining letter groups>>
 
 <<User-interface-definitions>>
 
@@ -493,7 +580,11 @@ For more information see the description of the [[ordrules]]-package.
 
 
 %% $Log$
-%% Revision 1.11  1996/05/20 08:47:56  kehr
+%% Revision 1.12  1996/05/29 14:15:29  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.11  1996/05/20  08:47:56  kehr
 %% Major release of the modules locref, idxstyle and index.
 %%
 %% Revision 1.10  1996/05/09  11:49:35  kehr

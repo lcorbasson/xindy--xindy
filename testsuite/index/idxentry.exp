@@ -76,19 +76,19 @@ xsend {(initialize-category-attributes '(("bold" "italic" "slanted") ("default")
 expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }
 
 
-xsend {(setq ca-bold (lookup (get-cat-attrs ic) "bold"))}
+xsend {(setq ca-bold (lookup-catattr ic "bold"))}
 expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
 
-xsend {(setq ca-slanted (lookup (get-cat-attrs ic) "slanted"))}
+xsend {(setq ca-slanted (lookup-catattr ic "slanted"))}
 expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
 
-xsend {(setq ca-italic (lookup (get-cat-attrs ic) "italic"))}
+xsend {(setq ca-italic (lookup-catattr ic "italic"))}
 expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
 
-xsend {(setq ca-default (lookup (get-cat-attrs ic) "default"))}
+xsend {(setq ca-default (lookup-catattr ic "default"))}
 expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
 
-xsend {(setq ca-typewriter (lookup (get-cat-attrs ic) "typewriter"))}
+xsend {(setq ca-typewriter (lookup-catattr ic "typewriter"))}
 expect  -re "\#<CATEGORY.*>.*$prompt$" { pass "$test" }
 
 xsend {(add-explicit-substitution-rule ic ca-default ca-typewriter)}
@@ -100,8 +100,8 @@ expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 #
 # create some structured-locrefs
 #
-xsend {(setq ie (make-indexentry :main-key '("Keyword") :idxclass ic))}
-expect -re "\#<INDEXENTRY.*>.*$prompt$" { pass "$test" }
+xsend {(setq ie (make-index-entry :main-key '("Keyword") :idxclass ic))}
+expect -re "\#<INDEX-ENTRY.*>.*$prompt$" { pass "$test" }
 
 # xsend {(pprint ie)}
 # expect -re ".*{.*}.*$prompt$" { pass "$test" }
@@ -212,8 +212,8 @@ expect -re "\#<.*SET-STATE-DELETED.*>.*$prompt$" { pass "$test" }
 xsend {(make-ready ic)}
 expect -re "\#<INDEX.*$prompt$" { pass "$test" }
 
-xsend {(process-group pg ic)}
-expect -re "\#<.*LOCREF-CLASS-GROUP.*>.*$prompt$" { pass "$test" }
+# xsend {(process-group pg ic)}
+# expect -re "\#<.*LOCREF-CLASS-GROUP.*>.*$prompt$" { pass "$test" }
 
-xsend {(pprint ie)}
-expect -re ".*{.*}.*$prompt$" { pass "$test" }
+# xsend {(pprint ie)}
+# expect -re ".*{.*}.*$prompt$" { pass "$test" }

@@ -100,9 +100,9 @@ The indexstyle itself will be initialised later after all functions are known.
               str)))
     `(QUOTE ,str-expansion)))
 
-(define-alphabet "ALPHA"  (string-expand "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-(define-alphabet "alpha"  (string-expand "abcdefghijklmnopqrstuvwxyz"))
-(define-alphabet "digits" (string-expand "0123456789"))
+(define-alphabet* "ALPHA"  (string-expand "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+(define-alphabet* "alpha"  (string-expand "abcdefghijklmnopqrstuvwxyz"))
+(define-alphabet* "digits" (string-expand "0123456789"))
 @ %def string-expand
 
 \no Here follows a general-purpose function
@@ -141,7 +141,7 @@ basetype-characters. Quiet easy, isn't it ?
                     #'(lambda (str)
                         (prefix-match-for-radix-numbers str 10))
                     "01234567890")
-@
+@ %def arabic-numbers
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -189,7 +189,11 @@ basetype-characters. Quiet easy, isn't it ?
 @
 
 %% $Log$
-%% Revision 1.9  1996/05/20 08:47:54  kehr
+%% Revision 1.10  1996/05/29 14:15:26  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.9  1996/05/20  08:47:54  kehr
 %% Major release of the modules locref, idxstyle and index.
 %%
 %% Revision 1.8  1996/05/09  11:49:32  kehr

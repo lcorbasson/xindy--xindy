@@ -392,11 +392,12 @@ the [[same-ordnum-list]].
 (when make-flag
   (let ((range-len (- (car (last prev-ordnum)) (car (last first-ordnum)))))
      (if (>= range-len join-length)
-         (push (list (list (make-location-range :first-ordnum first-ordnum
+         (push (list (list
+		       (make-location-range :first-ordnum first-ordnum
                                                 :locclass loccls
                                                 :inner  locref-stack
                                                 :first  first-locref
-                                                :last   locrefs
+                                                :last   (caar locref-stack)
                                                 :length range-len)))
                result-list)
          (push locref-stack result-list))
@@ -636,7 +637,11 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
-%% Revision 1.3  1996/05/20 08:49:01  kehr
+%% Revision 1.4  1996/05/29 14:15:46  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.3  1996/05/20  08:49:01  kehr
 %% Major release of the modules locref, idxstyle and index. Added picture
 %% for the range-building FSM with a complete rewrite.
 %%

@@ -79,20 +79,20 @@ incrementally filled with more information.
 <<Class \class{indexclass}>>=
 (defclass indexclass ()
     ((name                 :reader   get-name
-                           :initarg :name)
+                           :initarg :name :type string)
      (basetypes            :accessor get-basetypes
-                           :initform (make-hash-table :test #'equal))
+                           :initform (make-hash-table :test #'equal :size 10))
      (cat-attrs            :accessor get-cat-attrs
                            :initform (make-catattr-groups))
-     (locclasses           :accessor get-locclasses
+     (locref-classes       :accessor get-locref-classes
                            :initform '() :type list)
-     (keyword-merge-rules  :accessor get-keyword-merge-rules
-                           :initform '())
-     (keyword-sort-rules   :accessor get-keyword-sort-rules
-                           :initform '())
+     (xref-classes         :accessor get-xref-classes
+                           :initform '() :type list)
+     (letter-groups        :accessor get-letter-groups
+                           :initform '() :type list)
      <<Location-reference-cache definitions>>
-     (succ-table           :accessor get-succ-table
-                           :initform (make-hash-table))
+     ;;     (succ-table           :accessor get-succ-table
+     ;;                           :initform (make-hash-table))
      <<Rules for indexing>>
      ))
 
@@ -103,9 +103,8 @@ incrementally filled with more information.
 <<Export-list of submodule \module{idxclass}>>=
 (export '(indexclass              make-indexclass
           get-name                get-basetypes
-          get-cat-attrs
-          get-keyword-merge-rules get-keyword-sort-rules
-          get-succ-table          get-locclasses
+          get-cat-attrs           get-xref-classes
+          get-succ-table          get-locref-classes
           <<Export-list for indexing rules>>
           ))
 @
@@ -172,7 +171,10 @@ following chunks define the data-structure layout of the locref-cache.
 (defmethod add-locref-cache ((idxcls indexclass)
                              (locref-string string)
                              (num    number)
-                             (locref layered-location-reference))
+			     ;; the next one is typeless, since we
+			     ;; also want to store the value NIL into
+			     ;; it, to denote a mismatch
+                             locref)
   (setf (gethash locref-string (get-locref-cache idxcls))
         (cons num locref))
   (values num locref))
@@ -265,32 +267,50 @@ indexclass.
   idxcls)
 @ %def add
 
-\no Adding a new location-class needs special treatment, since we want
-matching in the correct order of declaration. If later on, more than
-on match succeeds the first one is taken and a warnig should be
-issued. If this location-class is already known we remove first remove
-it. In all cases we add the new location-class.
+<<Mutators for \class{indexclass}>>=
+(defmethod add-letter-group ((idxcls indexclass)
+                             (letter string)
+                             (group  number))
+  (setf (get-letter-groups idxcls)
+        (acons letter group (get-letter-groups idxcls)))
+  idxcls)
+@ %def add-letter-group
+
+\no Adding a new location-reference-class needs special treatment,
+since we want matching in the correct order of declaration. If later
+on, more than one match succeeds the first one is taken and a warnig
+should be issued. If this location-class is already known we remove
+first remove it. In all cases we add the new location-class.
 
 <<Mutators for \class{indexclass}>>=
-(defmethod add ((idxcls indexclass) (loccls location-class))
+(defmethod add ((idxcls indexclass) (loccls layered-location-class))
   (let* ((loccls-name (get-name loccls))
-         (old-loccls (cdr (lookup-location-class idxcls loccls-name))))
+         (old-loccls (cdr (lookup-locref-class idxcls loccls-name))))
     (when old-loccls
       (remove-location-class idxcls old-loccls))
-    (if (get-locclasses idxcls)
-        (rplacd (last (get-locclasses idxcls))
+    (if (get-locref-classes idxcls) #| if it is empty, we can't rplacd |#
+        (rplacd (last (get-locref-classes idxcls))
                 (acons loccls-name loccls nil))
-        (setf (get-locclasses idxcls)
+        (setf (get-locref-classes idxcls)
               (acons loccls-name loccls nil))))
   idxcls)
 
-(defmethod remove-location-class ((idxcls indexclass) (loccls location-class))
-  (setf (get-locclasses idxcls)
+(defmethod remove-location-class ((idxcls indexclass)
+                                  (loccls layered-location-class))
+  (setf (get-locref-classes idxcls)
         (delete-if #'(lambda (elt)
                        (eq (cdr elt) loccls))
-                   (get-locclasses idxcls)))
+                   (get-locref-classes idxcls)))
   idxcls)
 @ %def add remove-location-class
+
+<<Mutators for \class{indexclass}>>=
+(defmethod add ((idxcls indexclass) (xrefcls crossref-location-class))
+  (let ((xrefcls-name (get-name xrefcls)))
+    (setf (get-xref-classes idxcls)
+          (acons xrefcls-name xrefcls (get-xref-classes idxcls)))
+    idxcls))
+@ %def add
 
 \no Here follow the mutators for the merge-rules. Remember that
 \irule{drop-if-merged} implies \irule{merge-to}.
@@ -340,6 +360,7 @@ maintain.
 
 <<Export-list of submodule \module{idxclass}>>=
 (export '(add set
+          add-letter-group
           add-merge-rule
           add-drop-if-merged-rule
           add-implict-substitution-rule
@@ -364,18 +385,36 @@ functions are prefixed with [[lookup-]].
 (defmethod lookup-catattr ((idxcls indexclass) (catattr-name string))
   (lookup-catattr-name (slot-value idxcls 'cat-attrs) catattr-name))
 
-(defmethod lookup-crossref-class ((idxcls indexclass) (xref-name string))
-  (assoc xref-name (slot-value idxcls 'locclasses) :test #'equal))
+(defmethod lookup-letter-group ((idxcls indexclass) (letter string))
+  (let ((letter-group (find-if #'(lambda (lg)
+                                   (let ((match-len
+                                          (string/= (car lg) letter)))
+                                     (or (not match-len) #| full match |#
+                                         (= match-len #| full match with lg |#
+                                            (length (car lg))))))
+                               (get-letter-groups idxcls))))
+    (if letter-group
+        (cdr letter-group)
+        0)))
 
 (defmethod lookup-location-class ((idxcls indexclass) (loccls-name string))
-  (assoc loccls-name (slot-value idxcls 'locclasses) :test #'equal))
-@ %def lookup-basetype lookup-catattr lookup-crossref-class lookup-location-class
+  (or (lookup-crossref-class idxcls loccls-name)
+      (lookup-locref-class idxcls loccls-name)))
+
+(defmethod lookup-crossref-class ((idxcls indexclass) (xref-name string))
+  (assoc xref-name (slot-value idxcls 'xref-classes) :test #'equal))
+
+(defmethod lookup-locref-class ((idxcls indexclass) (loccls-name string))
+  (assoc loccls-name (slot-value idxcls 'locref-classes) :test #'equal))
+@ %def lookup-basetype lookup-catattr lookup-crossref-class lookup-location-class lookup-locref-class
 
 <<Export-list of submodule \module{idxclass}>>=
 (export '(lookup-basetype
           lookup-catattr
+          lookup-letter-group
+          lookup-location-class
           lookup-crossref-class
-          lookup-location-class))
+          lookup-locref-class))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -409,7 +448,7 @@ returned in a list.
                                 (CDR ELT) #|ELT is ("name".<LOCATION-CLASS>))|#
                                 ,@arguments)))
                   (WHEN RES (LIST RES))))
-            (GET-LOCCLASSES ,idxcls)))))
+            (GET-LOCREF-CLASSES ,idxcls)))))
 @ %def map-location-classes
 
 <<Export-list of submodule \module{idxclass}>>=
@@ -546,7 +585,9 @@ location-reference.
 Before processing the index we must do several cleanups. We must apply
 the substitution-hooks to receive a global substitution-relation.
 Additionally we must transform all other relation-rules into their
-hash-table representation via calling [[make-ready]].
+hash-table representation via calling [[make-ready]]. Also the letter
+groups must be sorted for a correct processing (this could also be
+delayed until the markup).
 
 <<Indexclass cleanups>>=
 (defmethod make-ready ((idxcls indexclass))
@@ -554,14 +595,21 @@ hash-table representation via calling [[make-ready]].
   (make-ready (get-merge-rules idxcls))
   (make-ready (get-drop-if-merged-rules idxcls))
   <<check for reflexivity>>
-;;                          (set-merge-rule-topsort (topsort
-;;                          (remove-reflexivity (transform-relation
-;;                          (get-drop-if-merged-rules idxcls)
-;;                          'get-ordnum))) idxcls)
+
+  ;(set-merge-rule-topsort (topsort (remove-reflexivity
+  ;(transform-relation (get-drop-if-merged-rules idxcls)
+  ;'get-ordnum)))
+
   (let ((counter 0))
     (mapc #'(lambda (catattr)
               (set-processing-ordnum (incf counter) catattr))
           (topsort (get-drop-if-merged-rules idxcls))))
+
+  (setf (get-letter-groups idxcls)
+        (sort (get-letter-groups idxcls)
+              #'(lambda (lg1 lg2)
+                  (> (length (car lg1))
+                     (length (car lg2))))))
   idxcls)
 @ %def make-ready
 
@@ -643,10 +691,20 @@ hash-table representation via calling [[make-ready]].
                            "locclasses {"
                            (mapc #'(lambda (lc)
                                      (write (get-name (cdr lc)) :stream s)
-                                     (write-string " " s)
+                                     (write-string " [" s)
+                                     (write (get-ordnum (cdr lc)) :stream s)
+                                     (write-string "] " s)
                                      (pprint-newline :linear s))
-                                 (get-locclasses idxcls)))
-
+                                 (get-locref-classes idxcls)))
+                          (pprint-slot-block
+                           "xrefclasses {"
+                           (mapc #'(lambda (lc)
+                                     (write (get-name (cdr lc)) :stream s)
+                                     (write-string " [" s)
+                                     (write (get-ordnum (cdr lc)) :stream s)
+                                     (write-string "] " s)
+                                     (pprint-newline :linear s))
+                                 (get-xref-classes idxcls)))
                           (pprint-slot-block
                            "merge-rules {"
                            (write (get-merge-rules idxcls) :stream s))
@@ -687,7 +745,11 @@ hash-table representation via calling [[make-ready]].
 @
 
 %% $Log$
-%% Revision 1.12  1996/05/20 08:47:49  kehr
+%% Revision 1.13  1996/05/29 14:15:24  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.12  1996/05/20  08:47:49  kehr
 %% Major release of the modules locref, idxstyle and index.
 %%
 %% Revision 1.11  1996/04/30  15:52:48  kehr

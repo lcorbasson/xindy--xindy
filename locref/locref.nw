@@ -54,7 +54,9 @@ the following diagram.
 
 <<Class \class{location-reference}>>=
 (defclass location-reference ()
-    ((locclass :initarg :locclass)))
+    ((locclass  :initarg :locclass)
+     (attribute :reader get-attribute :writer set-attribute
+                :initarg :attribute)))
 
 (defmacro get-locclass (locref)
   `(SLOT-VALUE ,locref 'LOCCLASS))
@@ -73,24 +75,28 @@ directly derived from its abstract description.
 
 <<Class \class{layered-location-reference}>>=
 (defclass layered-location-reference (location-reference)
-    ((layers  #|:reader get-layers|#                        :initarg :layers)
-     (string    :reader get-locref-string                   :initarg :string)
-     (ordnums #|:reader get-ordnums|#                       :initarg :ordnums)
-     (catattr                                               :initarg :catattr)
-     (state     :reader get-state     :writer set-state     :initarg :state)
-     (rangeattr                                             :initform 'nil)
-     (origin    :reader get-origin    :writer set-origin    :initform 'nil)
-     (attribute :reader get-attribute :writer set-attribute :initarg :attribute)))
+    ((layers    :initarg :layers)
+     (string    :initarg :string   :type string)
+     (ordnums   :initarg :ordnums)
+     (catattr   :initarg :catattr)
+     (state     :initarg :state)
+     (rangeattr                                  :initform 'nil)
+     (origin    :reader get-origin :writer set-origin :initform 'nil)
+     (subrefs                      :type list    :initform '())))
 
-(defmacro get-catattr (locref)
-  `(SLOT-VALUE ,locref 'CATATTR))
+(defmacro get-locref-string (locref)  `(SLOT-VALUE ,locref 'STRING))
+(defmacro get-catattr (locref)        `(SLOT-VALUE ,locref 'CATATTR))
+(defmacro get-ordnums (locref)        `(SLOT-VALUE ,locref 'ORDNUMS))
+(defmacro get-rangeattr (locref)      `(SLOT-VALUE ,locref 'RANGEATTR))
 
-(defmacro get-ordnums (locref)
-  `(SLOT-VALUE ,locref 'ORDNUMS))
+(defmacro get-state   (locref)        `(SLOT-VALUE ,locref 'STATE))
+(defmacro set-state   (state locref)
+  `(SETF (SLOT-VALUE ,locref 'STATE) ,state))
 
-(defmacro get-rangeattr (locref)
-  `(SLOT-VALUE ,locref 'RANGEATTR))
-@ %def layered-location-reference get-catattr get-ordnums get-rangeattr
+(defmacro get-subrefs (locref)        `(SLOT-VALUE ,locref 'SUBREFS))
+(defmacro set-subrefs (subrefs locref)
+  `(SETF (SLOT-VALUE ,locref 'SUBREFS) ,subrefs))
+@ %def layered-location-reference get-catattr get-ordnums get-rangeattr get-locref-string get-subrefs set-subrefs get-state set-state
 
 \no The constructor takes the additional keyword [[:virtual]] to
 distinguish between the two states a location-reference can be in
@@ -155,11 +161,12 @@ following mutators and predicates.
 (export '(layered-location-reference
           make-layered-location-reference
           get-layers       get-ordnums       get-catattr
-          get-rangeattr    rangeattr         get-locref-string
+          get-rangeattr    rangeattr         get-locref-string  string
           get-origin       set-origin        catattr ordnums
           state-normal-p   state-virtual-p   state-deleted-p
           set-state-normal set-state-virtual set-state-deleted
           set-rangeattr-open set-rangeattr-close
+          get-subrefs      set-subrefs  subrefs
           rangeattr-open-p rangeattr-close-p))
 @
 
@@ -171,14 +178,10 @@ following mutators and predicates.
 (defclass crossref-location-reference (location-reference)
     ((target :reader get-target :writer set-target :initarg :target)))
 
-(defun make-crossref-location-reference (loccls target)
+(defun create-cross-reference (loccls target attribute)
   (make-instance 'crossref-location-reference
-                 :locclass loccls :target target))
-
-(defmethod create-cross-reference ((loccls crossref-location-class)
-                                   (target list))
-  (make-crossref-location-reference loccls target))
-@ %def crossref-location-reference make-crossref-location-reference create-cross-reference
+                 :locclass loccls :target target :attribute attribute))
+@ %def crossref-location-reference make-crossref-location-reference
 
 <<Export-list of submodule \module{locclass}>>=
 (export '(crossref-location-reference create-cross-reference))
@@ -196,7 +199,7 @@ realised via methods bound to the location-classes, since the
 construction of a location-reference directly depends on the
 location-class.
 
-Currently we support only the creation of structured location-references.
+Currently we support only the creation of layered location-references.
 
 <<Building a location-reference>>=
 (defmethod build-location-reference ((locclass   layered-location-class)
@@ -410,7 +413,6 @@ A block for pretty-printing a location-reference.
 (defun pprint-layered-location-reference (s locref)
   (pprint-logical-block
    (s nil :prefix "[" :suffix "]")
-                                        ;(pprint-indent :block 2 s)
    (cond ((state-normal-p  locref) (write-string "Nor:" s))
          ((state-virtual-p locref) (write-string "Vir:" s))
          (t (write-string "Del:" s)))
@@ -430,10 +432,25 @@ A block for pretty-printing a location-reference.
    (when (get-origin locref)
      (write-string "<-" s)
      (write (get-catattr (get-origin locref)) :stream s))
+   (pprint-newline :fill s)
+   (write (get-subrefs locref) :stream s)
    ))
 
 (set-pprint-dispatch 'layered-location-reference
                      #'pprint-layered-location-reference)
+@
+
+<<Pretty-printing>>=
+(defun pprint-crossref-location-reference (s xref)
+  (pprint-logical-block
+   (s nil :prefix "[" :suffix "]")
+   (write (get-locclass xref) :stream s)
+   (write-string "->" s)
+   (write (get-target xref) :stream s)
+   ))
+
+(set-pprint-dispatch 'crossref-location-reference
+                     #'pprint-crossref-location-reference)
 @
 
 <<Pretty-printing>>=
@@ -446,7 +463,11 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.19  1996/05/20 08:49:31  kehr
+%% Revision 1.20  1996/05/29 14:15:58  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.19  1996/05/20  08:49:31  kehr
 %% Some modifications due to performance improvement.
 %%
 %% Revision 1.18  1996/05/09  11:49:54  kehr

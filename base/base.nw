@@ -26,119 +26,95 @@ functions, that are used in all other modules like pretty-printing and
 other stuff. It is like a library that may be used from other parts of
 the project.
 
-\section{Part \module{Base}}
-
-<<export-list of module \module{base}>>=
-(export 'show)
-@
-
-\subsection{Introduction}
-
-
-\subsection{Concrete Specification}
+\section{The root of the submodule}
 
 <<*>>=
 (in-package "BASE")
 (provide "BASE")
 
-(use-package "CLOS")
-(use-package "XP")
-
 (setq *print-pretty* t)
 
-<<export-list of module \module{base}>>
-<<global definitions>>
-<<show generic functions>>
 <<Error message system>>
 <<Useful macros>>
+<<Assertions>>
+<<Startup>>
 
-(defvar *RCS-Identifier* '(("base" . "$Id$")))
+(defvar *RCS-Identifier* '( <<RCS-Identifier>> ))
+
+<<Export-list of module \module{base}>>
 @
+
+<<RCS-Identifier>>=
+("base" . "$Id$")
+@
+
+\subsection{Useful macros}
 
 <<Useful macros>>=
 (defmacro ifnot (expr then-body else-body)
   `(IF (NOT ,expr) ,then-body ,else-body))
+@ %def ifnot
 
+<<Export-list of module \module{base}>>=
 (export 'ifnot)
 @
 
-This is a simple abbreviation to print the currently active
-indexclass.
-
-<<show generic functions>>=
-(defgeneric show (object))
-
-(defmethod show ((chr character))
-  (write-string "`")
-  (write-char chr)
-  (write-string "'")
-  (values))
-
-(defmethod show ((str string))
-  (write-string "\"")
-  (write-string str)
-  (write-string "\"")
-  (values))
-
-(defmethod show ((sym symbol))
-  (write-string "'")
-  (write-string (symbol-name sym))
-  (values))
-
-(defmethod show ((num number))
-  (format t "~D" num))
-
-(defmethod show ((lst list))
-  (write-string "( ")
-  (do ((x lst (cdr x)))
-      ((atom x) (unless (null x) (show x)))
-    (show (car x))
-    (write-string " "))
-  (write-string ")")
-  (values))
-
-(defmethod show ((hash hash-table))
-  (maphash #'(lambda (key val)
-               (declare (ignore key))
-               (show val)) hash))
-@
-
-
-<<global definitions>>=
-(defparameter *default-class-name* "default")
-(defvar *indexclasses* '())
-(defvar *active-idxcls-name*)
-@
 
 \subsection{Error message system}
 
-The error message system is necessary to handle all error messages.
-<<Error message system>>=
-(defun issue-warning (msg &optional (stream *error-output*))
-  (format stream msg))
+The error message system is necessary to handle all error messages. We
+support a function that issues a simple warning.
 
-(defun fatal-error (msg &optional (stream *error-output*))
-  (declare (ignore stream))
-  (error msg))
+<<Error message system>>=
+(defmacro oops (&rest msg)
+  `(FORMAT *ERROR-OUTPUT* ,@msg))
+@ %def oops
+
+<<Export-list of module \module{base}>>=
+(export '(oops))
 @
 
-<<Error message system>>=
+\subsection{Assertions}
+
+The following macro can be used to declare assertions.
+
+<<Assertions>>=
 (defmacro assert! (cond)
   `(UNLESS ,cond
-    (FORMAT *ERROR-OUTPUT* "assertion ~A failed!" ',cond)
+    (FORMAT *ERROR-OUTPUT* "Internal error! Assertion ~A failed!" ',cond)
     (ERROR "entering debugger")))
 
 (pushnew :ASSERT! *features*)
+@
+
+<<Export-list of module \module{base}>>=
 (export 'assert!)
 @
 
-%% Local Variables:
-%% mode: latex
-%% TeX-master: t
-%% End:
-%%
+\subsection{Startup}
+
+The following function can be used to start up the whole system.
+
+<<Startup>>=
+(defun startup ()
+  (eval-when (eval)
+    (require 'locref)
+    (require 'idxstyle)
+    (require 'index)
+    (require 'markup)))
+@ %def startup
+
+<<Export-list of module \module{base}>>=
+(export 'startup)
+@
+
+
 %% $Log$
-%% Revision 1.8  1996/05/20 08:45:55  kehr
+%% Revision 1.9  1996/05/29 14:15:18  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.8  1996/05/20  08:45:55  kehr
 %% Added macro `ifnot'.
 %%
 %% Revision 1.7  1996/05/09  11:49:01  kehr
@@ -192,4 +168,8 @@ The error message system is necessary to handle all error messages.
 %%
 %% Revision 1.1  1995/07/09  18:14:26  kehr
 %% Initial checkin.
-%%
+
+%% Local Variables:
+%% mode: lisp
+%% TeX-master: t
+%% End:

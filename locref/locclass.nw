@@ -84,7 +84,7 @@ location-class must implement a method [[perform-match]]
 
 <<Export-list of submodule \module{locclass}>>=
 (export '(location-class perform-match
-          get-name get-ordnum ordnum))
+          get-name get-ordnum set-ordnum ordnum))
 @
 
 \no We define a relation between location-classes that is used to sort
@@ -312,7 +312,7 @@ by the subclasses. For explanation see below.
 @ %def crossref-location-class
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(crossref-location-class))
+(export '(crossref-location-class get-target))
 @
 
 \subsubsection{Class \class{verified-crossref-location-class}}
@@ -328,7 +328,7 @@ For this reason slot [[target]] consists of a \tstrlist that holds the
 key (what key?) of the indexentry it points to.
 
 <<Class \class{verified-crossref-location-class}>>=
-(defclass verified-crossref-location-class (location-class)
+(defclass verified-crossref-location-class (crossref-location-class)
     ())
 
 (defun make-verified-crossref-location-class (name)
@@ -336,7 +336,8 @@ key (what key?) of the indexentry it points to.
 @ %def verified-crossref-location-class make-verified-crossref-location-class
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(verified-crossref-location-class))
+(export '(verified-crossref-location-class
+          make-verified-crossref-location-class))
 @
 
 \subsubsection{Class \class{unverified-crossref-location-class}}
@@ -347,7 +348,7 @@ processed index, because it is contained in another index. The
 [[target]] is then simply a string without any structure.
 
 <<Class \class{unverified-crossref-location-class}>>=
-(defclass unverified-crossref-location-class (location-class)
+(defclass unverified-crossref-location-class (crossref-location-class)
     ())
 
 (defun make-unverified-crossref-location-class (name)
@@ -355,7 +356,8 @@ processed index, because it is contained in another index. The
 @ %def unverified-crossref-location-class make-unverified-crossref-location-class
 
 <<Export-list of submodule \module{locclass}>>=
-(export '(unverified-crossref-location-class))
+(export '(unverified-crossref-location-class
+          make-unverified-crossref-location-class))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -580,7 +582,11 @@ is not an error, because we do a prefix-matching.
 
 
 %% $Log$
-%% Revision 1.15  1996/05/20 08:49:29  kehr
+%% Revision 1.16  1996/05/29 14:15:55  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.15  1996/05/20  08:49:29  kehr
 %% Some modifications due to performance improvement.
 %%
 %% Revision 1.14  1996/05/07  08:59:27  kehr

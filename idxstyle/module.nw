@@ -114,11 +114,11 @@ class.
 
 \subsection{Declaration of location-classes}
 
-\subsubsection{Structured location-classes}
-
 Location-classes are defined via composition of basetypes and
 separators. We distinguish structured location-classes (standard- and
 var-classes) and cross-reference classes.
+
+\subsubsection{Structured location-classes}
 
 \begin{istui}{define-location-class}{\emph{loccls-name}
     \opt{\sw{:var}$|$\sw{:min-range-length} \emph{integer}}\\%%
@@ -136,6 +136,27 @@ var-classes) and cross-reference classes.
 \end{istui}
 
 \subsubsection{Cross-reference location-classes}
+
+\begin{istui}{define-loccl}{\emph{loccls-name}
+    \opt{\sw{:unverified}}}%%
+  Defines a cross-reference location-class with name
+  \emph{loccls-name}. Since we distuingish between \emph{verified} and
+  \emph{unverified} cross-reference classes the optional keyword
+  \sw{:unverified} declares the type of the crossref location-class to
+  be unverified, since the default for all is \emph{verified} and
+  should only be defined to \sw{:unverified} in rare cases.
+\end{istui}
+
+\subsubsection{Declaration of the output order}
+
+\begin{istui}{define-location-class-order}{\emph{list}}%%
+  The order in which the location-classes (structured and
+  cross-referenced ones) are sent to the output defaults to the order
+  of their definition. If one explicitly needs to change that order,
+  this definition can be used to enumerate the order of all
+  location-classes. The argument \emph{list} is a list of all
+  location-class names and defines the order in the output.
+\end{istui}
 
 
 \subsection{Location-attributes}

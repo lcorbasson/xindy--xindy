@@ -96,7 +96,8 @@ following slots:
 
 (defun create-index ()
   (setq *index* (make-base-index *indexstyle*))
-  (setq *index-entry-table* (get-entry-table *index*)))
+  (setq *index-entry-table* (get-entry-table *index*))
+  *index*)
 
 (create-index)
 @ %def *index* create-index
@@ -164,7 +165,7 @@ of functions:
 <<Raw-index interface>>=
 (defmacro indexentry (&rest args)
   (destructuring-switch-bind (&key
-                              key print attr locref xref
+                              key print merge attr locref xref
                               &switch
                               (open-range  :open-range)
                               (close-range :close-range))
@@ -176,6 +177,7 @@ of functions:
           (locref `(ADD-LAYERED-LOCREF-INDEXENTRY
                     :MAIN-KEY    ',key
                     :PRINT-KEY   ',print
+                    :MERGE-KEY   ',merge
                     :CATATTR     ',attr
                     :LOCREF      ',locref
                     :OPEN-RANGE  ',open-range
@@ -184,10 +186,11 @@ of functions:
                   (error "you can't specify :open-range or :close-range with :xref at the same time !"))
                 (unless attr
                   (error "missing :attr in combination with :xref !"))
-                (add-crossref-indexentry :main-key key
-                                         :print-key print
-                                         :xref xref
-                                         :xref-class attr))
+                `(ADD-CROSSREF-INDEXENTRY
+                  :MAIN-KEY  ',key
+                  :PRINT-KEY ',print
+                  :XREF      ',xref
+                  :XREF-CLASS-NAME ',attr))
           (t (error "you must at least specify :locref or :xref !")))))
 
 @ %def indexentry
@@ -207,46 +210,12 @@ containing a location-reference to the index. The function for
 supporting cross-references is implemented in a separate function.
 
 <<Adding an indexentry>>=
-(defun add-crossref-indexentry (&key
-                                (entry-table *index-entry-table*)
-                                (idxcls *indexstyle*)
-                                (merge-key '()) (sort-key '()) (print-key '())
-                                main-key
-                                xref
-                                xref-class
-                                (attribute  nil))
-  #+:ASSERT! (assert! (and main-key xref xref-class))
-
-  (unless xref-class (setq xref-class "default"))
-  (let ((xref-class-obj (lookup-crossref-class idxcls xref-class)))
-    (if (not xref-class-obj)
-        (warn "unknown cross-reference-class `~A'! (ignored)" xref-class)
-        (let ((cross-reference (create-cross-reference xref-class-obj
-                                                       xref attribute)))
-          (when cross-reference
-            <<Manage the keyword rewrite-rules>>
-            (let ((old-entry (gethash merge-key entry-table)))
-              (if old-entry
-                  (setf (gethash merge-key entry-table)
-                        (join-indexentries (gethash merge-key entry-table)
-                                           main-key sort-key print-key
-                                           cross-reference))
-                  (setf (gethash merge-key entry-table)
-                        (make-index-entry :main-key  main-key
-                                          :sort-key  sort-key
-                                          :merge-key merge-key
-                                          :print-key print-key
-                                          :locrefs   (list cross-reference)
-                                          :indexclass idxcls)))))))))
-@ %def add-crossref-indexentry
-
-<<Adding an indexentry>>=
 (defun add-layered-locref-indexentry (&key
                                       (entry-table *index-entry-table*)
                                       (idxcls *indexstyle*)
                                       locref main-key
                                       (merge-key '())
-                                      (sort-key  '())  (print-key '())
+                                      (print-key '())
                                       (open-range nil) (close-range nil)
                                       (catattr    nil) (attribute nil))
   #+:ASSERT! (assert! (and main-key locref))
@@ -261,7 +230,11 @@ supporting cross-references is implemented in a separate function.
               (multiple-value-bind (num location-reference)
                   (create-location-reference-from-string
                    locref catattr-obj attribute)
-                (when (= 1 num) #| only one vaild location-reference! |#
+                (when (eql 1 num)
+                  #|                    ;
+                  Only one vaild location-reference! Use #'eql and
+                  not #'= since we compare num against NIL, too.
+                  |#
                   <<Manage the keyword rewrite-rules>>
                   (cond (open-range  (set-rangeattr-open location-reference))
                         (close-range (set-rangeattr-close location-reference)))
@@ -270,11 +243,10 @@ supporting cross-references is implemented in a separate function.
                         (setf (gethash merge-key entry-table)
                               (join-indexentries
                                (gethash merge-key entry-table)
-                               main-key sort-key print-key
+                               main-key print-key
                                location-reference))
                         (setf (gethash merge-key entry-table)
                               (make-index-entry :main-key  main-key
-                                                :sort-key  sort-key
                                                 :merge-key merge-key
                                                 :print-key print-key
                                                 :locrefs   (list
@@ -286,15 +258,45 @@ supporting cross-references is implemented in a separate function.
 (warn "specification of both :open-range and :close-range is invalid! (ignored)")
 @
 
+<<Adding an indexentry>>=
+(defun add-crossref-indexentry (&key
+                                (entry-table *index-entry-table*)
+                                (idxcls *indexstyle*)
+                                (merge-key '())
+                                (print-key '())
+                                main-key
+                                xref
+                                xref-class-name
+                                (attribute  nil))
+  #+:ASSERT! (assert! (and main-key xref xref-class-name))
+
+  (unless xref-class-name (setq xref-class-name "default"))
+  (let ((xref-class (cdr (lookup-crossref-class idxcls xref-class-name))))
+    (if (not xref-class)
+        (warn "unknown cross-reference-class `~A'! (ignored)~%"
+              xref-class-name)
+        (let ((cross-reference (create-cross-reference xref-class
+                                                       xref attribute)))
+          (when cross-reference
+            <<Manage the keyword rewrite-rules>>
+            (let ((old-entry (gethash merge-key entry-table)))
+              (if old-entry
+                  (setf (gethash merge-key entry-table)
+                        (join-indexentries (gethash merge-key entry-table)
+                                           main-key print-key
+                                           cross-reference))
+                  (setf (gethash merge-key entry-table)
+                        (make-index-entry :main-key  main-key
+                                          :merge-key merge-key
+                                          :print-key print-key
+                                          :locrefs   (list cross-reference)
+                                          :indexclass idxcls)))))))))
+@ %def add-crossref-indexentry
+
 <<Manage the keyword rewrite-rules>>=
-            #+:ORDRULES (unless merge-key
-                          (setq merge-key (gen-keyword-mergekey-list main-key)))
-            #-:ORDRULES (unless merge-key (setq merge-key main-key))
-#| to be delayed
-#+:ORDRULES (unless sort-key
-                          (setq sort-key  (gen-keyword-sortkey-list merge-key)))
-#-:ORDRULES (unless sort-key  (setq sort-key  merge-key))
-|#
+#+:ORDRULES (unless merge-key
+              (setq merge-key (gen-keyword-mergekey-list main-key)))
+#-:ORDRULES (unless merge-key (setq merge-key main-key))
 @
 
 \no These functions perform the keword-rewriting on a list of strings.
@@ -324,12 +326,10 @@ location-reference to the indexentry is performed throuh the method
 for further details).
 
 <<Adding an indexentry>>=
-(defun join-indexentries (idxent main-key sort-key print-key locref)
+(defun join-indexentries (idxent main-key print-key locref)
   (let ((old-main-key  (get-main-key  idxent))
-        (old-sort-key  (get-sort-key idxent))
         (old-print-key (get-print-key idxent)))
     (unless old-main-key  (set-main-key  main-key  idxent))
-    (unless old-sort-key  (set-sort-key  sort-key  idxent))
     (unless old-print-key (set-print-key print-key idxent))
     (add-location-reference-to-indexentry idxent locref)))
 @ %def merge-indexentries join-with-precedence
@@ -407,42 +407,6 @@ common slots from the template into the new locref.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsubsection{Sorting an index}
-
-Sorting an index is the task to transform the
-hash-table-representation of an index into a sorted
-list-representation.  We iterate with [[maphash]] over all the
-hash-tables elements and prepend the [[temp-list]] with a
-[[cons]]-cell (\emph{key}~.~\emph{idxent}). Afterwards we sort this
-list by comparing the first elements of the cons-cells and store the
-result into slot [[entry-list]].
-
-<<Sorting an index>>=
-(defmethod sort-indexentries ((index base-index))
-  (let ((temp-list '()))
-    (maphash #'(lambda (key idxent)
-                 (declare (ignore key))
-                 (setq temp-list (cons (cons (get-sort-key idxent) idxent) temp-list)))
-             (get-entry-table index))
-    (set-entry-list (sort temp-list
-                          #'(lambda (element-1 element-2)
-                              (strlist< (car element-1) (car element-2))))
-                    index)))
-
-(defun strlist< (string-list-1 string-list-2)
-  (declare (inline))
-  (do ((rest-1 string-list-1 (cdr rest-1))
-       (rest-2 string-list-2 (cdr rest-2)))
-      ((or (endp rest-1) (endp rest-2)
-           (string/= (first rest-1) (first rest-2)))
-         (or (endp rest-1)
-             (if (endp rest-2)
-                 'nil
-                 (string< (first rest-1) (first rest-2)))))))
-@ %def sort-index strlist<
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \subsubsection{Processing an index}
 
 After the index is filled with indexentries our first task is to sort the index.
@@ -457,36 +421,93 @@ we simply markup the index and start right out of the box.
                  (declare (ignore key))
                  (setq hash-list (cons idxentry hash-list)))
              (get-entry-table index))
-    #|
-    (loop for idxent being each hash-value of (index::get-entry-table index)
-    collect idxent)
-    |#
     (set-entry-list hash-list index)
     (build-indexentry-tree index)
-    ;;(sort-indexentries index)
     (mapc #'process-indexentry (get-entry-list index))
     index))
 @ %def process-index
 
-\noindent The following functions is necessary to form a flat index
-into a hierarchical one up to a maximum depth. The process is as
-follows. All indexentries that have the same top-most keyword are
-joined into a indexentry with several subentries.
+<<Export-list of submodule \module{index}>>=
+(export '(process-index))
+@
+
+\subsubsection{Building and sorting the indexentry-tree}
+
+The following functions is necessary to transform a flat index into a
+hierarchical one up to a maximum depth. The process is as follows. All
+indexentries that have the same top-most keyword are joined into a
+indexentry with several subentries. Addtionally we separate the
+top-level indexentries into the appropriate letter-groups.
+
+<<Class \class{letter-group}>>=
+(defclass letter-group ()
+    ((members   :accessor get-members  :initarg :members  :type list)
+     (group-id  :accessor get-group-id :initarg :group-id :type number)))
+
+(defun make-letter-group (&key members group-id)
+  (make-instance 'letter-group :members members :group-id group-id))
+@ %def letter-group make-letter-group
+
+<<Export-list of submodule \module{index}>>=
+(export '(letter-group get-group-id get-members))
+@
 
 <<Processing an index>>=
 (defmethod build-indexentry-tree ((index base-index))
-  (let ((index-hierdepth (get-hierdepth index)
-         #|(slot-value index 'hierdepth)|#
-          ))
+  (let ((index-hierdepth (get-hierdepth index)))
     (when (numberp index-hierdepth)
       (set-entries (build-indexentry-tree-recursive (get-entry-list index)
                                                     index-hierdepth)
-                   index))))
+                   index)))
+  (let ((letter-groups (split-list #'(lambda (idxent)
+                                       (lookup-letter-group
+                                        *indexstyle*
+                                        (car (get-sort-key idxent))))
+                                   #'<
+                                   (get-entries index))))
+    (set-entries (mapcar #'(lambda (lg-indexentries)
+                             (make-letter-group
+                              :members  (sort-indexentries lg-indexentries)
+                              :group-id (lookup-letter-group
+                                         *indexstyle*
+                                         (car (get-sort-key
+                                               (car lg-indexentries))))))
+                         letter-groups)
+                 index)))
 @ %def build-indexentry-tree
 
+\no The following function is responsible to build the desired tree
+structure of the index. For a flat index there is actually nothing to
+do since each entry cannot be split any further. The main task to be
+don is to convert the flat structure into a hierarchical one, that
+means indexentries can contain subentries, an so on. The [[max-depth]]
+of the hierarchy is given as an argument. The case [[max-depth]]=0
+means to completely transform the index into a tree. At first the list
+of indexentries is split into groups for which all entries have the
+same first keyword of the merge-key, i.e.\ the merge-keys
+\begin{verbatim}
+  ("merge" "nothing")
+  ("merge")
+  ("sort" "nothing")
+\end{verbatim}
+are split into the groups
+\begin{verbatim}
+  ( ("merge") ("merge" "nothing") )
+  ( ("sort" "nothing") ) .
+\end{verbatim}
+It is \emph{important} that the entries inside the group are sorted
+strictly by the [[string<]]-relation, since the first element of each
+list plays a special role. If the first entry has a merge-key of
+length 1 it means that it stays at this level and will not be
+processed any further. The test [[(= 1 (length merge-key))]] checks
+for this condition and if it is true, this indexentry is used as a
+container for the rest of the list (i.e.\ indexentries that have a
+longer keyword). Otherwise we construct a new indexentry and fill its
+slots with the neccessary data.
+
 <<Processing an index>>=
- (defmacro take-first (list)
-  `(IF (ENDP ,list) '() (LIST (CAR ,list))))
+(defmacro take-first (list)
+  `(AND ,list  (LIST (CAR ,list))))
 
 (defun build-indexentry-tree-recursive (idxent-list
                                         max-depth
@@ -500,30 +521,45 @@ joined into a indexentry with several subentries.
                                       idxent-list)))
         (mapcar
          #'(lambda (sublist)
-             (let ((car-sublist (car sublist)))
-               (if (= 1 (length (get-merge-key car-sublist)))
-                   (let ((new-idxent car-sublist))
-                     (set-subentries (build-indexentry-tree-recursive
-                                      (remove-first-keywords (cdr sublist))
-                                      max-depth
-                                      (1+ curr-depth))
-                                     new-idxent)
-                     new-idxent)
-                   (let* ((idxent car-sublist)
-                          (new-idxent
-                           (make-index-entry
-                            :merge-key (take-first (get-merge-key idxent))
-                            #|:print-key (take-first (get-print-key idxent))|#
-                            :idxclass  (get-idxclass idxent))))
-                     (set-subentries (build-indexentry-tree-recursive
-                                      (remove-first-keywords
-                                       sublist)
-                                      max-depth
-                                      (1+ curr-depth))
-                                     new-idxent)
+             (let* ((idxent (car sublist))
+                    (merge-key (get-merge-key idxent)))
+               (if (= 1 (length merge-key))
+                   (progn #| length = 1 |#
+                     (set-sort-key #-:ORDRULES merge-key
+                                   #+:ORDRULES (gen-keyword-sortkey-list
+                                                merge-key)
+                                   idxent)
+                     (set-subentries
+                      (sort-indexentries
+                       (build-indexentry-tree-recursive
+                        (remove-first-keywords (cdr sublist))
+                        max-depth
+                        (1+ curr-depth)))
+                      idxent)
+                     idxent)
+                   (let* #| length > 1 |#
+                       ((new-merge-key (take-first merge-key))
+                        (new-idxent
+                         (make-index-entry
+                          :main-key  (take-first (get-main-key idxent))
+                          :merge-key new-merge-key
+                          :sort-key
+                          #-:ORDRULES new-merge-key
+                          #+:ORDRULES (gen-keyword-sortkey-list
+                                       new-merge-key)
+                          ;;:print-key (take-first (get-print-key idxent))
+                          :idxclass  (get-idxclass idxent))))
+                     (set-subentries
+                      (sort-indexentries
+                       (build-indexentry-tree-recursive
+                        (remove-first-keywords sublist)
+                        max-depth
+                        (1+ curr-depth)))
+                      new-idxent)
                      new-idxent))))
          idxent-slist))
-      idxent-list  #| this is the otherwise case |#))
+      idxent-list #| this is the otherwise case |#
+      ))
 @ %def build-indexentry-tree-recursive
 
 <<Processing an index>>=
@@ -531,14 +567,35 @@ joined into a indexentry with several subentries.
   (declare (inline))
   (mapc #'(lambda (idxent)
             (setf (slot-value idxent 'merge-key)
-                  (cdr (slot-value idxent 'merge-key))))
+                  (cdr (slot-value idxent 'merge-key)))
+            (setf (slot-value idxent 'main-key)
+                  (cdr (slot-value idxent 'main-key)))
+            )
         idxent-list)
   idxent-list)
 @ %def take-first remove-first-keywords
 
-<<Export-list of submodule \module{index}>>=
-(export '(process-index))
-@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+<<Sorting an index>>=
+(defun sort-indexentries (indexentries)
+  #+:ASSERT! (assert! (listp indexentries))
+  (sort indexentries
+        #'(lambda (idxent-1 idxent-2)
+            (strlist< (get-sort-key idxent-1)
+                      (get-sort-key idxent-2)))))
+
+(defun strlist< (string-list-1 string-list-2)
+  (declare (inline))
+  (do ((rest-1 string-list-1 (cdr rest-1))
+       (rest-2 string-list-2 (cdr rest-2)))
+      ((or (endp rest-1) (endp rest-2)
+           (string/= (first rest-1) (first rest-2)))
+         (or (endp rest-1)
+             (if (endp rest-2)
+                 'nil
+                 (string< (first rest-1) (first rest-2)))))))
+@ %def sort-indexentries strlist<
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -582,6 +639,7 @@ joined into a indexentry with several subentries.
 <<Submodule \module{index}>>=
 <<Global index definitions>>
 <<Class \class{base-index}>>
+<<Class \class{letter-group}>>
 
 <<Adding an indexentry>>
 <<Sorting an index>>
@@ -600,7 +658,11 @@ joined into a indexentry with several subentries.
 
 
 %% $Log$
-%% Revision 1.14  1996/05/20 08:48:51  kehr
+%% Revision 1.15  1996/05/29 14:15:43  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.14  1996/05/20  08:48:51  kehr
 %% Major release of the modules locref, idxstyle and index. Added picture
 %% for the range-building FSM with a complete rewrite.
 %%

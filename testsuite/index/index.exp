@@ -8,8 +8,8 @@ expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 xsend {(add ic loccls-num-0-20)}
 expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
 
-xsend {(add ic (make-category-attribute "default"))}
-expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+xsend {(define-attributes ("default"))}
+expect -re "\#<CATATTR-GROUPS.*>.*$prompt$" { pass "$test" }
 
 xsend {(setq idx (create-index))}
 expect -re "\#<.*INDEX.*>.*$prompt$" { pass "$test" }

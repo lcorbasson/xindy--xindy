@@ -29,56 +29,100 @@ This module serves as the \term{backend} of our system. The final task
 of the index process is to actually markup the index and write it into
 the output stream.
 
-The markup-tree can be specified with the following grammar: Round
-braces `\texttt{(}\ldots\texttt{)}' denote the \term{closure} of an
-index-object and angles `$\langle\ldots\rangle$' denote
-BNF-expressions.
-
 \medskip
 
 \newcommand{\ISA}{\textsl{::=}}
 \newcommand{\Sep}{{\normalfont\texttt{sep}}}
+\newcommand{\Attr}[1]{{\small\normalfont$\langle$\emph{#1}$\rangle$}}
 \newcommand{\Open}{{\normalfont\texttt{open}}}
 \newcommand{\Close}{{\normalfont\texttt{close}}}
-\newcommand{\SepN}[1]{{\normalfont\texttt{sep}$^{#1}$}}
-\newcommand{\OpenN}[1]{{\normalfont\texttt{open}$^{#1}$}}
-\newcommand{\CloseN}[1]{{\normalfont\texttt{close}$^{#1}$}}
+\newcommand{\SepN}[1]{{\normalfont\texttt{sep}#1}}
+\newcommand{\OpenN}[1]{{\normalfont\texttt{open}#1}}
+\newcommand{\CloseN}[1]{{\normalfont\texttt{close}#1}}
 \newcommand{\LIST}[1]{\Open{} #1 \Close{}}
 \newcommand{\LISTN}[2]{\OpenN{#1} #2 \CloseN{#1}}
-\newcommand{\Braces}[1]{{\normalfont$\langle$}#1{\normalfont$\rangle$}}
+\newcommand{\Braces}[1]{{\normalfont\{}#1{\normalfont\}}}
 
 {\slshape%%
 \begin{tabular}{lcl}
-  index &\ISA& \LIST{indexentry-list$^0$}\\%%
-  indexentry-list$^n$ &\ISA& \LISTN{n}{indexentry$^n_1$ \Sep{}
-    indexentry$^n_2$ \Sep{} \ldots{} \Sep{} indexentry$^n_m$}\\%%
-  indexentry$^n$ &\ISA& \LISTN{n}{keyword-list$^n$ locclass-grp-list
-    indexentry-list$^{n+1}$} \\%%
-  keyword-list$^n$&\ISA& \LISTN{n}{keyword$^n_1$ \SepN{n}
-    keyword$^n_2$ \SepN{n} \ldots{} \SepN{n} keyword$^n_m$}\\%%
-  keyword$^n$ &\ISA& \LISTN{n}{\textsf{string}}\\%%
-  locclass-grp-list &\ISA& \LIST{loccls-grp$_1$ \Sep{} loccls-grp$_2$
-    \Sep{}
-    \ldots{} \Sep{} loccls-grp$_n$}\\%%
-  locclass-grp &\ISA& \LIST{attr-grp-list$_1$ \Sep{} attr-grp-list$_2$
-    \Sep{} \ldots{} \Sep{} attr-grp-list$_n$}\\%%
-  &&\Braces{structured-loccls-grp $|$ \LIST{locclass-grp\texttt{*}}
-    \LIST{indexentry\texttt{*}} }\\%%
-  locclass-grp &\ISA& \Braces{structured-loccls-grp $|$
-    crossref-grp}\texttt{+}\\%%
-  structured-loccls-grp &\ISA& \LIST{catattr-grp\texttt{+}}\\%%
-  catattr-grp &\ISA& \LIST{locref-list}\\%%
-  locref-list &\ISA& \Braces{layered-locref $|$ range}\texttt{+}\\%%
-  range &::=& \LIST{ layered-locref\ \ layered-locref }\\%%
-  layered-locref &\ISA& \LIST{ \LIST{layer\texttt{+}}
-    \LIST{layered-locref\texttt{*}} }\\%%
-  layer &\ISA& \LIST{\textsf{string}}\\%%
-  crossref-grp &\ISA& \LIST{crossref-locref\texttt{+}}\\%%
-  crossref-locref &\ISA& \LIST{\textsf{string}}\\%%
+  index &\ISA& \LIST{indexentry-list\Attr{depth=0}}\smallrule\\%%
+
+  indexentry-list\Attr{depth} &\ISA&\smallrule
+  \LISTN{\Attr{depth}}{indexentry\Attr{depth} \Sep{\Attr{depth}}
+    \ldots{}\\%%
+    &&\ldots{} \Sep{\Attr{depth}} indexentry\Attr{depth}}\\%%
+
+  indexentry\Attr{depth} &\ISA&
+  \LISTN{\Attr{depth}}{keyword-list\Attr{depth}
+    locclass-grp-list\Attr{depth}\\%%
+    &&\quad [indexentry-list\Attr{depth+1}]}\smallrule\\%%
+
+  keyword-list\Attr{depth}&\ISA&\smallrule
+  \LISTN{\Attr{depth}}{keyword\Attr{depth} \SepN{\Attr{depth}}
+    \ldots{}\\%%
+    &&\ldots{} \SepN{\Attr{depth}} keyword\Attr{depth}}\\%%
+
+  keyword\Attr{depth} &\ISA& \LISTN{\Attr{depth}}{\textsf{Keyword}}%%
+  \smallrule\\%%
+
+  locclass-grp-list &\ISA& \LIST{loccls-grp \Sep{} loccls-grp \Sep{}
+    \ldots{} \Sep{} loccls-grp}\smallrule\\%%
+
+  locclass-grp &\ISA& \Braces{layered-locref-grp\Attr{loccls} $|$
+    crossref-grp\Attr{xrefcls}}\smallrule\\%%
+
+  layered-locref-grp\Attr{loccls} &\ISA&\smallrule
+  \LISTN{\Attr{loccls}}{attr-grp-list\Attr{loccls} \Sep{\Attr{loccls}}
+    \ldots{}\\%%
+    &&\ldots{} \Sep{\Attr{loccls}} attr-grp-list\Attr{loccls}}\\%%
+
+  attr-grp-list\Attr{loccls} &\ISA&\smallrule%%
+  \LISTN{\Attr{loccls}}{attr-grp\Attr{loccls} \SepN{\Attr{loccls}} \ldots\\%%
+    &&\ldots{} \SepN{\Attr{loccls}} attr-grp\Attr{loccls}}\\%%
+
+  attr-grp\Attr{loccls} &\ISA&\smallrule%%
+  \LISTN{\Attr{loccls,attr-grp}}{locref-list\Attr{loccls}}\\%%
+
+  locref-list\Attr{loccls} &\ISA&\smallrule
+  \LISTN{}{locref\Attr{loccls}
+    \SepN{} locref\Attr{loccls} \SepN{} \ldots\\%%
+    &&\ldots{} \SepN{} locref\Attr{loccls}}\\%%
+
+  locref\Attr{loccls} &\ISA& \Braces{layered-locref\Attr{loccls,attr} $|$
+    range\Attr{loccls,attr}}\smallrule\\%%
+
+  range\Attr{loccls,attr} &::=&\smallrule
+  \LISTN{\Attr{loccls,attr}}{layered-locref\Attr{loccls,attr}\\%%
+    &&\SepN{\Attr{loccls,attr}} layered-locref\Attr{loccls,attr}}\\%%
+
+  layered-locref\Attr{loccls,attr} &\ISA&
+  \LISTN{\Attr{loccls,attr}}{\textsf{Locref-String}}\smallrule\\%%
+
+%%  layered-locref\Attr{loccls,attr} &\ISA&
+%%  \LIST{layer-list\Attr{loccls,attr}}\smallrule\\%%
+
+%%  layer-list\Attr{loccls,attr} &\ISA&\smallrule\LISTN{\Attr{loccls,attr}}
+%%  {layer\Attr{loccls,attr} \SepN{\Attr{loccls,attr}} \ldots\\%%
+%%    &&\ldots{} \SepN{\Attr{loccls,attr}} layer\Attr{loccls,attr}}\\%%
+
+%%  layer\Attr{loccls,attr} &\ISA&\smallrule
+%%  \LISTN{\Attr{loccls,attr}}{\textsf{string}}\\%%
+
+  crossref-grp\Attr{xrefcls} &\ISA&\smallrule%%
+  \LISTN{\Attr{xrefcls}}{crossref\Attr{xrefcls} \SepN{\Attr{xrefcls}}
+    \ldots\\%%
+    && \ldots{} \SepN{\Attr{xrefcls}} crossref\Attr{xrefcls}}\\%%
+
+  crossref\Attr{xrefcls} &\ISA&\smallrule%%
+  \LISTN{\Attr{xrefcls}}{xref-layer\Attr{xrefcls} \SepN{\Attr{xrefcls}}
+    \ldots\\%%
+    && \ldots{} \SepN{\Attr{xrefcls}} xref-layer\Attr{xrefcls}}\\%%
+
+  xref-layer\Attr{xrefcls} &\ISA&\smallrule\LISTN{\Attr{xrefcls}}
+  {\textsf{Layer-String}}\\%%
 
 \end{tabular}
-}
-\bigskip
+} \bigskip
 
 \noindent All object-closures actually describe a markup-string that
 must be user-definable. Since there the index-tree is defined
@@ -206,7 +250,11 @@ holds:
 
 
 %% $Log$
-%% Revision 1.5  1996/05/20 08:49:59  kehr
+%% Revision 1.6  1996/05/29 14:16:07  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.5  1996/05/20  08:49:59  kehr
 %% Minor modifications.
 %%
 %% Revision 1.4  1996/05/06  10:01:59  kehr

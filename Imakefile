@@ -16,16 +16,18 @@ ProjectTop()
  *
  *     Report		The project report
  *     Presentation     A set of presentation slides
+ *     Doc              The whole documentation
  */
 
 #define submodules base locref idxstyle index markup xindy rx
 
 /* ATTN: modules are made in list order! */
-BuildProjectModules(Report Presentation\
+BuildProjectModules(Report Presentation Doc\
 		    submodules testsuite)
 
 CVSAdd(ChangeLog Imakefile)
 CVSAdd(Report Presentation)
+CVSAdd(Doc)
 CVSAdd(noweb src testsuite)
 CVSAdd(rx)
 CVSAdd(submodules)
@@ -33,7 +35,11 @@ CVSAdd(submodules)
 /*======================================================================
  *
  * $Log$
- * Revision 1.11  1996/04/29 08:36:27  kehr
+ * Revision 1.12  1996/05/29 14:15:07  kehr
+ * Complete checkin after the major changes in the markup. See ChangeLog
+ * for details.
+ *
+ * Revision 1.11  1996/04/29  08:36:27  kehr
  * Nothing important.
  *
  * Revision 1.10  1996/01/31  16:18:49  kehr

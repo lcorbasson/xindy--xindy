@@ -1,4 +1,25 @@
-Thu May  2 18:40:42 1996    <kehr@eliade.hrz.th-darmstadt.de ()>
+Mon May 27 20:58:17 1996    <kehr@eliade.hrz.th-darmstadt.de>
+
+	* Some weeks of hard work are finished. The markup is completely
+	  finished. The cross-references are fully implemented. The letter
+	  groups, too. The sort- and merge-rules for keywords seem to
+	  word. It's great! The indexstyle is nearly complete. Still
+	  missing is a good startup-script and the TeX-frontend
+	  (Joachim promised to make it for me). The print-key is still not
+	  implemented. It is very simple but I most think about the
+	  correct policy. Still missing is the building of
+	  location-reference trees. Maybe it is comparable to the
+	  indexentry trees, we'll see.
+
+	  The complete markup-scheme suits me fine. I like the way to
+	  describe how the index should look like. With the debugging mode
+	  turned on, everybody sees exactly what markup-entities are
+	  called and one can successively replace them with your own
+	  markup-tags. Maybe this was one of my best ideas. Now users can
+	  master the markup in an autodidactic and interactive way. More
+	  experience and suggests are welcome.
+
+Thu May  2 18:40:42 1996    <kehr@eliade.hrz.th-darmstadt.de>
 
 	* Made changes in all modules. The thing starts to work! It now
 	  reads and processes and markups an index. Great!
@@ -21,7 +42,7 @@ Wed Mar 27 21:29:27 1996  Roger Kehr  <kehr@spock>
 	  handling of the foreign function interface. After experimenting
 	  with the regexp library from the clisp distibution I decided to
 	  move to the newer GNU Rx library. I wrote a regsub function in
-	  Lisp (the funtion was built by the program and evaluated later)
+	  Lisp (the function was built by the program and evaluated later)
 	  I took one more look into the old makeindex3-project and
 	  discovered, that it might be better to include some parts of the
 	  source (written in C) into my project. The reasons were simple.

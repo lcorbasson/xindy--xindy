@@ -238,6 +238,7 @@ constructor.
 (export '(enumeration make-enumeration))
 @
 
+
 \subsubsection{The submodule root}
 
 Here is the root chunk of this submodule.
@@ -260,7 +261,11 @@ Here is the root chunk of this submodule.
 %%======================================================================
 %%
 %% $Log$
-%% Revision 1.12  1996/05/09 11:49:51  kehr
+%% Revision 1.13  1996/05/29 14:15:53  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.12  1996/05/09  11:49:51  kehr
 %% Changes in all submodules, due to macro-expansion problems during
 %% compilation.
 %%

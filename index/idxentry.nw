@@ -255,8 +255,10 @@ The resulting code is now:
 <<Separating into location-class-groups>>=
 <<Splitting lists into sublists --- [[split-list]]>>
 <<Convert sublists into group objects --- [[convert-sublists-to-group-objects]]>>
+<<Convert sublists into group objects --- [[convert-sublists-to-specialized-groups]]>>
 <<Class \class{locref-group}>>
 <<Class \class{locref-class-group}>>
+<<Class \class{crossref-class-group}>>
 <<Separating the location-references by using [[split-list]] and [[convert-sublists-to-group-objects]]>>
 @
 
@@ -349,11 +351,18 @@ instead of the object-type. This function takes as its argument the
 sublist and must return an appropriate object-type. It is possible to
 convert different sublists into different object-types.
 
-<<convert-sublists-to-group>>=
-(defun convert-sublists-to-specialized-groups (list-of-sublists convert-func)
-  (declare (special convert-func))
+<<Convert sublists into group objects --- [[convert-sublists-to-specialized-groups]]>>=
+(defun convert-sublists-to-specialized-groups (list-of-sublists
+                                               convert-func
+                                               &optional
+                                               initializer-func)
   (mapcar #'(lambda (sublist)
-              (make-locref-group (funcall convert-func sublist) sublist))
+              (let ((locref-grp
+                     (make-locref-group (funcall convert-func sublist)
+                                        sublist)))
+                (if initializer-func
+                    (funcall initializer-func locref-grp)
+                    locref-grp)))
           list-of-sublists))
 @ %def convert-sublists-to-specialized-groups
 
@@ -399,19 +408,28 @@ dispatching during the markup process.
 
 <<Class \class{locref-class-group}>>=
 (defclass locref-class-group (locref-group)
-    ((locclass  #| get-loccclass is macro |#  :writer set-locclass :initform 'nil)))
+    ((locclass  :writer set-locclass :initform 'nil)))
 @ %def locref-class-group
+
+<<Class \class{crossref-class-group}>>=
+(defclass crossref-class-group (locref-group)
+    ((locclass  :writer set-locclass :initform 'nil)))
+@ %def crossref-class-group
+
 
 <<Separating the location-references by using [[split-list]] and [[convert-sublists-to-group-objects]]>>=
 (defun process-indexentry (idxent)
   (setq *currently-processed-indexentry* idxent)
-  (set-locrefs (convert-sublists-to-group-objects
+  (set-locrefs (convert-sublists-to-specialized-groups
                 (split-list #'(lambda (locref)
                                 (get-ordnum (get-locclass locref)))
                             #'<
                             (get-locrefs idxent))
-                'locref-class-group
-                :initializer-func
+                #'(lambda (sublist)
+                    (typecase (car sublist)
+                      (layered-location-reference  'locref-class-group)
+                      (crossref-location-reference 'crossref-class-group)
+                      (t (error "internal error in `process-indexentry'"))))
                 #'(lambda (locref-cls-grp)
                     (set-locclass (get-locclass
                                    (car (get-members locref-cls-grp)))
@@ -425,13 +443,16 @@ dispatching during the markup process.
 @ %def process-indexentry
 
 <<Export-list of submodule \module{idxentry}>>=
-(export '(locref-group get-members locref-class-group get-locclass
+(export '(locref-group get-members
+          locref-class-group crossref-class-group get-locclass
           make-locref-group process-group process-indexentry))
 @
 
 \paragraph*{Further processing}
 
 Process the following steps for each subset $L_i$ separately.
+The cross-references are not considered, so their method simply
+returns their argument.
 
 <<Processing location-reference-groups>>=
 (defmethod process-group ((locref-cls-grp locref-class-group)
@@ -441,6 +462,10 @@ Process the following steps for each subset $L_i$ separately.
   (remove-virtual-locrefs locref-cls-grp)
   (separate-into-catattr-groups locref-cls-grp)
   locref-cls-grp)
+
+(defmethod process-group ((crossref-cls-grp crossref-class-group)
+                          (idxcls indexclass))
+  crossref-cls-grp)
 
 <<Apply substitution- and merge-rules>>
 <<Building of ranges>>
@@ -865,12 +890,25 @@ don't need it at all).
                           (write-string "main-key: " s)
                           (write (get-main-key idxent) :stream s)
                           (pprint-newline :mandatory s)
+                          (write-string "merge-key: " s)
+                          (write (get-merge-key idxent) :stream s)
+                          (pprint-newline :mandatory s)
+                          (write-string "sort-key: " s)
+                          (write (get-sort-key idxent) :stream s)
+                          (pprint-newline :mandatory s)
                           (pprint-logical-block
                            (s nil :suffix "}")
                            (write-string "Locrefs {" s)
                            (pprint-indent :block 2)
                            (pprint-newline :mandatory s)
                            (pprint-linear s (get-locrefs idxent)))
+                          (pprint-newline :mandatory s)
+                          (pprint-logical-block
+                           (s nil :suffix "}")
+                           (write-string "Subentries {" s)
+                           (pprint-indent :block 2)
+                           (pprint-newline :mandatory s)
+                           (pprint-linear s (get-subentries idxent)))
                           (pprint-newline :mandatory s))
                          ))
 @
@@ -920,13 +958,19 @@ This section is placed here before the definition of all classes.
                                   "LOCREF-GROUP"               0)
 (set-pprint-locref-group-dispatch 'locref-class-group
                                   "LOCREF-CLASS-GROUP"         1)
+(set-pprint-locref-group-dispatch 'crossref-class-group
+                                  "CROSSREF-CLASS-GROUP"       2)
 (set-pprint-locref-group-dispatch 'category-attribute-group
-                                  "CATEGORY-ATTRIBUTE-GROUP"   2)
+                                  "CATEGORY-ATTRIBUTE-GROUP"   3)
 @
 
 
 %% $Log$
-%% Revision 1.15  1996/05/20 08:48:47  kehr
+%% Revision 1.16  1996/05/29 14:15:38  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.15  1996/05/20  08:48:47  kehr
 %% Major release of the modules locref, idxstyle and index. Added picture
 %% for the range-building FSM with a complete rewrite.
 %%

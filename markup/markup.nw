@@ -72,9 +72,14 @@ nothing).
 (defparameter *markup-verbose-mode*  nil)
 (defparameter *markup-verbose-open*  "<")
 (defparameter *markup-verbose-close* ">")
-(defparameter *markup-indentation*  2)
-(defparameter *markup-indent-level* 0)
+(defparameter *markup-indentation*   2)
+(defparameter *markup-indent-level*  0)
 (defparameter *empty-markup* "")
+
+(defparameter *internal-error-output* (make-string-output-stream))
+#| can be visited and flushed by calling
+(get-output-stream-string *internal-error-output* )
+|#
 
 (defun do-markup-indent ()
   (incf *markup-indent-level* *markup-indentation*))
@@ -104,20 +109,27 @@ markup algorithm.
 verbose-mode is turned on.
 
 <<Markup primitives>>=
-(defun do-markup-default (str &optional object)
-  (declare (inline))
+(defun do-markup-default (str &optional arg1 arg2)
   (when *markup-verbose-mode*
     (loop for x from 1 to *markup-indent-level*
           do (write-string " "))
     (do-markup-string *markup-verbose-open*)
     (do-markup-string str)
-    (when object
-      (etypecase object
+    (when arg1
+      (etypecase arg1
         (string (do-markup-string " [")
-                (do-markup-string object)
+                (do-markup-string arg1)
                 (do-markup-string "]"))
         (number (do-markup-string " [")
-                (write object :stream *markup-output-stream*)
+                (write arg1 :stream *markup-output-stream*)
+                (do-markup-string "]"))))
+    (when arg2
+      (etypecase arg2
+        (string (do-markup-string " [")
+                (do-markup-string arg2)
+                (do-markup-string "]"))
+        (number (do-markup-string " [")
+                (write arg2 :stream *markup-output-stream*)
                 (do-markup-string "]"))))
     (do-markup-string *markup-verbose-close*)
     (terpri)
@@ -180,12 +192,18 @@ T
                                            (&whole signature)
                                            &key open close sep declare body)
   (let ((name (stringify name)))
-    `(LET ()
-      (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-open")))
+    `(LET ((*ERROR-OUTPUT* *INTERNAL-ERROR-OUTPUT*))
+      (CLOS:DEFMETHOD
+          ,(intern (string-upcase (concatenate 'string name "-open"))
+                   'markup)
           ,signature ,@declare ,@open ,@body)
-      (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-close")))
+      (CLOS:DEFMETHOD
+          ,(intern (string-upcase (concatenate 'string name "-close"))
+                   'markup)
           ,signature ,@declare ,@close ,@body)
-      (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-sep")))
+      (CLOS:DEFMETHOD
+          ,(intern (string-upcase (concatenate 'string name "-sep"))
+                   'markup)
           ,signature ,@declare ,@sep ,@body))))
 @ %def define-list-environment-methods
 
@@ -194,62 +212,216 @@ T
                                       (&whole signature)
                                       &key open close declare body)
   (let ((name (stringify name)))
-    `(LET ()
-      (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-open")))
+    `(LET ((*ERROR-OUTPUT* *INTERNAL-ERROR-OUTPUT*))
+      (CLOS:DEFMETHOD
+          ,(intern (string-upcase (concatenate 'string name "-open"))
+                   'markup)
           ,signature ,@declare ,@open ,@body)
-      (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-close")))
+      (CLOS:DEFMETHOD
+          ,(intern (string-upcase (concatenate 'string name "-close"))
+                   'markup)
           ,signature ,@declare ,@close ,@body))))
 @ %def define-environment-methods
 
-<<Export-list of submodule \module{markup}>>=
-(export '(do-markup-string do-markup-list))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{A special reader syntax for quoted strings}
+
+The following reader function simulates the reading of strings like C
+does. Its quote-symbol is `\texttt{\bslash}' which quotes every
+character appearing next in the input stream. If the next character is
+`\texttt{n}' it is converted to a \texttt{Newline}-character. The
+macro-character \texttt{\#} recognizes a new kind of strings such that
+the string
+\begin{center}
+  \verb|#"this is a string\n with two newlines \n"|
+\end{center}
+will be correctly parsed and all occurences of `\texttt{\bslash{}n}'
+converted to a \texttt{Newline}-character.
+
+Additionally this reader-function knows the correct values of the
+special characters `\texttt{\bslash{}b}' and `\texttt{\bslash{}e}'.
+The encoding of these special characters declares
+`\texttt{\bslash{}b}' to be the character no.~1, and
+`\texttt{\bslash{}e}' to be character no.~255 in the
+ISO-Latin-alphabet. We can't choose character no.~0 for
+`\texttt{\bslash{}b}' since the sort-key generation is performed via
+the C-library \module{ORDRULES} in which character no.~0 is used as
+the string-termination character.
+
+<<Markup primitives>>=
+(defun c-string-reader (stream subchar char)
+  (declare (ignore subchar char))
+  (let ((ch nil)
+        (str (make-array 10
+                         :element-type 'string-char
+                         :adjustable t
+                         :fill-pointer 0)))
+    (loop
+      (setq ch (read-char stream t #\Newline t))
+      (case ch
+        (#\" (return str))              ;; "
+        (#\\ (setq ch (read-char stream t #\Newline t))
+             (case ch
+               (#\n (vector-push-extend #\Newline str))
+               (#\b (vector-push-extend (character   1) str))
+               (#\e (vector-push-extend (character 255) str))
+               (t   (vector-push-extend ch str))))
+        (t (vector-push-extend ch str))))))
+
+(set-dispatch-macro-character #\# #\" #'markup::c-string-reader)
+
+#|
+(let ((x #\Null))
+  (loop for i from 1 to 255
+        do (progn (print (character i))
+                  (when (char>= x (character i))
+                    (print "Whee!"))
+                  (setq x (character i)))))
+|#
+@ %def c-string-reader
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Some chunks for checking correct arguments}
+
+<<Check [[:open]] and [[:close]]>>=
+((and open (not (stringp open)))
+ (warn "parameter `~A' is not a string! (ignored)~%" open))
+((and close (not (stringp close)))
+ (warn "parameter `~A' is not a string! (ignored)~%" close))
 @
+
+<<Check [[:open]], [[:close]] and [[:sep]]>>=
+<<Check [[:open]] and [[:close]]>>
+((and sep  (not (stringp sep)))
+ (warn "parameter `~A' is not a string! (ignored)~%" sep))
+@
+
+<<Check [[:depth]]>>=
+((and depth (not (integerp depth)))
+ (warn "parameter `~A' is not a number! (ignored)~%" depth))
+@
+
+<<Check [[:group]]>>=
+((and group (not (integerp group)))
+ (warn "parameter `~A' is not a number! (ignored)~%" group))
+@
+
+<<Check [[:class]] for location-reference class>>=
+((and class (progn (setq class (stringify class))
+                   (not (lookup-locref-class *indexstyle* class))))
+ (warn "parameter `~A' is not a location-reference class! (ignored)~%" class))
+@
+
+<<Check [[:class]] for cross-reference class>>=
+((and class (progn (setq class (stringify class))
+                   (not (lookup-crossref-class *indexstyle* class))))
+ (warn "parameter `~A' is not a cross-reference class! (ignored)~%" class))
+@
+
+<<Check [[:attr]]>>=
+((and attr (progn (setq attr (stringify attr))
+                   (not (lookup-catattr *indexstyle* attr))))
+ (warn "parameter `~A' is not an attribute! (ignored)~%" attr))
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \paragraph{Index markup}
 
 The markup of an index currently consits of the open/close markups and
 the markup of the list of all indexentries.
 
-\begin{TODO}
-  \item This must be changed when implementing the \emph{letter groups}.
-\end{TODO}
-
 <<Index markup>>=
 (defmethod do-markup-index ((idx base-index))
-  (do-markup-index-open  idx)
+  (do-markup-index-open idx)
   (do-markup-list (get-entries idx)
-               :identifier IDXENT #| the identifier to use in the expansion |#
-               :open-body  (do-markup-indexentry-list-open  0 #|initial depth:=0|#)
-               :elt-body   (do-markup-indexentry IDXENT 0)
-               :sep-body   (do-markup-indexentry-list-sep   0)
-               :close-body (do-markup-indexentry-list-close 0))
+    :identifier LETTER-GRP
+    :open-body  (do-markup-letter-group-list-open)
+    :elt-body   (do-markup-letter-group LETTER-GRP)
+    :sep-body   (do-markup-letter-group-list-sep)
+    :close-body (do-markup-letter-group-list-close))
   (do-markup-index-close idx))
 
 (define-environment-methods do-markup-index ((idx base-index))
-  :open  ((do-markup-default "INDEX:OPEN"))
-  :close ((do-markup-default "INDEX:CLOSE")))
-#|
-(defmethod do-markup-index-open ((idx base-index))
-  (do-markup-default "INDEX:OPEN"))
-
-(defmethod do-markup-index-close ((idx base-index))
-  (do-markup-default "INDEX:CLOSE"))
-|#
+  :declare ((declare (ignore idx)))
+  :open  ((do-markup-default "INDEX:OPEN")
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "INDEX:CLOSE")))
 @ %def do-markup-index
 
-<<Markup interface>>=
-(defmacro markup-index (&key open close sep)
-  `(DEFINE-LIST-ENVIRONMENT-METHODS do-markup-indexentry-list (idx index:base-index)
-    :declare ((declare (ignore idx)))
-    :open  ,(when open  `((do-markup-string ,open)))
-    :close ,(when close `((do-markup-string ,close)))
-    :sep   ,(when sep   `((do-markup-string ,sep)))))
-@ %def markup-index
-
 <<Export-list of submodule \module{markup}>>=
-(export '(do-markup-index do-markup-index-open do-markup-index-close))
+(export '(do-markup-index))
 @
 
+<<Markup interface>>=
+(defmacro markup-index (&key open close)
+  (cond <<Check [[:open]] and [[:close]]>>
+        (t `(markup::define-environment-methods
+             DO-MARKUP-INDEX ((idx index:base-index))
+             :declare ((declare (ignore idx)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-index
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Letter group markup}
+
+<<Letter group markup>>=
+(define-list-environment-methods do-markup-letter-group-list ()
+  :open  ((do-markup-default "LETTER-GROUP-LIST:OPEN")
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "LETTER-GROUP-LIST:CLOSE"))
+  :sep   ((do-markup-default "LETTER-GROUP-LIST:SEP")))
+@ %def do-markup-letter-group-list
+
+<<Markup interface>>=
+(defmacro markup-letter-group-list (&key open close sep)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-LETTER-GROUP-LIST ()
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-letter-group-list
+
+<<Letter group markup>>=
+(defmethod do-markup-letter-group ((letter-grp letter-group))
+  (let ((group-id (get-group-id letter-grp)))
+    (do-markup-letter-group-open group-id)
+    (do-markup-list (get-members letter-grp)
+      :identifier IDXENT #| the identifier to use in the expansion |#
+      :open-body  (do-markup-indexentry-list-open  0
+		    #|initial depth:=0|#)
+      :elt-body   (do-markup-indexentry IDXENT     0)
+      :sep-body   (do-markup-indexentry-list-sep   0)
+      :close-body (do-markup-indexentry-list-close 0))
+    (do-markup-letter-group-close group-id)))
+
+(define-environment-methods do-markup-letter-group ((group number))
+  :open  ((do-markup-default "LETTER-GROUP:OPEN"  group)
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "LETTER-GROUP:CLOSE" group)))
+@ %def do-markup-letter-group
+
+<<Markup interface>>=
+(defmacro markup-letter-group (&key open close group)
+  (cond <<Check [[:open]] and [[:close]]>>
+        <<Check [[:group]]>>
+        (t `(markup::define-environment-methods
+             DO-MARKUP-LETTER-GROUP
+             (,(if group `(group (EQL ,group)) '(group number)))
+             :declare ((declare (ignore group)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-letter-group
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \paragraph{Indexentry markup}
 
@@ -259,6 +431,28 @@ location-references are actually location-class-groups we have 3
 subtargets for an indexentry markup.
 
 <<Indexentry markup>>=
+(define-list-environment-methods do-markup-indexentry-list ((depth number))
+  :open  ((do-markup-default "INDEXENTRY-LIST:OPEN"  depth)
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "INDEXENTRY-LIST:CLOSE" depth))
+  :sep   ((do-markup-default "INDEXENTRY-LIST:SEP"   depth)))
+@ %def do-markup-indexentry-list
+
+<<Markup interface>>=
+(defmacro markup-indexentry-list (&key open close sep depth)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        <<Check [[:depth]]>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-INDEXENTRY-LIST
+             (,(if depth `(depth (EQL ,depth)) '(depth number)))
+             :declare ((declare (ignore depth)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-indexentry-list
+
+<<Indexentry markup>>=
 (defmethod do-markup-indexentry ((idxent index-entry)
                                  (depth number))
   (do-markup-indexentry-open depth)
@@ -266,213 +460,438 @@ subtargets for an indexentry markup.
   (let ((print-key (get-print-key idxent)))
     (do-markup-list (or print-key (get-main-key idxent))
       :identifier KEYWORD
-      :open-body  (do-markup-keyword-open  depth)
-      :elt-body   (do-markup-string        KEYWORD)
-      :sep-body   (do-markup-keyword-sep   depth)
-      :close-body (do-markup-keyword-close depth)))
+      :open-body  (do-markup-keyword-list-open  depth)
+      :elt-body   (do-markup-keyword   KEYWORD  depth)
+      :sep-body   (do-markup-keyword-list-sep   depth)
+      :close-body (do-markup-keyword-list-close depth)))
 
-  (do-markup-list (get-locrefs idxent)
-    :identifier LOCCLS-GRP
-    :open-body  (do-markup-loccls-grp-list-open)
-    :elt-body   (do-markup-loccls-grp LOCCLS-GRP)
-    :sep-body   (do-markup-loccls-grp-list-sep)
-    :close-body (do-markup-loccls-grp-list-close))
+  (let ((locrefs (get-locrefs idxent)))
+    (unless (endp locrefs)
+      (do-markup-list locrefs
+        :identifier LOCCLS-GRP
+        :open-body  (do-markup-locclass-list-open)
+        :elt-body   (do-markup-locclass LOCCLS-GRP)
+        :sep-body   (do-markup-locclass-list-sep)
+        :close-body (do-markup-locclass-list-close))))
 
   (let ((subentries (get-subentries idxent)))
-    (when subentries
+    (unless (endp subentries)
       (do-markup-list subentries
         :identifier IDXENT
-        :open-body  (do-markup-indexentry-list-open  depth)
-        :elt-body   (do-markup-indexentry IDXENT (1+ depth)) #| incr(depth) |#
-        :sep-body   (do-markup-indexentry-list-sep   depth)
-        :close-body (do-markup-indexentry-list-close depth))))
+        :open-body  (do-markup-indexentry-list-open  (1+ depth))
+        :elt-body   (do-markup-indexentry IDXENT     (1+ depth))
+        :sep-body   (do-markup-indexentry-list-sep   (1+ depth))
+        :close-body (do-markup-indexentry-list-close (1+ depth)))))
 
   (do-markup-indexentry-close depth))
 @ %def do-markup-indexentry
 
 <<Indexentry markup>>=
-(define-list-environment-methods do-markup-keyword ((depth number))
-  :declare ((declare (ignore depth)))
-  :open  ((do-markup-default "KEYWORD:OPEN"))
-  :close ((do-markup-default "KEYWORD:CLOSE"))
-  :sep   ((do-markup-default "KEYWORD:SEP")))
+(define-environment-methods do-markup-indexentry ((depth number))
+  :open  ((do-markup-default "INDEXENTRY:OPEN"  depth)
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "INDEXENTRY:CLOSE" depth)))
+@ %def do-markup-indexentry
 
-#| The above macro expands to the following method declarations
-(defmethod do-markup-keyword-open ((depth number))
-  (declare (ignore depth))
-  (do-markup-default "KEYWORD:OPEN"))
+<<Markup interface>>=
+(defmacro markup-indexentry (&key open close depth)
+  (cond <<Check [[:open]] and [[:close]]>>
+        <<Check [[:depth]]>>
+        (t `(markup::define-environment-methods
+             DO-MARKUP-INDEXENTRY
+             (,(if depth `(depth (EQL ,depth)) '(depth number)))
+             :declare ((declare (ignore depth)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-indexentry
 
-(defmethod do-markup-keyword-sep ((depth number))
-  (declare (ignore depth))
-  (do-markup-default "KEYWORD:SEP"))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-(defmethod do-markup-keyword-close ((depth number))
-  (declare (ignore depth))
-  (do-markup-default "KEYWORD:CLOSE"))
-|#
+\paragraph{Keyword markup}
+
+<<Keyword markup>>=
+(define-list-environment-methods do-markup-keyword-list ((depth number))
+  :open  ((do-markup-default "KEYWORD-LIST:OPEN"  depth)
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "KEYWORD-LIST:CLOSE" depth))
+  :sep   ((do-markup-default "KEYWORD-LIST:SEP"   depth)))
+@ %def do-markup-keyword-list
+
+<<Markup interface>>=
+(defmacro markup-keyword-list (&key open close sep depth)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        <<Check [[:depth]]>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-KEYWORD-LIST
+             (,(if depth `(depth (EQL ,depth)) '(depth number)))
+             :declare ((declare (ignore depth)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-keyword-list
+
+<<Keyword markup>>=
+(defmethod do-markup-keyword (keyword (depth number))
+  (do-markup-keyword-open depth)
+  (do-markup-string keyword)
+  (do-markup-keyword-close depth))
+@ %def do-markup-keyword
+
+<<Keyword markup>>=
+(define-environment-methods do-markup-keyword ((depth number))
+  :open  ((do-markup-default "KEYWORD:OPEN"  depth)
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "KEYWORD:CLOSE" depth)))
 @ %def do-markup-keyword-*
 
-<<Indexentry markup>>=
-(define-environment-methods do-markup-indexentry ((depth number))
-  :open  ((do-markup-default "IDXENT-OPEN"  depth))
-  :close ((do-markup-default "IDXENT-CLOSE" depth)))
-
-#| The above macro expands to the following method declarations
-(defmethod do-markup-indexentry-open ((depth number))
-  (declare (ignore depth))
-  (do-markup-default "IDXENT:OPEN"))
-
-(defmethod do-markup-indexentry-close ((depth number))
-  (declare (ignore depth))
-  (do-markup-default "IDXENT:CLOSE"))
-|#
-@ %def do-markup-indexentry-*
-
-<<Indexentry markup>>=
-(define-list-environment-methods do-markup-indexentry-list ((depth number))
-  :declare ((declare (ignore depth)))
-  :open  ((do-markup-default "IDXENT-LST:OPEN")
-          (do-markup-indent))
-  :close ((do-markup-default "IDXENT-LST:CLOSE")
-          (do-markup-outdent))
-  :sep   ((do-markup-default "IDXENT-LST:SEP")))
-@ %def do-markup-indexentry-list-*
-
-<<Export-list of submodule \module{markup}>>=
-(export '(do-markup-indexentry
-          do-markup-indexentry-open
-          do-markup-indexentry-close
-          do-markup-indexentry-list-open
-          do-markup-indexentry-list-sep
-          do-markup-indexentry-list-close
-          do-markup-keyword-open
-          do-markup-keyword-sep
-          do-markup-keyword-close))
-@
+<<Markup interface>>=
+(defmacro markup-keyword (&key open close depth)
+  (cond <<Check [[:open]] and [[:close]]>>
+        <<Check [[:depth]]>>
+        (t `(markup::define-environment-methods
+             DO-MARKUP-KEYWORD
+             (,(if depth `(depth (EQL ,depth)) '(depth number)))
+             :declare ((declare (ignore depth)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-keyword
 
 
-\paragraph{Location-class-group markup}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Location-class markup}
+
+The following methods define the markup of a list of location-class
+groups. The elements of this group are of type
+\type{locref-class-group} or \type{crossref-class-group} and
+dispatching braches to the right methods.
 
 <<Location-class-group markup>>=
-(defmethod do-markup-loccls-grp ((locref-cls-grp locref-class-group))
+(define-list-environment-methods do-markup-locclass-list ()
+  :open  ((do-markup-default "LOCCLASS-LIST:OPEN")
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "LOCCLASS-LIST:CLOSE"))
+  :sep   ((do-markup-default "LOCCLASS-LIST:SEP")))
+@ %def do-markup-locclass-list
+
+<<Markup interface>>=
+(defmacro markup-locclass-list (&key open close sep)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-LOCCLASS-LIST ()
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-locclass-list
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subparagraph{Location-reference-class markup}
+
+<<Location-class-group markup>>=
+(defmethod do-markup-locclass ((locref-cls-grp locref-class-group))
   (let ((locclass (get-locclass locref-cls-grp)))
-    (do-markup-loccls-grp-open locclass)
+    (do-markup-locref-class-open locclass)
 
     (do-markup-list (get-members locref-cls-grp)
-      :identifier CATATTR-GRP
-      :open-body  (do-markup-catattr-grp-list-open)
-      :elt-body   (do-markup-catattr-grp CATATTR-GRP)
-      :sep-body   (do-markup-catattr-grp-list-sep)
-      :close-body (do-markup-catattr-grp-list-close))
+      :identifier ATTRIBUTE-GRP
+      :open-body  (do-markup-attribute-group-list-open)
+      :elt-body   (do-markup-attribute-group ATTRIBUTE-GRP)
+      :sep-body   (do-markup-attribute-group-list-sep)
+      :close-body (do-markup-attribute-group-list-close))
 
-    (do-markup-loccls-grp-close locclass)))
+    (do-markup-locref-class-close locclass)))
 
-(define-environment-methods do-markup-loccls-grp ((loccls location-class))
-  :open  ((do-markup-default "LOCCLS-GRP:OPEN" (get-name loccls)))
-  :close ((do-markup-default "LOCCLS-GRP:CLOSE" (get-name loccls))))
-
-(define-list-environment-methods do-markup-loccls-grp-list ()
-  :open  ((do-markup-default "LOCCLS-GRP-LST:OPEN")
+(define-environment-methods do-markup-locref-class
+    ((locrefcls layered-location-class))
+  :open  ((do-markup-default "LOCREF-CLASS:OPEN"  (get-name locrefcls))
           (do-markup-indent))
-  :close ((do-markup-default "LOCCLS-GRP-LST:CLOSE")
-          (do-markup-outdent))
-  :sep   ((do-markup-default "LOCCLS-GRP-LST:SEP")))
-@ %def do-markup-loccls-grp*
+  :close ((do-markup-outdent)
+          (do-markup-default "LOCREF-CLASS:CLOSE" (get-name locrefcls))))
+@ %def do-markup-locclass do-markup-locref-class
 
-<<Export-list of submodule \module{markup}>>=
-(export '(do-markup-loccls-grp
-          do-markup-loccls-grp-open
-          do-markup-loccls-grp-close
-          do-markup-loccls-grp-list-open
-          do-markup-loccls-grp-list-sep
-          do-markup-loccls-grp-list-close))
-@
+<<Markup interface>>=
+(defmacro markup-locref-class (&key open close class)
+  (cond <<Check [[:open]] and [[:close]]>>
+        <<Check [[:class]] for location-reference class>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-LOCREF-CLASS
+             (,(if class
+                   `(locrefcls (EQL ,(cdr (lookup-locref-class
+                                           *indexstyle* class))))
+                   '(locrefcls layered-location-class)))
+             :declare ((declare (ignore locrefcls)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-locref-class
 
-\paragraph{Catattr-group markup}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-<<Catattr-group markup>>=
-(defmethod do-markup-catattr-grp ((catattr-grp category-attribute-group))
-  (let ((ordnum (get-ordnum catattr-grp)))
-    (do-markup-catattr-grp-open ordnum)
+\paragraph{Attribute-group markup}
 
-    (do-markup-list (get-members catattr-grp)
+<<Attribute-group markup>>=
+(define-list-environment-methods do-markup-attribute-group-list ()
+  :open  ((do-markup-default "ATTRIBUTE-GROUP-LIST:OPEN")
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "ATTRIBUTE-GROUP-LIST:CLOSE"))
+  :sep   ((do-markup-default "ATTRIBUTE-GROUP-LIST:SEP")))
+@ %def do-markup-attribute-group-list
+
+<<Markup interface>>=
+(defmacro markup-attribute-group-list (&key open close sep)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-ATTRIBUTE-GROUP-LIST ()
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-attribute-group-list
+
+<<Attribute-group markup>>=
+(defmethod do-markup-attribute-group
+    ((attribute-group category-attribute-group))
+  (let ((ordnum (get-ordnum attribute-group)))
+    (do-markup-attribute-group-open ordnum)
+
+    (do-markup-list (get-members attribute-group)
       :identifier LOCREF
       :open-body  (do-markup-locref-list-open)
       :elt-body   (do-markup-locref LOCREF)
       :sep-body   (do-markup-locref-list-sep)
       :close-body (do-markup-locref-list-close))
 
-    (do-markup-catattr-grp-close ordnum)))
+    (do-markup-attribute-group-close ordnum)))
 
-(define-environment-methods do-markup-catattr-grp ((ordnum number))
-  :open  ((do-markup-default "CATATTR-GRP:OPEN" ordnum))
-  :close ((do-markup-default "CATATTR-GRP:CLOSE" ordnum)))
-
-(define-list-environment-methods do-markup-catattr-grp-list ()
-  :open  ((do-markup-default "CATATTR-GRP-LST:OPEN")
+(define-environment-methods do-markup-attribute-group ((ordnum number))
+  :open  ((do-markup-default "ATTRIBUTE-GROUP:OPEN"  ordnum)
           (do-markup-indent))
-  :close ((do-markup-default "CATATTR-GRP-LST:CLOSE")
-          (do-markup-outdent))
-  :sep   ((do-markup-default "CATATTR-GRP-LST:SEP")))
-@
+  :close ((do-markup-outdent)
+          (do-markup-default "ATTRIBUTE-GROUP:CLOSE" ordnum)))
+@ %def do-markup-attribute-group
 
-<<Export-list of submodule \module{markup}>>=
-(export '(do-markup-catattr-grp
-          do-markup-catattr-grp-open
-          do-markup-catattr-grp-close
-          do-markup-catattr-grp-list-open
-          do-markup-catattr-grp-list-sep
-          do-markup-catattr-grp-list-close))
-@
+<<Markup interface>>=
+(defmacro markup-attribute-group (&key open close sep group)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        <<Check [[:group]]>>
+        (t `(markup::define-environment-methods
+             DO-MARKUP-ATTRIBUTE-GROUP
+             (,(if group
+                   `(ordnum (EQL ,group))
+                   '(ordnum number)))
+             :declare ((declare (ignore ordnum)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-attribute-group
 
-\paragraph{Location-reference markup}
+
+\subparagraph{Layered location-reference markup}
+
+<<Location-reference markup>>=
+(define-list-environment-methods do-markup-locref-list ()
+  :open  ((do-markup-default "LOCREF-LIST:OPEN")
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "LOCREF-LIST:CLOSE"))
+  :sep   ((do-markup-default "LOCREF-LIST:SEP")))
+@ %def do-markup-locref-list
+
+<<Markup interface>>=
+(defmacro markup-locref-list (&key open close sep)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-LOCREF-LIST ()
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-locref-list
 
 <<Location-reference markup>>=
 (defmethod do-markup-locref ((locref layered-location-reference))
-  (let ((loccls (get-locclass locref)))
-    (do-markup-locref-open loccls)
+  (let ((loccls (get-locclass locref))
+        (attr   (get-catattr  locref)))
+    (do-markup-locref-open  attr loccls)
+    (do-markup-string (get-locref-string locref))
+    (do-markup-locref-close attr loccls)))
 
-    (do-markup-list (get-layers locref)
-                 :identifier LOCREF-LAYER
-                 :open-body  (do-markup-locref-layer-list-open)
-                 :elt-body   (do-markup-string LOCREF-LAYER)
-                 :sep-body   (do-markup-locref-layer-list-sep)
-                 :close-body (do-markup-locref-layer-list-close))
-
-    (do-markup-locref-close loccls)))
-
-(define-environment-methods do-markup-locref ((loccls location-class))
-  :open  ((do-markup-default "LOCREF:OPEN" (get-name loccls)))
-  :close ((do-markup-default "LOCREF:CLOSE" (get-name loccls))))
-
-(define-list-environment-methods do-markup-locref-list ()
-  :open  ((do-markup-default "LOCREF-LST:OPEN")
+(define-environment-methods do-markup-locref ((attr   category-attribute)
+                                              (loccls layered-location-class))
+  :open  ((do-markup-default "LOCREF:OPEN"  (get-name attr) (get-name loccls))
           (do-markup-indent))
-  :close ((do-markup-default "LOCREF-LST:CLOSE")
-          (do-markup-outdent))
-  :sep   ((do-markup-default "LOCREF-LST:SEP")))
-@
+  :close ((do-markup-outdent)
+          (do-markup-default "LOCREF:CLOSE" (get-name attr) (get-name loccls))))
+@ %def do-markup-locref
+
+<<Markup interface>>=
+(defmacro markup-locref (&key open close sep class attr)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        <<Check [[:attr]]>>
+        <<Check [[:class]] for location-reference class>>
+        (t `(markup::define-environment-methods
+             DO-MARKUP-LOCREF
+             (,(if attr
+                   `(attr (EQL ,(lookup-catattr *indexstyle* attr)))
+                   '(attr category-attribute))
+              ,(if class
+                   `(locrefcls (EQL ,(cdr (lookup-locref-class
+                                           *indexstyle* class))))
+                   '(locrefcls layered-location-class)))
+             :declare ((declare (ignore attr locrefcls)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-locref
 
 <<Location-reference markup>>=
-(define-list-environment-methods do-markup-locref-layer-list ()
-  :open  ((do-markup-default "LOCREF-LAYER-LST:OPEN")
-          (do-markup-indent))
-  :close ((do-markup-default "LOCREF-LAYER-LST:CLOSE")
-          (do-markup-outdent))
-  :sep   ((do-markup-default "LOCREF-LAYER-LST:SEP")))
-@
+(defmethod do-markup-locref ((range location-range))
+  (let ((loccls (get-locclass range)))
+    (do-markup-range-open  loccls)
+    (do-markup-locref      (get-first range))
+    (do-markup-range-sep   loccls)
+    (do-markup-locref      (get-last range))
+    (do-markup-range-close loccls)))
 
-<<Export-list of submodule \module{markup}>>=
-(export '(do-markup-locref-grp
-          do-markup-locref-grp-open
-          do-markup-locref-grp-close
-          do-markup-locref-grp-list-open
-          do-markup-locref-grp-list-sep
-          do-markup-locref-grp-list-close
-          do-markup-locref-layer-list-open
-          do-markup-locref-layer-list-sep
-          do-markup-locref-layer-list-close))
-@
+(define-list-environment-methods do-markup-range
+    ((loccls layered-location-class))
+  :open  ((do-markup-default "RANGE:OPEN"  (get-name loccls))
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "RANGE:CLOSE" (get-name loccls)))
+  :sep   ((do-markup-default "RANGE:SEP"   (get-name loccls))))
+@ %def do-markup-range
+
+<<Markup interface>>=
+(defmacro markup-range (&key open close sep class)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        <<Check [[:class]] for location-reference class>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-RANGE
+             (,(if class
+                   `(locrefcls (EQL ,(cdr (lookup-locref-class
+                                           *indexstyle* class))))
+                   '(locrefcls layered-location-class)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-locref
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subparagraph{Crossref-class-group markup}
+
+Cross-reference-groups are not separated any further into subgroups.
+Their elements are simple cross-references.
+
+<<Crossref-class-group markup>>=
+(defmethod do-markup-locclass ((xref-cls-grp crossref-class-group))
+  (let ((xrefclass (get-locclass xref-cls-grp)))
+
+    (do-markup-list (get-members xref-cls-grp)
+      :identifier XREF
+      :open-body  (do-markup-crossref-list-open  xrefclass)
+      :elt-body   (do-markup-crossref            XREF)
+      :sep-body   (do-markup-crossref-list-sep   xrefclass)
+      :close-body (do-markup-crossref-list-close xrefclass))))
+
+(define-list-environment-methods do-markup-crossref-list
+    ((xrefclass crossref-location-class))
+  :open  ((do-markup-default "CROSSREF-LIST:OPEN"  (get-name xrefclass))
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "CROSSREF-LIST:CLOSE" (get-name xrefclass)))
+  :sep   ((do-markup-default "CROSSREF-LIST:SEP"   (get-name xrefclass))))
+@ %def do-markup-crossref-grp
+
+<<Markup interface>>=
+(defmacro markup-crossref-list (&key open sep close class)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        <<Check [[:class]] for cross-reference class>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-CROSSREF-LIST
+             (,(if class
+                   `(xrefcls (EQL ,(cdr (lookup-crossref-class *indexstyle*
+                                                               class))))
+                   '(xrefcls crossref-location-class)))
+             :declare ((declare (ignore xrefcls)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-crossref-list
+
+<<Crossref-class-group markup>>=
+(defmethod do-markup-crossref ((xref crossref-location-reference))
+  (let ((xrefclass (get-locclass xref)))
+
+    (do-markup-list (get-target xref)
+      :identifier XREF-LAYER
+      :open-body  (do-markup-crossref-layer-list-open  xrefclass)
+      :elt-body   (do-markup-crossref-layer XREF-LAYER xrefclass)
+      :sep-body   (do-markup-crossref-layer-list-sep   xrefclass)
+      :close-body (do-markup-crossref-layer-list-close xrefclass))))
+
+(define-list-environment-methods do-markup-crossref-layer-list
+    ((xref-class crossref-location-class))
+  :open  ((do-markup-default "CROSSREF-LAYER-LIST:OPEN"
+            (get-name xref-class))
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "CROSSREF-LAYER-LIST:CLOSE"
+            (get-name xref-class)))
+  :sep   ((do-markup-default "CROSSREF-LAYER-LIST:SEP"
+            (get-name xref-class))))
+@ %def do-markup-crossref-layer-list
+
+<<Markup interface>>=
+(defmacro markup-crossref-layer-list (&key open sep close class)
+  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+        <<Check [[:class]] for cross-reference class>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-CROSSREF-LAYER-LIST
+             (,(if class
+                   `(xrefcls (EQL ,(cdr (lookup-crossref-class *indexstyle*
+                                                               class))))
+                   '(xrefcls crossref-location-class)))
+             :declare ((declare (ignore xrefcls)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))
+             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+@ %def markup-crossref-grp
+
+<<Crossref-class-group markup>>=
+(defmethod do-markup-crossref-layer (xref-layer
+                                     (xref-class crossref-location-class))
+  (do-markup-crossref-layer-open  xref-class)
+  (do-markup-string               xref-layer)
+  (do-markup-crossref-layer-close xref-class))
+
+(define-environment-methods do-markup-crossref-layer
+    ((xref-class crossref-location-class))
+  :open  ((do-markup-default "CROSSREF-LAYER:OPEN"  (get-name xref-class))
+          (do-markup-indent))
+  :close ((do-markup-outdent)
+          (do-markup-default "CROSSREF-LAYER:CLOSE" (get-name xref-class))))
+@ %def do-markup-crossref-layer
+
+<<Markup interface>>=
+(defmacro markup-crossref-layer (&key open close class)
+  (cond <<Check [[:open]] and [[:close]]>>
+        <<Check [[:class]] for cross-reference class>>
+        (t `(markup::define-list-environment-methods
+             DO-MARKUP-CROSSREF-LAYER
+             (,(if class
+                   `(xrefcls (EQL ,(cdr (lookup-crossref-class *indexstyle*
+                                                               class))))
+                   '(xrefcls crossref-location-class)))
+             :declare ((declare (ignore xrefcls)))
+             :open  ,(when open  `((do-markup-string ,open)))
+             :close ,(when close `((do-markup-string ,close)))))))
+@ %def markup-crossref-layer
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{The module root}
 
@@ -502,20 +921,50 @@ subtargets for an indexentry markup.
 
 \subsubsection{The submodule root}
 
+<<User-interface-definitions>>=
+(defparameter *markup-user-interface-definitions*
+  '(markup-crossref-layer
+    markup-crossref-layer-list
+    markup-crossref-list
+    markup-index
+    markup-letter-group
+    markup-letter-group-list
+    markup-indexentry
+    markup-indexentry-list
+    markup-keyword
+    markup-keyword-list
+    markup-locclass-list
+    markup-locref-class
+    markup-attribute-group-list
+    markup-attribute-group
+    markup-locref-list
+    markup-locref
+    markup-range
+    ))
+@ %def *markup-user-interface-definitions*
+
+<<Export-list of submodule \module{markup}>>=
+(export '*markup-user-interface-definitions*)
+(export *markup-user-interface-definitions*)
+@
+
 <<Submodule \module{markup}>>=
 ;; $Id$
 
 <<Markup definitions>>
 <<Markup primitives>>
-<<Indexentry markup>>
 <<Index markup>>
+<<Letter group markup>>
+<<Indexentry markup>>
+<<Keyword markup>>
 <<Location-class-group markup>>
-<<Catattr-group markup>>
+<<Crossref-class-group markup>>
+<<Attribute-group markup>>
 <<Location-reference markup>>
 <<Markup interface>>
 
+<<User-interface-definitions>>
 <<Export-list of submodule \module{markup}>>
-@
 
 <<RCS-Identifier>>=
 ("markup" . "$Id$")
@@ -528,7 +977,11 @@ subtargets for an indexentry markup.
 
 
 %% $Log$
-%% Revision 1.7  1996/05/20 08:49:56  kehr
+%% Revision 1.8  1996/05/29 14:16:03  kehr
+%% Complete checkin after the major changes in the markup. See ChangeLog
+%% for details.
+%%
+%% Revision 1.7  1996/05/20  08:49:56  kehr
 %% Minor modifications.
 %%
 %% Revision 1.6  1996/05/10  17:36:36  kehr
