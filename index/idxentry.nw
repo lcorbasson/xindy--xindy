@@ -162,44 +162,6 @@ indexentries) mustn't be set.
                           :idxcls-name (get-name idxcls)))))))
 @ %def gen-indexentry
 
-
-To markup an indexentry we give as arguments the indexentry, a list of
-markups for every layer (this markup is stored in the [[markup]]-slot
-of the indexclass) and the [[context]] which is a list of strings. The
-context is the [[print-key]] of the previous printed indexentry.
-
-<<markup methods>>=
-(defmethod markup-object ((idxent indexentry)
-                          (markup-list  list)
-                          (context-list list)
-                          (env-stack    list))
-  (let ((layer-counter 0)
-        (pass-mode  'find-starting-point))
-    (do ((key-list (get-print-key idxent) (cdr key-list))
-         (markups  markup-list            (cdr markups))
-         (contexts context-list           (cdr contexts)))
-        ((or (endp key-list) (endp markups))
-           (markup-object (get-locrefs idxent) '() '() '())) ;; for now
-      (if (equal pass-mode 'find-starting-point)
-          (if (and (equal (car key-list) (car contexts))
-                   (eql (get-force-print (car markups)) 'nil))
-              (incf layer-counter)
-              (progn
-                (setq pass-mode 'printing-mode)
-                (setq env-stack (close-environments env-stack layer-counter))
-                (push (markup-keyword-layer (car key-list)
-                                            (car markups)
-                                            (equal (car key-list)
-                                                   (car context-list)))
-                      env-stack)))
-          (push (markup-keyword-layer (car key-list)
-                                      (car markups)
-                                      (equal (car key-list)
-                                             (car context-list)))
-                env-stack))))
-  env-stack)
-@
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Processing an indexentry ---  a semi-formal description}
@@ -908,13 +870,12 @@ This section is placed here before the definition of all classes.
                                   "CATEGORY-ATTRIBUTE-GROUP"   2)
 @
 
-
-%% Local Variables:
-%% mode: latex
-%% End:
-%%
+
 %% $Log$
-%% Revision 1.7  1996/01/09 14:27:24  kehr
+%% Revision 1.8  1996/01/31 16:13:27  kehr
+%% Still working on th user-interface...
+%%
+%% Revision 1.7  1996/01/09  14:27:24  kehr
 %% Moved submodule `ranges' from module `locref' to this module.
 %% Nearly complete rewrite of all submodules. See ChangeLog for further details.
 %%
@@ -995,3 +956,9 @@ This section is placed here before the definition of all classes.
 %% Revision 1.1  1995/07/09  18:14:27  kehr
 %% Initial checkin.
 %%
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:

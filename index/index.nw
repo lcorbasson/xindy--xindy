@@ -1,5 +1,5 @@
 %%
-%% This file is part of the `makeindex4'-project at the
+%% This file is part of the `xindy'-project at the
 %% Technical University Darmstadt, Computer Science Department
 %% WG System Programming, Germany.
 %%
@@ -67,16 +67,20 @@ following slots:
 
 <<Class \class{base-index}>>=
 (defclass base-index ()
-    ((entry-table :accessor get-entry-table :initform (make-hash-table :test #'equal))
-     (entry-list  :reader get-entry-list :writer set-entry-list :initform '())
-     (idxclass    :reader get-idxclass                          :initarg :idxclass)))
+    ((entry-table :accessor get-entry-table
+                  :initform (make-hash-table :test #'equal))
+     (entry-list  :reader get-entry-list
+                  :writer set-entry-list
+                  :initform '())
+     (idxclass    :reader get-idxclass
+                  :initarg :idxclass)))
 
 (defun make-base-index (idxclass)
   (make-instance 'base-index :idxclass idxclass))
 @ %def base-index make-base-index
 
 <<Export-list of submodule \module{index}>>=
-(export '(base-index make-base-index))
+(export '(base-index make-base-index get-entry-list))
 @
 
 <<Class \class{base-index}>>=
@@ -159,7 +163,7 @@ result into slot [[entry-list]].
 (defmethod sort-indexentries ((index base-index))
   (let ((temp-list '()))
     (maphash #'(lambda (key idxent)
-		 (declare (ignore key))
+                 (declare (ignore key))
                  (setq temp-list (cons (cons (get-sort-key idxent) idxent) temp-list)))
              (get-entry-table index))
     (set-entry-list (sort temp-list
@@ -191,6 +195,7 @@ we simply markup the index and start right out of the box.
 <<Processing an index>>=
 (defmethod process-index ((index base-index))
   (sort-indexentries index)
+  ;(set-entry-table nil index)
   ;(markup-index)
   index)
 @ %def process-index
@@ -210,18 +215,15 @@ we simply markup the index and start right out of the box.
 (provide 'index)
 
 (eval-when (compile load eval)
-  (use-package 'clos)
-  (use-package 'xp)
-  (unless (find-package 'locref)
-    (load 'locref))
-  (use-package 'locref)
-  (unless (find-package 'idxstyle)
-    (load 'idxstyle))
-  (use-package 'idxstyle))
+  (use-package "CLOS")
+  (use-package "XP")
+  (require "locref")
+  (use-package "LOCREF")
+  (require "idxstyle")
+  (use-package "IDXSTYLE"))
 
 <<Submodule \module{idxentry}>>
 <<Submodule \module{ranges}>>
-<<Submodule \module{markup}>>
 <<Submodule \module{index}>>
 
 <<Pretty-printing>>
@@ -245,13 +247,12 @@ we simply markup the index and start right out of the box.
 ("index" . "$Id$")
 @
 
-%% Local Variables:
-%% mode: latex
-%% TeX-master: t
-%% End:
-%%
+
 %% $Log$
-%% Revision 1.6  1996/01/10 16:47:19  kehr
+%% Revision 1.7  1996/01/31 16:13:31  kehr
+%% Still working on th user-interface...
+%%
+%% Revision 1.6  1996/01/10  16:47:19  kehr
 %% Tested and corrected the keyword-markup. Not finished, yet.
 %%
 %% Revision 1.5  1996/01/10  11:09:00  kehr
@@ -296,4 +297,8 @@ we simply markup the index and start right out of the box.
 %% nearly finished an we can start to define indexentries to make that
 %% thing work.
 %%
-
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:

@@ -53,13 +53,58 @@ location-classes---system- or user-defined---are available, all
 sorting- and merging-rules are known, \etc\ We need all information to
 process every indexentry.
 
-%% Local Variables:
-%% mode: latex
-%% TeX-master: t
-%% End:
-%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\section{External interface of module \module{index}}
+
+\subsection{Submodule \module{idxentry}}
+
+\begin{defcls}{indexentry}{}
+  Describes the contents of an indexentry.
+\end{defcls}
+
+\begin{defunc}{make-indexentry}{\ldots \res \type{indexentry}\uip}
+  Constructor of class \class{indexentry}.
+\end{defunc}
+
+\begin{defmethod}{add}{\type{indexentry} \x \type{location-reference}\uip}
+  Adds a location-reference to an indexentry. (There is still some bug
+  in the implementation. See \secref{sec:precondition}.)
+\end{defmethod}
+
+
+\subsection{Submodule \module{index}}
+
+\begin{defcls}{index}{}
+  The class of indexes.
+\end{defcls}
+
+\begin{defunc}{create-index}{\type{indexclass} \res \type{index}\uip}
+  Constructor of an index. The index is bound to the given indexclass.
+\end{defunc}
+
+\begin{defunc}{add-indexentry}{\ldots\uip}
+  During the reading of indexentries we have two possible ways of
+  adding them to an index. First we could create an object of type
+  \type{indexentry} and add this object to the index. But if we have
+  already an indexentry with the same key this operation is not
+  necessary at all. For preformace-reasons we give this function all
+  information as keyword-arguments. (This specification must be
+  revisited)
+\end{defunc}
+
+\begin{defmethod}{process-index}{\type{index}\uip}
+  This performs all the necessary work of an index.
+\end{defmethod}
+
+
+
 %% $Log$
-%% Revision 1.4  1996/01/10 11:09:02  kehr
+%% Revision 1.5  1996/01/31 16:13:32  kehr
+%% Still working on th user-interface...
+%%
+%% Revision 1.4  1996/01/10  11:09:02  kehr
 %% Re-implemented the submodule `markup' .
 %%
 %% Revision 1.3  1996/01/09  14:27:28  kehr
@@ -72,3 +117,8 @@ process every indexentry.
 %% Revision 1.1  1995/12/05  18:46:34  kehr
 %% Added module `index' and restructured some parts.
 %%
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
