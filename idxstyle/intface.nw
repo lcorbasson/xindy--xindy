@@ -165,31 +165,92 @@ NIL in cases where no switch keyword was found in EXPR.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsubsection{Globals}
+
+<<Global definitions>>=
+(defparameter *indexstyle* (create-indexclass "default"))
+@ %def *indexstyle*
+
+\subsubsection{Helpers}
+
+<<Helpers>>=
+(defun stringify (name)
+  (etypecase name
+    (symbol (symbol-name name))
+    (string name)))
+@ %def stringify
+
+<<Check functions>>=
+(defun list-of-strings-p (x)
+  (cond ((not (listp x)) nil)
+        ((every #'stringp x))))
+@ %def list-of-strings-p
+
 \subsubsection{Alphabets}
 
 <<Defining alphabets>>=
-(defmacro define-alphabet (name string-list)
-  (cond ((or (symbolp name) (stringp name))
-	   (t (error "~A is not a symbol or a string")))))
+(defmacro define-alphabet (&optional name string-list)
+  (cond ((null name)
+           (error "missing argument <name> !"))
+        ((not (or (symbolp name) (stringp name)))
+           (error "~A is not a symbol or a string" name))
+        ((null string-list)
+           (error "missing argument <string-list> !"))
+        ((not (list-of-strings-p string-list))
+           (error "~A is not a list of strings" string-list))
+        (t (let ((name (stringify name)))
+             (when (lookup-basetype *indexstyle* name)
+               (warn "redefining alphabet `~A'" name))
+             (add *indexstyle*
+		  (make-alphabet name string-list)))))
+  nil)
 @ %def define-alphabet
 
-
 <<Export-list of submodule \module{intface}>>=
+(export 'define-alphabet)
 @
 
 \subsubsection{Location-classes}
 
 <<Defining location-classes>>=
-(defmacro define-location-class (name &rest args)
-  (destructuring-switch-bind (layer-list
-			      &switch
-			      (var :var)
-			      (min :min-range-length))
+(defmacro define-location-class (&rest args)
+  (destructuring-switch-bind (name
+                              layer-list
+                              &key (min-range-length
+                                    *default-minimum-range-length*)
+                              &switch (var :var))
       args
-    (check-type layer-list list)
-    `(print (list ',layer-list (quote ,name) ,var ,min))))
-@
+    (cond ((null name)
+             (error "missing argument <name> !"))
+          ((null layer-list)
+             (error "missing argument <layer-list> !"))
+	  ((null list-of-strings-p layer-list)
+	     (error "~A is not a list of strings" layer-list))
+	  (t (let ((name (stringify name))
+		   (layers (mapcar #'(lambda (x)
+				       (let* ((layer (stringify x))
+					      (basetype (lookup-basetype *indexstyle*
+									 layer)))
+					 (if basetype
+					     (make-loccls-layer basetype)
+					     (make-loccls-separator layer))))
+				   layer-list))
+		   )
+	       (when (lookup-location-class *indexstyle* name)
+		 (warn "redefining location-class `~A'" name))
+	       (add *indexstyle*
+		    (if var
+			(checked-make-var-location-class      name layers
+							      min-range-length)
+			(checked-make-standard-location-class name layers
+							      min-range-length)))
+	       )))))
+@ %def define-location-class
 
+
+<<Export-list of submodule \module{intface}>>=
+(export 'define-location-class)
+@
 
 
 \subsubsection{The submodule root}
@@ -197,7 +258,12 @@ NIL in cases where no switch keyword was found in EXPR.
 <<Submodule \module{intface}>>=
 ;; $Id$
 
+<<Global definitions>>
 <<Destructuring-switch-bind macro>>
+<<Defining alphabets>>
+<<Defining location-classes>>
+<<Helpers>>
+<<Check functions>>
 
 <<Export-list of submodule \module{intface}>>
 @
@@ -208,7 +274,11 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.4  1996/01/31 15:29:24  kehr
+%% Revision 1.5  1996/02/06 15:43:35  kehr
+%% Added some code for define-alphabet. This code is buggy and must be
+%% rewritten due to macro failures.
+%%
+%% Revision 1.4  1996/01/31  15:29:24  kehr
 %% Made a lot of modifications to the whole module. Currently I'm working
 %% on the implementation of the indexstyle-interface.
 %%
