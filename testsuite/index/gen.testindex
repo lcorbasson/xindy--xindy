@@ -1,7 +1,7 @@
 #!/bin/sh
 
 awk ' {	if (i++ % 2000 == 1) {
-		num = rand() * 10;
+		num = rand() * 5;
 		mainkey=$1
 		while (num > 0) {
 			getline;

@@ -37,16 +37,33 @@ BNF-expressions.
 \medskip
 
 \newcommand{\ISA}{\textsl{::=}}
-\newcommand{\LIST}[1]{{\normalfont\texttt{(}}#1{\normalfont\texttt{)}}}
+\newcommand{\Sep}{{\normalfont\texttt{sep}}}
+\newcommand{\Open}{{\normalfont\texttt{open}}}
+\newcommand{\Close}{{\normalfont\texttt{close}}}
+\newcommand{\SepN}[1]{{\normalfont\texttt{sep}$^{#1}$}}
+\newcommand{\OpenN}[1]{{\normalfont\texttt{open}$^{#1}$}}
+\newcommand{\CloseN}[1]{{\normalfont\texttt{close}$^{#1}$}}
+\newcommand{\LIST}[1]{\Open{} #1 \Close{}}
+\newcommand{\LISTN}[2]{\OpenN{#1} #2 \CloseN{#1}}
 \newcommand{\Braces}[1]{{\normalfont$\langle$}#1{\normalfont$\rangle$}}
 
 {\slshape%%
 \begin{tabular}{lcl}
-  index &\ISA& \LIST{indexentry-list}\\%%
-  indexentry &\ISA& \LIST{ \LIST{keyword\texttt{+}}
-    \LIST{locclass-grp\texttt{*}}
+  index &\ISA& \LIST{indexentry-list$^0$}\\%%
+  indexentry-list$^n$ &\ISA& \LISTN{n}{indexentry$^n_1$ \Sep{}
+    indexentry$^n_2$ \Sep{} \ldots{} \Sep{} indexentry$^n_m$}\\%%
+  indexentry$^n$ &\ISA& \LISTN{n}{keyword-list$^n$ locclass-grp-list
+    indexentry-list$^{n+1}$} \\%%
+  keyword-list$^n$&\ISA& \LISTN{n}{keyword$^n_1$ \SepN{n}
+    keyword$^n_2$ \SepN{n} \ldots{} \SepN{n} keyword$^n_m$}\\%%
+  keyword$^n$ &\ISA& \LISTN{n}{\textsf{string}}\\%%
+  locclass-grp-list &\ISA& \LIST{loccls-grp$_1$ \Sep{} loccls-grp$_2$
+    \Sep{}
+    \ldots{} \Sep{} loccls-grp$_n$}\\%%
+  locclass-grp &\ISA& \LIST{attr-grp-list$_1$ \Sep{} attr-grp-list$_2$
+    \Sep{} \ldots{} \Sep{} attr-grp-list$_n$}\\%%
+  &&\Braces{structured-loccls-grp $|$ \LIST{locclass-grp\texttt{*}}
     \LIST{indexentry\texttt{*}} }\\%%
-  keyword &\ISA& \LIST{\textsf{string}}\\%%
   locclass-grp &\ISA& \Braces{structured-loccls-grp $|$
     crossref-grp}\texttt{+}\\%%
   structured-loccls-grp &\ISA& \LIST{catattr-grp\texttt{+}}\\%%
@@ -71,9 +88,128 @@ recursion levels.
 Our task is now to define a set of functions that traverse the index
 and trigger the necessary user-defined markup-strings.
 
+\section{The Indexstyle-User-Interface (IstUI)}
+
+This section gives a brief summary of the necessary specifications for
+the indexstyle and their use. The following steps have to be done to set
+up the indexstyle.
+
+\subsection{General concepts}
+
+If we extend our model of the indexstyle to several indexclasses we
+need some mechanism to store information into a specific indexclass.
+To avoid specifying the indexclass as an optional argument to all of
+the following declarations we use the construct of an \emph{active}
+indexclass. New definitions are always performed in the active
+indexclass.
+
+\begin{istui}{in-indexclass}{\emph{indexclass-name}}
+  Declares a new indexclass with the given name. If this indexclass is
+  already existing simply make it the \emph{active} one. All of the
+  following declarations take place in this indexstyle.
+\end{istui}
+
+\subsection{Location-classes}
+
+\subsubsection{Declaration of basetypes}
+
+To define a new location-class we first need to declare any existing
+basetypes. Bastypes are alphabets or enumerations. Alphabets can be
+declared by simply declare a list of strings that serve as the
+alphabets' symbols.
+
+\begin{istui}{define-alphabet}{\emph{alphabet-name}
+    \List{\emph{strings}\ldots}}%%
+  Defines \emph{alphabet-name} to be an alphabet constisting of the
+  strings given by the sting-list. We implicitely assume that the
+  elements define also the \emph{successor}-Relation.
+\end{istui}
+
+\smallskip
+
+\noindent Enumerations can't be declared in this way since the
+\emph{matching} of their elements can only be done via a special
+method bound to a new class. A new declaration the consists of a
+class-definition and a method [[prefix-match]] bound to that specific
+class.
+
+\begin{istui}{define-enumeration}{\emph{enumeration-name}
+    \emph{method-body}}
+\end{istui}
+
+
+\subsection{Declaration of location-classes}
+
+\subsubsection{Structured location-classes}
+
+Location-classes are defined via composition of basetypes and
+separators. We distinguish structured location-classes (standard- and
+var-classes) and cross-reference classes.
+
+\begin{istui}{define-location-class}{\emph{loccls-name}
+    \opt{\sw{:var}$|$\sw{:min-range-length} \emph{integer}}\\%%
+    \hspace*{5cm}\List{ (\emph{basetype}$|$\emph{string})+ }}%%
+  Defines a location-class with name \emph{loccls-name} consisting of
+  the layers given by the list. The strings are assumed to be
+  \emph{separators}. If the switch \sw{:var} is specified the declared
+  class is of type \emph{variable}, i.e.\ it is a var-location-class.
+  If the keyword \sw{:min-range-length} is specified we define the
+  \term{minimum range-length} to be used when building ranges. If we
+  like to disallow buildung of ranges at all \emph{integer} can be
+  declared as \cmd{none}. Since building of ranges is currently only
+  allowed for standard classes \sw{:var} and \sw{:min-range-length}
+  mustn't be used together.
+\end{istui}
+
+\subsubsection{Cross-reference location-classes}
+
+
+\subsection{Location-attributes}
+
+Location-attributes are defined by the explicit definition of the
+\term{location-attribute groups}. A group is a sequence $A$ of
+  attributes for that holds:
+\[
+\forall a_i,a_j\in A: i<j \Rightarrow
+\textsf{substitute-if-double}~a_i~a_j \wedge~\func{sort-ordnum($a_i$)}
+< \func{sort-ordnum($a_j$)}
+\]
+The definition
+\begin{verbatim}
+      ( (bold italic slanted) default )
+\end{verbatim}
+consists of the groups \texttt{(bold italic slanted)} and
+\texttt{default}. The resulting substitution-rules are
+`\irule{substitute-if-double}~\texttt{bold}~\texttt{italic}~\texttt{slanted}'
+and `\irule{substitute-if-double}~\texttt{italic}~\texttt{slanted}'.
+A complete description is a sequence $G$ of attribute-groups such that
+holds:
+\[
+\forall g_i,g_j\in G, a_i\in g_i, a_j\in g_j: i<j \Rightarrow
+\wedge~\func{sort-ordnum($a_i$)} < \func{sort-ordnum($a_j$)}
+\]
+
+\noindent The user interface is as follows:
+
+\begin{istui}{define-attributes}{\emph{list}}
+  Argument \emph{list} is a list of list of strings. The nesting level
+  mustn't be more than~2. So
+  \begin{center}
+    \texttt{(\ldots(\ldots)\ldots)}
+  \end{center}
+  is allowed, whereas
+  \begin{center}
+    \texttt{(\ldots( (\ldots)\ldots) )}
+  \end{center}
+  is not.
+\end{istui}
+
 
 %% $Log$
-%% Revision 1.4  1996/05/06 10:01:59  kehr
+%% Revision 1.5  1996/05/20 08:49:59  kehr
+%% Minor modifications.
+%%
+%% Revision 1.4  1996/05/06  10:01:59  kehr
 %% Minor changes in nearly all modules.
 %%
 %% Revision 1.3  1996/04/29  08:38:40  kehr

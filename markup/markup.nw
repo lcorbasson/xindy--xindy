@@ -72,7 +72,7 @@ nothing).
 (defparameter *markup-verbose-mode*  nil)
 (defparameter *markup-verbose-open*  "<")
 (defparameter *markup-verbose-close* ">")
-(defparameter *markup-indentation* 2)
+(defparameter *markup-indentation*  2)
 (defparameter *markup-indent-level* 0)
 (defparameter *empty-markup* "")
 
@@ -177,28 +177,28 @@ T
 
 <<Markup primitives>>=
 (defmacro define-list-environment-methods (name
-					   (&whole signature)
-					   &key open close sep declare body)
+                                           (&whole signature)
+                                           &key open close sep declare body)
   (let ((name (stringify name)))
     `(LET ()
       (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-open")))
-	  ,signature ,@declare ,@open ,@body)
+          ,signature ,@declare ,@open ,@body)
       (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-close")))
-	  ,signature ,@declare ,@close ,@body)
+          ,signature ,@declare ,@close ,@body)
       (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-sep")))
-	  ,signature ,@declare ,@sep ,@body))))
+          ,signature ,@declare ,@sep ,@body))))
 @ %def define-list-environment-methods
 
 <<Markup primitives>>=
 (defmacro define-environment-methods (name
-				      (&whole signature)
-				      &key open close declare body)
+                                      (&whole signature)
+                                      &key open close declare body)
   (let ((name (stringify name)))
     `(LET ()
       (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-open")))
-	  ,signature ,@declare ,@open ,@body)
+          ,signature ,@declare ,@open ,@body)
       (CLOS:DEFMETHOD ,(intern (string-upcase (concatenate 'string name "-close")))
-	  ,signature ,@declare ,@close ,@body))))
+          ,signature ,@declare ,@close ,@body))))
 @ %def define-environment-methods
 
 <<Export-list of submodule \module{markup}>>=
@@ -217,10 +217,10 @@ the markup of the list of all indexentries.
 <<Index markup>>=
 (defmethod do-markup-index ((idx base-index))
   (do-markup-index-open  idx)
-  (do-markup-list (get-entry-list idx)
+  (do-markup-list (get-entries idx)
                :identifier IDXENT #| the identifier to use in the expansion |#
                :open-body  (do-markup-indexentry-list-open  0 #|initial depth:=0|#)
-               :elt-body   (do-markup-indexentry (cdr IDXENT) 0)
+               :elt-body   (do-markup-indexentry IDXENT 0)
                :sep-body   (do-markup-indexentry-list-sep   0)
                :close-body (do-markup-indexentry-list-close 0))
   (do-markup-index-close idx))
@@ -259,36 +259,35 @@ location-references are actually location-class-groups we have 3
 subtargets for an indexentry markup.
 
 <<Indexentry markup>>=
-(defmethod do-markup-indexentry ((idxent indexentry)
-				 (depth number))
-  (let ((new-depth  (1+ depth)))
-    (do-markup-indexentry-open depth)
+(defmethod do-markup-indexentry ((idxent index-entry)
+                                 (depth number))
+  (do-markup-indexentry-open depth)
 
-    (let ((print-key (get-print-key idxent)))
-      (do-markup-list (or print-key (get-main-key idxent))
-	:identifier KEYWORD
-	:open-body  (do-markup-keyword-open  new-depth)
-	:elt-body   (do-markup-string        KEYWORD)
-	:sep-body   (do-markup-keyword-sep   new-depth)
-	:close-body (do-markup-keyword-close new-depth)))
+  (let ((print-key (get-print-key idxent)))
+    (do-markup-list (or print-key (get-main-key idxent))
+      :identifier KEYWORD
+      :open-body  (do-markup-keyword-open  depth)
+      :elt-body   (do-markup-string        KEYWORD)
+      :sep-body   (do-markup-keyword-sep   depth)
+      :close-body (do-markup-keyword-close depth)))
 
-    (do-markup-list (get-locrefs idxent)
-      :identifier LOCCLS-GRP
-      :open-body  (do-markup-loccls-grp-list-open)
-      :elt-body   (do-markup-loccls-grp LOCCLS-GRP)
-      :sep-body   (do-markup-loccls-grp-list-sep)
-      :close-body (do-markup-loccls-grp-list-close))
+  (do-markup-list (get-locrefs idxent)
+    :identifier LOCCLS-GRP
+    :open-body  (do-markup-loccls-grp-list-open)
+    :elt-body   (do-markup-loccls-grp LOCCLS-GRP)
+    :sep-body   (do-markup-loccls-grp-list-sep)
+    :close-body (do-markup-loccls-grp-list-close))
 
-    (let ((subentries (get-subentries idxent)))
-      (when subentries
-        (do-markup-list subentries
-	  :identifier IDXENT
-	  :open-body  (do-markup-indexentry-list-open  new-depth)
-	  :elt-body   (do-markup-indexentry IDXENT new-depth)
-	  :sep-body   (do-markup-indexentry-list-sep   new-depth)
-	  :close-body (do-markup-indexentry-list-close new-depth))))
+  (let ((subentries (get-subentries idxent)))
+    (when subentries
+      (do-markup-list subentries
+        :identifier IDXENT
+        :open-body  (do-markup-indexentry-list-open  depth)
+        :elt-body   (do-markup-indexentry IDXENT (1+ depth)) #| incr(depth) |#
+        :sep-body   (do-markup-indexentry-list-sep   depth)
+        :close-body (do-markup-indexentry-list-close depth))))
 
-    (do-markup-indexentry-close depth)))
+  (do-markup-indexentry-close depth))
 @ %def do-markup-indexentry
 
 <<Indexentry markup>>=
@@ -315,9 +314,8 @@ subtargets for an indexentry markup.
 
 <<Indexentry markup>>=
 (define-environment-methods do-markup-indexentry ((depth number))
-  :declare ((declare (ignore depth)))
-  :open  ((do-markup-default ":IDXENT-OPEN"))
-  :close ((do-markup-default ":IDXENT-CLOSE")))
+  :open  ((do-markup-default "IDXENT-OPEN"  depth))
+  :close ((do-markup-default "IDXENT-CLOSE" depth)))
 
 #| The above macro expands to the following method declarations
 (defmethod do-markup-indexentry-open ((depth number))
@@ -334,9 +332,9 @@ subtargets for an indexentry markup.
 (define-list-environment-methods do-markup-indexentry-list ((depth number))
   :declare ((declare (ignore depth)))
   :open  ((do-markup-default "IDXENT-LST:OPEN")
-	  (do-markup-indent))
+          (do-markup-indent))
   :close ((do-markup-default "IDXENT-LST:CLOSE")
-	  (do-markup-outdent))
+          (do-markup-outdent))
   :sep   ((do-markup-default "IDXENT-LST:SEP")))
 @ %def do-markup-indexentry-list-*
 
@@ -375,9 +373,9 @@ subtargets for an indexentry markup.
 
 (define-list-environment-methods do-markup-loccls-grp-list ()
   :open  ((do-markup-default "LOCCLS-GRP-LST:OPEN")
-	  (do-markup-indent))
+          (do-markup-indent))
   :close ((do-markup-default "LOCCLS-GRP-LST:CLOSE")
-	  (do-markup-outdent))
+          (do-markup-outdent))
   :sep   ((do-markup-default "LOCCLS-GRP-LST:SEP")))
 @ %def do-markup-loccls-grp*
 
@@ -412,9 +410,9 @@ subtargets for an indexentry markup.
 
 (define-list-environment-methods do-markup-catattr-grp-list ()
   :open  ((do-markup-default "CATATTR-GRP-LST:OPEN")
-	  (do-markup-indent))
+          (do-markup-indent))
   :close ((do-markup-default "CATATTR-GRP-LST:CLOSE")
-	  (do-markup-outdent))
+          (do-markup-outdent))
   :sep   ((do-markup-default "CATATTR-GRP-LST:SEP")))
 @
 
@@ -444,23 +442,23 @@ subtargets for an indexentry markup.
     (do-markup-locref-close loccls)))
 
 (define-environment-methods do-markup-locref ((loccls location-class))
-  :open  ((do-markup-default "LOCREF:OPEN"))
-  :close ((do-markup-default "LOCREF:CLOSE")))
+  :open  ((do-markup-default "LOCREF:OPEN" (get-name loccls)))
+  :close ((do-markup-default "LOCREF:CLOSE" (get-name loccls))))
 
 (define-list-environment-methods do-markup-locref-list ()
   :open  ((do-markup-default "LOCREF-LST:OPEN")
-	  (do-markup-indent))
+          (do-markup-indent))
   :close ((do-markup-default "LOCREF-LST:CLOSE")
-	  (do-markup-outdent))
+          (do-markup-outdent))
   :sep   ((do-markup-default "LOCREF-LST:SEP")))
 @
 
 <<Location-reference markup>>=
 (define-list-environment-methods do-markup-locref-layer-list ()
   :open  ((do-markup-default "LOCREF-LAYER-LST:OPEN")
-	  (do-markup-indent))
+          (do-markup-indent))
   :close ((do-markup-default "LOCREF-LAYER-LST:CLOSE")
-	  (do-markup-outdent))
+          (do-markup-outdent))
   :sep   ((do-markup-default "LOCREF-LAYER-LST:SEP")))
 @
 
@@ -530,7 +528,10 @@ subtargets for an indexentry markup.
 
 
 %% $Log$
-%% Revision 1.6  1996/05/10 17:36:36  kehr
+%% Revision 1.7  1996/05/20 08:49:56  kehr
+%% Minor modifications.
+%%
+%% Revision 1.6  1996/05/10  17:36:36  kehr
 %% Wrote some more sophisticated macros that expand to several methods at
 %% once. The source is now much more compact.
 %%

@@ -76,7 +76,7 @@ expect -re "\#<INDEX.*>.*$prompt$"
 xsend {(pprint *indexstyle*)}
 expect -re ".*indexclass.*rules.*hook.*$prompt$" { pass "$test" }
 
-xsend {(idxstyle::map-location-classes #'(lambda (idxcls loccls) (get-name loccls)))}
+xsend {(idxstyle::map-location-classes *indexstyle* #'(lambda (idxcls loccls) (get-name loccls)))}
 expect -re ".*num.*Alph-num.*$prompt$" { pass "$test" }
 
 #
