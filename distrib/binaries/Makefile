@@ -9,22 +9,26 @@
 #   compile    :  compiles the xindy-system
 #   xindy.mem  :  creates the dumped version of xindy
 #   xindy      :  created the defaults startup-script
+#   gzipped    :  created a gzipped version of the mem-file
 #   clean      :  cleans unnecessary stuff
 #   testsuite  :  executes a testsuite
 #
 
-BINDIR = /usr/local/lib/xindy
-LIBDIR = /usr/local/lib/xindy/modules
+TOPDIR    = ../..
 
-SRC_DIR   = ../../src
+SRC_DIR   = $(TOPDIR)/src
 FAS       = base.fas locref.fas idxstyle.fas index.fas markup.fas
 DEFAULTS  = defaults.xdy
 MEMFILE   = xindy.mem
-XINDY_IN  = ../../bin/xindy.in
+XINDY_IN  = $(TOPDIR)/bin/xindy.in
 XINDY_RUN = ./xindy.run -q -M ./base.mem
-TEST_DIR  = ../../tests
+TEST_DIR  = $(TOPDIR)/tests
 
-all: compile xindy.mem
+LIBDIR    = /usr/local/lib/xindy/
+
+RM 	  = /bin/rm -f
+
+all: xindy compile xindy.mem
 
 base.fas: $(SRC_DIR)/base.lsp
 	$(XINDY_RUN) -c $(SRC_DIR)/base.lsp -o base.fas
@@ -43,7 +47,10 @@ xindy.mem: $(DEFAULTS) compile
 	$(RM) $(MEMFILE)
 	$(XINDY_RUN) -x '(load "dump-xindy.xdy")'
 
-gzipped: xindy.mem
+gzipped: force
+	@ if gzip -t xindy.mem 2>/dev/null; \
+	     then echo "!!! xindy.mem is already gzipped !!!"; exit 1\
+	     else make xindy.mem; fi
 	gzip xindy.mem
 	mv xindy.mem.gz xindy.mem
 
@@ -52,15 +59,13 @@ $(DEFAULTS): PLATFORM force
 	@echo "Creating file $(DEFAULTS)..."
 	@echo "(setq *load-paths* (list "     > $(DEFAULTS)
 	@echo "  (pathname \".\")"           >> $(DEFAULTS)
-	@echo "  (pathname \"$(LIBDIR)\")"   >> $(DEFAULTS)
-	@echo "))"                           >> $(DEFAULTS)
+	@echo "  (pathname \"$(LIBDIR)\")))" >> $(DEFAULTS)
 	@echo "(setq xindy:*xindy-platform*" >> $(DEFAULTS)
 	@echo " \"`cat PLATFORM`\" )"        >> $(DEFAULTS)
 	@echo "Finished $(DEFAULTS)."
 
 xindy: force
-	-sed -e "s|@XINDY_BINDIR@|$(BINDIR)|" \
-	     -e "s|@XINDY_LIBDIR@|$(LIBDIR)|" \
+	-sed -e "s|@XINDY_LIBDIR@|$(LIBDIR)|" \
 	     < $(XINDY_IN) > xindy
 	-chmod a+x xindy
 
@@ -76,6 +81,7 @@ PLATFORM:
 clean: force
 	$(RM) *.fas *.lib
 	$(RM) $(DEFAULTS) $(MEMFILE)
+	$(RM) xindy
 
 force:
 

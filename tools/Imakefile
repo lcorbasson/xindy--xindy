@@ -1,0 +1,46 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Imakefile for Documentation of the xindy-Project
+ *
+ * (history at end)
+ */
+
+/* needed modules */
+
+XCOMM ------------------------------------------------------------
+XCOMM continue in Imakefile
+
+#include <Project.imk>
+#include <CVS.imk>
+
+DESTDIR = ../distrib/bin
+
+FILELIST-tex2xindy = tex2xindy.l
+FILELIST-xindy     = xindy.in
+
+Distrib: distrib
+distrib: force $(DESTDIR)
+	 (cd xindy;     cp $(FILELIST-xindy)     ../$(DESTDIR))
+	 (cd tex2xindy; cp $(FILELIST-tex2xindy) ../$(DESTDIR))
+
+force :
+
+CVSAdd(Imakefile)
+CVSAdd($(subdirs))
+CVSCommit()
+
+/* ============================================================
+ *
+ * $Log$
+ * Revision 1.1  1996/07/11 14:16:48  kehr
+ * Complete Major checkin before changing the letter-groups.
+ *
+ *
+
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */

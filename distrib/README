@@ -12,7 +12,7 @@ organized as follows:
 
   tests/        contains a complete testsuite
 
-  bin/		several scripts that forming the enviroment of xindy
+  bin/          several scripts and tools forming the enviroment of xindy
 
   modules/	the library of pre-defined indexstyle-modules
 
@@ -22,7 +22,7 @@ organized as follows:
   src/          the source of the xindy-system
 
   contrib/	contains additional programs that can be used to make
-		xindy working with various document-formatting systems
+		xindy work with various document-formatting systems
 
 
 This distribution is also available at
@@ -37,16 +37,17 @@ which contains the most up-to-date information about xindy.
 
 Currently we support binary-distributions for the following platforms:
 
-    Linux ELF      i386
-    AIX-3.2        rs6000
-    HP-UX 9.x      hppa
-    SunOS 5.2-4    sun4m
+    Linux ELF        i386
+    AIX-3.2          rs6000
+    HP-UX 9.x        hppa
+    SunOS 5.2-4      sun4m
+    MS-DOS/Windows   i386,i486  (partially supported)
 
 Everybody is encouraged to port xindy to new platforms. For any kind
 of suggestions, helpful comments, questions, bug reports and such,
 please mail to
 
-	xindy@iti.informatik.th-darmstadt.de
+	@@@@iti.informatik.th-darmstadt.de
 
 
 See file INSTALL for a description how to install this distribution.

@@ -983,11 +983,8 @@ delivers. The result is a list containing the sorted sublists.
                        (declare (ignore element))
                        (push key key-list))
                    split-table)
-	  (gol t  "~&key-list: ~S~%" key-list)
           (maplist #'(lambda (rest-list)
-		       (info "~&split-list: ~S~%" rest-list)
 		       (let ((entries (gethash (car rest-list) split-table)))
-			 (gol t  "~&entries: ~S~%" entries)
 			 (if headfunc
 			     (let ((head (find-if headfunc entries)))
 			       (rplaca rest-list
@@ -1157,7 +1154,10 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.20  1996/07/09 14:41:46  kehr
+%% Revision 1.21  1996/07/11 14:16:26  kehr
+%% Complete Major checkin before changing the letter-groups.
+%%
+%% Revision 1.20  1996/07/09  14:41:46  kehr
 %% Corrected a bug in the incorrect usage of the split-list-function.
 %% Added some features to this function such that for each group that is
 %% created an element satisfying a predicate can be made the head of the

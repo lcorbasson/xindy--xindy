@@ -84,6 +84,7 @@ It can be imported by other packages by calling
 (export '(*idxstyle-user-interface-definitions*
           *indexstyle*
           *indexstyle-readtable*
+	  set-searchpath-by-string
           do-require))
 @
 
@@ -566,9 +567,12 @@ The following chunks implement the searchpath.
   (cond ((null args)
            (error "missing argument <pathlist> !"))
         ((stringp (car args))
-           `(SET-SEARCHPATH (STRING-TO-SEARCHLIST ,(car args))))
+           `(SET-SEARCHPATH-BY-STRING ,(car args)))
         ((listp args)
            `(SET-SEARCHPATH ',(car args)))))
+
+(defun set-searchpath-by-string (searchpath-str)
+  (set-searchpath (string-to-searchlist searchpath-str)))
 
 (defun string-to-searchlist (str)
   (let ((paths '())
@@ -790,7 +794,10 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.15  1996/07/03 18:41:42  kehr
+%% Revision 1.16  1996/07/11 14:16:19  kehr
+%% Complete Major checkin before changing the letter-groups.
+%%
+%% Revision 1.15  1996/07/03  18:41:42  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%

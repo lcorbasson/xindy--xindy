@@ -42,24 +42,30 @@ platform.
 (defmacro error-exit ()
   `(EXIT 1))
 
+(defun issue-startup-message ()
+  (info "This is ~A (~A).~%" *xindy-version* *xindy-platform*)
+  (info "Copyright (c) 1996  Roger Kehr~%~%"))
+
 (defun startup (&key idxstyle rawindex output logfile
 		     show-version markup-trace)
-  (info "This is ~A (~A).~%" *xindy-version* *xindy-platform*)
-  (info "Copyright (C) 1996  Roger Kehr~%~%")
+  (issue-startup-message)
   (when show-version (exit))
-  (when markup-trace
-    (setq *markup-verbose-mode* t))
+  (when markup-trace (setq *markup-verbose-mode* t))
+  #+HANDLER
   (handler-case
       (do-startup idxstyle rawindex output logfile)
     (error (condition)
-           (oops "~&~%FATAL ERROR:~%")
+	   (oops "~&~%FATAL ERROR:~%")
 	   (apply-oops (simple-condition-format-string    condition)
 		       (simple-condition-format-arguments condition))
-	   (error-exit))))
-@ %def startup
+	   (error-exit)))
+  #-HANDLER
+  (do-startup idxstyle rawindex output logfile))
+@ %def issue-startup-message startup
 
 <<Startup functions>>=
 (defun do-startup (idxstyle raw-index output logfile)
+  (set-searchpath-by-environment)
   (when logfile
     (info "~&Opening logfile ~S " logfile)
     (handler-case
@@ -114,6 +120,12 @@ platform.
 (export '(startup *xindy-version* *xindy-platform*))
 @
 
+<<Startup functions>>=
+(defun set-searchpath-by-environment ()
+  (let ((sp (system::getenv "XINDY_SEARCHPATH")))
+    (when sp (idxstyle:set-searchpath-by-string sp))))
+@ %def set-searchpath-by-environment
+
 \subsubsection{The submodule root}
 
 <<Submodule \module{startup}>>=
@@ -137,7 +149,10 @@ platform.
 
 
 %% $Log$
-%% Revision 1.2  1996/07/03 18:41:44  kehr
+%% Revision 1.3  1996/07/11 14:16:37  kehr
+%% Complete Major checkin before changing the letter-groups.
+%%
+%% Revision 1.2  1996/07/03  18:41:44  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%

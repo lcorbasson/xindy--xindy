@@ -10,6 +10,7 @@
 # tex2xindy cannot be compiled using standard lex. Use flex instead.
 # Modify the libraries according to your site.
 #
+
 FLEX    = flex -t
 FLEXLIB = -L/usr/local/lib -L/usr/local/lib/lib -lfl
 
@@ -17,7 +18,7 @@ FLEXLIB = -L/usr/local/lib -L/usr/local/lib/lib -lfl
 # Usual stuff
 #
 RM     = /bin/rm -f
-CFLAGS = -O
+CFLAGS = -O2
 
 # here we go
 

@@ -6,38 +6,37 @@
 # indexing system.
 #
 
-XINDY_LIBDIR=${XINDY_LIBDIR:=@XINDY_LIBDIR@}
-XINDY_BINDIR=${XINDY_BINDIR:=@XINDY_BINDIR@}
-
 #
-# some functions
+# Some functions.
 #
 
 usage() {
 	echo "
-`basename $0` [-t] [-v] [-o output] [-l logfile]
-	       indexstyle raw-index
+`basename $0`\t[-t] [-v] [-o output] [-l logfile]
+\tindexstyle raw-index
 
 options:
 
-  -t   enters tracing-mode for markup-tags.
-  -v   displays the current version of xindy.
-  -o   specifies the output-file for the tagged index.
-  -l   logfile into which xindy writes useful information
+  -t   Enters tracing-mode for markup-tags.
+  -v   Displays the current version of xindy.
+  -o   Specifies the output-file for the tagged index. If ommited, the
+       name of the raw-index is taken, with its extension replaced by
+       \`.ind'.
+  -l   Logfile into which xindy writes useful information.
 
 "
 	exit 2
 }
 
 check_bin() {
-   if [ ! -f $XINDY_BINDIR/xindy.run ]
+   if [ ! -f $runfile ]
    then
-     echo "can't find \`$XINDY_BINDIR/xindy.run' !"
+     echo "can't find \`$runfile' !"
      exit 3
    fi
-   if [ ! -x $XINDY_BINDIR/xindy.run ]
+   if [ ! -x $runfile ]
    then
-     echo "\`$XINDY_BINDIR/xindy.run' not executable !"
+     echo "\`$runfile' not executable !"
      exit 4
    fi
 }
@@ -59,7 +58,24 @@ then
     usage
 fi
 
-memfile="$XINDY_BINDIR/xindy.mem"
+# Define the default xindy library directory It should be in a xindy
+# subdirectory of a sibling lib directory. Use /usr/local/lib/xindy if
+# such a directory does not exist. If /usr/local/lib/xindy does not
+# exist as well, the user must set XINDY_LIBDIR explicitely.
+
+if [ "" = "$XINDY_LIBDIR" ]
+then
+    LibDir=`expr $0 : '\(.*\)/'`
+    : ${LibDir:=.}
+    LibDir=$LibDir/../lib/xindy
+    test -d $LibDir  ||  LibDir="@XINDY_LIBDIR@"
+    XINDY_LIBDIR=$LibDir
+fi
+
+memfile="$XINDY_LIBDIR/xindy.mem"
+runfile="$XINDY_LIBDIR/xindy.run"
+
+# Parse all arguments.
 
 while true
 do
@@ -88,13 +104,21 @@ do
   esac
 done
 
+# Now check if everything is present.
+
 if [ "" != "$try" ]
 then
    check_bin
    check_mem
 fi
 
-xindy_run="$XINDY_BINDIR/xindy.run -q -M $memfile"
+xindy_run="$runfile -q -M $memfile"
+
+if [ "" != "$interactive" ]
+then
+   $xindy_run
+   exit
+fi
 
 quote_string() {
    echo $1 | sed -e 's/"/\\\"/g' -e 's/\\/\\\\/g'
@@ -123,8 +147,8 @@ else
     then
 	# remove the suffix, if one exists
         output="`echo $2 | sed -e 's/\.[^\.]*$//'`"
-	# append suffix ".out"
-        output=`quote_string "$output.out"`
+	# append suffix ".ind"
+        output=`quote_string "$output.ind"`
     fi
     if [ "$logfile" != "" ]
     then

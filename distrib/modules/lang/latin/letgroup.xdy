@@ -1,7 +1,7 @@
 ;; $Id$
 ;;
-;; This file contains the standard letter groups used in german
-;; indexes.
+;; This file contains the standard letter groups used in latin-bases
+;; languages.
 
 (define-letter-group "a" 1000)
 (define-letter-group "b" 1100)

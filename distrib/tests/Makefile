@@ -9,8 +9,9 @@
 RM = /bin/rm -f
 
 XINDY_PLATFORM = test-arch
-ALLTESTS = startup mappings
-TESTS =  mappings
+ALLTESTS       = startup mappings
+TESTS 	       = mappings
+XINDY_DIR      = ../binaries/$(XINDY_PLATFORM)
 
 testsuite: banner tests compare
 
@@ -19,9 +20,12 @@ banner: force
 	@echo "Running tests on platform \"$(XINDY_PLATFORM)\"..."
 
 tests: force
-	@ XINDY_BINDIR=../binaries/$(XINDY_PLATFORM);\
-	  export XINDY_BINDIR; \
-          XINDY_LIBDIR=../modules;\
+	@if [ ! -x $(XINDY_DIR)/xindy ]; then \
+	  echo;\
+	  echo "!!! You must run \`make' in directory $(XINDY_DIR) before running any tests !!!";\
+	  echo; exit 1;\
+	 fi
+	@ XINDY_LIBDIR=$(XINDY_DIR);\
 	  export XINDY_LIBDIR; \
 	  for tst in $(TESTS); do \
 	     echo ;\
@@ -29,8 +33,7 @@ tests: force
 	     echo "Running test \"$$tst\".";\
 	     echo "------------------------------";\
 	     echo ;\
-             ../binaries/$(XINDY_PLATFORM)/xindy -o $$tst.out \
-				     $$tst.xdy $$tst.raw ;\
+             $(XINDY_DIR)/xindy -o $$tst.out $$tst.xdy $$tst.raw ;\
 	  done
 
 compare: force

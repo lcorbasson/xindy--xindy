@@ -1075,10 +1075,12 @@ An example output could look like
 
 <label id="markup-index">
 <cmddesc>
-(markup-index [:open string] [:close string])
+(markup-index [:open string] [:close string]
+	      [ [:flat] | [:tree] | [:hierdepth depth] ])
 </cmddesc>
 
-Defines the markup tags that enclose the whole index. Examples:
+Defines the markup tags that enclose the whole index via the
+<tt/:open/ and <tt/:close/ parameters. Examples:
 
 <tscreen><verb>
 (markup-index :open  "Here comes the index\n"
@@ -1091,6 +1093,49 @@ index and the <tt/:close/-string appears after the index is printed.
 The command <tt/(markup-index)/ defines that nothing is printed
 surround the entire index.
 
+Additionally one can specify the form of the generated index. It is
+possible to produce flat indexes by specifying the switch <tt/:flat/,
+to generate a tree with the <tt/:tree/ switch or any kind of mixture
+between both by specifying the depth up to trees should be built with
+the parameter <tt/:hierdepth/. Its argument <tt/depth/ is the number
+of layers that can be formed into a tree. Therefore <tt/:flat/ is an
+abbrevation of <tt/:hierdepth 0/ and <tt/:tree/ is an abbrevation of
+<tt/:hierdepth max-depth/, with <tt/max-depth/ being the maximum
+number of layers a keyword has. An example, the keywords
+
+<tscreen><verb>
+("tree" "binary" "AVL")
+("tree" "binary" "natural")
+</verb></tscreen>
+
+can be transformed in the following ways:
+
+A flat index (<tt/:flat/ or <tt/:hierdepth 0/)
+
+<tscreen><verb>
+tree binary AVL
+tree binary natural
+</verb></tscreen>
+
+with <tt/:hierdepth 1/
+
+<tscreen><verb>
+tree
+    binary  AVL
+    binary  natural
+</verb></tscreen>
+
+and a tree (<tt/:tree/ or <tt/:hierdepth/ &gt; 1)
+
+<tscreen><verb>
+tree
+    binary
+        AVL
+        natural
+</verb></tscreen>
+
+Most often one will create flat indexes or ones that are in a
+tree-like form.
 
 <!-- ================================================================= -->
 
@@ -1417,7 +1462,9 @@ done by writing an appropriate raw-index filter.
 The format of the raw-index interface of <sf/xindy/ defined as follows:
 
 <cmddesc>
-(indexentry :key string-list [:print string-list] [:attr string]
+(indexentry { :key string-list [:print string-list]
+	    | :tkey list-of-layers }
+	    [:attr string]
 	    { { :locref string | [:open-range | :close-range] }
 	    | { :xref string-list [:xref-type string] } } )
 </cmddesc>
@@ -1455,6 +1502,27 @@ argument is mandatory.
 
 <tag/<tt/:print//The optional <em/print-key/ defines the way the
 keyword has to be printed in the markup phase.
+
+<tag/<tt/:tkey//Another possibility to the define the keys of an
+indexentry is with the <tt/:tkey/-keyword-argument. It can be used
+instead of the <tt/:key/ and <tt/:print/-arguments. Instead of
+specifying separately the key and the corresponding print-key, we
+define the keyword by its layers. Each layer consist of a list of one
+or two strings. The first string will be interpreted as the main-key,
+whereas the second one will become the print-key. If the print-key is
+ommited, the main-key is taken instead. So the definitions
+
+<tscreen><verb>
+:tkey (("This") ("is") ("a") ("bang" "BANG !!!"))
+</verb></tscreen>
+
+is equivalent to
+
+<tscreen><verb>
+:key   ("This" "is" "a" "bang")
+:print ("This" "is" "a" "BANG !!!")
+</verb></tscreen>
+
 
 <tag/<tt/:locref//The reference an indexentry describes can be a
 <em/location-reference/ or a <em/cross-reference/. The switch

@@ -109,10 +109,12 @@ on logging''.
 The following macro can be used to declare assertions.
 
 <<Assertions>>=
-(defmacro assert! (cond)
+(defmacro assert! (cond &optional msg)
   `(UNLESS ,cond
     (FORMAT *ERROR-OUTPUT* "Internal error! Assertion ~A failed!" ',cond)
-    (ERROR "entering debugger")))
+    ,(if msg
+	 `(ERROR "~S" ,msg)
+	 `(ERROR "Entering debugger!"))))
 
 (pushnew :ASSERT! *features*)
 @
@@ -135,7 +137,10 @@ The following macro can be used to describe an error.
 @
 
 %% $Log$
-%% Revision 1.11  1996/07/03 18:41:34  kehr
+%% Revision 1.12  1996/07/11 14:15:36  kehr
+%% Complete Major checkin before changing the letter-groups.
+%%
+%% Revision 1.11  1996/07/03  18:41:34  kehr
 %% Checkin after some modifications of the error-system and the loading of
 %% indexstyle-modules have been made. Affects all modules.
 %%

@@ -588,65 +588,57 @@ slots with the neccessary data.
 (defun build-indexentry-tree-recursive (idxent-list
                                         max-depth
                                         &optional (curr-depth 1))
-  (gol t "~&b-i-t-r: curr-depth=~S idxent-list=~S~%"
-       curr-depth idxent-list)
-  (step
-   (cond ((endp idxent-list) idxent-list)          #| nothing more to do |#
-	 ((> curr-depth max-depth)   #| we reached the end |#
-	    (gol t "~&THEN:~%")
-	    (gen-all-sort-keys idxent-list) #| this is the then case |#
-	    )
-	 (t (let ((idxent-slist
-		   (split-list #'(lambda (idxent)
-				   (car (get-merge-key idxent)))
-			       idxent-list
-			       :headfunc
-			       #'(lambda (idxent)
-				   (= 1 (length (get-merge-key idxent)))))))
-	      (gol t "~&idxent-slist: ~S~%" idxent-slist)
-	      (mapcar
-	       #'(lambda (sublist)
-		   (let* ((idxent (car sublist))
+  (cond ((endp idxent-list) idxent-list)          #| nothing more to do |#
+	((> curr-depth max-depth)   #| we reached the end |#
+	   (gen-all-sort-keys idxent-list) #| this is the then case |#
+	   )
+	(t (let ((idxent-slist
+		  (split-list #'(lambda (idxent)
+				  (car (get-merge-key idxent)))
+			      idxent-list
+			      :headfunc
+			      #'(lambda (idxent)
+				  (= 1 (length (get-merge-key idxent)))))))
+	     (mapcar
+	      #'(lambda (sublist)
+		  (let* ((idxent (car sublist))
 
-			  (merge-key (get-merge-key idxent)))
-		     (gol t "~&merge-key: ~S~%" merge-key)
-		     (if (= 1 (length merge-key))
-			 (progn #| length = 1 |#
-			   (gol t " length=1 ")
-			   (set-sort-key #-:ORDRULES merge-key
-					 #+:ORDRULES (gen-keyword-sortkey-list
-						      merge-key)
-					 idxent)
-			   (set-subentries
-			    (sort-indexentries
-			     (build-indexentry-tree-recursive
-			      (remove-first-keywords (cdr sublist))
-			      max-depth
-			      (1+ curr-depth)))
-			    idxent)
+			 (merge-key (get-merge-key idxent)))
+		    (if (= 1 (length merge-key))
+			(progn #| length = 1 |#
+			  (set-sort-key #-:ORDRULES merge-key
+					#+:ORDRULES (gen-keyword-sortkey-list
+						     merge-key)
+					idxent)
+			  (set-subentries
+			   (sort-indexentries
+			    (build-indexentry-tree-recursive
+			     (remove-first-keywords (cdr sublist))
+			     max-depth
+			     (1+ curr-depth)))
 			   idxent)
-			 (let* #| length > 1 |#
-			     ((new-merge-key (take-first merge-key))
-			      (new-idxent
-			       (make-index-entry
-				:main-key  (take-first (get-main-key idxent))
-				:merge-key new-merge-key
-				:sort-key
-				#-:ORDRULES new-merge-key
-				#+:ORDRULES (gen-keyword-sortkey-list
-					     new-merge-key)
-				;;:print-key (take-first (get-print-key idxent))
-				:idxclass  (get-idxclass idxent))))
-			   (gol t " length>1 ")
-			   (set-subentries
-			    (sort-indexentries
-			     (build-indexentry-tree-recursive
-			      (remove-first-keywords sublist)
-			      max-depth
-			      (1+ curr-depth)))
-			    new-idxent)
-			   new-idxent))))
-	       idxent-slist))))))
+			  idxent)
+			(let* #| length > 1 |#
+			    ((new-merge-key (take-first merge-key))
+			     (new-idxent
+			      (make-index-entry
+			       :main-key  (take-first (get-main-key idxent))
+			       :merge-key new-merge-key
+			       :sort-key
+			       #-:ORDRULES new-merge-key
+			       #+:ORDRULES (gen-keyword-sortkey-list
+					    new-merge-key)
+			       ;;:print-key (take-first (get-print-key idxent))
+			       :idxclass  (get-idxclass idxent))))
+			  (set-subentries
+			   (sort-indexentries
+			    (build-indexentry-tree-recursive
+			     (remove-first-keywords sublist)
+			     max-depth
+			     (1+ curr-depth)))
+			   new-idxent)
+			  new-idxent))))
+	      idxent-slist)))))
 @ %def take-first build-indexentry-tree-recursive
 
 <<Processing an index>>=
@@ -657,6 +649,8 @@ slots with the neccessary data.
                   (cdr (slot-value idxent 'merge-key)))
             (setf (slot-value idxent 'main-key)
                   (cdr (slot-value idxent 'main-key)))
+            (setf (slot-value idxent 'print-key)
+                  (cdr (slot-value idxent 'print-key)))
             )
         idxent-list)
   idxent-list)
@@ -767,7 +761,10 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
-%% Revision 1.20  1996/07/09 14:41:51  kehr
+%% Revision 1.21  1996/07/11 14:16:30  kehr
+%% Complete Major checkin before changing the letter-groups.
+%%
+%% Revision 1.20  1996/07/09  14:41:51  kehr
 %% Corrected a bug in the incorrect usage of the split-list-function.
 %% Added some features to this function such that for each group that is
 %% created an element satisfying a predicate can be made the head of the

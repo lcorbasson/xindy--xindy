@@ -23,7 +23,7 @@ ProjectTop()
 
 /* ATTN: modules are made in list order! */
 BuildProjectModules(Report Presentation Doc\
-		    submodules testsuite)
+		    submodules testsuite tools)
 
 CVSAdd(ChangeLog Imakefile)
 CVSAdd(Report Presentation)
@@ -35,10 +35,28 @@ CVSAdd(tools)
 CVSAdd(submodules)
 
 Distrib : Release force
-	for subdir in Doc tools\
-        do\
-           (cd $$subdir; make Distrib)\
-        done
+	@ for subdir in Doc tools;\
+          do\
+           (echo; echo "changing to $$subdir"; cd $$subdir; make Distrib);\
+          done
+
+/* Make the packages */
+
+BINDIR  = ./distrib/binaries
+VERSION = 0.9
+GTAR    = gtar -czv --dereference -f
+
+#define Package(version,platform)					@@\
+Packages:: xindy-version-platform.tar.gz				@@\
+xindy-version-platform.tar.gz: force					@@\
+	$(GTAR) xindy-version-platform.tar.gz $(BINDIR)/platform
+
+Package($(VERSION),rs6000-aix)
+Package($(VERSION),hppa-hpux)
+Package($(VERSION),sun4-solaris)
+
+clean::
+	$(RM) xindy-$(VERSION)-*.tar.gz
 
 force:
 
@@ -46,7 +64,10 @@ force:
 /*======================================================================
  *
  * $Log$
- * Revision 1.13  1996/06/24 09:08:30  kehr
+ * Revision 1.14  1996/07/11 14:15:16  kehr
+ * Complete Major checkin before changing the letter-groups.
+ *
+ * Revision 1.13  1996/06/24  09:08:30  kehr
  * Added support for the distribution-tree.
  *
  * Revision 1.12  1996/05/29  14:15:07  kehr

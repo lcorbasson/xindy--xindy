@@ -90,7 +90,7 @@ INDEXENTRY   \\indexentry
                   }
 <encap>.            ECHO;
 
-<skip2location>[ \t]*\{   printf(" :location \""); BEGIN(location);
+<skip2location>[ \t]*\{   printf(" :locref \""); BEGIN(location);
 
 <location>\}        printf("\")\n"); BEGIN(0);
 <location>.         ECHO;
@@ -102,14 +102,17 @@ INDEXENTRY   \\indexentry
 
 main()
 {
-  fprintf(stderr, "This is `aux2xindy' version 0.9 June 1996.\n");
-  fprintf(stderr, "Copyright (C) 1996  Roger Kehr\n\n");
+  fprintf(stderr, "This is `tex2xindy' version 0.9 July 1996.\n");
+  fprintf(stderr, "Copyright (c) 1996  Roger Kehr\n\n");
   yylex();
 }
 
 /*
   $Log$
-  Revision 1.1  1996/06/24 08:53:57  kehr
+  Revision 1.2  1996/07/11 14:16:55  kehr
+  Complete Major checkin before changing the letter-groups.
+
+  Revision 1.1  1996/06/24  08:53:57  kehr
   Initial checkin of the Makefile, README and tex2xindy.
 
 
