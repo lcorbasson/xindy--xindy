@@ -217,13 +217,19 @@ The following symbols are exported:
   Abstract base-class of all location-references.
 \end{defvcls}
 
-\begin{defcls}{structured-locref}{}
-  This is the class of all structured location-references. With
-  \emph{structure} we mean that we can sort and join them.
-\end{defcls}
+\begin{defmethod}{set-state-normal}{\type{location-reference}}
+  Sets the state of a location-reference to \textsf{normal}.
+\end{defmethod}
+
+\begin{defmethod}{set-state-virtual}{\type{location-reference}}
+  Sets the state of a location-reference to \textsf{virtual}.
+\end{defmethod}
+
+\begin{defmethod}{set-state-deleted}{\type{location-reference}}
+  Sets the state of a location-reference to \textsf{deleted}.
+\end{defmethod}
 
 \begin{defunc}{make-structured-locref}{\uip}
-
 \end{defunc}
 
 \begin{defcls}{category-attribute}{}
@@ -263,7 +269,10 @@ The following symbols are exported:
 
 
 %% $Log$
-%% Revision 1.7  1996/01/17 16:56:04  kehr
+%% Revision 1.8  1996/01/31 15:25:25  kehr
+%% Minor modifications.
+%%
+%% Revision 1.7  1996/01/17  16:56:04  kehr
 %% Improved documentation and threw out some of the markup-stuff.
 %%
 %% Revision 1.6  1996/01/15  19:17:34  kehr

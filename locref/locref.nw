@@ -64,11 +64,11 @@ important.
 
 <<Class \class{location-reference}>>=
 (defclass location-reference ()
-    ())
+    ((locclass  :reader get-locclass :initarg :locclass)))
 @ %def location-reference
 
 <<Export-list of submodule \module{locref}>>=
-(export 'location-reference)
+(export '(location-reference get-locclass))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,7 +83,6 @@ directly derived from its abstract description.
     ((layers    :reader get-layers                          :initarg :layers)
      (ordnums   :reader get-ordnums                         :initarg :ordnums)
      (catattr   :reader get-catattr                         :initarg :catattr)
-     (locclass  :reader get-locclass                        :initarg :locclass)
      (state     :reader get-state     :writer set-state     :initarg :state)
      (origin    :reader get-origin    :writer set-origin    :initform 'nil)
      (attribute :reader get-attribute :writer set-attribute :initarg :attribute)))
@@ -152,12 +151,28 @@ following mutators and predicates.
 (export '(structured-locref
           make-structured-locref
           make-virtual-structured-locref
-          get-layers get-ordnums get-catattr get-locclass
+          get-layers get-ordnums get-catattr
           get-origin       set-origin
           state-normal-p   state-virtual-p   state-deleted-p
           set-state-normal set-state-virtual set-state-deleted
           ))
 @
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Class \class{crossref-location-reference}}
+
+<<Class \class{crossref-location-reference}>>=
+(defclass crossref-location-reference (location-reference)
+    ((target :reader get-target :writer set-target :initarg :target)))
+@ %def crossref-location-reference
+
+<<Export-list of submodule \module{locclass}>>=
+(export '(crossref-location-reference))
+@
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -194,7 +209,9 @@ Here we define the category-attribute-slots.
      (processing-ordnum  :reader get-processing-ordnum
                          :writer set-processing-ordnum
                          :initform 0)
-     (type   :reader get-type   :writer set-type   :initarg :type)))
+     (type               :reader get-type
+                         :writer set-type
+                         :initarg :type)))
 
 (defun make-category-attribute (attr-name)
   (make-instance 'category-attribute :name attr-name))
@@ -292,14 +309,14 @@ i really need it.
 <<*>>=
 ;; $Id$
 
-(in-package 'locref)
-(provide 'locref)
+(in-package "LOCREF")
+(provide "LOCREF")
 
 (eval-when (eval compile load)
-  (use-package 'clos)
-  (use-package 'xp)
-  (require 'base)
-  (use-package 'base))
+  (use-package "CLOS")
+  (use-package "XP")
+  (require "base")
+  (use-package "BASE"))
 
 <<Submodule \module{basetype}>>
 <<Submodule \module{locclass}>>
@@ -314,6 +331,7 @@ i really need it.
 <<Class \class{location-reference}>>
 <<Class \class{structured-locref}>>
 <<Class \class{category-attribute}>>
+<<Class \class{crossref-location-reference}>>
 <<Sorting location-references>>
 <<Export-list of submodule \module{locref}>>
 @
@@ -362,7 +380,10 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.13  1996/01/17 16:56:02  kehr
+%% Revision 1.14  1996/01/31 15:25:22  kehr
+%% Minor modifications.
+%%
+%% Revision 1.13  1996/01/17  16:56:02  kehr
 %% Improved documentation and threw out some of the markup-stuff.
 %%
 %% Revision 1.12  1996/01/15  19:17:32  kehr
