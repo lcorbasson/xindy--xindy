@@ -909,6 +909,10 @@ dispatching braches to the right methods.
              :close ,(when close `((do-markup-string ,close)))))))
 @ %def markup-locref
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Range markup}
+
 <<Location-reference markup>>=
 (defmethod do-markup-locref ((range location-range)
                              (loccls layered-location-class)
@@ -917,7 +921,8 @@ dispatching braches to the right methods.
     (do-markup-range-open  loccls length)
     (do-markup-locref (get-first range) loccls depth)
     (do-markup-range-sep   loccls length)
-    (do-markup-locref (get-last range)  loccls depth)
+    (when (markup-range-print-end-p loccls length)
+      (do-markup-locref (get-last range)  loccls depth))
     (do-markup-range-close loccls length)))
 
 (define-list-environment-methods do-markup-range
@@ -927,26 +932,48 @@ dispatching braches to the right methods.
   :close ((do-markup-outdent)
           (do-markup-default "RANGE:CLOSE" (get-name loccls) length))
   :sep   ((do-markup-default "RANGE:SEP"   (get-name loccls) length)))
+
+(defmethod markup-range-print-end-p ((loccls layered-location-class)
+				     (length number))
+  (declare (ignore loccls length))
+  t)
 @ %def do-markup-range
 
 <<Markup interface>>=
-(defmacro markup-range (&key open close sep class length)
-  (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
-        <<Check [[:class]] for location-reference class>>
-	((and length (not (numberp length)))
-	   (nraw "parameter `~S' is not a number! (ignored)~%" length))
-        (t `(markup::define-list-environment-methods
-             DO-MARKUP-RANGE
-             (,(if class
-                   `(locrefcls (EQL ,(cdr (lookup-locref-class
-                                           *indexstyle* class))))
-                   '(locrefcls layered-location-class))
-	      ,(if length
-                   `(length (EQL ,length))
-                   '(length number)))
-             :open  ,(when open  `((do-markup-string ,open)))
-             :close ,(when close `((do-markup-string ,close)))
-             :sep   ,(when sep   `((do-markup-string ,sep)))))))
+(defmacro markup-range (&whole whole &rest args)
+  (destructuring-switch-bind (&key
+			      open close sep class length
+			      &switch ignore-end)
+      args
+    (cond <<Check [[:open]], [[:close]] and [[:sep]]>>
+	  <<Check [[:class]] for location-reference class>>
+	  ((and length (not (numberp length)))
+	     (nraw "parameter `~S' is not a number! (ignored)~%" length))
+	  (t `(let ()
+	       (markup::define-list-environment-methods
+		   DO-MARKUP-RANGE
+		   (,(if class
+			 `(locrefcls (EQL ,(cdr (lookup-locref-class
+						 *indexstyle* class))))
+			 '(locrefcls layered-location-class))
+		    ,(if length
+			 `(length (EQL ,length))
+			 '(length number)))
+		 :open  ,(when open  `((do-markup-string ,open)))
+		 :close ,(when close `((do-markup-string ,close)))
+		 :sep   ,(when sep   `((do-markup-string ,sep))))
+	       (define-method markup::MARKUP-RANGE-PRINT-END-P
+		   (,(if class
+			 `(locrefcls (EQL ,(cdr (lookup-locref-class
+						 *indexstyle* class))))
+			 '(locrefcls layered-location-class))
+		    ,(if length
+			 `(length (EQL ,length))
+			 '(length number)))
+		 ;; :declare ((declare (ignore locrefcls length)))
+		 :body    ((format *error-output* "~&locrefcls: ~S, length ~S, ~S~%"
+				   locrefcls length ,(not ignore-end))
+			   ,(not ignore-end))))))))
 @ %def markup-locref
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1154,6 +1181,9 @@ Their elements are simple cross-references.
 
 
 %% $Log$
+%% Revision 1.18  1997/01/23 15:04:42  kehr
+%% Added (markup-range :ignore-end).
+%%
 %% Revision 1.17  1997/01/23 14:11:45  kehr
 %% Added support for (markup-range :length).
 %%
