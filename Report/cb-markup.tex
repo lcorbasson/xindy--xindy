@@ -103,8 +103,8 @@
 \date{\today}
 
 \title{A Simple Context-Based\\ Markup Algorithm and its\\Efficient
-  Implementation in \textsc{Clos}\\[2ex]
-  \Huge\sffamily DRAFT VERSION
+  Implementation in \textsc{Clos}
+  %%%\\[2ex] \Huge\sffamily DRAFT VERSION
   }
 
 \author{Roger Kehr}
@@ -234,12 +234,13 @@ This essentially is a message sent to the current object whose class
 must offer an appropriate callback method.
 
 The user of these systems simply binds methods to these classes that
-output the desired markup. Both systems offer a rich set of primitives
-to make the context information available inside the method bodies
-that have to be written by the end-user.
+output the desired markup. Methods are written in the underlying
+language (Tcl in \COST, \CLOS in \STIL). Both languages are extended
+by a rich set of primitives to make the context information available
+inside the method bodies.
 
 Thus, one can implement very powerful context-based markup strategies
-with a mixture of declarative specification and functional
+using a mixture of declarative specifications and functional
 descriptions.
 
 
@@ -263,19 +264,44 @@ can be page numbers, section numbers, or other kinds of location
 references for which a class definition must be supplied in the index
 style. As the markup of different location classes may be different
 (e.g.\ page numbers are encapsulated into other markup than section
-numbers), we decided to offer to the users a context-based markup
-scheme to be sufficient powerful. Other nodes in the tree are lists
-containing other objects as elements.
+numbers or location references of the same class may need different
+markup depending on certain attribute values they own), we decided to
+offer to the users a context-based markup scheme to be sufficient
+powerful. Consider an index of a textbook that contains references to
+a location class of page numbers which has to optically distinguish
+between definitions of items on a page and their usage. An example
+index is shown here:
 
+\begin{center}
+  \begin{minipage}{9cm}%
+    \begin{mkindex}
+      \idx search
+      \subidx binary, \textbf{23}, 24--26
+      \subidx sequential, \textbf{15}, 16, 31
+      \subidx ordered, \textbf{18}, 19
+    \end{mkindex}
+  \end{minipage}%
+\end{center}
+
+\noindent Here all references to the definition of an item are typeset
+in boldface, whereas the references to the usage of an item are
+without any specific markup. This requires that the location
+references own attributes that can be used to distinguish their
+intended meaning. The attribute values can be accessed during tree
+traversal time.
 
 For the intended application domain the functionality of systems such
-as \textsc{Stil} was not appropriate and we aimed for a more efficient
-solution to the markup problem.\footnote{Especially writing \CLOS
-  methods cannot be expected by any non-programmer user.} As a first
-restriction we decided to make available only a subset of the elements
-along the path as a node's context. Furthermore we observed that in
-many cases there is a need for making the attributes of an instance
-accessible as context information.
+as \STIL or \COST are not appropriate for two reasons: (1) the target
+group of users for an indexing system are typically non-programmers
+which cannot be expected to write \CLOS methods or Tcl code, and (2)
+the functionality offered by both systems is not absolutely necessary
+due to the limited context of an index.
+
+Hence, we aimed for a more efficient solution to the markup problem.
+As a first restriction we decided to make available only a subset of
+the elements along the path as a node's context. Furthermore we
+observed that in many cases there is a need for making the attributes
+of an instance accessible as context information.
 
 After these simplification steps we ended up in a very simple model.
 The context information for a particular node did not exceed four
@@ -297,7 +323,7 @@ markup scheme and the dispatching mechanism which is directly
 implemented using \CLOS method calls. Finally we describe the user
 interface responsible for the dynamic establishing of event bindings.
 
-
+\newpage
 
 \subsubsection*{Context-Based Markup via Multi-Method Dispatch}
 \label{sec:tagging}
@@ -391,8 +417,6 @@ the user interface consists of \Lisp macros expanding to appropriate
 method definitions. Defining methods at run-time is a very powerful
 property of \CLOS on which this approach relies mostly.
 
-\newpage
-
 \noindent All markup commands in index style have the following form:
 %%
 \def\itarg#1{\mbox{\normalfont\emph{#1}}}
@@ -402,8 +426,6 @@ property of \CLOS on which this approach relies mostly.
        \rmarg{[}:open \itarg{markup}\rmarg{]} \rmarg{[}:close \itarg{markup}\rmarg{]} \rmarg{[}:sep \itarg{markup}\rmarg{]}\footnote{Option \texttt{:sep} is applicable for list nodes only.}
        \rmarg{[\emph{context-dependent options such as} \texttt{:attr}, \texttt{:group}, \texttt{:class}, \texttt{:depth}, \ldots]})
 \end{alltt}}
-
-\enlargethispage{\baselineskip}
 
 \noindent Since all fields are optional one can assign
 the markup to only a subset of the context arguments. The accessible
@@ -435,6 +457,8 @@ is the most specialised one that matches the given arguments.  In the
 above situation the second markup is selected for a location reference
 of class \texttt{special-class}, but for all others the generic markup
 is used, as defined by the first command.
+
+\newpage
 
 As an example of the run-time definition of methods consider the
 following user interface declaration, which is specialised on all
@@ -528,8 +552,6 @@ reference to be suppressed in the resulting output.
 
 \bigskip
 
-\newpage
-
 \noindent\textsf{Example 2: Tagging of Hierarchies}
 
 \smallskip
@@ -605,6 +627,9 @@ as multi-methods.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % $Log$
+% Revision 1.4  1997/05/28 14:04:28  kehr
+% Added example into first part of text.
+%
 % Revision 1.3  1997/05/23 15:58:52  kehr
 % After Waldschmidts corrections.
 %
