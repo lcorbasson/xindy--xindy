@@ -2,6 +2,15 @@
   /*
 
    $Id$
+   1.8 Fixed minor quoting bugs (for increased makeindex compatibility).
+        1999-07-28 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
+       Fixed crossref to subitem.
+        1999-09-23 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
+
+   1.7 Fixed a bug concerning writing to and closing non-existing file (stat)
+       Fixed a bug concerning quoting the " character.
+       Enhancement for processing glossary files.
+        1999-06-14 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
 
    This is the source of `tex2xindy'.
 
@@ -24,20 +33,22 @@
 
 #include <stdio.h>
 
-static FILE* stat = NULL;
+#define QUOTE_ECHO qc(*yytext)
+FILE* attrfd = NULL;
 
 static int lineno    = 1;
 static int braces    = 0;
 static int xref_mode = 0;
+static int glos_mode = 0;
 static int errors    = 0;
 
-#define err( msg ) fprintf(stderr, "line %d: %s\n", lineno, msg); errors++;
+#define err( msg ) {fprintf(stderr, "line %d: %s\n", lineno, msg); errors++;}
 
 #define NO_RANGE     0
 #define OPEN_RANGE   1
 #define CLOSE_RANGE  2
 
-static int range = NO_RANGE;
+int range = NO_RANGE;
 
 /* This function quotes a character, if necessary. */
 
@@ -60,33 +71,50 @@ void qs( char* str ) {
 %}
 
 KEYWORD  \\indexentry
+KEYWORDG \\glossaryentry
 ENCAP    \|
 ACTUAL   @
 ESCAPE   \\
 LEVEL    !
+IS       :
 QUOTE    \"
 ROPEN    \(
 RCLOSE   \)
 ARGOPEN  \{
 ARGCLOSE \}
 
-%s key print skip2location location encap xref skiplocation
+%s key print skip2location location encap xref is skiplocation
 
 %%
 
 ^{KEYWORD}[ \t]*{ARGOPEN} { printf("(indexentry :tkey ((\"");
                             xref_mode = 0;
+                            glos_mode = 0;
                             BEGIN(key); }
 
-<key,print>{ESCAPE}    { qc('\\'); qc(input()); }
-<key,print>{QUOTE}     { qc(input()); }
+^{KEYWORDG}[ \t]*{ARGOPEN} { printf("(indexentry :tkey ((\"");
+                            xref_mode = 0;
+                            glos_mode = 1;
+                            BEGIN(key); }
+
+{ESCAPE}{QUOTE}        { qs(yytext); }
+{QUOTE}                { qc(input()); }
 <key,print>{ENCAP}     { printf("\")) :attr \"");
                          range = NO_RANGE; BEGIN(encap); }
+<key,print>{IS}        { if (glos_mode == 1)
+                           {
+                             printf("\")) :attr \"is\" :xref (\"");
+                             range = NO_RANGE;
+			     if (attrfd) fprintf(attrfd, "\txref\n");
+		           BEGIN(is);
+			   }
+                         else
+			   QUOTE_ECHO; }
 <key>{LEVEL}           { printf("\") (\""); }
 <print>{LEVEL}         { printf("\") (\""); BEGIN(key); }
-<key,print>{ARGOPEN}   { ECHO; braces++; }
+<key,print>{ARGOPEN}   { QUOTE_ECHO; braces++; }
 <key,print>{ARGCLOSE}  { if ( braces > 0 )
-                           {ECHO; braces--;}
+                           {QUOTE_ECHO; braces--;}
                          else
 			   {printf("\"))");
 		         BEGIN(skip2location);}
@@ -95,23 +123,22 @@ ARGCLOSE \}
 <key>{ACTUAL}          { printf("\" \""); BEGIN(print); }
 <print>{ACTUAL}        { err( "multiple @'s" ); }
 
-<key,print>.           { qc(*yytext);}
+<key,print>.           { QUOTE_ECHO; }
 
 <encap>{ENCAP}         { err( "multiple |'s" ); }
-<encap>{ESCAPE}        { qc('\\'); ECHO; }
 <encap>{ROPEN}         { range = OPEN_RANGE; }
 <encap>{RCLOSE}        { range = CLOSE_RANGE; }
 <encap>{ARGOPEN}       { /* close :attr "... */
                          printf("\" :xref (\"");
-			 if (stat) { fprintf(stat, "\txref\n"); }
+			 if (attrfd) fprintf(attrfd, "\txref\n");
 		         braces++;
 		         BEGIN(xref);
                        }
 <encap>{ARGCLOSE}      { if ( braces > 0 )
-                           {ECHO; braces--;}
+                           {QUOTE_ECHO; braces--;}
                          else {
 			   putchar('"');
-			   if (stat) { fprintf(stat, "\tlocref\n"); }
+			   if (attrfd) fprintf(attrfd, "\tlocref\n");
 			   switch (range) {
 			     case OPEN_RANGE : printf(" :open-range");
 			       break;
@@ -121,16 +148,18 @@ ARGCLOSE \}
 			   BEGIN(skip2location);
 			 }
                        }
-<encap>.              { ECHO;
-                        if (stat) { fwrite(yytext, sizeof(char), 1, stat); }
+<encap>.              { QUOTE_ECHO;
+                        if (attrfd) {
+			  fwrite(yytext, sizeof(char), 1, attrfd);
+			}
 	              }
 
 
 
-<xref>{ESCAPE}         { qc('\\'); qc(input()); }
-<xref>{ARGOPEN}        { ECHO; braces++; }
+<xref>{LEVEL}          { printf("\") (\""); }
+<xref,is>{ARGOPEN}     { QUOTE_ECHO; braces++; }
 <xref>{ARGCLOSE}       { if     ( braces >   1 )
-                           {ECHO; braces--;}
+                           {QUOTE_ECHO; braces--;}
                          else if ( braces == 1 )
 		           { braces--; }
                          else {
@@ -139,8 +168,15 @@ ARGCLOSE \}
 		           BEGIN(skip2location);
 		         }
                        }
-<xref>{LEVEL}         { printf("\" \""); }
-<xref>.               { qc(*yytext); }
+<is>{ARGCLOSE}         { if     ( braces > 0 )
+                           {QUOTE_ECHO; braces--;}
+                         else {
+		           printf("\")");
+			   xref_mode = 1;
+		           BEGIN(skip2location);
+		         }
+                       }
+<xref,is>.            { QUOTE_ECHO; }
 
 <skip2location>[ \t]*{ARGOPEN} {
                         if (xref_mode)
@@ -152,7 +188,7 @@ ARGCLOSE \}
                        }
 
 <location>{ARGCLOSE}  { printf("\")\n"); BEGIN(0); }
-<location>.           {ECHO;}
+<location>.           {QUOTE_ECHO;}
 
 <skiplocation>{ARGCLOSE} { printf(")\n"); BEGIN(0); }
 <skiplocation>.       { ; }
@@ -165,14 +201,14 @@ ARGCLOSE \}
 
 main(int argc, char* argv[])
 {
-  fprintf(stderr, "This is `tex2xindy' $Revision$.\n");
+  fprintf(stderr, "This is `tex2xindy' 1.8.\n");
   if ( argc > 1 ) {
     fprintf(stderr, "Running in makeindex compatibility mode.\n");
     fprintf(stderr, "Writing attribute names to file \"%s\".\n\n", argv[1]);
-    stat = fopen(argv[1], "w");
+    attrfd = fopen(argv[1], "w");
   }
   yylex();
-  if (stat) { fclose(stat); }
+  if (attrfd) fclose(attrfd);
   if (errors > 0) {
       exit( 1 );
   } else {
@@ -182,6 +218,9 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.11  1999/10/13 08:05:10  kehr
+  Merged bugfix from Thomas Henlich with my own modifications.
+
   Revision 1.10  1999/09/23 06:53:32  kehr
   Fixed wrong raw index generation for cross-ref keywords.
 
@@ -216,3 +255,6 @@ main(int argc, char* argv[])
   Revision 1.1  1996/06/24  08:53:57  kehr
   Initial checkin of the Makefile, README and tex2xindy.
 */
+
+
+
