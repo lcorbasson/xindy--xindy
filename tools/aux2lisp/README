@@ -1,0 +1,21 @@
+$Id$
+------------------------------------------------------------
+
+This directory contains some utilities that can be use to make xindy
+compatible with TeX. Since xindy uses a completely new
+indexstyle-scheme we can't be 100% compatible. makeindex-3 made a
+bunch of assumptions about the index which don't hold for xindy. Due
+to this fact we must make some workarounds. The programs herein are
+made for these purposes.
+
+The files in this directory are under development. If you find bugs or
+can give us hints to improve some of the programs, mail us and we will
+incorporate your ideas. If you also have written useful frontends to
+xindy, send us. We'll add them to our collection.
+
+Enjoy, Roger.
+
+=====================================================================
+Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
+Computer Science Department
+Technical University of Darmstadt, Germany

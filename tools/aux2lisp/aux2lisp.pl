@@ -17,7 +17,6 @@ chop( $date = `date` );                 # a handy constant
 
 ######################################################################
 
-
 # check arguments
 # store them in variables for better naming
 
@@ -25,9 +24,9 @@ if ( $#ARGV >= 0 ) {
     print "usage: $0";
     print <<EOMSG;
 
-    This program reads a TeX .aux file from <stdin> and tries to parse all
-    \indexentry-expressions. For each expr a LISP-sexp is written to
-    <stdout> that can be read in by the xindy-system.
+    This program reads a TeX .aux file from <stdin> and tries to parse
+    all \\indexentry-expressions. For each expr a raw-index expression
+    is written to <stdout> that can be read in by the xindy-system.
 
     The program is far from being perfect and uses some heuristics for
     parsing that may result in erroneous output.
@@ -36,8 +35,8 @@ EOMSG
     exit 1;
 }
 
-$debug1 = 1;
-$debug2 = 1;
+# $debug1 = 1;
+# $debug2 = 1;
 $quote    = "\"";
 $layersep = "!";
 $act_sep  = "@";
@@ -55,7 +54,7 @@ while (<>) {
 
  	# We can now parse the resulting string without any care for
  	# quoted symbols. Here we use a simple heuristic to find the
- 	# endo of the key-field: We start from the right and match for
+ 	# end of the key-field: We start from the right and match for
  	# the "...}{location}" regexp. This may lead to erroneus
  	# situations but without this kludge there is no easy way of
  	# parsing the expression. Additionally this regexps yields the
@@ -103,7 +102,7 @@ while (<>) {
 	    $act_key = $act_key . "\"" . $keylayer . "\" ";
 	}
 	($attr = $attr) =~ s/\"(.)/\1/;
-	print "(indexentry :key ($key) :print-key ($act_key) :attr \"$attr\" :location \"$location\")";
+	print "(indexentry :key ($key) :print ($act_key) :attr \"$attr\" :location \"$location\")";
  	print "";
     }
 }
@@ -196,6 +195,9 @@ sub split_string {
 #======================================================================
 #
 # $Log$
-# Revision 1.1  1996/01/31 15:15:36  kehr
+# Revision 1.2  1996/06/24 08:53:55  kehr
+# Initial checkin of the Makefile, README and tex2xindy.
+#
+# Revision 1.1  1996/01/31  15:15:36  kehr
 # Added the tool from converting .aux-files to Lisp-sexps.
 #
