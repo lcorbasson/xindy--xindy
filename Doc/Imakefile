@@ -26,13 +26,17 @@ distrib: all
 
 #define SGMLTarget(file)						@@\
 all:: file.sgml file.html file.dvi file.info file.txt file.ps		@@\
+dvi::   file.dvi						       	@@\
 file.tex: file.sgml							@@\
 	-./sgml2latex -2e file.sgml					@@\
 TeXTarget(latex,file)							@@\
+html::  file.html						       	@@\
 file.html: file.sgml						       	@@\
 	-./sgml2html -img file.sgml					@@\
+info::  file.info						       	@@\
 file.info: file.sgml							@@\
 	-./sgml2info file.sgml						@@\
+txt::   file.txt						       	@@\
 file.txt: file.sgml							@@\
 	-./sgml2txt file.sgml						@@\
 file.ps: file.dvi							@@\
@@ -45,7 +49,6 @@ realclean::								@@\
 
 SGMLTarget(manual)
 SGMLTarget(tutorial)
-SGMLTarget(compatibility-guide)
 SGMLTarget(xindy-by-topic)
 
 CVSAdd(*.sgml)
@@ -62,6 +65,9 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
+ * Revision 1.11  1997/02/07 15:24:01  kehr
+ * Reorganised the by-Topic guide and removed the compatibility guide.
+ *
  * Revision 1.10  1997/02/04 14:42:48  kehr
  * Added manual page for makeindex4 and the xindy-by-topic documentation.
  *
