@@ -10,9 +10,11 @@
 #include "rxsub.h"
 
 #define debug
-#undef debug
+#undef  debug
 #include "debug.h"
 
+#define DEBUG
+#undef  DEBUG
 
 RULE_TABLE SortRules;	/* rules for generating sortkeys */
 RULE_TABLE MergeRules;	/* rules for generating mergekeys */
@@ -23,9 +25,30 @@ static RULE_TYPE get_ruletype PROTO(( char *lside, char *rside ));
 static int       is_regexp PROTO(( char *s ));
 static void      unescape PROTO(( register char *s ));
 
+#define BUFLEN ((size_t)1024)
+char ordrules_string_buffer [BUFLEN];
+int  ordrules_string_buffer_used_bytes = 0;
+
+int
+add_sort_rule (left, right, isreject)
+char *left;
+char *right;
+int isreject;
+{
+  return( add_rule( SortRules, left, right, isreject ));
+}
+
+int
+add_merge_rule (left, right, isreject)
+char *left;
+char *right;
+int isreject;
+{
+  return( add_rule( MergeRules, left, right, isreject ));
+}
 
 /* insert rule 'left --> right' into ruletable 'table' */
-void
+int
 add_rule( table, left, right, isreject)
 RULE_TABLE table;
 char *left;
@@ -44,7 +67,10 @@ int isreject;
   char errmsg[STRING_MAX];
 
   dispstart( add_rule );
-  r = (RULE *) fmalloc( sizeof(RULE) );
+  dispstr( left );
+  dispstr( right );
+
+  r = (RULE *) malloc( sizeof(RULE) );
 
   switch (r->type = get_ruletype( left, right )) {
 
@@ -54,17 +80,17 @@ int isreject;
       dispmsg( bptr copy );
       /* insert '^' in regular expression to match string prefix only */
       *bptr++ = '^'; strcpy( bptr, left );
-      dispmsg( fmalloc );
-      r->r.reg.lside = (regex_t*) fmalloc (sizeof(regex_t));
+      dispmsg( malloc );
+      r->r.reg.lside = (regex_t*) malloc (sizeof(regex_t));
       displong( r->r.reg.lside );
       dispstart( regcomp );
       if ( 0 != (errcode = regcomp( r->r.reg.lside, buffer, cflags )) ) {
 	regerror( errcode, r->r.reg.lside, errmsg, STRING_MAX );
 	fprintf( stderr, "add_rule: %s\n", errmsg );
-	return;
+	return( errcode );
       }
       dispend( regcomp );
-      r->r.reg.rside = (char *) fmalloc( strlen(right) + 1);
+      r->r.reg.rside = (char *) malloc( strlen(right) + 1);
       strcpy( r->r.reg.rside, right );
       dispstr( r->r.reg.rside );
       displong( r->type );
@@ -88,18 +114,22 @@ int isreject;
       break;
 
     case CHR_RULE:
+      dispstart( CHR_RULE );
       r->r.chr  = *right;
       pos = *left;
+      dispend( CHR_RULE );
       break;
 
     case STR_RULE:
+      dispstart( STR_RULE );
       r->r.str.llen = strlen(left);
-      r->r.str.lside = (char *) fmalloc(r->r.str.llen + 1);
+      r->r.str.lside = (char *) malloc( (size_t)(r->r.str.llen + 1) );
       strcpy(r->r.str.lside,left);
       r->r.str.rlen = strlen(right);
-      r->r.str.rside = (char *) fmalloc(r->r.str.rlen + 1);
+      r->r.str.rside = (char *) malloc( (size_t)(r->r.str.rlen + 1) );
       strcpy(r->r.str.rside,right);
       pos = *left;
+      dispend( STR_RULE );
       break;
   }
 
@@ -180,7 +210,7 @@ register size_t buflen;
 {
   register RULE *r;
   register RULE_TYPE rtype;
-  register char *newdest;
+  register char *newdest = 0;
   char newsource[STRING_MAX];
 
   /* new stuff */
@@ -193,6 +223,10 @@ register size_t buflen;
 #endif
 
   dispstart( apply_rules );
+  dispstr( source );
+  dispstr( dest );
+  dispint( buflen );
+
   while ( *source ) {
 
     /* first check the rules beginning with character '*source' */
@@ -294,16 +328,47 @@ register size_t buflen;
 
   }
 
-  displong( dest );
   *dest = 0;
+  displong( dest );
+  ordrules_string_buffer_used_bytes = strlen( ordrules_string_buffer );
+#ifdef DEBUG
+#ifdef debug
+  dispstr( out );
+#endif
+#endif
 
 #ifdef DEBUG
-  if ( strcmp(in,out) )
+  /* if ( strcmp(in,out) ) */
     fprintf(stderr,"\nordrules: %s '%s' generated for '%s'.", table == MergeRules ? "mergekey" : "sortkey", out, in );
 #endif
 
   dispend( apply_rules );
 }
+
+char *gen_sortkey ( key )
+char *key;
+{
+  char *sortkey;
+  dispstart( gen_sortkey );
+  dispstr( key );
+  apply_rules( SortRules, key, ordrules_string_buffer, BUFLEN );
+  sortkey = (char*) malloc (strlen( ordrules_string_buffer ) +1);
+  strcpy( sortkey, ordrules_string_buffer );
+  dispend( gen_sortkey );
+  return( sortkey );
+}
+
+
+char *gen_mergekey ( key )
+char *key;
+{
+  char *mergekey;
+  apply_rules( MergeRules, key, ordrules_string_buffer, BUFLEN );
+  mergekey = (char*) malloc (strlen( ordrules_string_buffer ) +1);
+  strcpy( mergekey, ordrules_string_buffer );
+  return( mergekey );
+}
+
 
 /* insert a new group entry ('group','letter') into 'list' */
 #if 0
@@ -314,10 +379,10 @@ int group;
 char *letter;
 {
   GROUP_RULE *new;
-  new = (GROUP_RULE *) fmalloc(sizeof(GROUP_RULE));
+  new = (GROUP_RULE *) malloc(sizeof(GROUP_RULE));
   new->id = (group >= 0 ? group + USORTGROUP : group - USORTGROUP);
   new->len = strlen(letter);
-  new->let = (char *) fmalloc(new->len + 1);
+  new->let = (char *) malloc(new->len + 1);
   strcpy(new->let,letter);
 
   /* insert rule into list */
@@ -360,7 +425,12 @@ int group;
 
 /*
  * $Log$
- * Revision 1.1  1996/03/26 17:30:58  kehr
+ * Revision 1.2  1996/03/27 20:29:10  kehr
+ * It works. Today I had my first success in getting the FFI running with
+ * the ordrules-library. The interface is defined in `ordrulei.lsp' and
+ * allows direct access to the functions in `ordrules.c'.
+ *
+ * Revision 1.1  1996/03/26  17:30:58  kehr
  * First check-in of the rx-support for clisp.
  *
  * Revision 1.9  1992/01/03  13:22:10  schrod

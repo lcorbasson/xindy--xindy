@@ -94,18 +94,6 @@ typedef struct {
 extern GROUP_LIST GroupList;	/* list of character groups */
 extern GROUP_LIST HeadingList;	/* list of group headings */
 
-#define add_sort_rule(left,right,type) \
-		add_rule( SortRules, left, right, type)
-
-#define add_merge_rule(left,right,type) \
-		add_rule( MergeRules,left, right, type)
-
-#define gen_sortkey(key,sortkey,buflen) \
-		apply_rules(SortRules,key,sortkey,buflen)
-
-#define gen_mergekey(key,mergekey,buflen) \
-		apply_rules(MergeRules,key,mergekey,buflen)
-
 #define add_group_rule(letter, group) \
 		add_group( &GroupList, group, letter )
 
@@ -115,15 +103,26 @@ extern GROUP_LIST HeadingList;	/* list of group headings */
 int get_group PROTO(( char *sortkey ));
 char *get_heading PROTO(( int group ));
 
-void add_rule PROTO(( RULE_TABLE table, char *left, char *right, int isreject ));
+int  add_rule PROTO(( RULE_TABLE table, char *left, char *right, int isreject ));
 void apply_rules PROTO(( RULE_TABLE table, char *source, char *dest, size_t buflen ));
 void add_group PROTO(( GROUP_LIST *list, int group, char *letter ));
+
+int add_sort_rule  PROTO((char *left, char *right, int isreject));
+int add_merge_rule PROTO((char *left, char *right, int isreject));
+
+char* gen_sortkey  PROTO((char *key));
+char* gen_mergekey  PROTO((char *key));
 
 #endif /* _ORDRULES_H */
 
 /*
  * $Log$
- * Revision 1.1  1996/03/26 17:31:00  kehr
+ * Revision 1.2  1996/03/27 20:29:11  kehr
+ * It works. Today I had my first success in getting the FFI running with
+ * the ordrules-library. The interface is defined in `ordrulei.lsp' and
+ * allows direct access to the functions in `ordrules.c'.
+ *
+ * Revision 1.1  1996/03/26  17:31:00  kehr
  * First check-in of the rx-support for clisp.
  *
  * Revision 1.8  1991/12/16  14:47:04  schrod

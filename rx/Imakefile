@@ -19,18 +19,35 @@ XCOMM $Id$
 /* Absolutely necessary, entire distribution is based on gcc */
 #define UseGcc
 #include <StandardC.imk>
-
+#include <Library.imk>
 
 XCOMM ------------------------------------------------------------
 XCOMM continue in Imakefile
 
-CDependFiles(ordrules.c)
+OBJECTS = ordrules.o ordrulei.o rxsub.o rx.o regexi.o
 
+LispModuleTarget(ordrulei)
+LispModuleTarget(rx)
+
+ordrulei.c: ordrulei.lsp
+
+all:: $(OBJECTS)
+
+LibLibraryTarget(ordrules,$(OBJECTS))
+
+clean::
+	$(RM) ordrulei.c rx.c
+
+CObjectTarget(regexi,-I.)
 CObjectTarget(rxsub,-I.)
+CObjectTarget(rx,-I.)
 CObjectTarget(ordrules,-I.)
+CObjectTarget(ordrulei,-I.)
 
-CVSAdd(rxsub.h rxsub.c)
-CVSAdd(ordrules.h ordrules.c)
+CVSAdd(rxsub.h rxsub.c regexi.c)
+CVSAdd(mkind.h ordrules.h ordrules.c)
+CVSAdd(debug.h)
+CVSAdd(*.lsp)
 CVSAdd(*.nw)
 CVSAdd(Imakefile)
 CVSCommentLeader("%% ", *.nw)
@@ -39,7 +56,12 @@ CVSCommit()
 /* ============================================================
  *
  * $Log$
- * Revision 1.1  1996/03/26 17:30:56  kehr
+ * Revision 1.2  1996/03/27 20:29:01  kehr
+ * It works. Today I had my first success in getting the FFI running with
+ * the ordrules-library. The interface is defined in `ordrulei.lsp' and
+ * allows direct access to the functions in `ordrules.c'.
+ *
+ * Revision 1.1  1996/03/26  17:30:56  kehr
  * First check-in of the rx-support for clisp.
  *
  *
