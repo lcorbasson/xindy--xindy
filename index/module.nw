@@ -1,0 +1,62 @@
+%%
+%% This file is part of the `xindy'-project at the
+%% Technical University Darmstadt, Computer Science Department
+%% WG System Programming, Germany.
+%%
+%% This source is entirely written in the `noweb' literate programming
+%% system.
+%%
+%% History at end
+%%
+%% Module: index
+%%
+%%
+\RCS $Id$%
+\RCS $Author$%
+\RCS $Revision$%
+\RCS $RCSfile$%
+\RCS $State$%
+\RCS $Date$%
+%
+
+\chapter{Module \module{index}}
+
+%\ModuleTitle{}
+
+\section{Introduction}
+
+This module implements the abstract data types \type{index} and
+\type{indexentry}. The first one describes the structure of an index.
+The second creates instances of indexentries as they are read from the
+raw-index.
+
+The module is separated into the following parts:
+\begin{deflist}{XXXXXXX}
+\item [idxentry]
+\item [index]
+\end{deflist}
+
+\noindent The representation of the dependencies of all submodules is
+as follows:
+
+\begin{verbatim}
+index:
+indexentry
+\end{verbatim}
+
+\noindent This module needs all neccessary information properly set up
+by the indexclass-instances to work. This means that all basetypes and
+location-classes---system- or user-defined---are available, all
+sorting- and merging-rules are known, \etc\ We need all information to
+process every indexentry.
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+%%
+%% $Log$
+%% Revision 1.1  1995/12/05 18:46:34  kehr
+%% Added module `index' and restructured some parts.
+%%
+%%
