@@ -1,0 +1,103 @@
+#ifndef NOWEB-WRAP_IMK_INCLUDED			/* -*- Indented-Text -*- */
+#define NOWEB-WRAP_IMK_INCLUDED
+
+XCOMM ======================================================================
+XCOMM Imake module for noweb-wrap
+XCOMM $Id$
+
+#include <noweb.imk>
+
+/* history at end */
+
+/*
+ * This Imake module noweb-wrap
+ *
+ * The following target rules are exported:
+ *
+ * The folowing rules can be used to wrap the output of noweave inside
+ * a header and a trailer file. This is necessary if you like to
+ * configure your own header (e.g. use LaTeX2e ...). Note: This target
+ * works only successfully if the `-n' option of noweave is specified.
+ * This option is always turned on in our target rule by default. We
+ * could solve this problem using the `-delay' option of noweave and
+ * adding \documentclass[..]{..} information into the first part and
+ * \end{document} into the last part of the document. But this
+ * solution makes it impossible to format document consisting of
+ * multiple modules in a whole because we have more than one
+ * \document{style,class} in one document. By wrapping the output of
+ * noweave between a header and a trailer file we can still work with
+ * several files, too.
+ *
+ *    NowebLaTeXDocTargetWrap(program,headerfile,trailerfile)
+ *
+ * This rule is intended to typeset multiple noweb sources into one
+ * single document. `program' is the name of the generated output file
+ * (without suffix `.dvi') and docs is the list of all noweb
+ * documents. Note that the only difference in both targetnames is the
+ * letter `s' in NowebLaTeXDocumentTarget`s'Wrap and that the all
+ * documents must be specified with their extension.
+ *
+ *    NowebLaTeXDocTargetsWrap(program,headerfile,trailerfile,docs)
+ *
+ */
+
+/* ============================================================
+ *
+ * parameters
+ *
+ */
+
+/* NowebLaTeXDocTargetWrap -- make a typeset document using LaTeX.
+ * We can't use NowebTarget here since we need to noweave the source.
+ * We wrap the output of the noweave with a header and a trailer file.
+ */
+#ifndef NowebLaTeXDocTargetWrap
+#define NowebLaTeXDocTargetWrap(program,header,trailer)		@@\
+program.tex: program.nw							@@\
+	$(NOWEAVE) $(NOWEAVE_FLAGS) -n program.nw |\
+	  cat header - trailer > program.tex				@@\
+                                                                        @@\
+TeXFileTarget(latex,program,tex)                                        @@\
+                                                                        @@\
+clean::                                                                 @@\
+        $(RM) program.tex
+
+#endif /* NowebLaTeXDocTargetWrap */
+
+/* NowebLaTeXDocTargetsWrap -- make a typeset document using
+ * LaTeX. We can't use NowebTarget here since we need to noweave the
+ * source. We wrap the output of the noweave files with a header and a
+ * trailer file.
+ */
+#ifndef NowebLaTeXDocTargetsWrap
+#define NowebLaTeXDocTargetsWrap(program,header,trailer,docs)     	@@\
+program.tex: docs							@@\
+	$(NOWEAVE) $(NOWEAVE_FLAGS) -n docs | \
+	  cat header - trailer > program.tex				@@\
+                                                                        @@\
+TeXFileTarget(latex,program,tex)                                        @@\
+                                                                        @@\
+clean::                                                                 @@\
+        $(RM) program.tex
+
+#endif /* NowebLaTeXDocTargetsWrap */
+
+
+
+
+/* ============================================================
+
+$Log$
+Revision 1.1  1995/10/16 19:21:36  kehr
+Changed CVS-imake-template. I hope that it helps to manage the `add'
+and `admin'-commands of CVS. I'll verify the correct behaviour later.
+
+Additionally I introduced a new noweb-wrap-imake-module. This manages
+the wrapping of a noweaved source by a user-defined header and
+trailer. This is neccessary when one wishes to use different
+LaTeX-styles etc.
+
+*/
+
+
+#endif  /* already imported */

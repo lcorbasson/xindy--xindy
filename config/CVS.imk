@@ -56,25 +56,35 @@ REALIZATION:
 #define CVSAdminCmd admin
 #endif
 
+#ifndef CVSCommitCmd
+#define CVSCommitCmd commit
+#endif
 
-/* XXX */
+
 #ifndef CVSAdd
 #define CVSAdd(files)							@@\
 CVSAdd::								@@\
-    $(CVS_CMD) $(CVS_ADD_OPT) files
+    $(CVS_CMD) $(CVS_ADD_CMD) files
 #endif
 
 #ifndef CVSAdmin
 #define CVSAdmin(options,files)						@@\
 CVSAdmin::								@@\
-    -$(CVS_CMD) $(CVS_ADMIN_OPT) options files
+    -$(CVS_CMD) $(CVS_ADMIN_CMD) options files
 #endif
 
 
 #ifndef CVSCommentLeader
 #define CVSCommentLeader(leader,files)					@@\
 CVSCommentLeader::							@@\
-    $(CVS_CMD) $(CVS_ADMIN_OPT) -c leader files
+    $(CVS_CMD) $(CVS_ADMIN_CMD) -c leader files
+#endif
+
+#ifndef CVSCommit
+#define CVSCommit()							@@\
+CVSCommit:: CVSAdd						       	@@\
+    $(CVS_CMD) $(CVS_COMMIT_CMD)					@@\
+    $(MAKE) 'CVSCommentLeader'
 #endif
 
 
@@ -84,9 +94,10 @@ CVSCommentLeader::							@@\
  *
  */
 
-    CVS_CMD = CVSCmd
-    CVS_ADD_OPT = CVSAddCmd
-    CVS_ADMIN_OPT = CVSAdminCmd
+    CVS_CMD        = CVSCmd
+    CVS_ADD_CMD    = CVSAddCmd
+    CVS_ADMIN_CMD  = CVSAdminCmd
+    CVS_COMMIT_CMD = CVSCommitCmd
 
 /* ============================================================
  *
@@ -98,7 +109,16 @@ CVSCommentLeader::							@@\
 /* ============================================================
 
 $Log$
-Revision 1.1  1995/10/16 17:32:00  kehr
+Revision 1.2  1995/10/16 19:21:36  kehr
+Changed CVS-imake-template. I hope that it helps to manage the `add'
+and `admin'-commands of CVS. I'll verify the correct behaviour later.
+
+Additionally I introduced a new noweb-wrap-imake-module. This manages
+the wrapping of a noweaved source by a user-defined header and
+trailer. This is neccessary when one wishes to use different
+LaTeX-styles etc.
+
+Revision 1.1  1995/10/16  17:32:00  kehr
 Initial checkin of Report and Presentation.
 
 */
