@@ -164,7 +164,7 @@ following steps:
 of functions:
 
 <<Raw-index interface>>=
-(defmacro indexentry (&rest args)
+(defmacro indexentry (&whole whole &rest args)
   (destructuring-switch-bind (&key
                               key print tkey merge attr locref xref
                               &switch
@@ -172,15 +172,19 @@ of functions:
                               (close-range :close-range))
       args
     (cond ((not (or key tkey))
-             (error "missing argument :key or :tkey!"))
+             (error "missing argument :key or :tkey in~%~S."))
           ((and key tkey)
-             (error "you can't specify :key and :tkey at the same time !"))
-          ((and locref xref)
-             (error "you can't specify :locref and :xref at the same time !"))
+             (error "you can't specify :key and :tkey at the same time in~%~S."
+                    whole))
+          ((and locref xref) <<Error both reference types>>)
           (t (progn
                (when tkey (multiple-value-setq (key print)
-                            (tkey-to-normal-key tkey)))
-               (cond (locref `(ADD-LAYERED-LOCREF-INDEXENTRY
+                            (tkey-to-normal-key tkey whole)))
+               (cond ((not (listp key))
+                        (error ":key ~S is not a list in~%~S." key whole))
+                     ((not (listp print))
+                        (error ":print ~S is not a list in~%~S." print whole))
+                     (locref `(ADD-LAYERED-LOCREF-INDEXENTRY
                                :MAIN-KEY    ',key
                                :PRINT-KEY   ',print
                                :MERGE-KEY   ',merge
@@ -189,16 +193,32 @@ of functions:
                                :OPEN-RANGE  ',open-range
                                :CLOSE-RANGE ',close-range))
                      (xref (when (or open-range close-range)
-                             (error "you can't specify :open-range or :close-range with :xref at the same time !"))
-                           (unless attr
-                             (error "missing :attr in combination with :xref !"))
+                             <<Error both ranges>>)
+                           (unless attr <<Error missing attribute>>)
                            `(ADD-CROSSREF-INDEXENTRY
                              :MAIN-KEY  ',key
                              :PRINT-KEY ',print
                              :XREF      ',xref
                              :XREF-CLASS-NAME ',attr))
-                     (t (error "you must at least specify :locref or :xref !"))))))))
+                     (t <<Error no reference>> )))))))
 @ %def indexentry
+
+<<Error both reference types>>=
+(error "you can't specify :locref and :xref at the same time in~%~S."
+       whole)
+
+<<Error missing attribute>>=
+(error "missing :attr in combination with :xref in~%~S." whole)
+@
+
+<<Error both ranges>>=
+(error "you can't specify :open-range or :close-range with :xref at the same time in~%~S."
+       whole)
+@
+
+<<Error no reference>>=
+(error "you must at least specify :locref or :xref in~%~S." whole)
+@
 
 \no The following function transporms a list of the structure
 \begin{center}
@@ -209,7 +229,8 @@ print-keys is missing the corresponding main-key is used as the
 print-key.
 
 <<Raw-index interface>>=
-(defun tkey-to-normal-key (tkey)
+(defun tkey-to-normal-key (tkey whole)
+  (when (not (listp tkey)) <<[[:tkey-error]]>>)
   (let ((main-key  '())
         (print-key '()))
     (mapc #'(lambda (key-elt)
@@ -218,10 +239,14 @@ print-key.
                        (if (cdr key-elt)
                            (push (cadr key-elt) print-key)
                            (push (car  key-elt) print-key)))
-                    (t (error "invalid structure of :tkey `~S' !" tkey))))
+                    (t <<[[:tkey-error]]>> )))
           tkey)
     (values (nreverse main-key) (nreverse print-key))))
 @ %def tkey-to-normal-key
+
+<<[[:tkey-error]]>>=
+(error "INDEXENTRY: invalid structure of :tkey in~%~S." tkey whole)
+@
 
 <<Raw-index interface-definitions>>=
 (defparameter *raw-index-interface-definitions*
@@ -508,7 +533,7 @@ top-level indexentries into the appropriate letter-groups.
     (set-entries (build-indexentry-tree-recursive (get-entry-list index)
                                                   index-hierdepth)
                  index)
-    (gol t "~&forming letter-groups...")
+    (gol t "~&~%Forming letter-groups...")
     (let ((letter-groups (split-list #'(lambda (idxent)
                                          (lookup-letter-group
                                           *indexstyle*
@@ -729,7 +754,11 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
-%% Revision 1.18  1996/07/01 09:19:31  kehr
+%% Revision 1.19  1996/07/03 18:41:42  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.18  1996/07/01  09:19:31  kehr
 %% Added support for flat indexes and modified logfile-support.
 %%
 %% Revision 1.17  1996/06/24  09:12:48  kehr

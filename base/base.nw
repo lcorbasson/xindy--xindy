@@ -1,4 +1,4 @@
-%%
+b%%
 %% This file is part of the `xindy'-project at the
 %% Technical University Darmstadt, Computer Science Department
 %% WG System Programming, Germany.
@@ -32,7 +32,12 @@ the project.
 (lisp:in-package "BASE")
 (lisp:provide "BASE")
 
+(eval-when (eval load compile)
+  (when (find-package "XP")
+    (pushnew :XP *features*)))
+
 (setq *print-pretty* t)
+(setq *print-escape* t)
 
 <<Error message system>>
 <<Useful macros>>
@@ -67,15 +72,36 @@ support a function that issues a simple warning.
 <<Error message system>>=
 (defmacro oops (&rest msg)
   `(FORMAT *ERROR-OUTPUT* ,@msg))
-@ %def oops
+
+(defmacro apply-oops (&rest msg)
+  `(APPLY #'FORMAT *ERROR-OUTPUT* ,@msg))
+@ %def oops apply-oops
 
 <<Error message system>>=
 (defmacro info (&rest msg)
   `(FORMAT *ERROR-OUTPUT* ,@msg))
 @ %def info
 
+\subsection{Logging message system}
+
+The following macro can be used to issue useful logging-information
+into the stream \texttt{*log-stream*}. Logging can be dynamically
+turned on and off by setting \texttt{*logging-on*} to \texttt{t} or
+\texttt{nil}. Since the name \texttt{log} is already used for the
+arithmetic function we name it \texttt{gol} which can be read as ''go
+on logging''.
+
+<<Error message system>>=
+(defparameter *logging-stream* nil)
+(defparameter *logging-on*     nil)
+
+(defmacro gol (flag &rest msg)
+  `(WHEN (AND ,flag *LOGGING-ON*)
+    (FORMAT *LOGGING-STREAM* ,@msg)))
+@ %def gol
+
 <<Export-list of module \module{base}>>=
-(export '(oops info))
+(export '(oops apply-oops info *logging-stream* *logging-on* gol))
 @
 
 \subsection{Assertions}
@@ -95,8 +121,25 @@ The following macro can be used to declare assertions.
 (export 'assert!)
 @
 
+\subsection{Errors}
+
+The following macro can be used to describe an error.
+
+<<Error message system>>=
+(defmacro xerror (&rest msg)
+  `(LET ((*PRINT-READABLY* t)) (ERROR ,@msg)))
+@ %def xerror
+
+<<Export-list of module \module{base}>>=
+(export 'xerror)
+@
+
 %% $Log$
-%% Revision 1.10  1996/06/24 09:12:09  kehr
+%% Revision 1.11  1996/07/03 18:41:34  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.10  1996/06/24  09:12:09  kehr
 %% Several changes in all Lisp-modules due to the new startup-module and
 %% the implementation of the percentage bar appearing in the processing
 %% phases.

@@ -554,6 +554,7 @@ is not an error, because we do a prefix-matching.
 \subsubsection{Pretty-printing}
 
 <<Pretty-printing>>=
+#+:XP
 (set-pprint-dispatch 'location-class
                      #'(lambda (s loccls)
                          (pprint-logical-block
@@ -562,6 +563,7 @@ is not an error, because we do a prefix-matching.
                           (write-string ":" s)
                           (write (get-ordnum loccls) :stream s))))
 
+#+:XP
 (set-pprint-dispatch 'layered-location-class
                      #'(lambda (s loccls)
                          (pprint-logical-block
@@ -574,12 +576,14 @@ is not an error, because we do a prefix-matching.
                                     (pprint x s))
                                 (get-layers loccls)))))
 
+#+:XP
 (set-pprint-dispatch 'loccls-layer
                      #'(lambda (s layer)
                          (pprint-logical-block
                           (s nil :prefix "<" :suffix ">")
                           (pprint (get-basetype layer) s))))
 
+#+:XP
 (set-pprint-dispatch 'loccls-separator
                      #'(lambda (s sep)
                          (pprint-logical-block
@@ -589,7 +593,11 @@ is not an error, because we do a prefix-matching.
 
 
 %% $Log$
-%% Revision 1.17  1996/06/03 10:01:44  kehr
+%% Revision 1.18  1996/07/03 18:41:38  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.17  1996/06/03  10:01:44  kehr
 %% Added support for treeing layered-location-references.
 %%
 %% Revision 1.16  1996/05/29  14:15:55  kehr

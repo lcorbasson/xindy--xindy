@@ -391,9 +391,9 @@ i really need it.
 (lisp:provide "LOCREF")
 
 (lisp:use-package "CLOS")
-(lisp:use-package "XP")
 (lisp:require "base")
 (lisp:use-package "BASE")
+#+:XP (lisp:use-package "XP")
 
 <<Submodule \module{basetype}>>
 <<Submodule \module{locclass}>>
@@ -425,6 +425,7 @@ i really need it.
 A block for pretty-printing a location-reference.
 
 <<Pretty-printing>>=
+#+:XP
 (defun pprint-layered-location-reference (s locref)
   (pprint-logical-block
    (s nil :prefix "[" :suffix "]")
@@ -451,11 +452,13 @@ A block for pretty-printing a location-reference.
    (write (get-subrefs locref) :stream s)
    ))
 
+#+:XP
 (set-pprint-dispatch 'layered-location-reference
                      #'pprint-layered-location-reference)
 @
 
 <<Pretty-printing>>=
+#+:XP
 (defun pprint-crossref-location-reference (s xref)
   (pprint-logical-block
    (s nil :prefix "[" :suffix "]")
@@ -464,11 +467,13 @@ A block for pretty-printing a location-reference.
    (write (get-target xref) :stream s)
    ))
 
+#+:XP
 (set-pprint-dispatch 'crossref-location-reference
                      #'pprint-crossref-location-reference)
 @
 
 <<Pretty-printing>>=
+#+:XP
 (set-pprint-dispatch 'category-attribute
                      #'(lambda (s catattr)
                          (write-string "`" s)
@@ -478,7 +483,11 @@ A block for pretty-printing a location-reference.
 
 
 %% $Log$
-%% Revision 1.22  1996/06/24 09:13:00  kehr
+%% Revision 1.23  1996/07/03 18:41:39  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.22  1996/06/24  09:13:00  kehr
 %% Several changes in all Lisp-modules due to the new startup-module and
 %% the implementation of the percentage bar appearing in the processing
 %% phases.

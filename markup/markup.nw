@@ -116,7 +116,7 @@ verbose-mode is turned on.
 (defun do-markup-default (str &optional arg1 arg2 arg3)
   (when *markup-verbose-mode*
     (loop for x from 1 to *markup-indent-level*
-          do (write-string " "))
+          do (write-string " " *markup-output-stream*))
     (do-markup-string *markup-verbose-open*)
     (do-markup-string str)
     (when arg1 (etypecase arg1
@@ -141,7 +141,7 @@ verbose-mode is turned on.
                          (write arg3 :stream *markup-output-stream*)
                          (do-markup-string "]"))))
     (do-markup-string *markup-verbose-close*)
-    (terpri)
+    (terpri *markup-output-stream*)
     ))
 @ %def do-markup-default
 
@@ -241,43 +241,43 @@ T
 
 <<Check [[:open]] and [[:close]]>>=
 ((and open (not (stringp open)))
- (warn "parameter `~A' is not a string! (ignored)~%" open))
+ (warn "parameter `~S' is not a string! (ignored)~%" open))
 ((and close (not (stringp close)))
- (warn "parameter `~A' is not a string! (ignored)~%" close))
+ (warn "parameter `~S' is not a string! (ignored)~%" close))
 @
 
 <<Check [[:open]], [[:close]] and [[:sep]]>>=
 <<Check [[:open]] and [[:close]]>>
 ((and sep  (not (stringp sep)))
- (warn "parameter `~A' is not a string! (ignored)~%" sep))
+ (warn "parameter `~S' is not a string! (ignored)~%" sep))
 @
 
 <<Check [[:depth]]>>=
 ((and depth (not (integerp depth)))
- (warn "parameter `~A' is not a number! (ignored)~%" depth))
+ (warn "parameter `~S' is not a number! (ignored)~%" depth))
 @
 
 <<Check [[:group]]>>=
 ((and group (not (integerp group)))
- (warn "parameter `~A' is not a number! (ignored)~%" group))
+ (warn "parameter `~S' is not a number! (ignored)~%" group))
 @
 
 <<Check [[:class]] for location-reference class>>=
 ((and class (progn (setq class (stringify class))
                    (not (lookup-locref-class *indexstyle* class))))
- (warn "parameter `~A' is not a location-reference class! (ignored)~%" class))
+ (warn "parameter `~S' is not a location-reference class! (ignored)~%" class))
 @
 
 <<Check [[:class]] for cross-reference class>>=
 ((and class (progn (setq class (stringify class))
                    (not (lookup-crossref-class *indexstyle* class))))
- (warn "parameter `~A' is not a cross-reference class! (ignored)~%" class))
+ (warn "parameter `~S' is not a cross-reference class! (ignored)~%" class))
 @
 
 <<Check [[:attr]]>>=
 ((and attr (progn (setq attr (stringify attr))
                    (not (lookup-catattr *indexstyle* attr))))
- (warn "parameter `~A' is not an attribute! (ignored)~%" attr))
+ (warn "parameter `~S' is not an attribute! (ignored)~%" attr))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -285,14 +285,18 @@ T
 \paragraph{Markup tracing}
 
 <<Markup interface>>=
-(defmacro markup-trace (&key
-                        (open  *markup-verbose-open*)
-                        (close *markup-verbose-close*))
-  (cond <<Check [[:open]] and [[:close]]>>
-        (t `(LET ()
-             (SETQ *markup-verbose-open*  open)
-             (SETQ *markup-verbose-close* close)
-             (SETQ *markup-verbose-mode*  t)))))
+(defmacro markup-trace (&rest args)
+  (destructuring-switch-bind (&key
+			      (open  *markup-verbose-open*)
+			      (close *markup-verbose-close*)
+			      &switch
+			      on)
+      args
+    (cond <<Check [[:open]] and [[:close]]>>
+	  (t `(LET ()
+	       (SETQ *markup-verbose-open*  ,open)
+	       (SETQ *markup-verbose-close* ,close)
+	       ,(when on `(SETQ *markup-verbose-mode* t)))))))
 @ %def markup-trace
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -327,14 +331,39 @@ the markup of the list of all indexentries.
 (export '(do-markup-index))
 @
 
-<<Markup interface>>=
-(defmacro markup-index (&key open close)
-  (cond <<Check [[:open]] and [[:close]]>>
-        (t `(markup::define-environment-methods
-             DO-MARKUP-INDEX ((idx index:base-index))
-             :declare ((declare (ignore idx)))
-             :open  ,(when open  `((do-markup-string ,open)))
-             :close ,(when close `((do-markup-string ,close)))))))
+<<Index markup>>=
+(defmacro markup-index (&whole whole &rest args)
+  (destructuring-switch-bind (&key
+			      open close hierdepth
+			      &switch
+			      tree flat)
+      args
+    (let (hierdepth-cmd)
+      (when (or hierdepth tree flat)
+	(cond
+	  ((and tree flat)
+	     (error "you can't specify :tree and :flat simultaneously in ~%~S~%"
+		     whole))
+	  ((and hierdepth (or tree flat))
+	     (error "you can't specify :hierdepth with :tree or :flat simultaneously in ~%~S~%"
+		     whole))
+	  (flat (setq hierdepth-cmd
+		      `(SET-HIERDEPTH 0 *INDEX*)));; no tree-structure
+	  ;; MOST-POSITIVE-FIXNUM means make all trees
+	  (tree (setq hierdepth-cmd
+		      `(SET-HIERDEPTH MOST-POSITIVE-FIXNUM *INDEX*)))
+	  (hierdepth
+	     (when (not (numberp hierdepth))
+	       (xerror "~S is not a number in ~S~%" whole))
+	     (setq hierdepth-cmd
+		   `(SET-HIERDEPTH ,hierdepth *INDEX*))))
+	`(LET ()
+	  (markup::define-environment-methods
+	      DO-MARKUP-INDEX ((idx index:base-index))
+	    :declare ((declare (ignore idx)))
+	    :open  ,(when open  `((do-markup-string ,open)))
+	    :close ,(when close `((do-markup-string ,close))))
+	  ,hierdepth-cmd)))))
 @ %def markup-index
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -969,9 +998,9 @@ Their elements are simple cross-references.
 (lisp:provide "MARKUP")
 
 (lisp:use-package "CLOS")
-(lisp:use-package "XP")
 (lisp:require "base")
 (lisp:use-package "BASE")
+#+:XP (lisp:use-package "XP")
 (lisp:require "locref")
 (lisp:use-package "LOCREF")
 (lisp:require "idxstyle")
@@ -993,7 +1022,10 @@ Their elements are simple cross-references.
 <<User-interface-definitions>>=
 (eval-when (compile load eval)
   (defparameter *markup-user-interface-definitions*
-    '(markup-crossref-layer
+    '(*markup-verbose-mode*
+      *markup-verbose-open*
+      *markup-verbose-close*
+      markup-crossref-layer
       markup-crossref-layer-list
       markup-crossref-list
       markup-index
@@ -1046,7 +1078,11 @@ Their elements are simple cross-references.
 
 
 %% $Log$
-%% Revision 1.10  1996/06/24 09:13:17  kehr
+%% Revision 1.11  1996/07/03 18:41:43  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.10  1996/06/24  09:13:17  kehr
 %% Several changes in all Lisp-modules due to the new startup-module and
 %% the implementation of the percentage bar appearing in the processing
 %% phases.

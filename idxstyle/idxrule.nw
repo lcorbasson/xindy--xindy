@@ -549,6 +549,7 @@ method twice.
 \subsubsection{Pretty-printing}
 
 <<Pretty-printing>>=
+#+:XP
 (defun pprint-relation (s rel)
   (pprint-logical-block
    (s nil :suffix "}")
@@ -567,11 +568,14 @@ method twice.
                                      (pprint-newline :mandatory s)))
                                (get-rel-sets rel)))))
 
+#+:XP
 (set-pprint-dispatch 'relation-rule #'pprint-relation)
+#+:XP
 (set-pprint-dispatch 'relation      #'pprint-relation)
 @
 
 <<Pretty-printing>>=
+#+:XP
 (set-pprint-dispatch
  'catattr-groups
  #'(lambda (s catgrp)
@@ -586,7 +590,11 @@ method twice.
 @
 
 %% $Log$
-%% Revision 1.7  1996/06/03 10:01:10  kehr
+%% Revision 1.8  1996/07/03 18:41:41  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.7  1996/06/03  10:01:10  kehr
 %% Added support for treeing layered-location-references.
 %%
 %% Revision 1.6  1996/05/20  08:47:52  kehr

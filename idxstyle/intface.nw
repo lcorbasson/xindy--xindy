@@ -76,6 +76,7 @@ It can be imported by other packages by calling
     sort-rule
     searchpath
     require
+    info
     ))
 @ %def *idxstyle-user-interface-definitions*
 
@@ -139,7 +140,7 @@ type or structure.
                        (stringify x))
                     ((listp  x)
                        (error "nesting level too deep !"))
-                    (t (error "~A is not a string !" x))))
+                    (t (error "~S is not a string !" x))))
           slist))
 
 (export '(stringify list-of-strings-p
@@ -207,6 +208,20 @@ the string-termination character.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\subsubsection{Typechecking parameters}
+
+<<check :hierdepth>>=
+(when (not (numberp hierdepth))
+  (error "~S is not a number! in ~S~%" hierdepth whole))
+@
+
+<<check name>>=
+((null name)
+ (error "missing argument <name> in `~S' !" whole))
+((not (or (symbolp name) (stringp name)))
+ (error "~S is not a symbol or a string in `~S' !" name whole))
+@
+
 \subsubsection{Alphabets}
 
 We introduce two different forms of alphabet definitions. The first
@@ -216,25 +231,19 @@ alphabets via \Lisp-expressions and should only be used by an
 experienced user.
 
 <<Defining alphabets>>=
-(defmacro define-alphabet (&optional name string-list)
-  (cond ((null name)
-           (error "missing argument <name> !"))
-        ((not (or (symbolp name) (stringp name)))
-           (error "~A is not a symbol or a string" name))
+(defmacro define-alphabet (&whole whole &optional name string-list)
+  (cond <<check name>>
         ((not (listp string-list))
            (error "missing argument <string-list> !"))
         ((not (list-of-strings-p string-list))
-           (error "~A is not a list of strings" string-list))
+           (error "~S is not a list of strings" string-list))
         (t `(LET ((NAME (STRINGIFY ',name)))
              (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
-               (OOPS "redefining alphabet `~A'" NAME))
+               (OOPS "redefining alphabet `~S'" NAME))
              (ADD *indexstyle* (MAKE-ALPHABET NAME ',string-list))))))
 
-(defmacro define-alphabet* (&optional name string-list)
-  (cond ((null name)
-           (error "missing argument <name> !"))
-        ((not (or (symbolp name) (stringp name)))
-           (error "~A is not a symbol or a string" name))
+(defmacro define-alphabet* (&whole whole &optional name string-list)
+  (cond <<check name>>
         ((not (listp string-list))
            (error "missing argument <string-list> !"))
         (t (let ((scar (car string-list)))
@@ -242,9 +251,9 @@ experienced user.
                  `(LET ((NAME (STRINGIFY ',name))
                         (STRING-LIST ,string-list)) #| evaluates string-list |#
                    (UNLESS (LIST-OF-STRINGS-P STRING-LIST)
-                     (ERROR "~A is not a list of strings" STRING-LIST))
+                     (ERROR "~S is not a list of strings" STRING-LIST))
                    (WHEN (LOOKUP-BASETYPE *indexstyle* NAME)
-                     (OOPS "redefining alphabet `~A'" NAME))
+                     (OOPS "redefining alphabet `~S'" NAME))
                    (ADD *indexstyle* (MAKE-ALPHABET NAME STRING-LIST))))))))
 @ %def define-expand-alphabet define-expand-alphabet*
 
@@ -252,11 +261,11 @@ experienced user.
 \subsubsection{Enumerations}
 
 <<Defining enumerations>>=
-(defmacro define-enumeration (&optional name prefix-match-func base-alphabet)
-  (cond ((null name)
-           (error "missing argument <name> !"))
-        ((not (or (symbolp name) (stringp name)))
-           (error "~A is not a symbol or a string" name))
+(defmacro define-enumeration (&whole
+                              whole
+                              &optional
+                              name prefix-match-func base-alphabet)
+  (cond <<check name>>
         ((null prefix-match-func)
            (error "missing argument <prefix-match-function> !"))
         (t (let* ((name   (stringify name))
@@ -264,7 +273,7 @@ experienced user.
                            (concatenate 'string "ENUMERATION-" name))))
              `(LET () #| PROGN instead of LET () yields a runtime error !? |#
                (IF (LOOKUP-BASETYPE *indexstyle* ,name)
-                   (OOPS "redefining alphabet `~A'" ,name)
+                   (OOPS "redefining alphabet `~S'" ,name)
                    (PROGN
                      (DEFCLASS ,symbol (ENUMERATION) ())
                      (ADD *indexstyle*
@@ -295,9 +304,9 @@ experienced user.
       ((null layer-list)
          (error "missing argument <layer-list> !"))
       ((not (list-of-strings-p layer-list))
-         (error "~A is not a list of strings!" layer-list))
+         (error "~S is not a list of strings!" layer-list))
       ((not (numberp hierdepth))
-         (error "~A is not a number! in~%~A" hierdepth whole))
+         (error "~S is not a number! in~%~S" hierdepth whole))
       (t `(LET ((NAME (STRINGIFY ',name))
                 (LAYERS (MAPCAR #'(LAMBDA (X)
                                     (LET* ((LAYER (STRINGIFY X))
@@ -309,10 +318,10 @@ experienced user.
                                           (MAKE-LOCCLS-SEPARATOR LAYER))))
                                 ',layer-list)))
            (COND ((LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
-                    (OOPS "replacing cross-reference-class `~A' is not allowed !"
+                    (OOPS "replacing cross-reference-class `~S' is not allowed !"
                           NAME))
                  (t (WHEN (LOOKUP-LOCATION-CLASS *indexstyle* NAME)
-                      (OOPS "redefining location-reference-class `~A' !" NAME))
+                      (OOPS "redefining location-reference-class `~S' !" NAME))
                     (ADD *indexstyle*
                          ,(if var
                               `(CHECKED-MAKE-VAR-LOCATION-CLASS NAME LAYERS
@@ -327,18 +336,18 @@ experienced user.
 
 <<Defining location-classes>>=
 (defmacro define-crossref-class (&rest args)
-  (destructuring-switch-bind (name
+  (destructuring-switch-bind (&whole
+                              whole
+                              name
                               &switch (verified :unverified))
       args
-    (cond
-      ((null name)
-         (error "missing argument <name> !"))
+    (cond <<check name>>
       (t `(LET ((NAME (STRINGIFY ',name)))
            (cond ((LOOKUP-LOCATION-CLASS *indexstyle* NAME)
-                    (OOPS "replacing location-reference-class `~A' is not allowed !"
+                    (OOPS "replacing location-reference-class `~S' is not allowed !"
                           NAME))
                  (t (WHEN (LOOKUP-CROSSREF-CLASS *indexstyle* NAME)
-                      (OOPS "redefining crossref-location-class `~A'" NAME))
+                      (OOPS "redefining crossref-location-class `~S'" NAME))
                     (ADD *indexstyle*
                          ,(if verified
                               `(MAKE-UNVERIFIED-CROSSREF-LOCATION-CLASS NAME)
@@ -353,7 +362,7 @@ experienced user.
   (cond ((not (listp olist))
            (error "missing argument <list> !"))
         ((not (list-of-strings-p olist))
-           (error "~A is not a list of strings" olist))
+           (error "~S is not a list of strings" olist))
         (t `(LET ((CTR 1))
              (MAPC #'(LAMBDA (NAME)
                        (LET* ((NEW-NAME (STRINGIFY NAME))
@@ -362,7 +371,7 @@ experienced user.
                                                            NEW-NAME))))
                          (INCF CTR)
                          (COND (LOCCLS (SET-ORDNUM CTR LOCCLS))
-                               (t (OOPS "unknown location-class `~A'"
+                               (t (OOPS "unknown location-class `~S'"
                                         NEW-NAME)))))
               ',olist)))))
 @ %def define-location-class-order
@@ -383,7 +392,7 @@ experienced user.
              `(PROGN
                (MAPCAR #'(LAMBDA (CATATTR)
                            (IF (LOOKUP-CATATTR *indexstyle* CATATTR)
-                               (OOPS "ignoring redefinition of attribute `~A' !"
+                               (OOPS "ignoring redefinition of attribute `~S' !"
                                      CATATTR)
                                (ADD *indexstyle*
                                     (MAKE-CATEGORY-ATTRIBUTE CATATTR))))
@@ -513,17 +522,37 @@ For more information see the description of the [[ordrules]]-package.
   (cond ((null args)
            (error "missing argument <filename> !"))
         ((not (stringp (car args)))
-           (error "(require ~A): expected <filename> !" (car args)))
+           (error "(require ~S): expected <filename> !" (car args)))
         (t `(LET ((FILENAME (STRINGIFY ',(car args))))
              (DO-REQUIRE FILENAME)))))
 
 (defun do-require (filename)
-  (unless (member filename *included-files* :test #'equalp)
-    (push filename *included-files*)
-    (info "~&Loading module `~A'..." filename)
-    (load filename :verbose nil)
-    (info "~&Finished loading module `~A'.~%" filename)))
+  (let ((file (find-file filename)))
+    (unless (member file *included-files* :test #'equalp)
+      (push file *included-files*)
+      (info "~&Loading module ~S..." filename)
+      (load file :verbose nil)
+      (info "~&Finished loading module ~S.~%" filename))))
 @ %def require do-require
+
+\no Since the built-in [[load]] is not very clever when searching for
+files we implement a function that is given a filename which may
+contain absolute and relative pathnames. If it is an absolute pathname
+we check if is availabe and load it, if possible. If it is a relative
+pathname, we append the filename to all paths in
+[[*xindy-load-paths*]] and check if we get an existing file. If we
+find one we load it as usual.
+
+<<Including files>>=
+(defun find-file (filename)
+  (let ((file (pathname filename)))
+    (when (equal (file-namestring file) "")
+      (error "~S is not a valid filename !" filename))
+    (let ((found (some #'(lambda (path)
+                           (and (probe-file (append-pathnames path file))))
+                       *load-paths*)))
+      (or found (error "Could not find file ~S !" filename)))))
+@ %def find-file
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -560,15 +589,52 @@ The following chunks implement the searchpath.
                (mapcar
                 #'(lambda (elt)
                     (cond ((stringp elt)
-                             (list (pathname elt)))
+                             (list (make-real-pathname elt)))
                           ((eq elt :default)
                              *default-load-paths*)
                           ((eq elt :last)
                              *load-paths*)
-                          (t (oops "~&searchpath: invalid argument `~A' ! (ignored)~%"
+                          (t (oops "~&searchpath: invalid argument `~S' ! (ignored)~%"
                                    elt))))
                 path-list))))
 @ %def searchpath
+
+\no The following function takes a string representing a pathname and
+converts it into a pathname-object. Since the string represents a
+directory in every case we first convert it with the function
+[[pathname]] to a pathname-object. If the resulting pathname contains
+a name-field indicating that the string was not a correct pathname (in
+UNIX: the trailing [[/]] was missing) we create a new pathname by
+adding the filename to the directory resulting in the corrected
+pathname.
+
+<<Setting the searchpath>>=
+(defun make-real-pathname (pathname-str)
+  (let* ((pn     (pathname pathname-str))
+         (fname  (file-namestring pn)))
+    (cond ((string/= fname "")
+             (make-pathname :directory (append (pathname-directory pn)
+                                               (list fname))))
+          (t pn))))
+@ %def make-real-pathname
+
+\no The following function takes two pathnames and appends the second
+one (if its a [[:relative]] one) to the first one. It creates a new
+[[:directory]]-fieldand copies the [[name]]- and [[type]]-components
+of the second argument. This function can therefore be used to take a
+relative file- or directory-name and append it to an existing
+directory.
+
+<<Setting the searchpath>>=
+(defun append-pathnames (pn-dir pn-sub)
+  (let ((dir-dir (pathname-directory pn-dir))
+        (dir-sub (pathname-directory pn-sub)))
+    (cond ((not (eq :relative (car dir-sub))) nil)
+          (t (make-pathname :directory (append dir-dir (cdr dir-sub))
+                            :name (pathname-name pn-sub)
+                            :type (pathname-type pn-sub))))))
+@ %def append-pathnames
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -711,6 +777,7 @@ NIL in cases where no switch keyword was found in EXPR.
 <<Defining keyword rules>>
 <<Defining letter groups>>
 <<Including files>>
+<<Setting the searchpath>>
 
 <<User-interface-definitions>>
 
@@ -723,7 +790,11 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
-%% Revision 1.14  1996/06/24 09:12:29  kehr
+%% Revision 1.15  1996/07/03 18:41:42  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.14  1996/06/24  09:12:29  kehr
 %% Several changes in all Lisp-modules due to the new startup-module and
 %% the implementation of the percentage bar appearing in the processing
 %% phases.

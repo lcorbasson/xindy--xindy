@@ -42,41 +42,54 @@ platform.
 (defmacro error-exit ()
   `(EXIT 1))
 
-(defun startup (&key idxstyle rawindex output show-version markup-trace)
+(defun startup (&key idxstyle rawindex output logfile
+		     show-version markup-trace)
   (info "This is ~A (~A).~%" *xindy-version* *xindy-platform*)
   (info "Copyright (C) 1996  Roger Kehr~%~%")
   (when show-version (exit))
   (when markup-trace
     (setq *markup-verbose-mode* t))
   (handler-case
-      (do-startup idxstyle rawindex output)
+      (do-startup idxstyle rawindex output logfile)
     (error (condition)
-           (oops "~&FATAL ERROR: ~A~%" condition)
-           (error-exit))))
+           (oops "~&~%FATAL ERROR:~%")
+	   (apply-oops (simple-condition-format-string    condition)
+		       (simple-condition-format-arguments condition))
+	   (error-exit))))
 @ %def startup
 
 <<Startup functions>>=
-(defun do-startup (idxstyle raw-index output)
+(defun do-startup (idxstyle raw-index output logfile)
+  (when logfile
+    (info "~&Opening logfile ~S " logfile)
+    (handler-case
+	(setq *logging-stream* (open logfile
+				     :direction :output
+				     :if-does-not-exist :create))
+      (error ()
+	     (oops "~&ERROR: Opening logfile ~S failed!~% ~S.~%" logfile)
+	     (error-exit)))
+    (info "(done)~%")
+    (setq *logging-on* t)
+    (multiple-value-bind (sec min hour day mon year)
+	(get-decoded-time)
+      (gol t ";; This logile was generated automatically by `xindy'~%")
+      (gol t ";; at ~2,'0D.~2,'0D.~4,'0D  ~2,'0D:~2,'0D:~2,'0D~%"
+	   day mon year hour min sec))
+      (gol t ";; Indexstyle: ~S, Rawindex: ~S, Output: ~S~%~%"
+	   idxstyle raw-index output)
+    )
+
   (info "~&Reading indexstyle...~%")
-  (handler-case
-      (let ((*readtable* idxstyle:*indexstyle-readtable*))
-        (idxstyle:do-require idxstyle))
-    (error (condition)
-           (oops "~&ERROR: Reading indexstyle ~S failed!~%       ~A.~%"
-                 idxstyle condition)
-           (error-exit)))
+  (let ((*readtable* idxstyle:*indexstyle-readtable*))
+    (idxstyle:do-require idxstyle))
   (info "~&Finished reading indexstyle.")
   (info "~&Finalizing indexstyle... ")
   (idxstyle:make-ready idxstyle:*indexstyle*)
   (info "(done)~%~%")
 
-  (info "~&Reading raw-index `~A'..." raw-index)
-  (handler-case
-      (load raw-index :verbose nil)
-    (error (condition)
-           (oops "~&ERROR: Reading raw-index ~S failed!~%       ~A.~%"
-                 raw-index condition)
-           (error-exit)))
+  (info "~&Reading raw-index ~S..." raw-index)
+  (load raw-index :verbose nil)
   (info "~&Finished reading raw-index.~%~%")
 
   (handler-case
@@ -84,9 +97,8 @@ platform.
             (open output
                   :direction :output
                   :if-does-not-exist :create))
-    (error (condition)
-           (oops "~&ERROR: Opening file ~S failed!~%         ~A.~%"
-                 output condition)
+    (error ()
+           (oops "~&ERROR: Opening file ~S failed!~%" output)
            (error-exit)))
 
   (info "~&Processing index...")
@@ -95,13 +107,12 @@ platform.
 
   (info "~&Writing markup...")
   (markup:do-markup-index index:*index*)
-  (info "~%Markup written into file `~A'.~%" output))
+  (info "~%Markup written into file ~S.~%" output))
 @ %def do-startup
 
 <<Export-list of submodule \module{startup}>>=
 (export '(startup *xindy-version* *xindy-platform*))
 @
-
 
 \subsubsection{The submodule root}
 
@@ -111,6 +122,7 @@ platform.
 (lisp:in-package  "XINDY")
 (lisp:use-package "BASE")
 (lisp:use-package "MARKUP")
+(lisp:use-package "CLOS")
 (lisp:import markup:*markup-user-interface-definitions*)
 
 <<Global definitions>>
@@ -125,7 +137,11 @@ platform.
 
 
 %% $Log$
-%% Revision 1.1  1996/06/24 09:13:20  kehr
+%% Revision 1.2  1996/07/03 18:41:44  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.1  1996/06/24  09:13:20  kehr
 %% Several changes in all Lisp-modules due to the new startup-module and
 %% the implementation of the percentage bar appearing in the processing
 %% phases.

@@ -647,6 +647,7 @@ delayed until the markup).
 \subsubsection{Pretty-printing}
 
 <<Pretty-printing>>=
+#+:XP
 (defmacro pprint-slot-block (slot-name body)
   `(progn
     (pprint-logical-block (s nil :suffix " }")
@@ -656,6 +657,7 @@ delayed until the markup).
                           ,body)
     (pprint-newline :mandatory s)))
 
+#+:XP
 (defmacro pprint-slot-block-line (slot-name body)
   `(progn
     (pprint-logical-block (s nil :suffix " }")
@@ -667,6 +669,7 @@ delayed until the markup).
 @
 
 <<Pretty-printing>>=
+#+:XP
 (set-pprint-dispatch 'indexclass
                      #'(lambda (s idxcls)
                          (pprint-logical-block
@@ -745,7 +748,11 @@ delayed until the markup).
 @
 
 %% $Log$
-%% Revision 1.13  1996/05/29 14:15:24  kehr
+%% Revision 1.14  1996/07/03 18:41:40  kehr
+%% Checkin after some modifications of the error-system and the loading of
+%% indexstyle-modules have been made. Affects all modules.
+%%
+%% Revision 1.13  1996/05/29  14:15:24  kehr
 %% Complete checkin after the major changes in the markup. See ChangeLog
 %% for details.
 %%
