@@ -166,7 +166,8 @@ of set $C$ as the hash-key.
                       :writer set-attribute-list
                       :initform nil)
      (attribute-table :reader get-attribute-table
-                      :initform (make-hash-table :test #'equal))))
+                      :initform (make-hash-table :test #'equal
+                                                 :size 16))))
 
 (defun make-catattr-groups ()
   (make-instance 'catattr-groups))
@@ -176,13 +177,12 @@ of set $C$ as the hash-key.
   (setf (gethash (get-name catattr) (get-attribute-table catattr-grp))
         catattr))
 
-(defmethod lookup ((catattr-grp catattr-groups)
-                   (catattr-name string))
-  (gethash catattr-name (get-attribute-table catattr-grp)))
-@ %def catattr-groups make-catattr-groups add lookup
+(defmacro lookup-catattr-name (catattr-grp catattr-name)
+  `(GETHASH ,catattr-name (SLOT-VALUE ,catattr-grp 'ATTRIBUTE-TABLE)))
+@ %def catattr-groups make-catattr-groups add lookup-catattr-name
 
 <<Export-list of submodule \module{idxrule}>>=
-(export '(catattr-groups make-catattr-groups lookup))
+(export '(catattr-groups make-catattr-groups lookup-catattr-name))
 @
 
 \begin{note}
@@ -227,14 +227,17 @@ substitution-rule [[impl-subst-rule]] of the current indexclass.
              (mapcar
               #'(lambda (catattr)
                   (cond ((stringp catattr)
-                           (let ((ca (lookup catattr-grps catattr)))
+                           (let ((ca (lookup-catattr-name catattr-grps
+                                                          catattr)))
                              (incf sort-ordnum-counter)
                              (set-sort-ordnum sort-ordnum-counter ca)
                              (set-catattr-grp-ordnum catattr-grp-counter ca)
                              (when prev-catattr
                                (rel-insert impl-subst-rule
-                                           (lookup catattr-grps prev-catattr)
-                                           (lookup catattr-grps catattr)))
+                                           (lookup-catattr-name catattr-grps
+                                                                prev-catattr)
+                                           (lookup-catattr-name catattr-grps
+                                                                catattr)))
                              (setq prev-catattr catattr)))
                         (t (error "~A  is not a string" catattr))))
               sublists)))
@@ -372,8 +375,8 @@ invoked on object $x$ delivers a list $Y=\{y_1\ldots y_n\}$ of all
 objects such that holds $\forall y\in Y: x$ \textsf{rel} $y$.
 
 <<Class \class{relation}>>=
-(defmethod relation-set ((rel relation) x)
-  (cdr (assoc x (get-rel-sets rel))))
+(defmacro relation-set (rel x)
+  `(CDR (ASSOC ,x (SLOT-VALUE ,rel 'REL-SETS))))
 @ %def relation-set
 
 Another operation we need later is to check if $x$ is in relation to
@@ -408,8 +411,8 @@ afterwards the object is ready for work.
 in relation with $y$ in relation [[rel]].
 
 <<Class \class{relation}>>=
-(defmethod relation-p ((rel relation) (x t) (y t))
-  (gethash (cons x y) (get-rel-hash rel)))
+(defmacro relation-p (rel x y)
+  `(GETHASH (CONS ,x ,y) (SLOT-VALUE ,rel 'REL-HASH)))
 @ %def relation-p
 
 <<Export-list of submodule \module{idxrule}>>=
@@ -579,14 +582,11 @@ method twice.
       (write (get-attribute-table catgrp) :stream s))))
 @
 
-
-
-%% Local Variables:
-%% mode: latex
-%% End:
-%%
 %% $Log$
-%% Revision 1.5  1996/05/09 11:49:30  kehr
+%% Revision 1.6  1996/05/20 08:47:52  kehr
+%% Major release of the modules locref, idxstyle and index.
+%%
+%% Revision 1.5  1996/05/09  11:49:30  kehr
 %% Changes in all submodules, due to macro-expansion problems during
 %% compilation.
 %%
@@ -636,4 +636,8 @@ method twice.
 %% merge-to and separate-mixed--rules. The whole processing of
 %% location-refernces is more structured now and can be easier maintained.
 %%
-%%
+
+%% Local Variables:
+%% mode: lisp
+%% End:
+

@@ -76,7 +76,7 @@ The indexstyle itself will be initialised later after all functions are known.
 
 <<Global indexstyle definitions>>=
 (defparameter *indexstyle* nil)
-(defparameter *default-minimum-range-length* 3)
+(defparameter *default-minimum-range-length* 2)
 @ %def *indexstyle* *default-minimum-range-length*
 
 <<Global indexstyle initialisation>>=
@@ -189,7 +189,10 @@ basetype-characters. Quiet easy, isn't it ?
 @
 
 %% $Log$
-%% Revision 1.8  1996/05/09 11:49:32  kehr
+%% Revision 1.9  1996/05/20 08:47:54  kehr
+%% Major release of the modules locref, idxstyle and index.
+%%
+%% Revision 1.8  1996/05/09  11:49:32  kehr
 %% Changes in all submodules, due to macro-expansion problems during
 %% compilation.
 %%

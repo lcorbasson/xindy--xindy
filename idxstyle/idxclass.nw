@@ -90,11 +90,9 @@ incrementally filled with more information.
                            :initform '())
      (keyword-sort-rules   :accessor get-keyword-sort-rules
                            :initform '())
+     <<Location-reference-cache definitions>>
      (succ-table           :accessor get-succ-table
                            :initform (make-hash-table))
-;     (keyword-markup       :reader get-keyword-markup
-;                           :writer set-keyword-markup
-;                           :initform '())
      <<Rules for indexing>>
      ))
 
@@ -105,12 +103,101 @@ incrementally filled with more information.
 <<Export-list of submodule \module{idxclass}>>=
 (export '(indexclass              make-indexclass
           get-name                get-basetypes
-          get-cat-attrs           get-locclasses
+          get-cat-attrs
           get-keyword-merge-rules get-keyword-sort-rules
-          get-succ-table
-;          get-keyword-markup      set-keyword-markup
+          get-succ-table          get-locclasses
           <<Export-list for indexing rules>>
           ))
+@
+
+\subsubsection{The location-reference cache}
+
+The location-reference cache is used to speed up the matching of
+strings against location-class descriptions. Since each locref-string
+is matched against every location-class the performance can be
+improved if the result of each matching-process is stored for later
+use. For an index with multiple references into a logical document
+location the further matches can be looked up in the hash-table. The
+following chunks define the data-structure layout of the locref-cache.
+
+<<Global definitions of \module{idxclass}>>=
+(defparameter *locref-cache-size*        1000)
+(defparameter *locref-cache-rehash-size*    2)
+(defparameter *locref-cache-hits*           0)
+(defparameter *locref-cache-misses*         0)
+@ %def *locref-cache-size* *locref-cache-rehash-size*
+
+<<Location-reference-cache definitions>>=
+     (locref-cache :accessor get-locref-cache
+                   :initform (initialize-locref-cache))
+@
+
+<<Location-reference-cache>>=
+(defun initialize-locref-cache ()
+  (setq *locref-cache-hits*   0)
+  (setq *locref-cache-misses* 0)
+  (make-hash-table :test #'equal
+                   :size        *locref-cache-size*
+                   :rehash-size *locref-cache-rehash-size*))
+
+(defmethod clear-locref-cache ((idxclass indexclass))
+  (setf (get-locref-cache idxclass)
+        (initialize-locref-cache)))
+
+(defun set-locref-cache-parameters (&key (size 1000) (rehash-size 3))
+  (when (< size 100) (setq size 100))
+  (when (< rehash-size 1.5) (setq rehash-size 1.5))
+  (setq *locref-cache-size* size)
+  (setq *locref-cache-rehash-size* rehash-size))
+@ %def initialize-locref-cache clear-locref-cache set-locref-cache-parameters
+
+\no The items in the hash-table consists of a cons-cell
+\texttt{(}\emph{number of matches}\texttt{\ .\ }%
+  \emph{locref-template}\texttt{)}. The \emph{number} describes the number of
+  matches for a locref-string and \emph{locref-template} is a
+  location-reference that can be used to create a new location-reference.
+
+<<Location-reference-cache>>=
+(defmacro lookup-locref-cache (idxcls locref-string)
+  `(LET ((LOCREF-LOOKUP (GETHASH ,locref-string
+                                 (SLOT-VALUE ,idxcls 'LOCREF-CACHE))))
+    (IF LOCREF-LOOKUP
+        (PROGN
+          (INCF *LOCREF-CACHE-HITS*)
+          (VALUES (CAR LOCREF-LOOKUP) (CDR LOCREF-LOOKUP)))
+        (PROGN
+          (INCF *LOCREF-CACHE-MISSES*)
+          (VALUES NIL NIL)))))
+
+(defmethod add-locref-cache ((idxcls indexclass)
+                             (locref-string string)
+                             (num    number)
+                             (locref layered-location-reference))
+  (setf (gethash locref-string (get-locref-cache idxcls))
+        (cons num locref))
+  (values num locref))
+
+(defmethod locref-statistics ((idxcls indexclass))
+  (let ((ht (get-locref-cache idxcls)))
+    (with-output-to-string (s)
+      (format
+       s "Statistics for locref-cache of indexclass ~S:~%" (get-name idxcls))
+      (format
+       s
+       "Hash-table: size=~A, count=~A, cache-hits=~A, cache-misses=~A, hits=~4,1,,'*F%~%"
+       (hash-table-size ht) (hash-table-count ht)
+       *locref-cache-hits* *locref-cache-misses*
+       (if (> *locref-cache-misses* 0)
+           (* 100 (/ *locref-cache-hits* (+ *locref-cache-hits*
+                                            *locref-cache-misses*)))
+           100.0 #| produces an invalid value |#)))))
+@ %def lookup-locref-cache add-locref-cache locref-statistics
+
+<<Export-list of submodule \module{idxclass}>>=
+(export '(locref-cache-size*      *locref-cache-rehash-size*
+          initialize-locref-cache clear-locref-cache
+          lookup-locref-cache     add-locref-cache
+          locref-statistics))
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -275,17 +362,21 @@ functions are prefixed with [[lookup-]].
   (gethash basetype-name (get-basetypes idxcls)))
 
 (defmethod lookup-catattr ((idxcls indexclass) (catattr-name string))
-  (lookup (get-cat-attrs idxcls) catattr-name))
+  (lookup-catattr-name (slot-value idxcls 'cat-attrs) catattr-name))
+
+(defmethod lookup-crossref-class ((idxcls indexclass) (xref-name string))
+  (assoc xref-name (slot-value idxcls 'locclasses) :test #'equal))
 
 (defmethod lookup-location-class ((idxcls indexclass) (loccls-name string))
-  (assoc loccls-name (get-locclasses idxcls) :test #'equal))
-@ %def lookup-basetype lookup-catattr lookup-location-class
+  (assoc loccls-name (slot-value idxcls 'locclasses) :test #'equal))
+@ %def lookup-basetype lookup-catattr lookup-crossref-class lookup-location-class
 
 <<Export-list of submodule \module{idxclass}>>=
 (export '(lookup-basetype
           lookup-catattr
+          lookup-crossref-class
           lookup-location-class))
-@ %def lookup-basetype lookup-catattr lookup-location-class
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -307,18 +398,18 @@ the following signature:
 returned in a list.
 
 <<Iterators for \class{indexclass}>>=
-(defmacro map-location-classes (apply-func &rest arguments)
-  `(LET ((IDXCLS *INDEXSTYLE*))
+(defmacro map-location-classes (idxcls apply-func &rest arguments)
+  `(LET ()
     (APPLY #'NCONC
            (MAPCAR
             #'(LAMBDA (ELT)
                 (LET ((RES
                        (FUNCALL ,apply-func
-                                IDXCLS
+                                ,idxcls
                                 (CDR ELT) #|ELT is ("name".<LOCATION-CLASS>))|#
                                 ,@arguments)))
                   (WHEN RES (LIST RES))))
-            (GET-LOCCLASSES IDXCLS)))))
+            (GET-LOCCLASSES ,idxcls)))))
 @ %def map-location-classes
 
 <<Export-list of submodule \module{idxclass}>>=
@@ -463,12 +554,10 @@ hash-table representation via calling [[make-ready]].
   (make-ready (get-merge-rules idxcls))
   (make-ready (get-drop-if-merged-rules idxcls))
   <<check for reflexivity>>
-;  (set-merge-rule-topsort (topsort
-;                           (remove-reflexivity
-;                            (transform-relation
-;                             (get-drop-if-merged-rules idxcls)
-;                             #'get-ordnum)))
-;                          idxcls)
+;;                          (set-merge-rule-topsort (topsort
+;;                          (remove-reflexivity (transform-relation
+;;                          (get-drop-if-merged-rules idxcls)
+;;                          'get-ordnum))) idxcls)
   (let ((counter 0))
     (mapc #'(lambda (catattr)
               (set-processing-ordnum (incf counter) catattr))
@@ -488,7 +577,9 @@ hash-table representation via calling [[make-ready]].
 ;; $Id$
 ;;
 
+<<Global definitions of \module{idxclass}>>
 <<Class \class{indexclass}>>
+<<Location-reference-cache>>
 <<Mutators for \class{indexclass}>>
 <<Finders for \class{indexclass}>>
 <<Iterators for \class{indexclass}>>
@@ -596,7 +687,10 @@ hash-table representation via calling [[make-ready]].
 @
 
 %% $Log$
-%% Revision 1.11  1996/04/30 15:52:48  kehr
+%% Revision 1.12  1996/05/20 08:47:49  kehr
+%% Major release of the modules locref, idxstyle and index.
+%%
+%% Revision 1.11  1996/04/30  15:52:48  kehr
 %% Minor changes.
 %%
 %% Revision 1.10  1996/04/30  09:26:36  kehr
