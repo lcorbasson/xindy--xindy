@@ -30,7 +30,7 @@ XCOMM $Id$
 	modulgraph.eps
 
 #define STY \
-	a4.sty               figsect.sty          stdwrk.sty\
+	figsect.sty          stdwrk.sty\
 	bslash.sty           footnotelist.sty     tableofcontents.sty\
 	environments.sty     sectioning.sty       xindy.sty
 
@@ -47,7 +47,10 @@ CVSCommentLeader("%% ", SRC STY)
 /* ============================================================
 
 $Log$
-Revision 1.1  1995/10/16 17:31:43  kehr
+Revision 1.2  1995/10/20 11:57:31  kehr
+Korrektur nach Klaus' Durchsicht.
+
+Revision 1.1  1995/10/16  17:31:43  kehr
 Initial checkin of Report and Presentation.
 
 */

@@ -25,10 +25,9 @@ eingegangen. Allgemeine Anforderungen an das System waren:
   entworfenen Datenmodells in eine Programmiersprache ermöglichen und
   leicht erweiterbar sein.
   \label{forderung:datenmodell}
-\item Es sollte eine möglichst schnelle Implementierung gestatten, um
-  sich auf die wesentlichen Punkte des Systems zu konzentrieren. Aus
-  diesem Grund sollten auch fertige Bibliotheken zum Einsatz kommen
-  können, um die Entwicklungszeit zu verkürzen.
+\item Es sollte eine möglichst schnelle Implementierung gestatten und
+  die wesentlichen Punkte des Modells umfassen. Zur Realisierung
+  sollten auch fertige Bibliotheken verwendet werden.
   \label{forderung:entwicklungszeit}
 \end{enumerate}
 %
@@ -37,9 +36,8 @@ eingegangen. Allgemeine Anforderungen an das System waren:
 
 Aus den aufgeführten Forderungen haben wir uns zunächst für die
 Programmiersprache \cpp entschieden, da eine einfache Abbildung in
-entsprechende Klassen möglich ist, und es inzwischen eine hohe
-Verfügbarkeit dieser Sprache auf vielen unterschiedlichen Plattformen
-gibt.
+entsprechende Klassen möglich ist. Diese Sprache ist au"serdem auf den
+wichtigsten Betriebssystemen verf"ugbar.
 
 \newcommand{\CL}{\textsc{Common Lisp}\xspace}
 \newcommand{\CLOS}{{CLOS}\xspace}
@@ -99,14 +97,13 @@ Dadurch ist die ursprünglich angestrebte Erstellung eines Parsers für
 den Indexstyle entfallen und bietet letztendlich einen höheren
 Konfigurierungsgrad als ursprünglich angestrebt.
 
-F"ur die Rohindexerkennung war urspr"unglich ein eigener Parser
-vorgesehen war, ist ein
-\texttt{perl}-Skript~\cite{Wall:PP92,Schwartz:LP93} vorgesehen.  Diese
-skriptorientierte Programmiersprache bietet vielfältige Möglichkeiten
-zur Erkennung von Mustern und verwendet Reguläre Ausdrücke, um die
-Indexeinträge zu filtern und in eine Folge von \LISP-Ausdrücken
-umzuwandeln. Diese werden dann von \mkxvier-System gelesen und
-ausgewertet.
+F"ur die Rohindexerkennung war urspr"unglich ein eigener Parser in
+Form eines \texttt{perl}-Skripts~\cite{Wall:PP92,Schwartz:LP93}
+vorgesehen. Diese skriptorientierte Programmiersprache bietet
+vielfältige Möglichkeiten zur Erkennung von Mustern und verwendet
+Reguläre Ausdrücke, um die Indexeinträge zu filtern und in eine Folge
+von \LISP-Ausdrücken umzuwandeln. Diese werden dann von
+\mkxvier-System gelesen und ausgewertet.
 
 Das entsprechende Skript ist leicht auf andere Eingabeformate und
 Textsysteme modifizierbar. Das hier vorgestellte Konzept nutzt die
@@ -156,7 +153,7 @@ Systems. Sie stellt die \emph{enthält}-Relationen der wichtigsten
 Klassen dar und beschreibt welche Klasse \emph{Container} für eine
 andere Klasse sind.
 
-\begin{tfigure}{Schematisches Datenmodell der wichtgsten Klassen der
+\begin{tfigure}{Schematisches Datenmodell der wichtigsten Klassen der
     Implementierung mit \emph{enth"alt}-Beziehungen}
   {fig:datenmodell}
   \centering \epsfig{file=datenmodell.eps}
@@ -201,10 +198,9 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 \begin{describeComponents}
 \item[name] Hier ist der Name der Indexklasse abgelegt. Es exisitiert
   immer eine Indexklasse mit Namen \texttt{default}.
-\item[basetypes] Alle definierten Komponententypen werden hier als
-  Hashtabelle abgelegt. Die Komponententypen werden über ihre Namen
-  angesprochen. Die Elemente sind Instanzen der Klasse
-  \texttt{basetype}.
+\item[basetypes] Alle definierten Komponententypen werden hier
+  abgelegt. Die Komponententypen werden über ihre Namen angesprochen.
+  Die Elemente sind Instanzen der Klasse \texttt{basetype}.
 \item[locclasses] Alle vom Benutzer definierten Lokationsklassen
   werden hier abgelegt. Die Elemente sind Instanzen der Klasse
   \texttt{location-class}.
@@ -215,7 +211,7 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 \item[succ-table] ist die Tabelle mit den Nachfolgerdefinitionen.
   Hierin ist das \emph{Dokumentwissen} enthalten.
 \item[merge-to-rules] sind die \textsf{merge-to}-Regeln. Sie sind
-  Instanzen von \texttt{index-rule}.
+  Instanzen der Klasse \texttt{index-rule}.
 \item[sep-mix-rule] enthalten die \textsf{separated-mixed}-Regeln.
 \end{describeComponents}
 
@@ -240,7 +236,7 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 \begin{describeMethods}
   \begin{defgen}{prefix-match}{\farg{string} \farg{basetype}}
     Das Argument \farg{string} ist dieZeichenkette, \farg{basetype}
-    ist eine Instanz eines Komponententyps. Die Funktion versucht
+    ist eine Instanz eines Komponententyps. Die Funktion versucht,
     einen Präfix der Zeichenkette dem angegebenen Komponententyp
     zuzuordnen. Die Methoden müssen für alle abgeleiteten Klassen von
     \texttt{basetype} definiert sein und einen multiple-value der Form
@@ -272,6 +268,7 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 \end{describeMethods}
 
 
+%\newpage
 
 \begin{describeClass}{enumeration}
   Diese Klasse ist Basisklasse aller Aufzählungen und von
@@ -299,7 +296,7 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 
 \begin{describeComponents}
 \item[name] enthält den Namen der Lokationsklasse.
-\item[layers] beinhaltet die Liste der Ebenen der Lokationsstruktur.
+\item[layers] enth"alt die Liste der Ebenen der Lokationsstruktur.
   Die Ebenen sind Instanzen der Klasse \texttt{loccls-layer}.
 \item[join-layers] enthält eine Liste der Nummern aller
   Strukturkomponenten, die prinzipiell zur Bereichsbildung herangezogen
@@ -514,7 +511,10 @@ Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
 
 %%
 %% $Log$
-%% Revision 1.1  1995/10/16 17:31:52  kehr
+%% Revision 1.2  1995/10/20 11:57:34  kehr
+%% Korrektur nach Klaus' Durchsicht.
+%%
+%% Revision 1.1  1995/10/16  17:31:52  kehr
 %% Initial checkin of Report and Presentation.
 %%
 %% Revision 1.14  1995/10/06  23:05:14  kehr

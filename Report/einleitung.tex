@@ -16,20 +16,20 @@ gelangen. Lehrbücher sind in der Regel ohne einen gut stukturierten
 Index nicht als Nachschlagewerk verwendbar.
 %% Oft genug hat man den Eindruck, als ob die Autoren den Leser nach dem Motto
 %% \flqq\textit{Suchet, so werdet ihr finden.}\frqq{} arbeiten lassen.
-Viele Lehrbücher weisen leider einen sehr unvollständigen Index auf, in
-welchem wichtige Begrif"|fe fehlen oder die Verweise auf die
-entsprechenden Seiten im Buch fehlerhaft oder ungenügend sind. Das
-Resultat ist ein schlecht strukturiertes und unübersichtliches
-Stichwortverzeichnis.  Das Buch verliert dadurch entscheidend an
-Qualität und Wert.
+Viele Lehrbücher weisen leider einen sehr unvollständigen Index auf,
+in welchem wichtige Begrif"|fe fehlen oder die Verweise auf die
+entsprechenden Seiten im Buch fehlerhaft oder ungenügend sind. Sie
+enthalten dadurch ein schlecht strukturiertes und unübersichtliches
+Stichwortverzeichnis und verlieren dadurch entscheidend an Qualität.
 
 \remark{Mängel bestehender Systeme}%
 Grund für diese Mängel sind oft nicht ausreichende Systeme zur
 Erstellung solcher Indexe. Ist es bei maschinell lesbaren Texten
-meistens möglich durch entsprechende Suche nach bestimmten Begrif"|fen
-ansatzweise trotzdem an die gewünschten Textstellen zu gelangen, ist
-dies prinzipiell bei gedruckter Literatur nicht möglich, und der Leser
-ist grundsätzlich immer auf das Stichwortverzeichnis angewiesen.
+meistens möglich, durch entsprechende Suche nach bestimmten
+Begrif"|fen ansatzweise trotzdem an die gewünschten Textstellen zu
+gelangen, ist dies prinzipiell bei gedruckter Literatur nicht möglich,
+und der Leser ist grundsätzlich immer auf das Stichwortverzeichnis
+angewiesen.
 
 \remark{Besondere Bedürfnisse}%
 Weiterhin trifft man insbesondere in den Naturwissenschaften immer
@@ -37,7 +37,7 @@ häufiger auf spezielle Wünsche der Autoren. Zu diesen Wünschen zählen
 Indexe mit mehrsprachigen Einträgen, die Verwendung verschiedenartiger
 Indexverweise auf Seitenummern, Gliederungsebenen, Anhänge, Symbole
 \etc, welche mit herkömmlichen Indexierungssystemen nicht
-zufriedenstellend genug erfüllt werden können. Prinzipiell sollte ein
+zufriedenstellend erfüllt werden können. Prinzipiell sollte ein
 Indexierungsprogramm auch in der Lage sein, spezielle
 In\-dex\-in\-for\-ma\-tion\-en wie HyperText-Links o.ä.\ zu verwalten.
 Viele der existierenden Systeme sind in einzelnen Details sehr
@@ -95,11 +95,9 @@ gewonnenen Informationen in ein Modell der Indexverarbeitung abbilden.
 Es folgt ein Überblick über die Verarbeitungsvorgänge innerhalb des
 Modells in Abschnitt~\ref{sec:indexverarbeitung}. In
 Abschnitt~\ref{sec:implementierung} finden sich Informationen über die
-erfolgte Implementierung des Systems. Den Abschluß bilden
-Abschnitt~\ref{sec:zusammenfassung} mit einer Zusammenfassung, der
-Ausblick über weiterführende Arbeiten in
-Abschnitt~\ref{sec:weiterArbeiten} und ein Glossar in
-Abschnitt~\ref{sec:glossar}.
+erfolgte Implementierung des Systems. Den Abschluß bilden die
+Zusammenfassung in Abschnitt~\ref{sec:zusammenfassung} und ein Glossar
+in Abschnitt~\ref{sec:glossar}.
 
 
 \section*{Datenfluß in einem Indexierungssystem}
@@ -110,16 +108,16 @@ die Rohdaten der Indexeinträge in einem festgelegten Format. Das
 Indexsystem liest zunächst sämtliche für den Verarbeitungsprozeß
 benötigten Informationen aus der Indexstyle-Datei\remark{Indexstyle}
 ein. Anschließend werden die Rohdaten des Indexes eingelesen. Die
-Indexeinträge werden daraufhin gemischt und sortiert. Die
-entsprechenden Misch- und Sortierregeln sind im Indexstyle angegeben.
-Anschließend werden die Lokationsreferenzen separat für jeden
-Indexeintrag gemischt und sortiert. Die dazu notwendigen Informationen
-befinden sich ebenfalls im Indexstyle. Zuletzt wird der komplette
+Indexeinträge werden daraufhin gemischt und sortiert. Dieser Proze"s
+besteht aus der Verarbeitung der Stichw"orter und den dazugeh"origen
+Verweisen auf das Dokument. Diese Verweise werden mit
+\emph{Lokationsreferenz} bezeichnet. Die entsprechenden Misch- und
+Sortierregeln sind im Indexstyle angegeben. Zuletzt wird der komplette
 Index mit einem Markup versehen und dem Textsatzsystem zur
 Weiterverarbeitung zugeführt.
 
 Besondere Wichtigkeit liegt dabei auf der benutzerdefinierbaren
-Kon\-fi\-gu\-ra\-tion\remark{Benutzer\-definierbare Konfiguration} des
+Konfiguration \remark{Benutzer\-definierbare Konfiguration}des
 Indexstyles. Möglichst viele Parameter des Systems sollten von
 Benutzer einstellbar sein, um eine möglichst hohe Anpassungsfähigkeit
 zu gewährleisten.
@@ -155,7 +153,10 @@ und das System später auf expliziten Befehl hin Indexe erstellt.
 
 %%
 %% $Log$
-%% Revision 1.1  1995/10/16 17:31:50  kehr
+%% Revision 1.2  1995/10/20 11:57:32  kehr
+%% Korrektur nach Klaus' Durchsicht.
+%%
+%% Revision 1.1  1995/10/16  17:31:50  kehr
 %% Initial checkin of Report and Presentation.
 %%
 %% Revision 1.18  1995/10/06  23:05:12  kehr

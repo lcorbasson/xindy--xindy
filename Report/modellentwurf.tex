@@ -518,10 +518,10 @@ zeigen.
 
 Wir haben in diesem Abschnitt die Spezifikation von Regeln geleistet,
 die das Mischen und Sortieren von Lokationsreferenzen steuern sollen.
-Bei eingehender Untersuchung noch weitere solcher Regeln auf"|findbar.
-Wir haben uns dabei bewußt auf die potentiellen Bedürfnisse der
-Anwender konzentriert und versucht eine zu komplexe Beschreibungsform
-zu vermeiden.
+Bei eingehender Untersuchung sind mit Sicherheit noch weitere solcher
+Regeln auf"|findbar.  Wir haben uns dabei bewußt auf die potentiellen
+Bedürfnisse der Anwender konzentriert und versucht eine zu komplexe
+Beschreibungsform zu vermeiden.
 %%Allerdings wird der Bedarf nach solchen Regeln normalerweise nicht
 %%unbedingt gegeben sein, da bei den Überlegungen, die zu den hier
 %%entwickelten Regeln geführt haben, der Sichtpunkt des
@@ -933,7 +933,7 @@ umreißen:
 \subsection{Ausgabebaum}
 
 Aufgrund dieser Überlegungen müssen wir ein Verfahren entwickeln, das
-es uns ermöglicht eine Ausgabeanordnung vorzusehen, deren kleinste
+es uns ermöglicht, eine Ausgabeanordnung vorzusehen, deren kleinste
 Ausgabeeinheit die Strukturkomponenten der Lokationsreferenzen \bzw
 Stichwörter sind. Die Datenstruktur des Indexes beruht auf einer
 Baumstruktur, die aus mehrstufigen Listen aufgebaut ist. Diesen Baum
@@ -1278,13 +1278,14 @@ uns einfach nur eine Liste von Stichwortgruppen durch Tupel der Form
   \textsl{String}
 \end{center}
 definieren und können beim Traversieren des Stichwortbaums bei
-Überschreiten der Gruppengrenzen die entsprechenden Markups in den
+Über\-schrei\-ten der Gruppengrenzen die entsprechenden Markups in den
 Ausgabestrom einfügen. Im \textsf{makeindex}-System von
-\cite{Chen:SPE-19-9-897} werden Stichwortgruppen grundsätzlich nur aus
-den Anfangsbuchstaben der Stichwörter gebildet und optische Trennungen
-in den Ausgabestrom eingefügt. Im \emph{International MakeIndex}
-\cite{Schrod:CG-10-81} werden Anweisungen eingeführt, welche die
-Bildung von zusätzlichen Buchstabengruppen und deren Markup erlaubt.
+\cite{Chen:SPE-19-9-897} werden Stichwortgruppen grund\-sätz\-lich nur
+aus den Anfangsbuchstaben der Stichwörter gebildet und optische
+Trennungen in den Ausgabestrom eingefügt. Im \emph{International
+  MakeIndex} \cite{Schrod:CG-10-81} werden Anweisungen eingeführt,
+welche die Bildung von zusätzlichen Buchstabengruppen und deren Markup
+erlaubt.
 
 Die in diesem Verfahren angewandte Grundidee besteht aus einem
 zusätzlichen Mapping des Sortierungsschlüssels eines Indexeintrags auf
@@ -1293,15 +1294,14 @@ Systemen implizit als die Abbildung auf den ersten Buchstaben
 angenommen.
 
 Wir erweitern die Ausgabe zu einem zweischichtigen Modell durch die
-Zusammenfassung von Stichwörtern zu Gruppen, denen jeweils ein
-zusätzliches Markup zugeordnet wird. Wir beschreiben die
-Ausgabeinformationen in einer Liste $G$ von Stichwortgruppen mit $G =
-\{g_1\ldots{}g_n\}$ mit $g_i = (\{l_1\ldots{}\l_m\}, \markup)$.  Die
-Elemente $g_i$ sind also Obergruppen, denen als Gesamtheit ein Markup
-zugeordnet ist, während die $l_i$ eine Stichwortgruppen der üblichen
-Form sind. Ein Markup besteht in der einfachsten Form aus einem Paar
-von Strings, welche die entsprechenden Tagging-Umgebungen einleiten
-und schließen.
+Bildung von Stichwortgruppen, denen jeweils ein zusätzliches Markup
+zugeordnet wird. Wir beschreiben die Ausgabeinformationen in einer
+Liste $G$ von Stichwortgruppen mit $G = \{g_1,\ldots{},g_n\}$ mit $g_i
+= (\{l_1,\ldots{},\l_m\}, \markup)$.  Die Elemente $g_i$ sind also
+Obergruppen, denen als Gesamtheit ein Markup zugeordnet ist, während
+die $l_i$ eine Stichwortgruppen der üblichen Form sind. Ein Markup
+besteht in der einfachsten Form aus einem Paar von Strings, welche die
+entsprechenden Tagging-Umgebungen einleiten und schließen.
 
 Diese Definition erscheint uns im Moment ausreichend genug, um auch
 komplexere Indexe geeignet auszugeben.
@@ -1512,7 +1512,10 @@ Indexklasse werden jedoch von Definitionen in den jeweiligen Klassen
 
 %%
 %% $Log$
-%% Revision 1.1  1995/10/16 17:31:53  kehr
+%% Revision 1.2  1995/10/20 11:57:35  kehr
+%% Korrektur nach Klaus' Durchsicht.
+%%
+%% Revision 1.1  1995/10/16  17:31:53  kehr
 %% Initial checkin of Report and Presentation.
 %%
 %% Revision 1.26  1995/10/06  23:05:16  kehr
