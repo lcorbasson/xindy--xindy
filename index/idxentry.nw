@@ -894,43 +894,45 @@ intuitive solution for the moment.
 (defun tree-location-references (locref-list
                                  max-depth
                                  &optional (curr-depth 1))
-  (if (or (endp locref-list)        #| nothing more to do |#
-          (> curr-depth max-depth)) #| we reached the end |#
-      locref-list  #| this is the THEN case |#
-      (let ((locref-slist (split-list #'(lambda (locref)
-                                          (car (get-layers locref)))
-                                      locref-list
-                                      :sort-func #'string<)))
-        (mapcar
-         #'(lambda (sublist)
-             (let* ((locref (car sublist))
-                    (layers (get-layers locref)))
-               (if (= 1 (length layers))
-                   (progn #| length = 1 |#
-                     (set-subrefs
-                      (sort-locrefs
-                       (tree-location-references (remove-first-layers
-                                                  (cdr sublist))
-                                                 max-depth
-                                                 (1+ curr-depth)))
-                      locref)
-                     locref)
-                   (let #| length > 1 |#
-                       ((new-locref
-                         (make-layered-location-reference
-                          :layers   (take-first (get-layers locref))
-                          :ordnums  (take-first (get-ordnums locref))
-                          :locclass (get-locclass locref)
-                          :catattr  (get-last-in-group (get-catattr locref))
-                          )))
-                     (set-subrefs
-                      (sort-locrefs
-                       (tree-location-references (remove-first-layers sublist)
-                                                 max-depth
-                                                 (1+ curr-depth)))
-                      new-locref)
-                     new-locref))))
-         locref-slist))))
+  (cond ((or (endp locref-list)         #| nothing more to do |#
+             (> curr-depth max-depth))  #| we reached the end |#
+           locref-list)
+        (t (let ((locref-slist
+                  (split-list #'(lambda (locref)
+                                  (car (get-ordnums locref)))
+                              locref-list
+                              :sortfunc #'<)))
+             (mapcar
+              #'(lambda (sublist)
+                  (let* ((locref  (car sublist))
+                         (ordnums (get-ordnums locref)))
+                    (if (= 1 (length ordnums))
+                        (progn #| length = 1 |#
+                          (set-subrefs
+                           (sort-locrefs
+                            (tree-location-references (remove-first-layers
+                                                       (cdr sublist))
+                                                      max-depth
+                                                      (1+ curr-depth)))
+                           locref)
+                          locref)
+                        (let #| length > 1 |#
+                            ((new-locref
+                              (make-layered-location-reference
+                               :layers   (take-first (get-layers locref))
+                               :ordnums  (take-first (get-ordnums locref))
+                               :locclass (get-locclass locref)
+                               :catattr  (get-last-in-group
+                                          (get-catattr locref))
+                               )))
+                          (set-subrefs
+                           (sort-locrefs
+                            (tree-location-references (remove-first-layers sublist)
+                                                      max-depth
+                                                      (1+ curr-depth)))
+                           new-locref)
+                          new-locref))))
+              locref-slist)))))
 @ %def take-first tree-location-references
 
 <<Treeing location-references>>=
@@ -939,11 +941,13 @@ intuitive solution for the moment.
   (mapc #'(lambda (locref)
             (typecase locref
               (layered-location-reference
-                 (set-ordnums (cdr (get-ordnums locref)) locref)
-                 (set-layers  (cdr (get-layers  locref)) locref))
+                 (set-layers  (cdr (get-layers  locref)) locref)
+                 (set-ordnums (cdr (get-ordnums locref)) locref))
               (location-range
                  (let ((first (get-first locref))
                        (last (get-last locref)))
+                   (set-layers  (cdr (get-layers  locref)) locref)
+                   (set-ordnums (cdr (get-ordnums locref)) locref)
                    (set-layers  (cdr (get-layers  first)) first)
                    (set-ordnums (cdr (get-ordnums first)) first)
                    (set-layers  (cdr (get-layers  last))  last)
@@ -1169,7 +1173,11 @@ This section is placed here before the definition of all classes.
 
 
 %% $Log$
-%% Revision 1.22  1996/07/22 15:54:53  kehr
+%% Revision 1.23  1996/07/24 13:49:26  kehr
+%% Fixed a bug in the handling of hierarchical location-references that
+%% appeared with ranges.
+%%
+%% Revision 1.22  1996/07/22  15:54:53  kehr
 %% Replaced some of the oops-macros by nraw-macros. Implemented the
 %% checking of the cross-references.
 %%

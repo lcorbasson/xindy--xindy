@@ -610,8 +610,8 @@ slots with the neccessary data.
 (defun build-indexentry-tree-recursive (idxent-list
                                         max-depth
                                         &optional (curr-depth 1))
-  (cond ((endp idxent-list) idxent-list)          #| nothing more to do |#
-        ((> curr-depth max-depth)   #| we reached the end |#
+  (cond ((endp idxent-list) idxent-list)   #| nothing more to do |#
+        ((> curr-depth max-depth)          #| we reached the end |#
            (gen-all-sort-keys idxent-list) #| this is the then case |#
            )
         (t (let ((idxent-slist
@@ -784,7 +784,11 @@ modified their sort-key according to the sort-mapping.
 
 
 %% $Log$
-%% Revision 1.23  1996/07/22 15:54:57  kehr
+%% Revision 1.24  1996/07/24 13:49:30  kehr
+%% Fixed a bug in the handling of hierarchical location-references that
+%% appeared with ranges.
+%%
+%% Revision 1.23  1996/07/22  15:54:57  kehr
 %% Replaced some of the oops-macros by nraw-macros. Implemented the
 %% checking of the cross-references.
 %%
