@@ -1,0 +1,16 @@
+#!/bin/sh
+
+awk ' {	if (i++ % 2000 == 1) {
+		num = rand() * 10;
+		mainkey=$1
+		while (num > 0) {
+			getline;
+			print "'\''(\"" int(rand()*100)"\")" "," "'\''(\"" mainkey "\" \"" $1 "\")";
+			num--;
+		}
+	}
+      }' /usr/dict/words |
+awk ' BEGIN { FS="," }
+      {
+	print "(add-indexentry ie-tab ic " $1 " :merge-key " $2 " :sort-key " $2 ")"
+      }'

@@ -1,0 +1,23 @@
+#
+# prepare indexclasses for testing with idxentry
+#
+
+xsend {(setq ic (create-indexclass "default"))}
+expect -re "\#<INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq idx (create-index ic))}
+expect -re "\#<.*INDEX.*>.*$prompt$" { pass "$test" }
+
+xsend {(setq ie-tab (index::get-entry-table idx))}
+expect -re ".*TABLE.*$prompt$" { pass "$test" }
+
+xsend {(load "../testsuite/index/testindex.lsp")}
+expect_T
+
+xsend {(print "READY")}
+expect -re ".*READY.*$prompt$" { pass "$test" }
+
+xsend {(process-index idx)}
+expect -re ".*INDEX.*$prompt$" { pass "$test" }
+
+
