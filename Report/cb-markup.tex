@@ -102,14 +102,15 @@
 
 \date{June 1997}
 
-\title{A Simple Context-Based\\ Markup Algorithm and its\\Efficient
+\title{\mbox{}\\[1ex]%%
+  A Simple Context-Based\\ Markup Algorithm and its\\Efficient
   Implementation in \textsc{Clos}
   %%%\\[2ex] \Huge\sffamily DRAFT VERSION
   }
 
-\author{Roger Kehr}
+\author{\mbox{}\\[-3ex]Roger Kehr}
 
-\iti{Bericht TI-XXX/97}
+\iti{Bericht TI-12/97}
 
 \maketitle
 
@@ -167,16 +168,16 @@ the data structures for later reuse, and \term{structured markup},
 making the representation further available for other post-processing
 steps such as typesetting.
 
-We are interested in the problem of \term{tagging} the data to obtain
-a specific markup needed for typesetting purposes. This problem is
+We are interested in the problem of \term{tagging} data to obtain a
+specific markup needed for typesetting purposes. This problem is
 easily solvable as long as the way how markup is assigned to data
-objects is fix. In this case the markup process can be directly
-coded into some algorithm.
+objects is fix. In this case the markup process can be directly coded
+into some algorithm.
 
 If there is a need for \term{configurable markup}, the situation is
-slightly more complicated. For an illustration of the difference
+slightly more complicated. For an illustration of the difference,
 consider a tree consisting of nodes of different types that have to be
-serialized into an output stream. Usually one traverses the tree and
+serialised into an output stream. Usually one traverses the tree and
 emits appropriate markup tags when moving from node to node. This kind
 of markup is called \term{environment-based markup}, since the objects
 (in this example the nodes of the tree) are encapsulated into an
@@ -306,9 +307,9 @@ instance accessible as context information.
 After these simplification steps we ended up in a very simple model.
 The context information for a particular node did not exceed four
 different objects. The basic traversing order was preorder and events
-were generated when entering a node and when leaving a node. For list
-nodes we additionally generated an event when moving from one element
-in the list to its successor.
+were generated when entering and leaving a node. For list nodes we
+additionally generated an event when moving from one element in the
+list to its successor.
 
 
 \subsection{An Efficient Implementation in CLOS}
@@ -328,8 +329,7 @@ interface responsible for the dynamic establishing of event bindings.
 \subsubsection*{Context-Based Markup via Multi-Method Dispatch}
 \label{sec:tagging}
 
-\enlargethispage{\baselineskip}
-
+\enlargethispage{2\baselineskip}
 
 \begin{sidewaysfigure}
   \begin{center}
@@ -395,6 +395,7 @@ arbitrary depth is represented through the following method:
         (locrefcls (eql #<class     "pagenums">))
         (depth     number))
      (do-markup-string "\macro{"))
+   
 \end{verbatim}
     }
 
@@ -462,19 +463,18 @@ is used, as defined by the first command.
 
 \newpage
 
-As an example of the run-time definition of methods consider the
-following user interface declaration, which is specialised on all
-three arguments,
+As an example of the run-time definition of methods, consider the
+following user interface declaration,
 %%
 {\small\begin{verbatim}
    (markup-locref :open "\defin{" :close "}"
-                  :attr "definition"
+                  :attr  "definition"
                   :class "pagenums"
                   :depth 1 ))
 \end{verbatim}
     }
 %%
-\noindent roughly expands to
+\noindent  which is specialised on all three arguments, roughly expands to
 %%
 {\small%%
 \begin{verbatim}
@@ -484,6 +484,7 @@ three arguments,
           (locrefcls (eql #<class     "pagenums">))
           (depth     (eql 1)))
        (do-markup-string "\defin{"))
+
      (defmethod do-markup-locref-close
          ((attr      (eql #<attribute "definition">))
           (locrefcls (eql #<class     "pagenums">))
@@ -628,6 +629,9 @@ concepts such as multi-methods.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % $Log$
+% Revision 1.6  1997/06/04 13:48:44  kehr
+% Final version of the report.
+%
 % Revision 1.5  1997/06/04 08:35:23  kehr
 % Incorporated changes suggested by Waldschmidt. Need TR-no. to finish.
 %
