@@ -1,0 +1,57 @@
+%%
+%% $Id$
+%%
+%% LaTeX-Style: sectioning
+%%
+%% Styledescription:
+%%    Implements a lof of stuff in conjunction with document-sections
+%%
+%%
+
+\NeedsTeXFormat{LaTeX2e}[1994/01/01]
+\ProvidesPackage{sectioning}[1995/07/01 v1.0 sectioning RK]
+
+%%
+%% This package makes the titles for paragraph and subparagraphs look
+%% like those for the other sections. They appear on a separate line
+%% and are not embedded in a paragraph.
+%% Additionally the set the secnumpdeph-counter appropriate to the level
+%%
+
+\DeclareOption{ParagraphLikeSections}{%
+  \renewcommand{\paragraph}{%
+    \@startsection{paragraph}{4}{\z@}%
+    {-3.25ex\@plus -1ex \@minus -.2ex}%
+    {1.5ex \@plus .2ex}%
+    {\reset@font\normalsize\bfseries}}
+    \setcounter{secnumdepth}{4}}
+
+\DeclareOption{SubparagraphLikeSections}{%
+  \renewcommand{\subparagraph}{%
+    \@startsection{subparagraph}{4}{\z@}%
+    {-3.25ex\@plus -1ex \@minus -.2ex}%
+    {1.5ex \@plus .2ex}%
+    {\reset@font\normalsize\bfseries}}
+    \setcounter{secnumdepth}{5}}
+
+\DeclareOption{help}{%
+  \typeout{Package: `sectioning'}%
+  \typeout{Options: ParagraphLikeSections SubparagraphLikeSections}}
+
+\ProcessOptions
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:56  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.2  1995/07/04  09:46:32  kehr
+%% Weitere Änderungen. Bin aber fast fertig.
+%%
+%%
+

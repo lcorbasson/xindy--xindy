@@ -1,0 +1,42 @@
+%%
+%% $Id$
+%%
+%% LaTeX-Style: footnotelist
+%%
+%% Styledescription:
+%%   This package formats footnotes in a list-style matter.
+%%
+
+\NeedsTeXFormat{LaTeX2e}[1994/01/01]
+\ProvidesPackage{footnotelist}[1995/07/01 footnotelist RK]
+
+\renewcommand{\@makefntext}[1]{\setlength{\parindent}{0pt}%
+  \begin{list}{}{%
+      \setlength{\labelwidth}{1.2em}%
+      \setlength{\leftmargin}{\labelwidth}%
+      \setlength{\labelsep}{3pt}%
+      \setlength{\itemsep}{0pt}%
+      \setlength{\parsep}{0pt}%
+      \setlength{\partopsep}{0pt}%
+      \setlength{\topsep}{0pt}%
+      \footnotesize}%
+    \item[\hfill\@makefnmark]#1%
+    \end{list}}
+
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:51  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.2  1995/07/04  09:46:28  kehr
+%% Weitere Änderungen. Bin aber fast fertig.
+%%
+%%
+

@@ -1,0 +1,1622 @@
+%%
+%% $Id$
+%%
+%% Document: Modellentwurf-Abschnitt aus dem `makeindex4' - Projekt
+%%
+
+%\newcommand{\includeBoxes}[1]{#1}
+\newcommand{\includeBoxes}[1]{}
+
+\chapter{Modellentwurf}
+\label{sec:modellentwurf}
+
+Nach der Analyse bestehender Systeme, ihrer Vor- und Nachteile und
+eigenen Überlegungen kommen wir nun zur Definition des Indexmodells.
+Nach der Definition der grundlegenden Begrif"|fe, auf denen das Modell
+aufbauen soll, wird das eigentliche Datenmodell definiert, welches aus
+den \oa\ Überlegungen herausgearbeitet wurde. Im Anschluß an das
+Datenmodell folgen die Mechanismen der Sortier- und Mischvorgänge
+eines Indexes.  Hierbei wird im wesentlichen nur auf die neuen Details
+eingegangen. Auf die Vorarbeiten anderer Autoren wird zu gegebener
+Zeit noch speziell verwiesen.
+
+\section{Definitionen}
+
+\begin{lindent}{2em}
+
+\item Ein {\bf Zeichen} oder {\bf Character} ist die kleinste vom
+  Indexsystem verarbeitbare Einheit. Zeichen werden aus Dateien oder
+  Datenströmen gelesen und vom System weiterverarbeitet. Die Anzahl
+  der zur Verfügung stehenden Zeichen ist endlich und fest. Auf der
+  Menge der zur Verfügung stehenden Zeichen ist eine mathematische
+  Relation \textit{ord\/}() definiert für die gilt, daß zwei
+  verschiedene Zeichen nie die gleiche Ordnung besitzen dürfen, also
+  gilt: \hspace{1cm}%
+  $\forall x,y\,.\; x \not= y \,\rightarrow$\, \textit{ord\/}($x$)
+  $\not=$ \textit{ord\/}($y$)
+
+  \label{def:Zeichen}
+
+\item \textbf{Zeichenketten} oder \textbf{Strings} sind Listen von
+  Zeichen. Jeder String hat eine definierte Länge, welche sich aus der
+  Anzahl der Zeichen ergibt, aus denen er besteht. Ein Zeichen und ein
+  String der Länge $1$ sind unterschiedlich.
+
+  %Länge eines Strings
+  %$s$ läßt sich mit \Func{length}{$s$} ermitteln. Für einen leeren
+  %String $s$ gilt \Func{empty}{$s$} $=$ {\it wahr\/}.
+
+  \label{def:Zeichenkette}
+
+\end{lindent}
+
+
+\section{Daten- und Strukturmodell des Index}
+
+\newcommand{\demph}[1]{\textbf{#1}}
+
+\begin{Def}
+  Ein \demph{Index} \emph{i} ist eine Liste von Indexeinträgen.
+  %Die Listeneinträge werden während des Indexierungsprozesses mit Hilfe
+  %einer Ordnungsfunktion \mbox{\emph{sortIndex}$()$} geordnet.
+  %\newcommand{\IdxEntListBox}[1]{\framebox[1.2\width]{%
+  %    \rule[-0.7ex]{0mm}{3ex}#1}}
+  %\begin{center}
+  %  \IdxEntListBox{Indexeintrag$_{1}$} \IdxEntListBox{Indexeintrag$_{2}$}%
+  %  \ \ldots{}\ \IdxEntListBox{Indexeintrag$_{n}$}
+  %\end{center}
+\end{Def}
+
+
+\subsection{Indexeintrag}
+
+\begin{Def} Ein \emph{Indexeintrag} ist ein Tupel
+  \begin{center}
+    \idxent $=$ $($ \keyK, \keyP, \keyM, \keyS, \locrefSet, \idxclsSet $)$
+  \end{center}
+  \noindent und besteht aus den Komponenten
+  \label{DefIndexEntry}
+  \begin{deflistcolon}{\locrefSet}
+  \item[\keyK{}] {\bf Indexschlüssel}, Liste von Strings
+  \item[\keyP{}] {\bf Druckschlüssel}, Liste von Strings
+  \item[\keyM{}] {\bf Mischschlüssel}, Liste von Strings
+  \item[\keyS{}] {\bf Sortierungsschlüssel}, Liste von Strings
+  \item[\locrefSet{}] Menge der \textbf{Lokationsreferenzen}
+  \item[\idxclsSet{}] Menge der \textbf{Indexklassen}
+  \end{deflistcolon}
+
+  \includeBoxes{%
+    \begin{center}
+      \begin{tabular}{|l@{$=$}l|}
+        \hline%
+        \multicolumn{2}{|c|}{\textbf{Schlüssel}}\\
+        \hline%
+        \keyK & \Hierzwei{Suche}{binäre}\\ \keyP &
+        \Hierzwei{Suche}{binäre}\\ \keyM & \Hierzwei{Suche}{binaere}\\
+        \keyS & \Hierzwei{Suche}{binaere}\\ \hline
+      \end{tabular}
+      \vspace*{2mm}
+      \begin{tabular}{|c|}
+        \hline%
+        \textbf{Lokationsreferenzen}\\
+        \locrefSet \\
+        \hline%
+        \quasi{Seite 21}\\ \quasi{Seite 23}\\ \quasi{Abschnitt
+          2.11.3}\\ \ldots{}\\
+        \hline%
+      \end{tabular}
+      \vspace*{2mm}%
+      \begin{tabular}{|c|}
+        \hline%
+        \textbf{Indexklassen}\\
+        \idxclsSet\\
+        \hline%
+        \quasi{Gesamtindex}\\
+        \hline%
+      \end{tabular}
+    \end{center}%
+    }%
+  \newcommand{\ient}{\textit{e}}
+  \noindent Weiterhin definieren wir:
+  \begin{quote}
+    \itshape\raggedright Sei \ient{} ein Indexeintrag, so soll gelten:
+    \mbox{\ient.\keyP{} $\equiv$ \keyP{}}, \mbox{\ient.\keyP{}
+      $\equiv$ \keyP{}}, \mbox{\ient.\keyM{} $\equiv$ \keyM{}},
+    \mbox{\ient.\keyS{} $\equiv$ \keyS{}} sowie
+    \mbox{\ient.\locrefSet{} $\equiv$ \locrefSet{}} und
+    \mbox{\ient.\idxclsSet{} $\equiv$ \idxclsSet{}} .
+
+    Diese Abkürzungsform soll im weiteren auch für alle anderen
+    Referenzierungen auf Komponenten von Tupeln verwendet werden.
+  \end{quote}
+  \smallskip
+\end{Def}
+
+\begin{Def}
+  Die \demph{Lokationsmenge} \locrefSet{} ist eine Menge \bzw Liste
+  von Lokationen.
+\end{Def}
+
+\begin{Def}
+  Eine \demph{Indexklasse} \idxcls{} ist ein String.
+\end{Def}
+
+\subsection{Lokationsreferenz}
+
+\begin{Def} Eine \demph{Lokationsreferenz} ist ein Tupel
+  \begin{center}
+    \locref$ = ($ \strref , \optattr , \loccls , \refattr $)$ .
+  \end{center}
+\end{Def}
+
+\begin{Def}
+  Eine \demph{Strukturreferenz} \strref{} ist eine Liste \layerSet{}
+  von Hierarchieebenen.
+\end{Def}
+
+\begin{Def}
+    Eine \demph{Hierarchieebene} \layer{} ist ein Tripel
+    \begin{center}
+      \layer $= ($ \laystr, \sepstr,  \ordnum $)$
+    \end{center}
+    mit den Komponenten
+    \begin{deflistcolon}{\ordnum}
+    \item[\laystr] {\bf Ebene}, String
+    \item[\sepstr] {\bf Trennzeichen}, String
+    \item[\ordnum] {\bf Ordnungszahl}, ganze Zahl
+    \end{deflistcolon}
+    \includeBoxes{%
+      \begin{center}
+        \begin{tabular}{|c|c|c|}
+          \hline \multicolumn{3}{|c|}{\textbf{Hierarchieebenen}
+            \layerSet}\\ \hline
+          \laystr & \sepstr & \ordnum\\ \hline
+          \quasi{2} & \quasi{\textbf{.}} & 2\\
+          \quasi{11} & \quasi{\textbf{.}} & 11\\
+          \quasi{3} & \quasi{\,} & 3 \\ \hline
+        \end{tabular}
+      \end{center}%
+      \medskip%
+      }%
+\end{Def}
+
+\begin{Def}
+  Ein \demph{Referenzattribut} \refattr{} ist ein Paar
+  \begin{center}
+    \refattr{} $= ($ \refattrtype{} , \refargSet$)$
+  \end{center}
+  mit den Komponenten
+  \begin{deflistcolon}{\refargSet}
+    \raggedright
+  \item[\refattrtype] Ein \textbf{Referenzattribut-Typ} ist ein String.
+  \item[\refargSet]   Die \textbf{Referenzattribut-Argumente} sind
+    eine Liste von Strings.
+  \end{deflistcolon}
+  \normalfont
+  Beispiel: \refattr{} $= ($ \quasi{\textit{Crossreference}} ,
+  \quasi{\Hierzwei{Suche}{binäre}\/}$)$
+\end{Def}
+
+\begin{Def}
+  Ein \demph{Kategorieattribut} \optattr{} ist ein String.
+
+%  \normalfont
+%  Beispiel: \optattr{} $=$ \quasi{\textbf{fett}}
+\end{Def}
+
+\begin{Def}
+  Eine \demph{Lokationsklasse} \loccls{} ist ein String, mit dem auf
+  eine Lokationsklasse verwiesen wird. Für genauere Details sei hier
+  auf die Implementierung verwiesen.
+\end{Def}
+
+
+%%\begin{tfigure}%
+%%  {Überblick über das Datenmodell eines Indexeintrags in hierarchischer Darstellung}%
+%%  {fig:hierdatamodell}%
+%%  \begin{tabbing}
+%%    \hspace*{0.5cm} \= \hspace*{0.5cm} \= \hspace*{0.5cm} \=
+%%    \hspace*{0.5cm} \= \hspace*{0.5cm} \= \hspace*{0.5cm} \=
+%%    \hspace*{2.5cm} \= \kill \idxent\\ \> \keyK \> \> \> \> \> \>
+%%    \Hierzwei{Suche}{binäre}\\ \> \keyP \> \> \> \> \> \>
+%%    \Hierzwei{Suche}{binäre}\\ \> \keyM \> \> \> \> \> \>
+%%    \Hierzwei{Suche}{binaere}\\ \> \keyS \> \> \> \> \> \>
+%%    \Hierzwei{Suche}{binaere}\\ \> \idxclsSet\\ \> \> \idxcls $[1]$\>
+%%    \> \> \> \> \quasi{Gesamtindex}\\ \> \> \ldots\\ \> \locrefSet\\
+%%    \> \> \locref $[1]$\\ \> \> \> \strref\\ \> \> \> \> \layerSet\\
+%%    \> \> \> \> \> \layer $[1]$\\ \> \> \> \> \> \> \laystr \>
+%%    \quasi{\textbf{2}}\\ \> \> \> \> \> \> \sepstr \>
+%%    \quasi{\textbf{.}}\\ \> \> \> \> \> \> \ordnum \> 2\\ \> \> \> \>
+%%    \> \layer $[2]$\\ \> \> \> \> \> \> \laystr \>
+%%    \quasi{\textbf{1}}\\ \> \> \> \> \> \> \sepstr \> \quasi{\,}\\ \>
+%%    \> \> \> \> \> \ordnum \> 1\\ \> \> \> \optattr \> \> \> \>
+%%    \textbf{fett} \\ \> \> \> \loccls\> \> \> \> \texttt{[num].[num]}
+%%    \\ \> \> \> \refattr\\ \> \> \> \> \refattrtype \> \> \>
+%%    \textit{f.} \\ \> \> \> \> \refargSet\\ \> \> \> \> \> \ldots\\
+%%    \> \> \ldots%
+%%  \end{tabbing}
+
+%%  Beispiel:
+%%  \begin{tabbing}
+%%    Lokationsreferenzen \= \kill
+%%    Stichwort           \>: \Hierzwei{Suche}{binäre}\\
+%%    Lokationsreferenz   \>: \textbf{2.1}\textit{f.}\\
+%%    Lokationsklasse     \>: \quasi{Gesamtindex}\\
+%%  \end{tabbing}%
+%%\end{tfigure}
+
+%%\noindent Um die Datenstruktur, welche sich aus diesen Definitionen ergibt,
+%%anhand eines Beispiels zu verdeutlichen, zeigen wir in
+%%Abbildung~\ref{fig:hierdatamodell} die hierarchische Darstellung eines
+%%beispielhaften Indexeintrags.
+
+
+\section{Regeln bei der Lokationsverarbeitung}
+\label{sec:lokationsverarbeitung:regeln}
+
+In Abschnitt~\ref{sec:sortierenundmischen} haben wir uns mit dem
+Mischen und Sortieren von Lokationsreferenzen beschäftigt. Diese
+Überlegungen müssen nun in ein geeignetes Modell für die
+Lokationsverarbeitung einfließen. Mit Hilfe der
+Lokationsreferenzmatrix in
+Tabelle~\ref{tab:Lokationsreferenzmatrix:eins} haben wir bereits ein
+Unterscheidungsverfahren für die verschiedenen Lokationsreferenzen
+eingeführt, auf welchem wir im folgenden aufbauen werden.
+
+Wir definieren nun einen Satz von Regeln\remark{Sortier- und
+  Mischregeln}, die dem Benutzer des Systems eine möglichst
+vielfältige Gestaltung des Sortier- und Mischvorgangs gestatten
+soll.
+
+\begin{Def}
+  \label{def:lokationsverarbeitungsregel}
+  Eine \textbf{Lokationsverarbeitungsregel} ist ein Tupel
+  \begin{center}
+    \islocrefrule $=$ $($ \optattrSet , \loccls, \hierSet , \rulename ,
+    \targetattr , \targethierSet , \rulearg $)$
+  \end{center}
+  mit den Komponenten
+  \begin{deflistcolon}{\rulename}
+    \raggedright
+  \item[\optattrSet]    \textbf{Kategorieattribute}.
+  \item[\loccls]        \textbf{Lokationsklasse}.
+  \item[\hierSet]       Menge der \textbf{Hierarchiebereiche}.
+  \item[\rulename]      \textbf{Regelname}.
+  \item[\targetattr]    \textbf{Zielattribut}.
+  \item[\targethierSet] Menge der \textbf{Zielhierarchiebereiche}.
+  \item[\ruleargSet]    Menge der \textbf{Zusatzargumente}.
+  \end{deflistcolon}
+\end{Def}
+
+\noindent Je nach Regeltyp kann es sein, daß einige der Tupelelemente
+undefiniert bleiben. Für die zu definierenden Regeln definieren wir
+folgende Schreibweisen:
+%
+\begin{enumerate}
+\item Kategorieattribute werden durch ihre Bezeichner wie
+  \texttt{default} oder \texttt{bold} angegeben.
+\item Lokationsklassen werden durch ihren Klassennamen angegeben.
+\item Hierarchiemengen werden durch die Auf"|listung von
+  Hierarchienummern oder Hierarchiebereichen wie \zB \texttt{(1-2 4)},
+  \texttt{(3-)} oder \texttt{(-4)} definiert. Bereiche dürfen dabei
+  nach beiden Richtungen geöffnet sein.
+\end{enumerate}
+%
+Wir sprechen im Zusammenhang von Hierarchieebenen auch von
+\emph{höherer} \bzw \emph{tieferer} Ebene und meinen damit Ebenen mit
+kleinerer \bzw größerer Ebenennummer, wobei Ebene~1 die höchste Ebene
+ist.
+
+\begin{hinweis}
+  Für alle in den folgenden Abschnitten aufgeführten Beispiele gehen
+  wir von der Sortierreihenfolge
+  \begin{center}
+    {\normalfont \texttt{( (bold default) italic )}}
+  \end{center}
+  aus, die die Kategorieattribute \texttt{bold} und \texttt{default}
+  zu einem virtuellen Attribut zusammenfaßt. Man beachte auch den
+  höheren Vorrang des Attributs \texttt{bold} gegenüber
+  \texttt{default}. Als Lokationsklassen betrachten wir die Klasse
+  \texttt{section} der Struktur
+  \Strukzwei{\texttt{num}}{.}{\texttt{num}} und \texttt{manpage} der
+  Struktur \Metaclass{\Strukzwei{\texttt{num}}{.}{\texttt{alpha}}}.
+  %%und \texttt{pagenumber} mit der Struktur \Strukeins{\texttt{num}}.
+
+  Die in Klammern angeführten Lokationsreferenzen klassifizieren die
+  einzelnen Attribute welche zunächst nur interne Ergebnisse des
+  Mischprozesses sind. Die optische Ausgabe wird dann \uU noch von
+  anderen Optionen beeinflußt.
+\end{hinweis}
+
+\newcommand{\roptattr}{{\textit{optattr\/}}\xspace}
+\newcommand{\roptattrA}{{\textit{optattr$_{from}$\/}}\xspace}
+\newcommand{\roptattrB}{{\textit{optattr$_{to}$\/}}\xspace}
+\newcommand{\rhier}{{\textit{hierarchien\/}}\xspace}
+\newcommand{\rtarget}{{\textit{zielattr\/}}\xspace}
+\newcommand{\rtgthier}{{\textit{zielhier\/}}\xspace}
+\newcommand{\rargs}{{\textit{argument\/}}\xspace}
+
+
+\subsection{Mischregeln}
+
+\begin{description}
+
+\item[join] \mbox{}\\ Für die angegebenen
+  Lokationsklassen wird ein Zusammenfassen von Lokationsreferenzen
+  innerhalb der angegebenen Hierarchiestufen zu Bereichen zugelassen.
+
+  Der optionale Parameter \numberarg gibt die untere Grenze an, ab
+  wievielen Zähleinheiten aufeinanderfolgende Lokationen zu einem
+  Bereich zusammengefaßt werden können. Bei Fehlen dieses Parameters
+  wird der Defaultwert angenommen.
+
+  Syntax: \textsf{join} \ \loccls \ \rhier\opt{\numberarg{}}
+
+  \begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+    \textsf{join} \ \texttt{section (1-2)} \hfill 3 & 1.1 1.2 1.3 & 1.1--1.3\\
+    \textsf{join} \ \texttt{section (1)} \hfill 3 & 1.1 1.2 1.3 & 1.1 1.2 1.3\\
+    \textsf{join} \ \texttt{section (1)} \hfill 3 & 1 2 3\, 1.1 1.2 1.3 &
+    1--3\, 1.1 1.2 1.3
+  \end{tabular}
+
+  \smallskip
+
+
+%\item[join-range] \mbox{}\\
+
+%  Syntax: \loccls \ \rhier \ \textsf{join-range}\, \rtgthier
+
+%  \begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+%    \texttt{default (-)} \textsf{join-range} \texttt{3} & 1.1 1.2
+%    1.3 & 1.1--1.3\\
+%    \texttt{default (-)} \textsf{join-range} \texttt{3}
+%    & 1 2\, 1.1 1.2 1.3 & 1.1 1.2 1.3
+%  \end{tabular}
+
+\item[ignore-for-join] \mbox{}\\ Die angegebenen Hierarchiestufen
+  dürfen aus der Referenzliste entfernt werden, wenn ein Bereich von
+  Lokationen auf höherer Ebene diese Lokationen mit einschließt.
+%  Trotzdem kann als Bereichsgrenze eine der Lokationen tieferer
+%  Ordnung enthalten sein, wenn sie direkter Nachfolger oder Vorgänger
+%  der entsprechenden Bereichsgrenze ist. Die Bereichsgrenzen sind
+%  damit genaugenommen eine Lokationsreferenz der Ebene der
+%  Bereichsbildung mit einer optionalen Lokationsreferenz niedrigerer
+%  Ebene. Wir brauchen diese Darstellung um die Regel
+%  \textsf{print-qualified-range} zu implementieren, die später
+%  eingeführt werden wird.
+
+  Syntax: \textsf{ignore-for-join} \ \loccls \ \rhier \ \rtgthier
+
+  \begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+    \textsf{ignore-for-join} \ \texttt{section (-)} \ \texttt{(2-)} & 5 6
+    6.1 6.2 7 & 5--7\\%%
+    \textsf{ignore-for-join} \ \texttt{manpage (-)} \ \texttt{(2-)} & 11
+    11a 12 13 13a 13b & 11--13
+  \end{tabular}
+
+\item[merge-to] \mbox{}\\ Die Referenzen der Attributklasse \roptattrA
+  dürfen auch von der Attributklasse \roptattrB als Mitglieder
+  angesehen werden und bei der Bereichsbildung mitverwendet werden.
+
+  \smallskip
+
+  Syntax: \textsf{merge-to}\ \roptattrA \ \roptattrB
+
+  \smallskip
+
+  \begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+    \textsf{merge-to}\, \texttt{italic} \ \texttt{default} & (1.1 1.3)
+    (\emph{1.2}) & (1.1--1.3) (\emph{1.2})
+  \end{tabular}
+
+\end{description}
+
+
+%\subsection{Sortierregeln}
+
+%\begin{description}
+%\item[sort-with] \mbox{}\\ Die Lokationen der
+%  Attributklasse \roptattrA werden immer innerhalb des Attributes
+%  \roptattrB einsortiert. Die Lokationsreferenz wird nicht in der
+%  eigenen Attributklasse weiterbehandelt.
+
+%  Syntax: \roptattrA \ \textsf{sort-with}\, \roptattrB
+
+%  \begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+%    \texttt{bold (-)} \textsf{merge-to}\, \texttt{default} & 1.1
+%    {\bf 1.2} 1.3 & 1.1--1.3
+%  \end{tabular}
+
+%\end{description}
+
+
+\subsection{Ausgaberegeln}
+\label{sec:ausgaberegeln}
+
+%Folgende allgemeine Forderungen sollten an die Ausgabe der
+%Referenzliste gestellt werden.
+%%
+%\begin{enumerate}
+
+%\item Keine Lokationsreferenz mit einem bestimmten optischen Attribut
+%  darf in einer Referenzliste mehrfach vorkommen.
+
+%\item Die Ausgabe eines Bereichs des originalen optischen Attributes
+%  hat Vorrang vor der \textsf{sort-with}-Regel, \bzw dem impliziten
+%  Sortieren durch die Regel \textsf{merge-to}. Beispiel:
+
+%  \begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+%    \texttt{bold}\, \textsf{sort-with}\, \texttt{default} & 1.1 1.3\,
+%    \textbf{1.2--1.4} & 1.1 1.3\, {\bf 1.2--1.4}
+%  \end{tabular}
+
+%\end{enumerate}
+%%
+%Wir kommen nach diesen Überlegungen zu den folgenden Regeln:
+%%
+
+\begin{description}
+
+\item[drop-if-merged] \mbox{}\\ Als Erweiterung der
+  \textsf{merge-to}-Regel bedeutet diese Regel, daß eine Lokation
+  beim Mischen mit einem Bereich einer anderen Attributklasse für die
+  Ausgabe in der eigenen Attributklasse unterdrückt wird.
+
+  Syntax: \textsf{drop-if-merged}\ \roptattrA \ \roptattrB
+
+  \begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+    \textsf{merge-to}\ \texttt{italic}\, \texttt{default} & (1.1 1.3)
+    (\emph{1.2}) & (1.1--1.3) (\emph{1.2})\\%%
+    \textsf{drop-if-merged}\, \texttt{italic}\, \texttt{default} & (1.1 1.3)
+    (\emph{1.2}) & (1.1--1.3)
+  \end{tabular}
+
+%\item[print-qualified-range] \mbox{}\\ Läßt den
+%  Ausdruck von hierarchieüberschreitenden Bereichen zu.
+
+%  Syntax:  \roptattr \ \textsf{print-qualified-range}
+
+%  \noindent\begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+%    \texttt{default} \textsf{print-qualified-range} & 5--$[$7/7a$]$ & 5--7a\\
+%    \textsl{normalerweise} & 5--$[$7/7a$]$ & 5--7
+%  \end{tabular}
+
+\item[substitute-if-double] \mbox{}\\ Diese Regel erzwingt das
+  Verdrängen von Lokationsreferenzen eines Kategorieattributs bei
+  Separate-Sorting durch ein anderes.
+
+  Syntax:  \textsf{substitute-if-double} \ \roptattr \ \roptattr
+
+  \noindent\begin{tabular}{l@{ : }r@{ $\rightarrow$ }l}
+    \textsf{substitute-if-double} \ \texttt{bold default} & 3 4
+    5 \ \textbf{4} & 3 5 \ \textbf{4}\\ \textsl{normalerweise} & 3 4 5
+    \ \textbf{4} & 3 4 5 \ \textbf{4}\\
+  \end{tabular}
+
+\end{description}
+
+
+\noindent Das Standardverhalten von virtuellen Attributen wollen wir noch an
+einem Beispiel mit den Attributen \texttt{default} und \texttt{bold}
+zeigen.
+
+\begin{enumerate}
+\item
+  Grundmenge:\, 11 13 14 15 18 \textbf{12} \textbf{13} \textbf{14}
+  \textbf{18}
+
+\item Verdrängung:\, 11 \textbf{12} \textbf{13}
+  \textbf{14} 15 \textbf{18}
+
+\item Ausgabe: 11, \textbf{12--14}, 15, \textbf{18}
+\end{enumerate}
+
+
+
+
+\subsection*{Zusammenfassung}
+
+Wir haben in diesem Abschnitt die Spezifikation von Regeln geleistet,
+die das Mischen und Sortieren von Lokationsreferenzen steuern sollen.
+Bei eingehender Untersuchung noch weitere solcher Regeln auf"|findbar.
+Wir haben uns dabei bewußt auf die potentiellen Bedürfnisse der
+Anwender konzentriert und versucht eine zu komplexe Beschreibungsform
+zu vermeiden.
+%%Allerdings wird der Bedarf nach solchen Regeln normalerweise nicht
+%%unbedingt gegeben sein, da bei den Überlegungen, die zu den hier
+%%entwickelten Regeln geführt haben, der Sichtpunkt des
+%%\emph{sinnvollen} im Vordergrund stand.
+
+
+
+%\section{Rohindexerkennung}
+
+%\subsection{Einführung}
+
+%Die Eingabe an das Indexsystem besteht in der allgemeinsten Form aus
+%einem Zeichenstrom des Dokumentalphabetes, welcher auch Informationen
+%enthalten kann, die nicht für das Indexsystem bestimmt sind. Um nun
+%die korrekten Daten für das Indexsystem zu extrahieren und
+%anschließend einem Indexeintrag korrekt zuzuordnen, benötigen wir eine
+%Beschreibungsform des Eingabeformates, welche möglichst universell
+%verwendbar ist. Diese Beschreibungsform besteht aus einer deklarativen
+%Grammatik, welche die Eingabesprache definiert und die korrekte
+%Zuordnung von Eingabetext zu den einzelnen Objekten des Indexeintrags
+%ermöglicht.
+
+
+%\subsection{Analyse von Erkennungsstrategien}
+
+%Der Datenstrom, der von den Rohindexdaten geliefert wird, liegt im
+%Dokumentalphabet vor. Wir müssen nun eine Abbildung definieren, die
+%Teilzeichenfolgen den Komponenten eines Indexeintrags zuordnet.
+%Untersuchen wir zuerst die Komponenten auf ihre Semantik, so können
+%wir die folgenden Kategorien von unterschiedlichen semantischen
+%Komponenten bilden.
+
+%\begin{Def}
+%  Eine Komponente besitzt eine \emph{Stringsemantik}, wenn sie nicht
+%  in Unterkomponenten zerlegbar ist und wir eine Teilzeichenfolge
+%  direkt auf diese Komponente abbilden können.
+%\end{Def}
+
+%\begin{Def}
+%  Eine Komponente besitzt eine \emph{Listensemantik} wenn sie aus
+%  gleichartigen Substrukturen aufgebaut ist, die ihrerseits eine
+%  Stringsemantik besitzen.
+%\end{Def}
+
+%\noindent Beispiele für Komponenten des Indexeintrags, welche Listensemantik
+%besitzten sind \keyK, \keyS, \keyP, \idxclsSet, \refargSet;
+%Komponenten, die eine Stringsemantik besitzen sind \refattr
+%und \optattr.
+
+%Wir definieren nun eine deklarative Beschreibungsform, die ähnlich
+%einer Grammatik aufgebaut ist und die Erkennung der beiden
+%Semantikformen unterstützt und des weiteren noch zusätzliche Elemente
+%besitzt, um Klammerstrukturen zu erkennen und zu zerlegen. Ein
+%Indexeintrag, wie er vom Zeichenstrom gelesen wird, besteht aus den im
+%folgenden beschreibenen Schlüsselkomponenten.
+
+%\newcommand{\gindexkey}{{\normalfont\textsf{indexkey}}\xspace}
+%\newcommand{\gsortkey}{{\normalfont\textsf{sortkey}}\xspace}
+%\newcommand{\gprintkey}{{\normalfont\textsf{printkey}}\xspace}
+%\newcommand{\gindexclass}{{\normalfont\textsf{indexclass}}\xspace}
+%\newcommand{\grefargs}{{\normalfont\textsf{refargs}}\xspace}
+%\newcommand{\glocref}{{\normalfont\textsf{locref}}\xspace}
+%\newcommand{\goptattr}{{\normalfont\textsf{optattr}}\xspace}
+%\newcommand{\grefattr}{{\normalfont\textsf{refattr}}\xspace}
+
+%Die Komponenten \gindexkey $\equiv$ \keyK, \gsortkey $\equiv$ \keyM,
+%\gprintkey $\equiv$ \keyP, \gindexclass $=$ \idxclsSet und \grefargs
+%$\equiv$ \refargSet besitzen besagte Listensemantik.  Dies bedeutet,
+%daß sie beim Erkennungsvorgang sofort in gleichartige Substrukturen
+%zerlegt werden müssen. Der \gindexkey muß \zB sofort in die einzelnen
+%Hierarchiebenen zerlegt werden, da die Informationen über diesen
+%Zerlegungsvorgang in der folgenden Eingabesprache definiert werden.
+%Die Komponenten \glocref $\equiv$ \locref \footnote{Das Indexsystem
+%  erkennt die Substrukturen anhand der Beschreibungen für die
+%  Lo\-ka\-tions\-klas\-sen}, \goptattr $\equiv$ \optattr und \grefattr
+%$\equiv$ \refattr besitzen eine einfache Stringsemantik und bedürfen
+%keiner weiteren Analyse beim Einleseprozeß.
+
+%\newcommand{\gignore}{{\normalfont\textsf{ignore}}\xspace}
+%\newcommand{\gdelimited}{{\normalfont\textsf{delimited}}\xspace}
+%\newcommand{\gbalanced}{{\normalfont\textsf{balanced}}\xspace}
+%\newcommand{\goptional}{{\normalfont\textsf{optional}}\xspace}
+%\newcommand{\glist}{{\normalfont\textsf{list}}\xspace}
+%\newcommand{\gquoted}{{\normalfont\textsf{quoted}}\xspace}
+
+%Die Eingabesprache selbst ist ähnlich einer Grammatik aufgebaut und
+%erkennt die Schlüsselwörter \gignore, \gdelimited, \gbalanced, \goptional,
+%\glist und \gquoted. Tabelle~\ref{tab:EingabeSpracheGram}
+%beschreibt die entsprechende Grammatik.
+
+%\begin{ttable}
+%  {Grammatik der Beschreibungssprache für Eingabedaten}
+%  {tab:EingabeSpracheGram}
+%  \slshape
+%  \begin{tabular}{lll}
+%    indexentry  &::=& {\sf indexentry}
+%                    \verb="{"=
+%                        ignore-stmt stmtlist
+%                        \opt{spec}
+%                    \verb="}"=\\
+
+%spec        &::=& component \verb=:= stmtlist \opt{spec}\\
+
+%component   &::=& keycomponent \verb=|= {\bf component-id}\\
+
+%keycomponent    &::=& listcomponent \verb=|= stringcomponent\\
+%listcomponent   &::=& \gindexkey \verb=|= \gprintkey \verb=|=
+%                        \gsortkey\\
+%                &   &  \verb=|= \gindexclass \verb=|= \grefargs{}\\
+%stringcomponent &::=& \glocref \verb=|= \goptattr \verb=|=
+%                        \grefattr\\
+
+%stmtlist    &::=& \argplus{statement}\\
+
+%statement   &::=& ignore-stmt \verb=|= delim-stmt \verb=|= balanced-stmt\\
+
+%ignore-stmt &::=& \gignore \textbf{ignore-regexp} \\
+
+%delim-stmt  &::=& \gdelimited compound \opt{\goptional{}} {\bf delim}
+%                    \opt{quoted}\\
+
+%balanced-stmt    &::=& \gbalanced compound \\
+%            &     & \opt{\goptional{}} {\bf open} {\bf close} \opt{quoted}\\
+
+%compound    &::=& \glist listcomponent \verb=|= component \\
+
+%quoted      &::=& \gquoted \textbf{quotestring}
+%\end{tabular}
+
+%\end{ttable}
+
+%Mit Hilfe dieser Eingabesprache können neue Komponentenbezeichner
+%eingeführt werden, wodurch eine einfache und lesbare Spezifikation mit
+%Subspezifikationen ermöglicht wird.  Die Eingabesprache beginnt zuerst
+%mit der Definition des Indexeintrags durch das Schlüsselwort
+%\textsf{indexentry}. Innerhalb des Definitionsblocks können dann
+%weitere Verfeinerungsstellen durch andere Komponenten (Schlüssel-
+%bzw.\ selbstdefinierte Komponenten) angegeben werden. Die
+%Verfeinerungen müssen zum Schluß zu den Schlüsselkomponenten
+%(\emph{keycomponents}) führen. Durch die Mehrfachverwendung des
+%Schlüsselwortes \textsf{indexentry} ist es möglich auf
+%verschiedenartige Eingabeformate unterschiedlich zu reagieren.
+
+%\bigskip
+
+%\noindent Die Statements werden im folgenden kurz erläutert:
+
+%\begin{description}
+
+%\item[ignore] ignoriert den nachfolgenden maximalen String im
+%  Zeichenstrom, welcher auf den angegebenen regulären Ausdruck\, {\bf
+%    ignore-regexp}\, paßt. Wird kein solcher String gefunden so wird
+%  eine Fehlermeldung ausgegeben.
+
+%\item[delimited] erkennt den nachfolgenden maximalen String bis zu
+%  einer Zeichenfolge $d$ auf die der reguläre Ausdruck {\bf delim}
+%  paßt. Wird keine solche Zeichenfolge gefunden, so wird ein Fehler
+%  gemeldet. Nach dem Erkennen von $d$ wird mit dem darauf"|folgenden
+%  Zeichen im Erkennungsprozeß fortgefahren.
+
+%  Eine leere Zeichenkette als Argument von {\sf delimited} wird so
+%  interpretiert, daß der ganze folgende Reststring geliefert wird,
+%  falls vorhanden.
+
+%% Für die Schlüsselkomponenten {\sf indeykey, printkey} und {\sf indexclass}
+%% wird eine Unterteilung in die jeweiligen Subkomponenten (Hierarchieebenen,
+%% bzw.\ Klassenaufzählung) durch die größt mögliche Anzahl von Matches
+%% vorgenommen.
+%%
+%% \verb=delimited indexkey ";" = erkennt \verb= key;subkey;subsubkey=
+%%
+%% als einen gültigen Indexschlüssel und unterteilt ihn in die jeweiligen
+%% Hierarchiebenen.
+%%
+%% Es wird jedoch höchstens bis
+%% zum Ende der Eingabezeile nach einem Endezeichen gesucht (???). Wird ein
+%% entsprechendes Zeichen nicht gefunden, so wird ein Fehler gemeldet.
+%%
+%%     \item[{\sf delimited-opt}] erkennt den nachfolgenden String bis eines der
+%% in {\bf delimstr} enthaltenen Zeichen erkannt wurde. Wird ein entsprechendes
+%% Zeichen nicht gefunden, so wird diese Regel übersprungen.
+%%
+%% (Man kann sich hierbei noch überlegen, ob man eine Art {\it Endezeichen\/}
+%% definiert, welches auf das Ende einer Zeichenkette (bzw.\ der Eingabezeile)
+%% paßt. In diesem Fall wird eine Zeichenkette {\it immer\/} erkannt, auch wenn
+%% kein spezielles Endezeichen vorhanden war.)
+%%
+
+%\item[balanced] erkennt den nachfolgenden String, wobei die
+%  Erkennung genau dann erfolgt, wenn ein korrektes Klammergebirge mit
+%  Hilfe der nachfolgenden Klammerausdrücke ermittelt werden konnte.
+%  Bei den Zeichenketten {\bf open} und {\bf close} handelt es sich um
+%  reguläre Ausdrücke.
+
+%  Paßt der reguläre Ausdruck {\bf open} nicht an die aktuelle Position
+%  des Zeichenstroms, oder konnte kein korrektes Klammergebirge
+%  gefunden werden, so wird ein Fehler gemeldet. Ebenso wird mit dem
+%  darauf"|folgenden Zeichen im Erkennungsprozeß fortgefahren.
+
+%  Wird beim Ermitteln der Klammerstruktur wieder das Ausgangsniveau
+%  erreicht (Anzahl offene Klammern $=$  Anzahl geschlossene Klammern), so wird
+%  ein Zeichenstrom als erkannt festgehalten.
+
+%%
+%% Für die Listenkomponenten {\sf indexkey, printkey} und {\sf indexclass}
+%% wird eine Unterteilung in die jeweiligen Subkomponenten (Hierarchieebenen,
+%% bzw.\ Klassenaufzählung) durch die
+%%
+%% \verb=balanced indexkey "{(" "})" = erkennt \verb= {(key)(subkey)(subsubkey)}=
+%%
+%% als gültigen Indexschlüssel und unterteilt ihn in die jeweiligen
+%% Hierarchiebenen.
+%%
+%%     \item {\sf balanced-opt} verhält sich genauso wie {\sf balanced}. Es
+%% tritt jedoch kein Fehlerfall ein, wenn keine Erkennung erfolgen konnte. In
+%% diesem Fall wird davon ausgegangen, das dieses Argument optional fehlend ist.
+%%
+
+%\end{description}
+
+%\bigskip
+
+%\noindent Die optionalen Schlüsselwörter haben folgende Bedeutung:
+
+%\smallskip
+
+%\begin{description}
+
+%\item[list]\label{DefListOp} kann nur in Zusammenhang mit den
+%  Listenkomponenten angegeben werden. Wenn es angegeben ist, so wird
+%  versucht möglichst viele aufeinanderfolgende Listenelemente des
+%  Eingabestroms mit der Struktur dieses Statements zu erkennen. Jedes
+%  erkannte Element wird dann an die vorhandene mitgeführte Liste für
+%  diese Komponente angefügt. Anfangs ist die mitgeführte Liste für
+%  diese Komponente eines Indexeintrags leer.
+
+%  Das Optional {\sf list} hat im Zusammenhang mit {\sf delimited} noch
+%  die Semantik, das dem letzten Listenelement der Rest des zur
+%  Verfügung stehenden Zeichenstroms zugeordnet wird. Deshalb sollte
+%  dieses Paar nur dann angegeben werden, wenn die Zeichenkette auf die
+%  diese Listenoperation angewendet wird, bereits in einer vorherigen
+%  Verfeinerungsebene ermittelt wurde. Dieses Verhalten ist sinnvoll,
+%  da man sonst in jedem Fall auch hinter dem letzten Listenelement den
+%  Delimiter angeben muß, was gegen die Benutzerfreundlichkeit spricht.
+
+%\item[optional] besagt, daß für diese Regel kein Fehlerfall
+%  gemeldet wird wenn kein Match mit Hilfe dieses Statements erfolgen
+%  konnte. Der Einleseprozeß fährt dann an der aktuelle Position im
+%  Zeichenstrom mit dem nächsten Statement fort.
+
+%\item[quoted] definiert für diese Regel eine Zeichenkette {\bf
+%    quotestr} mit Hilfe dieser eine Quotierung von Zeichen innerhalb
+%  des Zeichenstroms erfolgen kann. Dies kann benutzt werden, um andere
+%  reguläre Ausdrücke, wie z.B.\ {\bf delim}, {\bf open}, etc. zu
+%  maskieren.
+
+%\end{description}
+
+%\medskip
+
+%\noindent Nur dann, wenn ein lückenloses Matchen aller regulären
+%Ausdrücke und Komponenten erfolgt ist, ohne daß Eingabezeichen
+%unzugeordnet geblieben sind, wird der Indexeintrag des Eingabestroms
+%akzeptiert. Eingabedaten werden genau dann als Indexdaten erkannt,
+%wenn ein Match mit dem \gignore-Statement des Indexkeys erfolgt ist.
+%Andernfalls werden die Eingabedaten weiter überlesen.
+
+%Nach dem Erkennen eines Indexeintrags, müssen mindestens die
+%Komponenten \gindexkey und \glocref erkannt worden sein, damit eine
+%sinnvolle Weiterverarbeitung des Indexes erfolgen kann.
+
+
+%\subsection{Beispielspezifikation}
+
+%Abbildung~\ref{fig:EingabeSprachBeisp} spezifiziert eine
+%Erkennungsspezifikation.  Diese Spezifikation benutzt die
+%selbstdefinierten Komponenten {\tt indexkeys}, \texttt{indexclasses}
+%{\tt fullindexkey}, {\tt fullprintkey}\, und\, {\tt location}, welche
+%dann zu den Schlüsselkomponenten verfeinert werden. Die Zeichenkette
+%\begin{center}
+%  {\small
+%    \verb=\indexentry{key!is!this@print!is!that}{(author)(full)}{1.2|bold}=
+%    }
+%\end{center}
+%\noindent am Zeilenanfang würde demnach als korrekter Indexeintrag
+%erkannt werden.
+
+%\begin{tfigure}
+%  {Beispiel für eine Eingabespezifikation für \LaTeX}
+%  {fig:EingabeSprachBeisp}%
+%\noindent\small%
+%\begin{verbatim}
+%indexentry {    ignore              "^\\indexentry[ \t\n]*"
+%                balanced            indexkeys    "{" "}" quoted "\"
+%                ignore              "[ \t\n]*"
+%                balanced            indexclasses "{" "}" quoted "\"
+%                ignore              "[ \t\n]*"
+%                balanced            location     "{" "}" quoted "\"
+
+%indexkeys:      delimited           fullindexkey "@"
+%                delimited optional  fullprintkey ""
+
+%indexclasses:   balanced  list      indexclass   "(" ")" quoted "\"
+
+%fullindexkey:   delimited           indexkey     "!"
+%fullprintkey:   delimited           printkey     "!"
+
+%location:       delimited           locref       "|"
+%                delimited optional  optattr      ""
+%}
+%\end{verbatim}%
+%\end{tfigure}
+
+
+
+%\subsection{Objektabbildung}
+
+%Nach dem Einlesen der Eingabespezifikation für die Indexeinträge
+%besteht der nächs\-te Teilprozeß des Indexierens aus dem Einlesen der
+%Indexeinträge. Das Einlesen ist ein Erkennungsprozeß, welcher
+%prinzipiell Strings aus dem Eingabestrom erkennt und in systeminterne
+%Objekte abbildet. Diese Abbildung soll im folgenden näher beschrieben
+%werden.
+
+%Wie bereits aus dem Definitiqonsabschnitt \ref{DefIndexEntry} zu
+%ersehen ist, läßt sich diese Abbildung folgendermaßen beschreiben:
+
+%\begin{lindent}{2em}
+
+%\item Die Schlüsselkomponente \gindexclass{}\footnote{Wir setzten hier
+%    aus Vereinfachungsgründen die entsprechenden Schlüsselwörter
+%    analog für den ermittelten String \bzw Liste aus dem Inputparsing
+%    des entsprechenden Statements} mit optionaler Angabe von \glist
+%  wird in die Menge \idxclsSet der Indexklassen eines Indexeintrags
+%  aufgenommen.
+
+%  Diese Menge ist für jeden Indexeintrag mit der leeren Menge
+%  vorinitialisiert. Jedes Auftreten und Erkennen von \gindexclass fügt
+%  dieser Menge weitere Elemente hinzu.\footnote{Grundsätzlich müssen
+%    alle hier verwendeten Mengen bzw.\ Listenoperationen additiv
+%    verstanden werden}
+
+%\item \gindexkey wird in die Komponente \keyK des Indexeintragtupels
+%  abgebildet. Da $K$ eine Liste darstellt werden die einzelnen
+%  Listenelemente intern mit Hilfe des \glist--Operators ermittelt
+%  (siehe \ref{DefListOp}). Analog dazu wird \gprintkey in das Element
+%  \keyP übertragen\footnote{Hierbei verstehen wir bei einem mehrfachen
+%    Auftreten eines dieser Statements die Abbildung als eine Anfügung
+%    zu bereits vorhandenen Listenelementen}.
+
+%\item \goptattr wird direkt in die Komponente \optattr des
+%  Indexeintrags abgebildet.
+
+%\item \glocref als letzte Schlüsselkomponente kann nicht sofort in
+%  eine Komponente des Indexeintrags überführt werden, da bei der
+%  Rohindexerkennung zunächst nur ein String ermittelt wird. Für die
+%  Analyse der Struktur dieses Strings ist die Lokationsklassifizierung
+%  zuständig, welche an späterer Stelle beschrieben wird.
+
+%\item {\sf refattr} ist das Referenzattribut \refattr einer Location.
+
+%\item {\sf refargs} ist die zu dem Referenzattribut geh"orende
+%  Argumentliste \refargSet.
+
+%\end{lindent}
+
+
+
+
+\section{Ausgabeformatierung}
+\label{sec:ausgabe-tagging}
+
+Als Gegenstück zum Einlesen der Rohindexdaten muß nun die Ausgabe des
+fertig generierten Indexes in den Ausgabestrom modelliert werden. Hier
+ist eine hohe Konfigurierbarkeit wünschenswert, da sich die in der
+Literatur gefunden Ausgabeformen verschiedener Indextypen erheblich
+voneinander unterscheiden. Wir können folgende Punkte als grundlegende
+Voraussetzungen an die Indexausgabe festhalten, um deren Grenzen zu
+umreißen:
+
+\begin{enumerate}
+\item Die Stichwörter werden in der Reihenfolge ihrer Sortierung
+  ausgegeben. Dabei werden alle Unterstichpunkte ebenfalls in ihrer
+  Sortierreihenfolge ausgegeben.
+
+\item Die Lokationsreferenzen werden klassenweise ausgegeben. Eine
+  Mischung zwischen verschiedenen Klassen ist nicht wünschenswert. Die
+  Reihenfolge der Klassen wird im Indexstyle vorgegeben. Innerhalb
+  einer Lokationsklasse haben wir nun eine sortierte Menge von
+  Referenzen, die bezüglich ihrer Kategorieattribute vermischt sein
+  können. Die Ausgabe der Lokationsreferenzen kann allerdings nicht
+  eine Lokationsreferenz als kleinste Einheit auf"|fassen, wie das
+  Beispiel in Abschnitt~\ref{sec:klassenlokationsreferenzen} zeigt.
+  Greifen wir dieses Beispiel auf, so erkennen wir die Klassenstruktur
+  \Strukzwei{\texttt{num}} {$\sqcup$}{\texttt{num}}. Allerdings wurden
+  bei der Ausgabe die Lokationsreferenzen zerlegt aufgelistet, so daß
+  wir als kleinste Darstellungseinheit die Lokationshierarchien
+  beachten müssen.
+
+\item In Textsystemen werden Formatierungsanweisungen üblicherweise
+  durch \emph{Umgebungen} ausgedrückt. Ein Textfragment wird mit
+  geeigneten Zeichenfolgen umklammert, um damit besondere Attribute
+  wie Zeichensatz oder Schriftgrößen zu verändern. Wir sollten also in
+  der Lage sein, Ausgabeeinheiten mit Umgebungen zu versehen.
+
+\end{enumerate}
+
+
+\subsection{Ausgabebaum}
+
+Aufgrund dieser Überlegungen müssen wir ein Verfahren entwickeln, das
+es uns ermöglicht eine Ausgabeanordnung vorzusehen, deren kleinste
+Ausgabeeinheit die Strukturkomponenten der Lokationsreferenzen \bzw
+Stichwörter sind. Die Datenstruktur des Indexes beruht auf einer
+Baumstruktur, die aus mehrstufigen Listen aufgebaut ist. Diesen Baum
+bezeichnen wir mit \emph{Ausgabebaum}. Ein Beispielbaum ist in
+Abbildung~\ref{fig:ausgabebaum} dargestellt. Die erste Ebene bildet
+die Liste der Stichwörter. Jedes Stichwort besteht dabei aus einer
+Liste aller Teilstichwörter. Die nächste Ebene besteht aus einer Liste
+von Lokationsklassen (durch dicke Punkte dargestellt).  Eine
+Lokationsklasse besteht aus einer Liste von Lokationsreferenzen
+(vertikal angeordnet), die ihrerseits aus einer Liste von
+Strukturkomponenten (horizontal angeordnet) bestehen. Diese
+Strukturkomponenten bilden zusammen mit den Teilstichwörtern die
+kleinsten Einheiten des Ausgabebaums.
+
+Da sowohl Stichwörter als auch Lokationsreferenzen aus Listen von
+Teilkomponenten bestehen, die in bestimmter Form ausgegeben werden
+müssen, werden wir die Ausgabestrategie allgemein genug formulieren,
+so daß sie grundsätzlich für beide gleichermaßen verwendbar ist.
+
+\begin{tfigure}{Schematischer Ausgabebaum für die Ausgabeformatierung}
+  {fig:ausgabebaum}
+  \hspace*{0pt}\par
+  \centering
+  \epsfig{file=ausgabebaum.eps}
+
+  \vspace*{5mm}
+
+  \noindent \Hierzwei{Suche}{binäre}: 1.1, 1.3, 2.1, 2.4; Kapitel 1,
+  Kapitel 2, \ldots
+\end{tfigure}
+
+Bei der Ausgabeformatierung müssen wir nun den kompletten Baum
+geeignet traversieren und entlang der Knoten und Verbindungen
+entsprechende Zeichenketten in den Ausgabestrom schreiben. Die
+Traversierung muß auf die gewünschte Ausgabeform anpaßbar sein.
+Betrachten wir die Lokationen in der Abbildung, so sind \zB die
+folgenden Ausgabeformen denkbar:
+%
+\begin{enumerate}
+\item 1.1, 1.3, 2.1, 2.4; Kapitel 1, Kapitel 2
+  \label{ausg:sequentiell}
+\item \ldots{}; Kapitel 1, 2
+  \label{ausg:bumper}
+\item 1 \  1,3; 2 \ 1,4; \ldots
+\end{enumerate}
+%
+Wir müssen demnach in der Lage sein, Strukturkomponenten
+einzeln ausgeben zu können und zus"atzlich die Ausgabe von bestimmten
+Elementen des Ausgabebaums gezielt zu unterdrücken.
+
+%%Wir teilen dazu die Ebenen einer Lokationsklasse in \emph{aktive} und
+%%\emph{passive}\remark{aktive und passive Strukturkomponenten} ein. Ein
+%%aktiver Knoten wird bei der Ausgabe nur einmal ausgegeben wie das Wort
+%%\quasi{Kapitel} in Fallbeispiel~2 oder die oberste Strukturkomponente der
+%%Gliederungsnummern in Fallbeispiel~3. Dagegen kann der Wert von
+%%passiven Strukturkomponenten mehrfach ausgegeben werden wie in
+%%Fallbeispiel~1.
+
+
+%Wir müssen also für die Lokationsklasse der Kapitel den Baum in einer
+%Hauptreihenfolge durchlaufen, während wir für die Lokationsklasse der
+%Abschnittsnummern \Quasi{jojo--artig} durch den Baum auf und ab laufen
+%müssen. Wir müssen also für alle Lokationsklassen die Traversierung
+%separat festlegen, wobei wir im folgenden zwischen aktiven und
+%passiven Knoten unterscheiden.
+
+%\begin{Def}\mbox{}\par
+%  \begin{circleitemize}
+%  \item Ein \emph{aktiver} Knoten oder \emph{Bumper}\footnote{Dieser
+%      Name soll die Vorstellung ausdrücken, daß das gedachte JoJo an
+%      dieser Stelle beim Hochlaufen gegen ein Hindernis stößt und
+%      zurückgestoßen wird.} ist ein Knoten, der beim Traversieren
+%    nicht nach oben verlassen werden darf, ohne daß alle Elemente des
+%    Knotens inklusive ihrer Unterbäume abgearbeitet wurden.
+%  \item Ein \emph{passiver} Knoten kann während des Traversierens nach
+%    oben verlassen werden.
+%  \item Der oberste Knoten einer Lokationsklasse ist immer ein aktiver
+%    Knoten.
+%  \end{circleitemize}
+%\end{Def}
+
+%\noindent Betrachten wir nun die Beispiele der Abbildung, so sind für
+%die Ausgabeform~\ref{ausg:sequentiell} die Knoten A$_1$ und B$_1$
+%aktive Knoten, während für die Ausgabeform~\ref{ausg:bumper} auch noch
+%der Knoten A$_{1,1}$\footnote{A$_{x,y}$ bezeichnet im Baum A den
+%  Unterknoten $y$ des Unterknotens $x$ von A} aktiv ist. Ordnen wir
+%nun an geeigneten Stellen Ausgabekommandos in die Traversierung ein,
+%so sind wir prinzipiell in der Lage alle möglichen Ausgabevarianten zu
+%realisieren, die mit Hilfe dieser Traversierung durchführbar sind.
+\subsection{Traversierung des Ausgabebaums}
+\label{sec:travAusgabebaum}
+
+Nun stellt sich die Frage nach den notwendigen Ausgabekommandos und
+dem Traversierungsalgorithmus. Folgende Ausgabekommandos sind anhand
+der Traversierung und der Durchsicht verschiedener Indexe entworfen
+worden:
+%
+\begin{circleitemize}
+
+\item Beim erstmaligen Eintritt in einen Knoten und beim endgültigen
+  Verlassen sollten Ausgabekommandos definierbar sein:
+  \textsf{pre-print-node} und \textsf{post-print-node}.
+
+\item Vor und nach einer Strukturkomponente: \textsf{pre-print-layer} und
+  \textsf{post-print-layer}.
+
+\item Die Strukturkomponente, also das Element selbst:
+  \textsf{print-element}.
+
+\item Bei listenförmigen Aufzählungen mit Trennzeichen ist es
+  wün"-schens"-wert, Trennzeichen \emph{nach} dem letzten Element
+  unterdrücken zu können. Wir bezeichnen das Ausgabekommando, welches
+  immer nach einer Strukturkomponente, aber nicht nach der letzten
+  Strukturkomponente ausgegeben wird, als
+  \textsf{optional-post-print-layer}.
+
+  Beispiel: 1.1, 1.3, 1.5$[,]$
+
+\item Bei der Aufzählung von Bereichen (\zB 1.2--1.5) muß das
+  Bereichstrennzeichen (in diesem Fall \quasi{--}) definierbar sein.
+  Es tritt beim Ausdruck von Bereichen an die Stelle von
+  \textsf{optional-post-print-layer}. Wir bezeichnen es mit
+  \textsf{optional-range}.
+
+\item Es ist vor allem bei Stichwörtern notwendig, ein
+  Wiederholungssymbol definieren zu können. Oft findet man Indexe in
+  der Form
+  \begin{tabbing}
+      \hspace{1cm}\=S\=uche\=, binäre \hspace{3em} \=\ldots\\
+                  \>\>$\widetilde{\ \ \ }$\>, sequentielle \>\ldots
+  \end{tabbing}
+  Hier wird das Tilde-Zeichen als Wiederholungssymbol für das
+  Stichwort der ersten Ebene verwendet. Üblicherweise wird das
+  Wiederholungszeichen an jedem Seiten- oder Spaltenanfang nicht
+  verwendet, um den Leser eine leichtere Orientierung zu ermöglichen.
+  Das Erkennen des Seitenanfangs oder anderer Positionen im Dokument
+  kann jedoch nur durch das Textsatzsystem geleistet werden.  Dieses
+  Wiederholungssymbol bezeichnen wir mit \textsf{repetition-symbol}.
+
+\item Wir ordnen jedem Knoten die Eigenschaft \emph{aktiv} oder
+  \emph{passiv} zu. Ein aktiver Knoten erzwingt bei der Ausgabe eine
+  Einreihung in den momentanen Ausgabestrom. Ein passiver Knoten
+  überläßt die Entscheidung über die Einreihung der
+  Formatierungsroutine, die mittels Kontextvergleich die passende
+  Einordnungsstrategie ermittelt.
+
+\end{circleitemize}
+
+\newcommand{\indexopen}[1]{\textit{#1}$_{\scriptscriptstyle(}$}
+\newcommand{\indexclose}[1]{\textit{#1}$_{\scriptscriptstyle)}$}
+
+\begin{ttable}%
+  {Tabelle mit Ausgabematrizen für unterschiedliches Markup eines
+    Ausgabebaums}%
+  {tab:ausgabematrix}%
+  \centering%
+  \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+    \hline%
+    \multicolumn{9}{|c|}{\textbf{Ausgabematrix}\medrule}\\
+    \hline\hline
+    \multicolumn{9}{|c|}{\smallrule Ausgabeform:\, 1.1.1, 1.1.2,
+      1.2.1--1.2.3, \ldots{} 2.1.1 \ldots{} $x.y.z$}\\
+    \hline%
+    \textit{Typ} & \textsf{pre-} &
+    \textsf{pre-} & \textsf{layer} & \textsf{rep.-} & \textsf{post-} &
+    \multicolumn{2}{|c|}{\textsf{optional-}} & \textsf{post-} \\[-2pt]
+    & \textsf{node} & \textsf{layer} & & \textsf{symbol} & \textsf{layer} &
+    \textsf{post-layer} & \textsf{range} & \textsf{node} \\
+    \hline%
+    \textsf{A}  & &                    & \textit{num} & & &
+    \quasi{\textbf{,}$\sqcup$} & &\\
+    \textsf{A} & & \quasi{\textbf{.}} & \textit{num} & & & & &\\
+    \textsf{A} & & \quasi{\textbf{.}} & \textit{num} & & & &
+    \quasi{\textbf{--}} &\\
+    \hline%
+    \hline%
+    \multicolumn{9}{|c|}{\smallrule Ausgabeform:\, \textbf{1} 1.1, 1.2,
+      2.1--2.3, \ldots{}; \textbf{2} $x.y$, \ldots{}}\\
+    \hline%
+    \textit{Typ} & \textsf{pre-} &
+    \textsf{pre-} & \textsf{layer} & \textsf{rep.-} & \textsf{post-} &
+    \multicolumn{2}{|c|}{\textsf{optional-}} & \textsf{post-} \\[-2pt]
+    & \textsf{node} & \textsf{layer} & & \textsf{symbol} & \textsf{layer} &
+    \textsf{post-layer} & \textsf{range} & \textsf{node} \\
+    \hline%
+    \textsf{P} & & {\small\slshape bold-on} & \textit{num} & &
+    {\small\slshape bold-off} & \quasi{\textbf{;}$\sqcup$} & &\\
+    \textsf{A} & \quasi{$\sqcup$} & & \textit{num} & & &
+    \quasi{\textbf{,}$\sqcup$} & &\\
+    \textsf{A} & & \quasi{\textbf{.}} & \textit{num} & & & &
+    \quasi{\textbf{--}} &\\
+    \hline
+  \end{tabular}
+
+  \smallskip
+
+\end{ttable}
+
+
+\noindent Daraus ergibt sich nun eine Definitionsmatrix, in der für jede
+Strukturkomponente einer Lokationsklasse die Ausgabekommandos
+definiert werden können und die Komponenten als aktive (\textsf{A})
+oder passive Einheiten (\textsf{P}) festgelegt werden müssen. Eine
+entsprechende Beispielmatrix ist in Tabelle~\ref{tab:ausgabematrix}
+dargestellt.
+
+Als natürliches Durchlaufverfahren des Ausgabebaums wählen wir eine
+modifizierte Version der Traversierung \emph{Hauptreihenfolge}.
+
+Jeder Ebene eines Stichworts und jeder Strukturkomponente einer
+Lokationsklasse wird ein entsprechendes Markup zugewiesen. Bei der
+Ausgabe eines neuen Stichworts wird als \emph{Kontext}\remark{Kontext}
+der Druckschlüssel des vorherigen Stichworts mitgegeben. Die
+Formatierungsroutine kann durch einen Vergleich dieses Kontexts mit
+dem aktuellen Stichwort entscheiden, ab welcher Ebene sich beide
+unterscheiden. Passive Knoten werden bei Gleichheit mit dem Kontext
+unterdrückt. Unterscheiden sich Kontext und Schlüssel, oder ist das
+Markup einer Ebene aktiv oder mit einem Wiederholungssymbol versehen,
+wird die Ausgabe des Knotens gestartet.
+
+Entscheidet sich die Formatierungsroutine für eine Ausgabe einer
+Strukturkomponente, so werden die Formatierungsanweisungen für das Öffnen
+von Umgebungen in den Ausgabestrom hineingeschrieben.
+
+Die Formatierungsanweisungen zum Schließen der jeweiligen Umgebungen
+werden auf einen Stapel\remark{Umgebungs\-stapel} abgelegt, da ihre
+Ausgabe verzögert werden muß, bis die Unterstrukturen abgearbeitet
+sind. Da sich die Stichwörter und Lokationsreferenzen an bestimmten
+Stellen in den Ausgabeprozeß einreihen, muß bei der Einreihung dafür
+gesorgt werden, daß der Stapel mit den Umgebungen immer geeignet
+geleert und die Anweisungen in den Ausgabestrom eingefügt werden.
+
+
+%%Hierbei gibt ein passives Element seine Repräsentation an seine Kinder
+%%weiter, während ein aktiver Knoten eine leere Zeichenkette weitergibt.
+%%Eine \emph{Repräsentation} besteht aus der Komposition von
+%%\textsf{pre-print-layer}, \textsf{print-element} und
+%%\textsf{post-print-layer}. Ein aktiver Knoten fügt seine
+%%Repräsentation selbst dem Ausgabestrom hinzu. Ansonsten sind die
+%%Blätter des Ausgabebaums dafür zuständig, die übergebene
+%%Repräsentation ihrer Vorgänger vor der Ausgabe der eigenen
+%%Repräsentation in den Ausgabestrom einzuleiten.
+
+Dies beschreibt ein einfaches aber mächtiges Verfahren, die Ausgabe
+von Lokationsreferenzen zu steuern.
+
+%Eine vereinfachte \LISP-ähnliche Notation dieses Algorithmus ist wie folgt:
+%\begin{verbatim}
+%(defun print-node (current-node prefix-of-father)
+%  (let ((prefix nil))
+%    (if (is-active current-node)
+%        (progn
+%          (do-write current-node)
+%          (setq prefix ""))
+%        (progn
+%          (setq prefix
+%                (append prefix-of-father
+%                        do-return current-node))))
+%    (dolist (son list-of-all-sons)
+%      (print-node son))))
+%\end{verbatim}
+
+%Der resultierende Algorithmus ist für die
+%aktionsgebundene Traversierung ist in
+%Abbildung~\ref{alg:controlled-jojo-traverse} dargestellt.
+
+%\begin{tfigure}
+%  {Algorithmus \emph{controlled-jojo-traverse} für die Traversierung
+%    des Ausgabebaumes}
+%  {alg:controlled-jojo-traverse}
+%  \small
+%  \begin{algorithm}
+%    \ENUM \F{node-type} : $\{$\F{bumper}, \F{passive}$\}$;\\
+%    \ENUM \F{control-mode} : $\{$\F{callback}, \F{finished}$\}$;\\[6pt]
+%    \FUNC \F{controlled-jojo-traverse}
+%          $($ \F{r} : \F{node}, \F{modevec}$[\ ]$ : \F{node-type} $)$;\\
+%    \VAR \F{positionvec}$[\ ]$ \= $\equiv [0]$;\\
+%    \>   \F{curr-control} : \F{control-mode};\\[6pt]
+%    \>\FUNC \F{inner-traverse} $( r : \F{node}, \F{lay} : \F{int}
+%    )$ : \F{control-mode};\\
+%    \>\VAR \F{position} $\equiv$ \F{positionvec}$[\F{lay}]$;\\
+%    \>\BEGIN\\
+%    \>\>\IF (\F{position} $=$ 0) \THEN \ACTION{\textsf{pre-print-node}};\\
+%    \>\>\REPEAT \texttt{//} {\small\slshape Schleife über alle Elemente eines Kontens}\\
+%%    \>\>\>\IF (\F{position} $>$ 0) \THEN
+%%    \ACTION{\textsf{optional-pre-print-layer}};\\
+%    \>\>\>\F{position} $\equiv$ \F{position}$+ 1$;\\
+%    \>\>\>\REPEAT \texttt{//} {\small\slshape Schleife über alle Callbacks
+%      eines Knotens}\\
+%    \>\>\>\>\ACTION{\textsf{pre-print-layer}};\\
+%    \>\>\>\>\ACTION{\textsf{print-layer}};\\
+%    \>\>\>\>\F{curr-control} $\equiv$
+%             \F{inner-traverse}(\F{r}$[\F{position}]$ , \F{lay}$+ 1$);\\
+%    \>\>\>\>\ACTION{\textsf{post-print-layer}};\\
+%    \>\>\>\>\texttt{//} {\small\slshape Beende Schleife falls passiver Knoten
+%      oder Subknoten fertig}\\
+%    \>\>\>\UNTIL( \=( \=(\F{modevec}$[\F{lay}]$ $=$ \F{bumper}) \AND\\
+%    \>\>\>        \>  \>(\F{curr-control} $=$ \F{finished}) ) \OR\\
+%    \>\>\>        \>(\F{modevec}$[\F{lay}]$ $=$ \F{passive}) )\\
+%    \>\>\>\IF (\F{curr-control} $=$ \F{finished}) \THEN\\
+%    \>\>\>\>\F{position} $\equiv \F{position} + 1$;\\
+%    \>\>\>\IF (\F{position} $<$ \F{maxelement}($r$)) \THEN\\
+%    \>\>\>\>  \ACTION{\textsf{optional-post-print-layer}};\\
+%    \>\>\>\texttt{//} {\small\slshape Beende Schleife falls passiver Knoten
+%      oder alle Elemente bearbeitet}\\
+%    \>\>\UNTIL( \=(\F{modevec}$[\F{lay}]$ $=$ \F{passive}) \OR\\
+%    \>\>     \>( \=(\F{modevec}$[\F{lay}]$ $=$ \F{bumper}) \AND\\
+%    \>\>     \> \>(\F{position} $>$ \F{r}$[$\F{maxelement}(\F{r})$]$) ) )\\
+%    \>\>\F{positionvec}$[\F{lay}]$ $\equiv$ \F{position};\\
+%    \>\>\IF (\EXPR{Range follows}) \THEN
+%      \ACTION{\textsf{optional-print-range}}; \ENDIF\\
+%    \>\>\IF (\F{position} $\ge$ \F{r}$[$\F{maxelement}(\F{r})$]$) \THEN\\
+%    \>\>\>\ACTION{\textsf{post-print-node}};\\
+%    \>\>\>\RETURN (\F{finished});\\
+%    \>\>\ELSE\\
+%    \>\>\>\RETURN (\F{callback});\\
+%    \>\>\ENDIF\\
+%    \>\ENDFUNC\\[6pt]
+%    \BEGIN\\
+%    \>\F{inner-traverse}($r$, 1);\\
+%    \ENDFUNC
+%  \end{algorithm}
+%\end{tfigure}
+
+
+\subsection{Stichwortgruppen}
+
+Bei der Darstellung von Indexen ist es üblich,
+Stichwortgruppen\remark{Stichwortgruppen} durch spezielle
+Informationen visuell darzustellen. Oft bildet man Stichwortgruppen
+nach dem ersten Buchstaben eines Stichworts und trennt beispielsweise
+in einem Index jede Buchstabengruppe optisch voneinander ab. Da eine
+solche optische Abtrennung Teil der Ausgabeformatierung ist, müssen
+wir auf geeignete Weise die Definition von Stichwortgruppen und deren
+Markup vorsehen.
+
+Da die Sortierung der
+Stichwörter bereits durch das sort-mapping festgelegt wurde, müssen wir
+uns einfach nur eine Liste von Stichwortgruppen durch Tupel der Form
+\begin{center}
+  \lettergrp $= ( \keyword, \markup )$\, mit\, \keyword, \markup\ :
+  \textsl{String}
+\end{center}
+definieren und können beim Traversieren des Stichwortbaums bei
+Überschreiten der Gruppengrenzen die entsprechenden Markups in den
+Ausgabestrom einfügen. Im \textsf{makeindex}-System von
+\cite{Chen:SPE-19-9-897} werden Stichwortgruppen grundsätzlich nur aus
+den Anfangsbuchstaben der Stichwörter gebildet und optische Trennungen
+in den Ausgabestrom eingefügt. Im \emph{International MakeIndex}
+\cite{Schrod:CG-10-81} werden Anweisungen eingeführt, welche die
+Bildung von zusätzlichen Buchstabengruppen und deren Markup erlaubt.
+
+Die in diesem Verfahren angewandte Grundidee besteht aus einem
+zusätzlichen Mapping des Sortierungsschlüssels eines Indexeintrags auf
+einen \emph{Stichwortgruppenschlüssel}. Dieses Mapping wird in den
+Systemen implizit als die Abbildung auf den ersten Buchstaben
+angenommen.
+
+Wir erweitern die Ausgabe zu einem zweischichtigen Modell durch die
+Zusammenfassung von Stichwörtern zu Gruppen, denen jeweils ein
+zusätzliches Markup zugeordnet wird. Wir beschreiben die
+Ausgabeinformationen in einer Liste $G$ von Stichwortgruppen mit $G =
+\{g_1\ldots{}g_n\}$ mit $g_i = (\{l_1\ldots{}\l_m\}, \markup)$.  Die
+Elemente $g_i$ sind also Obergruppen, denen als Gesamtheit ein Markup
+zugeordnet ist, während die $l_i$ eine Stichwortgruppen der üblichen
+Form sind. Ein Markup besteht in der einfachsten Form aus einem Paar
+von Strings, welche die entsprechenden Tagging-Umgebungen einleiten
+und schließen.
+
+Diese Definition erscheint uns im Moment ausreichend genug, um auch
+komplexere Indexe geeignet auszugeben.
+
+
+\section{Indexstyle}
+
+Mit dem Abschluß des vorigen Abschnitts haben wir nun die
+grundlegenden Parameter des Indexsystems umrissen. Dies gibt uns nun
+die Möglichkeit, das Datenmodell des
+\emph{Indexstyles}\remark{Indexstyle} zu entwerfen. Der Indexstyle ist
+die Zusammenfassung aller Parameter und Spezifikationen, mit denen
+unser System in der Lage sein soll, einen Indexierungsprozeß
+durchzuführen. Zu diesen Parametern zählen \ua die folgenden Daten:
+
+\begin{circleitemize}
+
+%\item Spezifikation des Eingabeformates der Rohdaten.
+
+\item Beschreibung der Lokationsklassen mit Struktur und Regelwerk.
+
+\item Beschreibung der Indexklassen, insbesondere deren
+  Ausgabeformatierung.
+
+\item Regelwerk zum Mischen und Sortieren der Stichwörter.
+  Insbesondere das regelbasierte Substitutionsschema analog zum
+  \emph{International MakeIndex}.
+
+\item Informationen zur Ausgabeformatierung des kompletten Indexes mit
+  der Definition von Stichwortgruppen.
+
+\end{circleitemize}
+
+\noindent Aus der Menge der Parameter wird auch das Ziel der Arbeit
+deutlich, ein hoch parametrisierbares und individuell vom Benutzer
+definierbares Indexsystem zu entwerfen. Möglichst viele Parameter
+sollen in die externe Spezifikation ausgelagert werden, um höchste
+Konfigurierbarkeit zu erlangen.
+
+Bei den folgenden Definitionen verwenden wir bei Bezeichnern den
+Exponenten \isindex{}{}, um kenntlich zu machen, daß es sich um
+Datenelemente des Indexstyles handelt. Weil wir hier die Parameter von
+realen Objekten des Indexeintrags beschreiben, bietet es sich an,
+ähnliche Bezeichner dafür zu verwenden, um die Analogie kenntlich zu
+machen. Gleichzeitig schließen wir eine Verwechslung mit den Elementen
+des Indexeintrags aus, die ohne Exponenten geschrieben werden.
+
+%Im wesentlichen handelt es sich bei der Elementen im Indexstyle um die
+%Parameter einer Objektklasse\footnote{vergleichbar mit statischen
+%  Klassendaten in \cpp}, während entsprechende Elemente im
+%Indexeintrag instanziierte reale Objekte handelt.
+
+\begin{Def}
+  Ein \textbf{Indexstyle} \idxstyle ist eine Liste von Indexklassen
+  \begin{center}
+    \idxstyle $= ($ \isidxclsSet $)$ .
+  \end{center}
+\end{Def}
+
+\begin{Def}
+  Eine \textbf{Indexklasse} \isidxcls ist ein Tupel
+  \begin{center}
+    \isidxcls $=$ $($ \isidxclsname, \isbasetypeSet, \ismapruleSet,
+    \isidxtagSet $)$
+  \end{center}
+  mit den Komponenten
+  \begin{deflistcolon}{\isidxclsname}
+  \item[\isidxclsname] \textbf{Klassenname}, String
+  \item[\isbasetypeSet] \textbf{Komponententypen}, Alphabete und Aufzählungen
+  \item[\islocclsSet]  \textbf{Lokationsklassen}
+  \item[\isidxtagSet]  \textbf{Markup-Informationen}.
+  \end{deflistcolon}
+\end{Def}
+
+%%\begin{Def}
+%%  Eine \textbf{Abbildungsregel} \ismaprule ist ein Tupel
+%%  \begin{center}
+%%    \ismaprule $=$ $($ \isruletype, \ispattern, \isreplace $)$
+%%  \end{center}
+%%  mit den Komponenten
+%%  \begin{deflistcolon}{isruletype}
+%%  \item[\isruletype] \textbf{Regeltyp}, Element aus \isruletypes $=
+%%    \{${\normalfont \textsf{sort}, \textsf{merge}}$\}$.
+%%  \item[\ispattern]  \textbf{Regulärer Ausdruck}, String
+%%  \item[\isreplace]  \textbf{Regulärer Ausdruck}, String
+%%  \end{deflistcolon}
+%%\end{Def}
+
+
+\begin{Def}
+  Eine \textbf{Lokationsklasse} \isloccls ist ein Tupel
+  \begin{center}
+    \isloccls $= ($ \islocclsname, \islaystruc, \islocrefruleSet $)$
+  \end{center}
+  mit den Komponenten
+  \begin{deflistcolon}{\islocclsname}
+  \item[\islocclsname]   \textbf{Lokationsklassenname}, String
+  \item[\islaystrucSet]  Menge der \textbf{Lokationsstrukturkomponenten}
+  \item[\islocrefruleSet]Menge der
+    \textbf{Lokationsverarbeitungsregeln}, siehe
+    Definition~\ref{def:lokationsverarbeitungsregel} auf
+    Seite~\pageref{def:lokationsverarbeitungsregel}.
+  \end{deflistcolon}
+\end{Def}
+
+\begin{Def}
+  Eine \textbf{Lokationsstrukturkomponente} \islaystruc ist ein Tupel
+  \begin{center}
+    \islaystruc $= ($ \isbasetype, \issep $)$
+  \end{center}
+  mit den Komponenten
+  \begin{deflistcolon}{\issep}
+  \item[\isbasetype] \textbf{Komponententyp}, Element aus \isbasetypes
+    %$= \{${\normalfont\textsf{num}, \textsf{alpha},
+    %  \textsf{Alpha}, \textsf{roman}, \textsf{Roman},
+    %  \textsf{userdefined}}$\}$
+  \item[\issep] \textbf{Trennzeichen}, String.
+  \end{deflistcolon}
+\end{Def}
+
+\noindent Mit diesen Definitionen haben wir das schematische
+Datenmodell des Indexstyles festgelegt. Wir verzichten auf eine
+detailliertere Beschreibung aller Komponenten, da sie für das
+Verständnis des Gesamtsystems nicht relevant sind.
+
+Um die Benutzbarkeit des Systems zu erhöhen, definieren wir eine
+\texttt{default}-Indexklasse, deren Definitionen in allen anderen
+Indexklassen ebenfalls gelten sollen. Die Festlegungen dieser
+Indexklasse werden jedoch von Definitionen in den jeweiligen Klassen
+überschrieben.
+
+
+%%Die fehlenden Definitionen für die Darstellung der Grammatik des
+%%Eingabeformates wird nicht modelliert, da wir prinzipiell nur an der
+%%Grammatik selbst und nicht an ihrer Darstellung interessiert sind.
+
+%%Wie im Datenmodell des Indexeintrags geben wir hier ebenfalls eine
+%%grobe hierarchische Übersicht in Abbildung~\ref{fig:indexstyle}.
+
+%%\begin{tfigure}%
+%%  {Überblick über das Datenmodell einer Indexklassenbeschreibung in
+%%    hierarchischer Darstellung}%
+%%  {fig:indexstyle}%
+%%  \begin{tabbing}
+%%    \hspace*{0.5cm} \=
+%%    \hspace*{0.5cm} \=
+%%    \hspace*{0.5cm} \=
+%%    \hspace*{0.5cm} \=
+%%    \hspace*{0.5cm} \=
+%%    \hspace*{0.5cm} \=
+%%    \hspace*{2.5cm} \=
+%%    \kill
+%%    \idxstyle\\
+%%    \> \isidxclsSet\\
+%%    \> \> \isidxcls $[1]$\\
+%%    \> \> \> \isidxclsname  \> \> \> \> \quasi{Autor}\\
+%%    \> \> \> \ismapruleSet\\
+%%    \> \> \> \> \ismaprule $[1]$\\
+%%    \> \> \> \> \> \isruletype \> \> \textsf{sort}\\
+%%    \> \> \> \> \> \ispattern  \> \> \verb|"\"A"|\\
+%%    \> \> \> \> \> \isreplace  \> \> \verb|"ae"|\\
+%%    \> \> \> \> \ismaprule $[2]$\\
+%%    \> \> \> \> \> \isruletype \> \> \textsf{merge}\\
+%%    \> \> \> \> \> \ispattern  \> \> \verb|"\\?\"[AaOoUus]"|\\
+%%    \> \> \> \> \> \isreplace  \> \> \verb|"&"|\\
+%%    \> \> \> \isidxtagSet\\
+%%    \> \> \isidxcls $[2]$\\
+%%    \> \> \> \isidxclsname  \> \> \> \> \quasi{Gesamt}\\
+%%    \> \> \> \ldots\\
+%%    \> \> \isidxcls $[3]$\\
+%%    \> \> \> \isidxclsname  \> \> \> \> \quasi{Kommandos}\\
+%%    \> \> \> \ismapruleSet\\
+%%    \> \> \> \> \ismaprule $[1]$\\
+%%    \> \> \> \> \> \isruletype \> \> \textsf{sort}\\
+%%    \> \> \> \> \> \ispattern  \> \> \verb|"^\(.*)"|\\
+%%    \> \> \> \> \> \isreplace  \> \> \verb|"\1"|\\
+%%    \> \> \> \> \ldots\\
+%%    \> \> \> \isidxtagSet\\
+%%    \> \> \> \> \ldots\\
+%%    \> \islocclsSet\\
+%%    \> \> \isloccls $[1]$\\
+%%    \> \> \> \islocclsname  \> \> \> \> \quasi{LaTeX-Section}\\
+%%    \> \> \> \islaystrucSet \> \> \> \> \Strukdrei{num}{.}{num}{.}{num}\\\
+%%    \> \> \> \isloclsortorderSet \> \> \> \> $\{$\textsf{default},
+%%    \textsf{bold}, \textsf{italic} $\}$  \\
+%%    \> \> \> \islocrefruleSet \> \> \> \> \ldots\\
+%%    \> \> \ldots\\
+%%    \> \isidxgram\\
+%%    \> \> \ldots%
+%%  \end{tabbing}%
+%%%
+%%% Beispiel:
+%%% \begin{tabbing}
+%%%   Lokationsreferenzen \= \kill
+%%%   Stichwort           \>: \Hierzwei{Suche}{binäre}\\
+%%%   Lokationsreferenz   \>: \textbf{2.1}\textit{f.}\\
+%%%   Lokationsklasse     \>: \quasi{Gesamtindex}\\
+%%% \end{tabbing}%
+%%\end{tfigure}
+
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: "makeindex4.tex"
+%% TeX-master: t
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:53  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.26  1995/10/06  23:05:16  kehr
+%% Korrektur nach der Durchsicht von Karin.
+%%
+%% Revision 1.25  1995/09/22  01:12:07  kehr
+%% Zweite Überarbeitung nch der inhaltlichen Korrektur. Außerdem habe
+%% ich das Logo zu MacIndex verändert. Hat jetzt mehr pepp !
+%%
+%% Revision 1.24  1995/09/21  00:05:45  kehr
+%% Erste Veränderungen nach der inhaltlichen Korrektur durch Joachim am
+%% 20.Sep.95. Fast alle Dateien d'sind davon betroffen. Außerdem sind noch zwei
+%% neue Abbildungen hinzugekommen.
+%%
+%% Revision 1.23  1995/09/06  18:52:51  kehr
+%% Made final changes before giving for correction.
+%%
+%% Revision 1.22  1995/08/28  18:08:17  kehr
+%% Neue Einspielung der xfig-Dateien
+%%
+%% Revision 1.21  1995/07/04  09:46:30  kehr
+%% Weitere Änderungen. Bin aber fast fertig.
+%%
+%% Revision 1.20  1995/07/04  00:46:52  kehr
+%% Bald ist's soweit ;-)
+%% Ich habe heute die generelle Umstrukturierung vorgenommen und einige
+%% Teile herausgeschmissen. Die Indexverarbeitung muß noch überarbeitet werden.
+%%
+%% Revision 1.19  1995/06/18  23:32:24  kehr
+%% Schluß für heute. Genug geschafft.
+%%
+%% Revision 1.18  1995/06/18  19:10:38  kehr
+%% Lokationsverarbeitung geblickt !;-)
+%%
+%% Revision 1.17  1995/06/17  20:36:30  kehr
+%% Habe die Lokationsreferenzverarbeitung umstrukturiert und besser
+%% definiert. DIe Buchstabengruppen müssen noch beendet werden und der
+%% Algorithmus zum Mischen und Sortieren der Lokationsreferenzen muß
+%% fertiggestellt werden.
+%%
+%% Revision 1.16  1995/06/15  12:58:43  kehr
+%% Erweiterung der Ausgabematrix und kleinere Änderungen am Layot.
+%% Überprüfe jetzt das ganze Dokument, um mich auf die beiden letzten
+%% Probleme einzulesen.
+%%
+%% Revision 1.15  1995/06/13  21:55:16  kehr
+%% Habe heute die Formulierung des Algorithmus controlled-jojo-traverse
+%% fertiggestellt. Desweiteren Fehler in der Anwendung der \lindent-Umgebung
+%% gefunden. Ich muß noch die Matrix für die Definition der Ausgabekommandos
+%% und der Angabe im Indexstyle entwickeln.
+%%
+%% Revision 1.14  1995/06/09  20:59:51  kehr
+%% Superviel gemacht heute ;-)
+%%
+%% Revision 1.13  1995/06/08  20:19:48  kehr
+%% Bibliographie erweitert.
+%%
+%% Revision 1.12  1995/06/08  11:25:59  kehr
+%% Implementierungsteil angefangen.
+%%
+%% Revision 1.11  1995/06/08  00:35:54  kehr
+%% Was soll ich bloß schreiben ???
+%%
+%% Revision 1.10  1995/06/07  20:59:13  kehr
+%% Und weiter am Modellentwurf. Spezifikation des Indexstyles vorerst
+%% fertig. Es fehlt noch die Eingabegrammatik.
+%%
+%% Revision 1.9  1995/06/07  11:24:21  kehr
+%% Definitionen der Indexstyle-Elemente.
+%%
+%% Revision 1.8  1995/06/06  23:50:14  kehr
+%% Modellentwurf weitergebracht.
+%%
+%% Revision 1.7  1995/06/06  17:51:02  kehr
+%% Commit um die Änderungen festzuhalten.
+%%
+%% Revision 1.6  1995/06/06  11:50:35  kehr
+%% Weitere Bearbeitung des Modellentwurfs.
+%%
+%% Revision 1.5  1995/05/31  19:18:52  kehr
+%% Fertigstellung des Analyse-Abschnitts (Hoffentlich ;-).
+%%
+%% Revision 1.4  1995/05/28  21:37:11  kehr
+%% Neue überarbeitete Version.
+%% Inhaltliche Änderungen:
+%%   Glossar hinzugenommen. Einleitung mit Datenflußgraph. Kleinere
+%%   Änderungen an der Beschreibung des International Makeindex.
+%% Systemänderungen:
+%%   Makefile-Änderungen, Stiländerungen, Titelseite
+%%
+%% Revision 1.3  1995/05/05  23:07:15  kehr
+%% Geänderte Datenstrukturen mit enumerate und neuen labels für enumerate
+%%
+%% Revision 1.2  1995/05/05  22:25:05  kehr
+%% Geänderte Struktur mit einleitung.tex
+%% Zwischenspeicherung vor der Umstellung der Definnitionen
+%%
+%% Revision 1.1  1995/04/28  22:15:26  kehr
+%% Weitere Dateien eingecheckt.
+%%
+%%
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

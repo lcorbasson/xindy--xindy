@@ -1,0 +1,232 @@
+%%
+%% $Id$
+%%
+%% Document: Einleitung für das `makeindex4' - Projekt
+%%
+
+\chapter{Vorwort}
+
+\remark{Index als Bestandteil von Literatur}%
+Die Qualität von guten Lehr- und Sachbüchern ist in erster Linie eine
+Frage der methodischen und didaktischen Vermittlung von Wissen.
+Weiterhin kann man auf die Funktion eines Buches als Nachschlagewerk
+besonderen Wert legen. Es sollte möglich sein, durch Nachschlagen nach
+Stichwörtern und Begrif"|fen schnell an gewünschte Informationen zu
+gelangen. Lehrbücher sind in der Regel ohne einen gut stukturierten
+Index nicht als Nachschlagewerk verwendbar.
+%% Oft genug hat man den Eindruck, als ob die Autoren den Leser nach dem Motto
+%% \flqq\textit{Suchet, so werdet ihr finden.}\frqq{} arbeiten lassen.
+Viele Lehrbücher weisen leider einen sehr unvollständigen Index auf, in
+welchem wichtige Begrif"|fe fehlen oder die Verweise auf die
+entsprechenden Seiten im Buch fehlerhaft oder ungenügend sind. Das
+Resultat ist ein schlecht strukturiertes und unübersichtliches
+Stichwortverzeichnis.  Das Buch verliert dadurch entscheidend an
+Qualität und Wert.
+
+\remark{Mängel bestehender Systeme}%
+Grund für diese Mängel sind oft nicht ausreichende Systeme zur
+Erstellung solcher Indexe. Ist es bei maschinell lesbaren Texten
+meistens möglich durch entsprechende Suche nach bestimmten Begrif"|fen
+ansatzweise trotzdem an die gewünschten Textstellen zu gelangen, ist
+dies prinzipiell bei gedruckter Literatur nicht möglich, und der Leser
+ist grundsätzlich immer auf das Stichwortverzeichnis angewiesen.
+
+\remark{Besondere Bedürfnisse}%
+Weiterhin trifft man insbesondere in den Naturwissenschaften immer
+häufiger auf spezielle Wünsche der Autoren. Zu diesen Wünschen zählen
+Indexe mit mehrsprachigen Einträgen, die Verwendung verschiedenartiger
+Indexverweise auf Seitenummern, Gliederungsebenen, Anhänge, Symbole
+\etc, welche mit herkömmlichen Indexierungssystemen nicht
+zufriedenstellend genug erfüllt werden können. Prinzipiell sollte ein
+Indexierungsprogramm auch in der Lage sein, spezielle
+In\-dex\-in\-for\-ma\-tion\-en wie HyperText-Links o.ä.\ zu verwalten.
+Viele der existierenden Systeme sind in einzelnen Details sehr
+leistungsfähig, aber ein übergreifendes Konzept fehlt meist und sie
+sind deshalb nur begrenzt einsetzbar. Beispiele für solche Systeme
+sind das \Makeindex-System~\cite{Chen:SPE-19-9-897} in Verbindung mit
+dem \TeX{}- \cite{texbook} \bzw{} \LaTeX-System~\cite{latex} oder
+moderne interaktive Textverarbeitungssysteme wie {\slshape
+  StarWriter\/}~\cite{starwriter} oder {\slshape
+  Word\,für\,Windows\/}~\cite{winword}.
+
+Die grundsätzliche Problematik, welche Begrif"|fe und Stichwörter in
+einen Index aufzunehmen sind, auf welche Stellen im Text verwiesen
+werden soll, wie Referenzen optisch unterschiedlich hervorzuheben sind
+\usw, ist nicht Gegenstand dieser Arbeit. Diese Aufgabe wird
+üblicherweise vom Autor eines Buches übernommen, denn sie erfordert
+Kenntnis von den Inhalten und der Struktur des Textes und soll auch
+auf Schwerpunkte innerhalb des Buches hinweisen. Weitere Betrachtungen
+zu diesem Themenaspekt finden sich in \cite{Lamb:EPODD-6-1-23} und
+\cite{chicago}.
+
+%\remark{Text-Tagging}%
+%Wir betrachten hier diese als \emph{Text-Tagging} bezeichnete Aufgabe
+%als bereits gelöst und erwarten als Eingabedaten für unser Modell
+%einen irgendwie strukturierten Datenstrom von einzelnen ungeordneten
+%Indexeinträgen, die von dem zu entwerfenden System aufbereitet,
+%gemischt und sortiert werden, und anschließend zu einem fertigen Index
+%zusammengefügt werden.
+
+\remark{Gegenstand der Studienarbeit}%
+Gegenstand der Arbeit ist eine grundsätzliche Analyse der
+Erfordernisse an ein Indexierungssystem und die Entwicklung eines
+möglichst universellen Modells der Indexverarbeitung. Dieses Modell
+soll den \oa Ansprüchen in möglichst vielen Bereichen gerecht werden.
+Neue erweiterte Mechanismen zur Generierung eines Indexes werden
+vorgestellt und entsprechende Algorithmen eingeführt.
+
+Basierend auf diesem Modell wird dann eine Implementierung der
+grundlegenden Verfahren des Modells vorgenommen, um die
+grundsätzlichen Mechanismen in der Praxis zu verifizieren.
+
+
+\chapter{Einführung}
+\label{sec:ana:Einfuehrung}
+
+Wir werden in dem nun folgenden Abschnitt die grundsätzliche Funktion
+eines Indexierungssystems und seine Einbettung in den Textsatzprozeß
+darlegen.  In Abschnitt~\ref{sec:analyse} werden wir eine vertiefte
+Analyse bestehender Systeme durchführen. Eigene Erkenntnisse werden
+dargelegt und insbesondere die Lokationsreferenzen werden als
+Schwerpunkt dieser Arbeit in
+Abschnitt~\ref{sec:ana:Lokationsreferenzen} vertieft untersucht. In
+Abschnitt~\ref{sec:modellentwurf} werden wir die aus der Analyse
+gewonnenen Informationen in ein Modell der Indexverarbeitung abbilden.
+Es folgt ein Überblick über die Verarbeitungsvorgänge innerhalb des
+Modells in Abschnitt~\ref{sec:indexverarbeitung}. In
+Abschnitt~\ref{sec:implementierung} finden sich Informationen über die
+erfolgte Implementierung des Systems. Den Abschluß bilden
+Abschnitt~\ref{sec:zusammenfassung} mit einer Zusammenfassung, der
+Ausblick über weiterführende Arbeiten in
+Abschnitt~\ref{sec:weiterArbeiten} und ein Glossar in
+Abschnitt~\ref{sec:glossar}.
+
+
+\section*{Datenfluß in einem Indexierungssystem}
+
+Der Datenfluß, an welchem ein Indexierungssystem beteiligt ist, ist in
+Abbildung~\ref{fig:datenfluss} dargestellt. Das Textsatzsystem liefert
+die Rohdaten der Indexeinträge in einem festgelegten Format. Das
+Indexsystem liest zunächst sämtliche für den Verarbeitungsprozeß
+benötigten Informationen aus der Indexstyle-Datei\remark{Indexstyle}
+ein. Anschließend werden die Rohdaten des Indexes eingelesen. Die
+Indexeinträge werden daraufhin gemischt und sortiert. Die
+entsprechenden Misch- und Sortierregeln sind im Indexstyle angegeben.
+Anschließend werden die Lokationsreferenzen separat für jeden
+Indexeintrag gemischt und sortiert. Die dazu notwendigen Informationen
+befinden sich ebenfalls im Indexstyle. Zuletzt wird der komplette
+Index mit einem Markup versehen und dem Textsatzsystem zur
+Weiterverarbeitung zugeführt.
+
+Besondere Wichtigkeit liegt dabei auf der benutzerdefinierbaren
+Kon\-fi\-gu\-ra\-tion\remark{Benutzer\-definierbare Konfiguration} des
+Indexstyles. Möglichst viele Parameter des Systems sollten von
+Benutzer einstellbar sein, um eine möglichst hohe Anpassungsfähigkeit
+zu gewährleisten.
+
+Wie man aus diesem Konzept erkennen kann, ist unser System eine Art
+\emph{Indexprozessor}. Ein Index wird in einem kompletten Durchlauf
+erzeugt. Eine inkrementelle Einbindung in ein System, welches durch
+Einfüge- oder Löschoperationen eine dynamische Veränderung des Indexes
+erzeugt, ist nicht vorgesehen. Dies ist normalerweise auch nicht
+erforderlich, da ein Index nie direkt bearbeitet werden sollte,
+sondern immer aus einem Generierungsprozeß mit vohergehendem
+generischen Markup der Indexbegrif"|fe hervorgehen sollte.
+
+Auch typische interaktive Textverarbeitungssysteme wie \textsl{Word
+  für Windows}~\cite{winword} oder
+\textsl{StarWriter}~\cite{starwriter} verwenden diese Methode, indem
+zuerst Begrif"|fe im Dokument für den Index speziell markiert werden
+und das System später auf expliziten Befehl hin Indexe erstellt.
+
+\begin{tfigure}
+  {Datenfluß in einem Indexierungssystem}
+  {fig:datenfluss}
+  \vspace*{-1mm}
+  \centering
+  \epsfig{file=datenfluss.eps}
+\end{tfigure}
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: "makeindex4.tex"
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:50  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.18  1995/10/06  23:05:12  kehr
+%% Korrektur nach der Durchsicht von Karin.
+%%
+%% Revision 1.17  1995/09/22  01:12:01  kehr
+%% Zweite Überarbeitung nch der inhaltlichen Korrektur. Außerdem habe
+%% ich das Logo zu MacIndex verändert. Hat jetzt mehr pepp !
+%%
+%% Revision 1.16  1995/09/21  00:05:42  kehr
+%% Erste Veränderungen nach der inhaltlichen Korrektur durch Joachim am
+%% 20.Sep.95. Fast alle Dateien d'sind davon betroffen. Außerdem sind noch zwei
+%% neue Abbildungen hinzugekommen.
+%%
+%% Revision 1.15  1995/09/06  18:52:48  kehr
+%% Made final changes before giving for correction.
+%%
+%% Revision 1.14  1995/08/28  18:08:12  kehr
+%% Neue Einspielung der xfig-Dateien
+%%
+%% Revision 1.13  1995/07/04  09:46:28  kehr
+%% Weitere Änderungen. Bin aber fast fertig.
+%%
+%% Revision 1.12  1995/07/04  00:46:48  kehr
+%% Bald ist's soweit ;-)
+%% Ich habe heute die generelle Umstrukturierung vorgenommen und einige
+%% Teile herausgeschmissen. Die Indexverarbeitung muß noch überarbeitet werden.
+%%
+%% Revision 1.11  1995/06/17  20:36:28  kehr
+%% Habe die Lokationsreferenzverarbeitung umstrukturiert und besser
+%% definiert. DIe Buchstabengruppen müssen noch beendet werden und der
+%% Algorithmus zum Mischen und Sortieren der Lokationsreferenzen muß
+%% fertiggestellt werden.
+%%
+%% Revision 1.10  1995/06/09  20:59:48  kehr
+%% Superviel gemacht heute ;-)
+%%
+%% Revision 1.9  1995/06/08  20:19:46  kehr
+%% Bibliographie erweitert.
+%%
+%% Revision 1.8  1995/06/08  00:35:53  kehr
+%% Was soll ich bloß schreiben ???
+%%
+%% Revision 1.7  1995/05/31  19:18:51  kehr
+%% Fertigstellung des Analyse-Abschnitts (Hoffentlich ;-).
+%%
+%% Revision 1.6  1995/05/29  00:22:42  kehr
+%% Die Einleitung ist somweit fertig und die Analyse muß jetzt noch
+%% beendet werden. Mir fehlt da noch eine vernünftige Idde für die
+%% Alphabete und deren Definitionen.
+%%
+%% Revision 1.5  1995/05/28  21:37:09  kehr
+%% Neue überarbeitete Version.
+%% Inhaltliche Änderungen:
+%%   Glossar hinzugenommen. Einleitung mit Datenflußgraph. Kleinere
+%%   Änderungen an der Beschreibung des International Makeindex.
+%% Systemänderungen:
+%%   Makefile-Änderungen, Stiländerungen, Titelseite
+%%
+%% Revision 1.4  1995/05/05  22:25:03  kehr
+%% Geänderte Struktur mit einleitung.tex
+%% Zwischenspeicherung vor der Umstellung der Definitionen
+%%
+%% Revision 1.3  1995/04/30  16:14:09  kehr
+%% Trennung in Einleitung, Einführung und Analyse. Evtl. sollten die Filenamen
+%% entsprechend anepaßt werden. Darüberhinaus Analyse weitergeführt.
+%%
+%% Revision 1.2  1995/04/25  01:09:39  kehr
+%% Analyse und Modellentwurf weitergebracht.
+%%
+%% Revision 1.1  1995/04/22  21:05:39  kehr
+%% Erstes Setup der Studienarbeit des Makeindex4-Projektes
+%%
+

@@ -1,0 +1,576 @@
+%%
+%% $Id$
+%%
+%% Document: Implementierung des `makeindex4' - Projekts
+%%
+
+
+\chapter{Implementierung}
+\label{sec:implementierung}
+
+
+In diesem Abschnitt soll auf die konkrete Implementierung des
+\mkxvier-Systems eingegangen werden. Dabei wird kurz auf die
+verwendete Programmiersprache und auf die Entwicklungsumgebung
+eingegangen. Allgemeine Anforderungen an das System waren:
+%
+\begin{enumerate}
+\item Das System sollte möglichst portabel sein. Die bestehenden
+  Indexsysteme werden besonders intensiv im Zusammenhang mit dem
+  \TeX-\cite{texbook} \bzw{} \LaTeX-System~\cite{latex} genutzt. Es
+  sollte möglich sein, das zu entwickelnde System weiterhin in diesem
+  Bereich einzusetzen, wenngleich das System auf andere
+  Anwendungssysteme hin konfigurierbar ist.
+\item Das System sollte eine einfache und schnelle Umsetzung des
+  entworfenen Datenmodells in eine Programmiersprache ermöglichen und
+  leicht erweiterbar sein.
+  \label{forderung:datenmodell}
+\item Es sollte eine möglichst schnelle Implementierung gestatten, um
+  sich auf die wesentlichen Punkte des Systems zu konzentrieren. Aus
+  diesem Grund sollten auch fertige Bibliotheken zum Einsatz kommen
+  können, um die Entwicklungszeit zu verkürzen.
+  \label{forderung:entwicklungszeit}
+\end{enumerate}
+%
+
+\section{Entwicklungsumgebung}
+
+Aus den aufgeführten Forderungen haben wir uns zunächst für die
+Programmiersprache \cpp entschieden, da eine einfache Abbildung in
+entsprechende Klassen möglich ist, und es inzwischen eine hohe
+Verfügbarkeit dieser Sprache auf vielen unterschiedlichen Plattformen
+gibt.
+
+\newcommand{\CL}{\textsc{Common Lisp}\xspace}
+\newcommand{\CLOS}{{CLOS}\xspace}
+
+Nach weiteren Überlegungen wurde eine Implementierung in \CL
+\cite{Steele:CLL84,Steele:common-lisp-2} vorgenommen, um die
+Entwicklungszeit zu verkürzen und im Rahmen dieser Arbeit möglichst
+viele neue Punkte des Modells zu verifizieren. Dabei wurde
+umfangreichen Gebrauch von den objektorientierten Möglichkeiten des
+\emph{Common Lisp Object System} \CLOS~\cite{Keene:88,ACM:X3J13}
+gemacht.
+
+%Forderung~\ref{forderung:datenmodell} läßt sich durch eine Umsetzung
+%in \cpp-Klassen realisieren. Desweiteren ist diese Sprache für die
+%Komplexität dieses Projekt ausreichend genug portabel. Wir entschieden
+%uns um Forderung~\ref{forderung:entwicklungszeit} zu erfüllen für die
+%LEDA-Bibliothek~\cite{LEDA}. Diese \cpp-Klassenbibliothek bietet
+%bereits viele vordefinierte Sprachelemente wie Listen, Arrays und
+%Dictionaries. Der Entwicklungsprozeß konnte damit entscheidend
+%vereinfacht werden.
+%\smallskip
+%Da das System intensiven Gebrauch von Konfigurationsdateien macht,
+%welche ef"|fizient und schnell eingelesen werden müssen, haben wir
+%einen entsprechenden Parsergenerator verwendet. Wir haben und für daß
+%PCCTS-System~\cite{PCCTSmanual} enschieden. Es handelt sich dabei um
+%das lexikalische Analysewerkzeug \texttt{dlg} und den
+%\textsl{LL}$(k)$-Parsergenerator \texttt{antlr}. Dieses System ist zum
+%einen in der Lage mit \cpp-Code zu generieren und weist gegenüber
+%anderen Systemen wie \texttt{lex} und \texttt{yacc}~\cite{Levine:LY92}
+%vereinfachte Syntax zur Definition der Produktionsregeln an.
+%\smallskip
+
+Um außerdem Erfahrung mit \emph{Literate Programming} zu sammeln,
+wurde das System mit Hilfe des LPS-Systems\footnote{LPS bedeutet
+  Literate Programming System. Man versteht darunter die parallele
+  Beschreibung von Programm und Dokumentation in gemischter Form
+  innerhalb eines Dokumentes.} \texttt{noweb}~\cite{Ramsey:LPT93}
+erstellt und mit Hilfe von \LaTeXe{} gesetzt.
+
+%Als wesentliche Arbeitsunterlagen für den Umgang mit \cpp wurden
+%\cite{Lippman:CP91} und \cite{Meyers:1992} verwendet. Für die
+%Erstellung des Parsers \cite{Aho:CPT86}, \cite{Parr:predLLk:94} und
+%\cite{Parr:sem:94}.
+
+Wertvolle Hilfe für textuelle Erstellung der Studienarbeit in \LaTeXe{}
+und Nachformatierung der \texttt{noweb}-Programme waren
+\cite{Goosens:LC94,latex,Kopka:94}. Als mathematisches Nachschlagewerk
+wurde im wesentlichen \cite{Ihringer:93} benutzt.
+
+
+\section{Struktur}
+
+Da das System in \CL implementiert wurde, bot sich die Möglichkeit,
+den Indexstyle mit einer deklarativen Beschreibung in Form von
+\LISP-Ausdrücken anzugeben, die der Interpreter direkt lesen kann.
+Dadurch ist die ursprünglich angestrebte Erstellung eines Parsers für
+den Indexstyle entfallen und bietet letztendlich einen höheren
+Konfigurierungsgrad als ursprünglich angestrebt.
+
+F"ur die Rohindexerkennung war urspr"unglich ein eigener Parser
+vorgesehen war, ist ein
+\texttt{perl}-Skript~\cite{Wall:PP92,Schwartz:LP93} vorgesehen.  Diese
+skriptorientierte Programmiersprache bietet vielfältige Möglichkeiten
+zur Erkennung von Mustern und verwendet Reguläre Ausdrücke, um die
+Indexeinträge zu filtern und in eine Folge von \LISP-Ausdrücken
+umzuwandeln. Diese werden dann von \mkxvier-System gelesen und
+ausgewertet.
+
+Das entsprechende Skript ist leicht auf andere Eingabeformate und
+Textsysteme modifizierbar. Das hier vorgestellte Konzept nutzt die
+Stärken vorhandener Systeme und bildet mit der Symbiose von
+\texttt{perl} und \CL eine schnelle und leicht wart- und adaptierbare
+Gesamtlösung.
+
+
+\section{Portabilität}
+
+Das \mkxvier-System wurde auf den folgenden Rechnerarchitekturen und
+Betriebssystemen getestet:
+%
+\begin{circleitemize}
+\item \textsf{IBM RS/6000, AIX 3.2} mit \texttt{perl-4.0.36} und
+  \texttt{clisp-94-10-26}.
+\item \textsf{IBM-AT}-kompatibler Rechner auf
+  \textsf{Intel-i486}-Basis, \textsf{Linux 1.2},
+  \texttt{perl-4.0.36} und \texttt{clisp-94-10-26}.
+%%\item \textsf{IBM-AT}-kompatibler Rechner mit MS-DOS 6.0
+\end{circleitemize}
+%
+%Prinzipiell sollte das System auch auf anderen
+%ARM~\cite{Ellis:ACR90}-konformen \cpp-Umgebungen lauf"|fähig sein.
+
+\noindent Das \texttt{clisp}-System ist eine
+Public-Domain-Implementierung von \CL und auf diversen ftp-Servern
+verfügbar.
+
+Das \mkxvier-System sollte grundsätzlich auf allen Plattformen
+lauf"|fähig sein, auf denen \CL und \texttt{perl} verfügbar sind.
+Sollte letzteres nicht verfügbar sein, so muß evtl.\ eine Lösung mit
+einer anderen Sprache verwendet werden. Die Rohindexerkennung und
+Generierung der \LISP-Ausdrücke kann auch auf beliebige andere Weise
+erfolgen, solange das \LISP-Kernmodul entsprechend mit Informationen
+versorgt wird.
+
+
+\section{Aktueller Implementierungsstand}
+
+
+Im folgenden Abschnitt soll die bisherige Implementierung skizziert
+werden und insbesondere die Modellierung der Klassen und Module
+vorgestellt werden.  Abbildung~\ref{fig:datenmodell} zeigt einen
+Überblick über die Beziehungen zwischen den zentralen Klassen des
+Systems. Sie stellt die \emph{enthält}-Relationen der wichtigsten
+Klassen dar und beschreibt welche Klasse \emph{Container} für eine
+andere Klasse sind.
+
+\begin{tfigure}{Schematisches Datenmodell der wichtgsten Klassen der
+    Implementierung mit \emph{enth"alt}-Beziehungen}
+  {fig:datenmodell}
+  \centering \epsfig{file=datenmodell.eps}
+\end{tfigure}
+
+In Abbildung~\ref{fig:vererbungsgraph} sind die wichtigsten
+Vererbungsbeziehungen zwischen Klassen dargestellt. Sie sollen einen
+Überblick über die dem System innewohnenden Beziehungen geben.
+Weitere implementationsspezifische Vererbungsbeziehungen sind nicht
+dargestellt. Der Modulgraph in Abbildung~\ref{fig:modulgraph} zeigt
+die \emph{benutzt}-Relationen der Module.
+
+
+\begin{tfigure}{Vererbungsgraphen der wichtigsten Klassen der Implementierung}
+  {fig:vererbungsgraph}
+  \centering
+  \epsfig{file=vererbungsgraph.eps}
+\end{tfigure}
+
+\begin{tfigure}{Modulgraph mit \emph{benutzt}-Relationen}
+  {fig:modulgraph}
+  \centering%%
+  \epsfig{file=modulgraph.eps}
+\end{tfigure}
+
+%\afterpage{\clearpage}
+\newpage
+
+\section*{Klassenbeschreibungen}
+
+Wir beschreiben nun für die angeführten Klassen ihre jeweilige
+Funktion und die wichtigsten Komponenten und Methoden \bzw
+Schnittstellen, um einen Überblick über das Gesamtsystem zu erhalten.
+
+\begin{describeClass}{indexclass}
+  Diese Klasse ist die oberste Datenstruktur im System. Sie enthält
+  alle Definitionen, die zu einer Indexklasse gehören. Dazu gehören
+  sowohl die Komponenten, die den Indexstyle definieren, als auch der
+  Index selbst.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[name] Hier ist der Name der Indexklasse abgelegt. Es exisitiert
+  immer eine Indexklasse mit Namen \texttt{default}.
+\item[basetypes] Alle definierten Komponententypen werden hier als
+  Hashtabelle abgelegt. Die Komponententypen werden über ihre Namen
+  angesprochen. Die Elemente sind Instanzen der Klasse
+  \texttt{basetype}.
+\item[locclasses] Alle vom Benutzer definierten Lokationsklassen
+  werden hier abgelegt. Die Elemente sind Instanzen der Klasse
+  \texttt{location-class}.
+\item[index] Hier ist der Index abgelegt. Es handelt sich um eine
+  Instanz der \texttt{index}-Klasse.
+\item[keyword-markup] Die Ausgabeformatierung für die Stichwörter
+  werden hier abgelegt.
+\item[succ-table] ist die Tabelle mit den Nachfolgerdefinitionen.
+  Hierin ist das \emph{Dokumentwissen} enthalten.
+\item[merge-to-rules] sind die \textsf{merge-to}-Regeln. Sie sind
+  Instanzen von \texttt{index-rule}.
+\item[sep-mix-rule] enthalten die \textsf{separated-mixed}-Regeln.
+\end{describeComponents}
+
+\begin{describeMethods}
+  Da die Klasse oberste Verwaltungseinheit ist, stehen im wesenlichen
+  nur Operationen zum Füllen und Zugreifen der Komponenten zur
+  Verfügung.
+\end{describeMethods}
+
+
+
+\begin{describeClass}{basetype}
+  Diese Klasse ist die abstrakte Basisklasse für Alphabete und
+  Aufzählungen.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[name] enthält den Namen des Komponententyps.
+\item[base-alphabet] das Basisalphabet des Komponententyps.
+\end{describeComponents}
+
+\begin{describeMethods}
+  \begin{defgen}{prefix-match}{\farg{string} \farg{basetype}}
+    Das Argument \farg{string} ist dieZeichenkette, \farg{basetype}
+    ist eine Instanz eines Komponententyps. Die Funktion versucht
+    einen Präfix der Zeichenkette dem angegebenen Komponententyp
+    zuzuordnen. Die Methoden müssen für alle abgeleiteten Klassen von
+    \texttt{basetype} definiert sein und einen multiple-value der Form
+    (\farg{matched-str} \farg{rest-str} \farg{ordnum}) zurückliefern.
+    Dabei bezeichnet \farg{matched-str} eine Zeichenkette, die dem
+    Komponententyp zugeordnet werden konnte, \farg{rest-str} der Rest
+    der Zeichenkette und \farg{ordnum} die Ordnungszahl, die der
+    Zeichenkette zugeordnet wurde.
+  \end{defgen}
+\end{describeMethods}
+
+
+
+\begin{describeClass}{alphabet}
+  Diese Klasse ist Basisklasse aller Alphabete und von
+  \texttt{basetype} abgeleitet.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[symbols] enthält eine Liste aller Symbole des Alphabets. Ein
+  Symbol ist dabei ein Wort über dem Basisalphabet. Wir ermitteln bei
+  Alphabeten das Basisalphabet durch Analyse der Symbole des
+  Alphabets.
+\end{describeComponents}
+
+\begin{describeMethods}
+  Es ist eine allgemeine Methode \func{prefix-match} definiert, die
+  das oben beschriebene Verhalten für alle Alphabete nachbildet.
+\end{describeMethods}
+
+
+
+\begin{describeClass}{enumeration}
+  Diese Klasse ist Basisklasse aller Aufzählungen und von
+  \texttt{basetype} abgeleitet.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[\normalfont\emph{Konstruktor}] Der Konstruktor bekommt das
+  Basisalphabet übergeben, da keine weiteren Informationen über die
+  Aufzähung bekannt sind.
+\end{describeComponents}
+
+\begin{describeMethods}
+  Da Aufzählungen wie die arabischen oder die römischen Zahlen eine
+  grund"-sätz"-lich andere Struktur aufweisen als Alphabete, muß für
+  jede konkrete Aufzählung eine entsprechende Methode
+  \func{prefix-match} implementiert werden.
+\end{describeMethods}
+
+
+\begin{describeClass}{location-class}
+  Diese Klasse ist Container für alle zu einer Lokationsklasse
+  gehörenden Informationen.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[name] enthält den Namen der Lokationsklasse.
+\item[layers] beinhaltet die Liste der Ebenen der Lokationsstruktur.
+  Die Ebenen sind Instanzen der Klasse \texttt{loccls-layer}.
+\item[join-layers] enthält eine Liste der Nummern aller
+  Strukturkomponenten, die prinzipiell zur Bereichsbildung herangezogen
+  werden dürfen.
+\item[ordnum] die einer Lokationsklasse zugeordnete Ordnungsnummer.
+  Dies wird zur Definition eines Ordnungskriteriums auf
+  Lokationsklassen für die Sortierung von Lokationsreferenzen
+  benötigt. Das momentan implementierte Ordnungskriterium bezieht sich
+  auf die Reihenfolge der Definitionen der Lokationsklassen.
+  Lokationsreferenzen von früher definierten Lokationsklassen
+  erscheinen bei der Ausgabe zuerst.
+\end{describeComponents}
+
+\begin{describeMethods}
+  Die zugeordneten Methoden dienen dem Zugriff auf die Komponenten der
+  Instanzen.
+\end{describeMethods}
+
+
+\begin{describeClass}{location-reference}
+  Diese Klasse verwaltet eine Lokationsreferenz. Sie ist Container für
+  die Strukturkomponenten und Attribute der Lokationsreferenz.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[layers] hierin finden sich die einzelnen Ebenen der
+  Lokationsreferenz. Eine Ebene ist ein Objekt von Klasse
+  \texttt{locref-layer}.
+\item[ordnums] Die Ordnungszahlen der Ebenen werden hier abgelegt.
+  Ursprünglich wurde in jeder Ebene die zugeordnete Ordnungszahl
+  abgelegt. Durch die Zusammenfassung in einer direkt zugreifbaren
+  Liste wurde eine einfache Optimierung vorgenommen.
+\item[optattr] beinhaltet den Namen des zugeordneten optischen Attributs.
+\item[locclass] beinhaltet den Namen der zugeordneten Lokationsklasse.
+\end{describeComponents}
+
+\begin{describeMethods}
+  \begin{defunc}{locref<}{\farg{locref-1} \farg{locref-2}}
+    Diese Funktion vergleicht die Ordnungszahlen zweier
+    Lokationsreferenzen und liefert \texttt{t} oder \texttt{nil}.
+  \end{defunc}
+
+  \begin{defmethod}{markup-object}{\farg{location-reference} \farg{markup}
+      \farg{context} \farg{env-stack}}
+    Implementiert die Ausgabeformatierung für eine Lokationsreferenz.
+  \end{defmethod}
+\end{describeMethods}
+
+
+
+\begin{describeClass}{indexentry}
+  Diese Klasse enthält alle Informationen über einen Indexeintrag. Sie
+  stellt einen Container dar, der beim Einlesen eines Indexeintrags
+  initialisiert wird.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[main-key] enthält den Hauptschlüssel des Indexeintrags.
+\item[merge-key] ist der Schlüssel zum Mischen zweier Einträge.
+\item[sort-key] ist der Sortierschlüssel.
+\item[print-key] ist der Schlüssel, der für die Ausgabe verwendet wird.
+\item[locrefs] sind die dem Indexeintrag zugeordneten Lokationsreferenzen.
+\end{describeComponents}
+
+\begin{describeMethods}
+  \begin{defunc}{process-indexentry}{\farg{indexentry}}
+    Sortiert und mischt alle Lokationsreferenzen dieses Indexeintrags
+    und bildet Bereiche aus aufeinanderfolgenden Referenzen.
+
+    Diese Verarbeitung gliedert sich in verschiedene Unterprozesse.
+    Die Funktionsweise folgt der in
+    Abschnitt~\ref{sec:locrefmischung} beschriebenen Vorgehensweise.
+    Die Lokationsreferenzen werden in Gruppen unterteilt, die zu
+    verschiedenen Lokationsklassen gehören. Anschließend wird jede
+    Gruppe gemäß der Regeln des separate- \bzw mixed-sorting
+    unterteilt. Es folgt die Anwendung der \texttt{merge-to}-Regeln
+    und eine Sortierung gemäß der Totalen Ordnung. Zuletzt werden die
+    Bereiche gebildet.
+  \end{defunc}
+
+  \begin{defmethod}{markup-object}{\farg{indexentry} \farg{markup-list}
+      \farg{context-list} \farg{env-stack}}
+    Implementiert die Ausgabeformatierung für einen Indexeintrag.
+  \end{defmethod}
+\end{describeMethods}
+
+
+
+\begin{describeClass}{index}
+  Diese Klasse ist ein Container für die Liste der Indexeinträge.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[entries] enthält die Liste der Indexeinträge.
+\end{describeComponents}
+
+\begin{describeMethods}
+  \begin{defunc}{indexentry=}{\farg{indexentry-1} \farg{indexentry-2}}
+    Überprüft, ob zwei Indexeinträge bezüglich ihres Mischschlüssels
+    gleich sind.
+  \end{defunc}
+
+  \begin{defunc}{merge-indexentry-to-index}{\farg{indexentry} \farg{index}}
+    Fügt einen Indexeintrag in den Index ein und vereinigt ihn
+    gegebenenfalls mit einem Indexeintrag gleichen Mischschlüssels.
+  \end{defunc}
+
+  \begin{defunc}{merge-indexentries}{\farg{indexentry-1} \farg{indexentry-2}}
+    Vereinigt zwei Indexeinträge miteinander, deren Mischschlüssel
+    gleich sind und liefert einen neuen Indexeintrag (\emph{siehe
+      Abschnitt~\ref{sec:stwmischung}}).
+  \end{defunc}
+
+  \begin{defmethod}{markup-object}{\farg{index} \farg{markup-list}
+      \farg{context-list} \farg{env-stack}}
+    Implementiert die Ausgabeformatierung für einen Index.
+  \end{defmethod}
+
+  \begin{defunc}{process-index}{\farg{indexclass}}
+    Verarbeitet den zur Indexklasse \farg{indexclass} gehörenden Index.
+  \end{defunc}
+\end{describeMethods}
+
+
+
+\begin{describeClass}{markup}
+  Diese Klasse definiert die Markup-Struktur für die
+  Ausgabeformatierung. Sie definiert Ausgabeprimitive für die
+  \texttt{markup-object}-Methoden und behandelt die Verwaltung
+  der geöffneten Umgebungen mittels eines Stacks.
+\end{describeClass}
+
+\begin{describeComponents}
+\item[\ ] sämtliche Komponenten wie in Abschnitt~\ref{sec:travAusgabebaum}
+  beschrieben.
+\end{describeComponents}
+
+\begin{describeMethods}
+  \begin{defgen}{markup-object}{\farg{index} \farg{markup}
+      \farg{context} \farg{env-stack}}%
+    Diese generische Funktion wird verwendet, um die Komponenten, die
+    bei der Ausgabeformatierung beteiligt sind, mit einer
+    einheitlichen Schnittstelle zu versehen.  Jede Komponente benötigt
+    eine an die jeweilige Klasse gebundene Methode, fügt ihre
+    Ausgabekommandos in den Ausgabestrom hinzu und legt die
+    Ausgabestrings für das Schließen von Formatierungsumgebungen auf
+    den Environment-Stack.  Dieser Stack wird dann von der Funktion
+    \texttt{close-environment} gegebenenfalls entleert.
+
+    Wir beschreiben nun den Rumpf der
+    \texttt{markup-object}-Methoden.  Die Punktnotation
+    \emph{list}.\textsf{komp} liefert die Komponente \textsf{komp} des
+    ersten Elements der Liste \emph{list}.
+    \begin{algorithm}
+      \FUNC \texttt{markup-object} (\F{object markup-list context-list
+        env-stack})\\
+      \BEGIN\\
+        \>\F{object-list} := \flqq hole \F{object-list} aus
+        \F{object}\frqq\\%%
+        \>\WHILE \=(\F{context-list}.\textsf{value} ==
+        \F{object-list}.\textsf{value}) \OR\\%%
+        \>\>\>(\F{markup-list}.\textsf{typ} == \emph{aktiv})\\%%
+        \>\>\F{counter}++\\%%
+        \>\>\ACTION{\textsl{entferne erste Elemente aus}
+          \F{object-list
+          markup-list context-list}}\\%%
+        \>\ENDWHILE\\%%
+        \>\F{env-stack} := %%
+        \F{close-environments}(\F{env-stack} \F{counter})\\%%
+        \>\WHILE \NOT\ \F{empty}(\F{object-list})\\%%
+        \>\>\F{mprint}(\F{markup-list}.\textsf{pre-node})\\%%
+        \>\>\F{mprint}(\F{markup-list}.\textsf{pre-layer})\\%%
+        \>\>\ACTION{drucke nun \F{object-list}.\textsf{value} \bzw
+          \F{markup-list}.\textsf{repetition-symbol}}\\%%
+        \>\>\F{mprint}(\F{markup-list}.\textsf{post-layer})\\%%
+
+        \>\>\F{push}(\=$\{$\F{markup-list}.\textsf{post-node},
+        \ACTION{\textsl{evtl. auch} \textsf{optional-post-layer}}$\}$,\\%%
+          \>\>\>\F{env-stack})\\%%
+          \>\>\ACTION{\textsl{entnehme erstes Element aus
+              \F{object-list} und
+            \F{markup-list}}}\\%%
+        \>\ENDWHILE\\%%
+        \>\ACTION{\textsl bearbeite Unterelemente von \F{object}}\\%%
+        \ENDFUNC
+    \end{algorithm}
+  \end{defgen}
+
+
+  \begin{defunc}{close-environments}{\farg{env-stack}\,
+      \texttt{\&optional} \farg{stack-length}}%%
+    Schließt die auf dem Stack geöffneten Umgebungen der
+    Ausgabeformatierung bis der Stack nur noch die Tiefe
+    \farg{stack-length} besitzt. Fehlt das optionale Argument so
+    werden alle Umgebungen geschlossen. Der Stack wird in den
+    \texttt{markup-object}-Methoden aufgebaut.
+  \end{defunc}
+
+  \begin{defgen}{mprint}{\farg{object}}
+    Definiert eine generische Funktion für Ausgabeprimitive wie
+    Strings und Zahlen. Entsprechende Methoden sind dafür
+    implementiert.
+  \end{defgen}
+
+\end{describeMethods}
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: "makeindex4.tex"
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:52  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.14  1995/10/06  23:05:14  kehr
+%% Korrektur nach der Durchsicht von Karin.
+%%
+%% Revision 1.13  1995/09/22  01:12:03  kehr
+%% Zweite Überarbeitung nch der inhaltlichen Korrektur. Außerdem habe
+%% ich das Logo zu MacIndex verändert. Hat jetzt mehr pepp !
+%%
+%% Revision 1.12  1995/09/21  00:05:43  kehr
+%% Erste Veränderungen nach der inhaltlichen Korrektur durch Joachim am
+%% 20.Sep.95. Fast alle Dateien d'sind davon betroffen. Außerdem sind noch zwei
+%% neue Abbildungen hinzugekommen.
+%%
+%% Revision 1.11  1995/09/06  18:52:49  kehr
+%% Made final changes before giving for correction.
+%%
+%% Revision 1.10  1995/08/28  18:08:14  kehr
+%% Neue Einspielung der xfig-Dateien
+%%
+%% Revision 1.9  1995/07/04  09:46:29  kehr
+%% Weitere Änderungen. Bin aber fast fertig.
+%%
+%% Revision 1.8  1995/07/04  00:46:51  kehr
+%% Bald ist's soweit ;-)
+%% Ich habe heute die generelle Umstrukturierung vorgenommen und einige
+%% Teile herausgeschmissen. Die Indexverarbeitung muß noch überarbeitet werden.
+%%
+%% Revision 1.7  1995/06/18  19:10:37  kehr
+%% Lokationsverarbeitung geblickt !;-)
+%%
+%% Revision 1.6  1995/06/17  20:36:29  kehr
+%% Habe die Lokationsreferenzverarbeitung umstrukturiert und besser
+%% definiert. DIe Buchstabengruppen müssen noch beendet werden und der
+%% Algorithmus zum Mischen und Sortieren der Lokationsreferenzen muß
+%% fertiggestellt werden.
+%%
+%% Revision 1.5  1995/06/15  12:58:41  kehr
+%% Erweiterung der Ausgabematrix und kleinere Änderungen am Layot.
+%% Überprüfe jetzt das ganze Dokument, um mich auf die beiden letzten
+%% Probleme einzulesen.
+%%
+%% Revision 1.4  1995/06/13  21:55:15  kehr
+%% Habe heute die Formulierung des Algorithmus controlled-jojo-traverse
+%% fertiggestellt. Desweiteren Fehler in der Anwendung der \lindent-Umgebung
+%% gefunden. Ich muß noch die Matrix für die Definition der Ausgabekommandos
+%% und der Angabe im Indexstyle entwickeln.
+%%
+%% Revision 1.3  1995/06/09  20:59:50  kehr
+%% Superviel gemacht heute ;-)
+%%
+%% Revision 1.2  1995/06/08  20:19:47  kehr
+%% Bibliographie erweitert.
+%%
+%% Revision 1.1  1995/06/08  11:25:58  kehr
+%% Implementierungsteil angefangen.
+%%
+%%
+

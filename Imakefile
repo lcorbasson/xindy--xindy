@@ -1,0 +1,37 @@
+XCOMM $Id$
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Top Imakefile for `xindy' project
+ *
+ * (history at end)
+ */
+
+#include <Project.imk>
+
+ProjectTop()
+
+/*
+ * The project now consists of the following modules:
+ *
+ *     Report		The project report
+ *     Presentation     A set of presentation slides
+ */
+
+/* ATTN: modules are made in list order! */
+BuildProjectModules(Report Presentation)
+
+CVSAdd(ChangeLog Imakefile)
+
+/*======================================================================
+ *
+ * $Log$
+ * Revision 1.1  1995/10/16 17:31:33  kehr
+ * Initial checkin of Report and Presentation.
+ *
+
+ * ------------------------------------------------------------
+ * Local Variables:
+ * mode: Indented-Text
+ * End:
+ */

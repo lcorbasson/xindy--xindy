@@ -1,0 +1,105 @@
+%%
+%% $Id$
+%%
+%% Document: Hauptdokument des `makeindex4'-Projektes
+%%
+
+\input{prefix}
+
+\input{title}
+\newpage
+
+\pagenumbering{roman}
+
+\tableofcontents
+
+\newpage
+\listoffigures
+\listoftables
+
+%% \input{abstract}
+
+\newpage
+\pagenumbering{arabic}
+
+\input{einleitung}
+
+\input{analyse}
+
+\input{modellentwurf}
+
+\input{indexverarbeitung}
+
+\input{implementierung}
+
+\input{zusammenfassung}
+
+\input{glossar}
+
+\bibliography{bibliographie}
+%%\bibliographystyle{apalike}
+\bibliographystyle{alpha}
+
+\input{postfix}
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-command-default: "LaTeX"
+%% TeX-master: t
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:59  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.13  1995/10/06  23:05:15  kehr
+%% Korrektur nach der Durchsicht von Karin.
+%%
+%% Revision 1.12  1995/09/06  18:52:50  kehr
+%% Made final changes before giving for correction.
+%%
+%% Revision 1.11  1995/08/28  18:08:15  kehr
+%% Neue Einspielung der xfig-Dateien
+%%
+%% Revision 1.10  1995/06/08  11:25:58  kehr
+%% Implementierungsteil angefangen.
+%%
+%% Revision 1.9  1995/06/06  17:51:02  kehr
+%% Commit um die Änderungen festzuhalten.
+%%
+%% Revision 1.8  1995/05/31  19:18:52  kehr
+%% Fertigstellung des Analyse-Abschnitts (Hoffentlich ;-).
+%%
+%% Revision 1.7  1995/05/31  16:14:58  kehr
+%% Dokumant- und Sortierungsalphabet entwickelt. Makefileänderungen und
+%% Styleveränderungen.
+%%
+%% Revision 1.6  1995/05/29  00:22:43  kehr
+%% Die Einleitung ist somweit fertig und die Analyse muß jetzt noch
+%% beendet werden. Mir fehlt da noch eine vernünftige Idde für die
+%% Alphabete und deren Definitionen.
+%%
+%% Revision 1.5  1995/05/28  21:37:10  kehr
+%% Neue überarbeitete Version.
+%% Inhaltliche Änderungen:
+%%   Glossar hinzugenommen. Einleitung mit Datenflußgraph. Kleinere
+%%   Änderungen an der Beschreibung des International Makeindex.
+%% Systemänderungen:
+%%   Makefile-Änderungen, Stiländerungen, Titelseite
+%%
+%% Revision 1.4  1995/05/05  22:25:03  kehr
+%% Geänderte Struktur mit einleitung.tex
+%% Zwischenspeicherung vor der Umstellung der Definitionen
+%%
+%% Revision 1.3  1995/04/30  16:14:10  kehr
+%% Trennung in Einleitung, Einführung und Analyse. Evtl. sollten die Filenamen
+%% entsprechend anepaßt werden. Darüberhinaus Analyse weitergeführt.
+%%
+%% Revision 1.2  1995/04/25  01:09:39  kehr
+%% Analyse und Modellentwurf weitergebracht.
+%%
+%% Revision 1.1  1995/04/22  21:05:41  kehr
+%% Erstes Setup der Studienarbeit des Makeindex4-Projektes
+%%

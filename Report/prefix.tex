@@ -1,0 +1,181 @@
+%%
+%% $Id$
+%%
+%% Document:
+%%
+
+
+%%\documentclass[11pt]{article}
+\documentclass[11pt]{report}
+
+\usepackage{oldgerm}
+\usepackage{a4}
+\usepackage{xspace}
+\usepackage{afterpage}
+\usepackage{theorem}
+\usepackage{fancyheadings}
+\usepackage{ifthen}
+%%\usepackage{shortvrb}
+\usepackage[hang,bf,small]{caption}
+
+%\usepackage{multicol}
+
+\usepackage{epsfig}
+
+% its absolutely necessary to include german AFTER epsfig
+\usepackage{german}
+\usepackage[isolatin]{inputenc}
+
+
+%% These are my styles
+
+%% Need to set \ReportMode=1 because of the incompatibilities with
+%% foil.cls. See stdwrk.sty for further details.
+
+\newcommand{\ReportMode}{1}
+\usepackage{stdwrk}
+
+\usepackage{xindy}
+\usepackage{figsect}
+\usepackage{environments}
+\usepackage[help,level4]{tableofcontents}
+\usepackage[help,ParagraphLikeSections]{sectioning}
+\usepackage{footnotelist}
+
+
+%%%%% Here comes stuff from Guy Steele..
+
+%%\makeatletter
+%%% The \null in the following is intended to suppress hyphenation
+%%% in code words not already containing hyphens.  The \leavevmode
+%%% is needed to prevent vertical mode from swallowing the \null.
+%%%%%\def\cd#1{\leavevmode{\cf \null#1}}
+%%\def\cd{\leavevmode\begingroup\cf\@cd}
+%%\def\@cd#1{\null#1\endgroup}
+%%\def\cf{\ttfamily\frenchspacing}
+%%\makeatother
+
+%%%%% stuff from Guy Steele ends here.
+
+
+%\makeindex
+
+\input{hyphenations.tex}
+\input{words.tex}
+
+\tolerance=1000
+\emergencystretch=20pt
+%\parskip=6pt
+
+\overfullrule 2mm
+
+%
+% aktivieren der fancyheadings
+%
+\pagestyle{fancy}
+\newcommand{\titleshape}[1]{\textbf{#1}}
+%
+% falls die Headings über die Marginalien hinausragen sollen
+%
+%\addtolength{\headwidth}{\marginparsep}
+%\addtolength{\headwidth}{\marginparwidth}
+%
+% Korrektur um overfull vbox zu unterbinden
+%
+\addtolength{\headheight}{2pt}
+%
+% section und subsection im Kopf redefinieren
+%
+\renewcommand{\chaptermark}[1]{\markright{\textbf{\thechapter}\ %
+      \titleshape{#1}}}
+\renewcommand{\sectionmark}[1]{\markright{\textbf{\thesection}\ %
+      \titleshape{#1}}}
+%
+% linken und rechten Kopf definieren
+%
+\lhead{\fancyplain{}{\let\uppercase\relax\bfseries\rightmark}}
+\rhead{\fancyplain{}{\bfseries\thepage}}
+\cfoot{}
+
+%% Aktivieren des Pipe-Zeichens als Abbrev für \verb|...|
+%% Dies muß an den gewünschten Stellen im Text geschehen, da eine
+%% globale Definiton nicht möglich ist.
+%\MakeShortVerb{\|}
+%\DeleteShortVerb{\|}
+
+\overfullrule 1mm
+
+\begin{document}
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: "makeindex4.tex"
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:56  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.15  1995/10/06  23:05:18  kehr
+%% Korrektur nach der Durchsicht von Karin.
+%%
+%% Revision 1.14  1995/09/22  01:12:09  kehr
+%% Zweite Überarbeitung nch der inhaltlichen Korrektur. Außerdem habe
+%% ich das Logo zu MacIndex verändert. Hat jetzt mehr pepp !
+%%
+%% Revision 1.13  1995/09/21  00:05:48  kehr
+%% Erste Veränderungen nach der inhaltlichen Korrektur durch Joachim am
+%% 20.Sep.95. Fast alle Dateien d'sind davon betroffen. Außerdem sind noch zwei
+%% neue Abbildungen hinzugekommen.
+%%
+%% Revision 1.12  1995/09/06  18:52:53  kehr
+%% Made final changes before giving for correction.
+%%
+%% Revision 1.11  1995/07/04  00:46:55  kehr
+%% Bald ist's soweit ;-)
+%% Ich habe heute die generelle Umstrukturierung vorgenommen und einige
+%% Teile herausgeschmissen. Die Indexverarbeitung muß noch überarbeitet werden.
+%%
+%% Revision 1.10  1995/06/17  20:36:31  kehr
+%% Habe die Lokationsreferenzverarbeitung umstrukturiert und besser
+%% definiert. DIe Buchstabengruppen müssen noch beendet werden und der
+%% Algorithmus zum Mischen und Sortieren der Lokationsreferenzen muß
+%% fertiggestellt werden.
+%%
+%% Revision 1.9  1995/06/09  20:59:53  kehr
+%% Superviel gemacht heute ;-)
+%%
+%% Revision 1.8  1995/06/08  00:35:55  kehr
+%% Was soll ich bloß schreiben ???
+%%
+%% Revision 1.7  1995/06/07  20:59:14  kehr
+%% Und weiter am Modellentwurf. Spezifikation des Indexstyles vorerst
+%% fertig. Es fehlt noch die Eingabegrammatik.
+%%
+%% Revision 1.6  1995/06/06  17:51:03  kehr
+%% Commit um die Änderungen festzuhalten.
+%%
+%% Revision 1.5  1995/05/29  00:22:44  kehr
+%% Die Einleitung ist somweit fertig und die Analyse muß jetzt noch
+%% beendet werden. Mir fehlt da noch eine vernünftige Idde für die
+%% Alphabete und deren Definitionen.
+%%
+%% Revision 1.4  1995/05/28  21:37:12  kehr
+%% Neue überarbeitete Version.
+%% Inhaltliche Änderungen:
+%%   Glossar hinzugenommen. Einleitung mit Datenflußgraph. Kleinere
+%%   Änderungen an der Beschreibung des International Makeindex.
+%% Systemänderungen:
+%%   Makefile-Änderungen, Stiländerungen, Titelseite
+%%
+%% Revision 1.3  1995/05/05  22:25:06  kehr
+%% Geänderte Struktur mit einleitung.tex
+%% Zwischenspeicherung vor der Umstellung der Definitionen
+%%
+%% Revision 1.2  1995/04/25  01:09:41  kehr
+%% Analyse und Modellentwurf weitergebracht.
+%%
+%% Revision 1.1  1995/04/22  21:05:41  kehr
+%% Erstes Setup der Studienarbeit des Makeindex4-Projektes
+%%

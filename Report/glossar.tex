@@ -1,0 +1,199 @@
+%%
+%% $Id$
+%%
+%% Document: Glossar: `makeindex4' - Projekt
+%%
+
+
+\chapter{Glossar}
+\label{sec:glossar}
+
+\begin{tfigure}%
+  {Index mit Bezeichnung der Komponenten eines Indexeintrags}%
+  {fig:glo:1}%
+  \centering
+  \begin{minipage}{8cm}
+    \begin{mkindex}
+      \idx Bäume
+      \subidx AVL, 3.3
+      \subidx natürliche, 3.1
+      \idx
+      \fbox{%
+        \fbox{Suche, binäre}\,\footnote{Stichwort},%
+        \fbox{%
+          \fbox{2.2}\,\footnote{Strukturreferenz} %
+          \fbox{\emph{f.}}\,\footnote{Lokationsattribut}%
+          }\,\footnote{Attributierte Strukturreferenz}\,%
+        }\,\footnote{Indexeintrag}
+      \subidx sequentielle, 2.1
+    \end{mkindex}
+  \end{minipage}
+\end{tfigure}
+
+
+\begin{description}
+
+\item[Attributierte Strukturreferenz] \mbox{}\\ Strukturreferenz, der
+  ein zusätzliches Attribut zugeordnet ist. Die Lokationsreferenz
+  \quasi{35\emph{f.}}, die auf Seite 35 und die folgenden Seiten
+  verweist, besteht aus der Strukturreferenz \Strukeins{35} und dem
+  Attribut \quasi{\emph{f.}}.
+
+\item[Basisalphabet] \mbox{}\\ Teilmenge eines Dokumentalphabets.
+  \emph{Siehe auch Definition~\ref{def:basisalphabet},
+    S.\,\pageref{def:basisalphabet}}.
+
+
+\item[Dokumentalphabet] \mbox{}\\ Gemeinsames zugrundeliegendes
+  Alphabet des Textsatzsystems und des Indexsystems. Üblicherweise
+  ASCII, ISO-Latin--Familie oder Unicode. \emph{Siehe auch
+    Definition~\ref{def:dokumentalphabet},
+    S.\,\pageref{def:dokumentalphabet}}.
+
+\item[Dokumentwissen] \mbox{}\\ Bezeichnet Informationen, die in der
+  Struktur des Dokumentes abgelegt sind und dem Indexierungssystem zur
+  korrekten Bildung von Lokationsbereichen mitgeteilt werden müssen.
+  \emph{Siehe Abschnitt~\ref{sec:nachfolger}}.
+
+\item[Hierarchieebene] \mbox{}\\ Bezeichnet eine einzelne Ebene eines
+  hierarchisch untergliederten Stichworts. Das Stichwort
+  \Hierzwei{Suche}{binäre} besteht aus den Hierarchieebenen
+  \quasi{Suche} und \quasi{binäre}.
+
+\item[Index] \mbox{}\\ Bezeichnet ein Stichwortverzeichnis im üblichen
+  Sinne. Es besteht aus einer Liste von sortierten Indexeinträgen.
+
+\item[Indexeintrag] \mbox{}\\ Besteht aus einem Stichwort und einer
+  Menge von Lokationsreferenzen. \emph{Siehe auch
+    Abbildung~\ref{fig:glo:1}}.
+
+\item[Kategorieattribut] \mbox{}\\ Lokationsreferenzattribut, welches
+  zu Kategorisierungszwecken verwendet wird und vom Textsatzsystem zur
+  unterschiedlichen optischen Hervorhebung von Lokationsreferenzen
+  verwendet werden kann. \emph{Siehe auch
+    Abschnitt~\ref{sec:kategorieattribute}}.
+
+\item[Komponententyp] \mbox{}\\ Bezeichnet den Typ einer
+  Strukturkomponente.
+
+\item[Lokation] \mbox{}\\ Strukturelles Objekt \bzw Element eines
+  Textes. Beispiele für solche Lokationen sind \emph{Seiten},
+  \emph{Kapitel}, \emph{Abschnitte}, \emph{Unterabschnitte},
+  \emph{Anhänge} \etc{}\,. Jede Lokation kann in einem Dokument nur
+  ein einziges Mal auftreten und muß eindeutig auf"|findbar sein.
+
+\item[Lokationsreferenz] \mbox{}\\ Eindeutiger Bezeichner, der einer
+  Lokation zugeordnet ist. Die Lokationsreferenz \quasi{Seite 51}
+  verweist auf eindeutige Weise auf bestimmtes Objekt des Dokuments,
+  eben die 51.\ Seite.
+
+  %Im \mkxvier{}--System wird eine Lokationsreferenz als
+  %\emph{Attributierte Strukturreferenz} behandelt.
+
+\item[Permutierter Index] \mbox{}\\ Enhält zu jedem hierarchisch
+  gegliederten Stichwort wie \Hierzwei{Suche}{binäre} auch
+  Permutationen der Stichworthierarchien wie \zB
+  \Hierzwei{binäre}{Suche}. \emph{Siehe dazu auch
+    Abschnitt~\ref{index:permutierter}}\,.
+
+\item[Referenz] ist gleichbedeutend mit \emph{Lokationsreferenz}.
+
+\item[Sortieralphabet] \mbox{}\\ Definiert ein Alphabet von Worten
+  über einem Basisalphabet. Ein solches Alphabet bestimmt die
+  Sortierordnung innerhalb von Strukturkomponenten einer Lokationsreferenz.
+  \emph{Siehe auch Definition~\ref{def:sortierungsalphabet},
+    S.\,\pageref{def:sortierungsalphabet}}.
+
+\item[Stichwort] \mbox{}\\ Begriff, auf dessen Vorkommen innerhalb
+  eines Textes verwiesen werden soll. Ein strukturierter
+  Begriff kann sich aus mehreren Ebenen zusammensetzen. Im
+  Beispiel~\ref{fig:glo:1} haben wir die Stichwörter
+  \Hierzwei{Bäume}{AVL}, \Hierzwei{Bäume}{natürliche} und
+  \Hierzwei{Suche}{binäre}. Wir verstehen hier als Stichwort alle
+  zusammengehörenden Ebenen eines Begriffs.
+
+\item[Strukturkomponente] \mbox{}\\ Teilkomponente der Struktur einer
+  Lokationsreferenz. Die Lokationsreferenz \Strukdrei{3}{.}{1}{.}{2}
+  besteht aus den Strukturkomponenten \Strukebene{3}, \Strukebene{1} und
+  \Strukebene{2}.
+
+\item[Strukturreferenz] \mbox{}\\ Beschreibt die strukturelle
+  Zusammensetzung einer Lokationsreferenz. Die Struktur einer Referenz
+  ergibt sich aus der Folge der Strukturkomponenten und der Trennzeichen
+  zwischen den Ebenen. Die Lokation \mbox{\quasi{Kapitel--1}} besteht
+  aus der 1.\ Ebene \quasi{Kapitel}, dem Trennzeichen \quasi{--} und
+  der 2.\ Ebene \quasi{1}. Wir notieren solche Strukturreferenzen als
+  \Strukzwei{Kapitel}{--}{1}. Weitere Beispiele sind der Abschnitt
+  \Strukdrei{1}{.}{2}{.}{3} oder die Seite \Strukeins{23}.
+
+\end{description}
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: "makeindex4.tex"
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:51  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.13  1995/10/06  23:05:13  kehr
+%% Korrektur nach der Durchsicht von Karin.
+%%
+%% Revision 1.12  1995/09/22  01:12:02  kehr
+%% Zweite Überarbeitung nch der inhaltlichen Korrektur. Außerdem habe
+%% ich das Logo zu MacIndex verändert. Hat jetzt mehr pepp !
+%%
+%% Revision 1.11  1995/09/21  00:05:42  kehr
+%% Erste Veränderungen nach der inhaltlichen Korrektur durch Joachim am
+%% 20.Sep.95. Fast alle Dateien d'sind davon betroffen. Außerdem sind noch zwei
+%% neue Abbildungen hinzugekommen.
+%%
+%% Revision 1.10  1995/08/28  18:08:13  kehr
+%% Neue Einspielung der xfig-Dateien
+%%
+%% Revision 1.9  1995/07/04  00:46:50  kehr
+%% Bald ist's soweit ;-)
+%% Ich habe heute die generelle Umstrukturierung vorgenommen und einige
+%% Teile herausgeschmissen. Die Indexverarbeitung muß noch überarbeitet werden.
+%%
+%% Revision 1.8  1995/06/17  20:36:29  kehr
+%% Habe die Lokationsreferenzverarbeitung umstrukturiert und besser
+%% definiert. DIe Buchstabengruppen müssen noch beendet werden und der
+%% Algorithmus zum Mischen und Sortieren der Lokationsreferenzen muß
+%% fertiggestellt werden.
+%%
+%% Revision 1.7  1995/06/09  20:59:49  kehr
+%% Superviel gemacht heute ;-)
+%%
+%% Revision 1.6  1995/06/08  20:19:47  kehr
+%% Bibliographie erweitert.
+%%
+%% Revision 1.5  1995/06/07  20:59:12  kehr
+%% Und weiter am Modellentwurf. Spezifikation des Indexstyles vorerst
+%% fertig. Es fehlt noch die Eingabegrammatik.
+%%
+%% Revision 1.4  1995/05/31  19:18:51  kehr
+%% Fertigstellung des Analyse-Abschnitts (Hoffentlich ;-).
+%%
+%% Revision 1.3  1995/05/31  16:14:57  kehr
+%% Dokumant- und Sortierungsalphabet entwickelt. Makefileänderungen und
+%% Styleveränderungen.
+%%
+%% Revision 1.2  1995/05/29  00:22:43  kehr
+%% Die Einleitung ist somweit fertig und die Analyse muß jetzt noch
+%% beendet werden. Mir fehlt da noch eine vernünftige Idde für die
+%% Alphabete und deren Definitionen.
+%%
+% Revision 1.1  1995/05/28  21:37:10  kehr
+% Neue überarbeitete Version.
+% Inhaltliche Änderungen:
+%   Glossar hinzugenommen. Einleitung mit Datenflußgraph. Kleinere
+%   Änderungen an der Beschreibung des International Makeindex.
+% Systemänderungen:
+%   Makefile-Änderungen, Stiländerungen, Titelseite
+%
+%%
+

@@ -1,0 +1,51 @@
+%%
+%% $Id$
+%%
+%% LaTeX-Style: bslash
+%%
+%% Styledescription:
+%%   Definiert das Macro \bslash um auch \texttt{\bslash...} zu
+%%   ermöglichen. Es ist ein einfacher Auszug aus dem entsprechenden
+%%   Teil im doc.dtx des LaTeX2e-Sources. Dort steht auch, daß man bei
+%%   moving arguments evtl. ein \protect voranstellen muß.
+%%
+
+\NeedsTeXFormat{LaTeX2e}[1994/01/01]
+\ProvidesPackage{bslash}[1995/07/01 bslash RK]
+
+\makeatletter
+% \begin{macro}{\bslash}
+% \changes{v1.7a}{1992/02/26}{Moved \cmd\bslash documentation to `user
+%                           interface' part}
+%    We start a new group in which to hide the alteration of
+%    |\catcode|$\,$s, and make \verb+|+ introduce commands,
+%    whilst |\| becomes an `other' character.
+%
+%    \begin{macrocode}
+{\catcode`\|=\z@ \catcode`\\=12
+%    \end{macrocode}
+%    Now we are able to define |\bslash| (globally) to generate a
+%    backslash of |\catcode| `other'.  We then close this group,
+%    restoring original |\catcode|$\,$s.
+%    \SpecialEscapechar{\|}
+%    \begin{macrocode}
+|gdef|bslash{\}}
+%    \end{macrocode}
+% \end{macro}
+\makeatother
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:48  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.1  1995/09/06  18:52:47  kehr
+%% Made final changes before giving for correction.
+%%
+

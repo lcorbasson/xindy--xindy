@@ -1,0 +1,241 @@
+%%
+%% $Id$
+%%
+%% This file contains LaTeX-macros that are needed in the
+%% noweb-sources AND in the formal project description. To be strictly
+%% in the naming scheme we refer to them only by LaTeX-macros.
+%%
+%%
+
+%%
+%% Deutsche Abkürzungen
+%%
+\newcommand{\zB}{z.B.\xspace}
+\newcommand{\bzgl}{bzgl.\xspace}
+\newcommand{\dhei}{d.h.\xspace}
+\newcommand{\ua}{u.a.\xspace}
+\newcommand{\uU}{u.U.\xspace}
+\newcommand{\oa}{o.a.\xspace}
+\newcommand{\usw}{usw.\xspace}
+\newcommand{\bzw}{bzw.\xspace}
+\newcommand{\etc}{etc.\xspace}
+\newcommand{\so}{s.o.\xspace}
+
+%%
+%% English Shortcuts
+%%
+\newcommand{\ie}{i.e.\xspace}
+\newcommand{\eg}{e.g.\xspace}
+
+
+\newcommand{\emdash}{--}
+
+\newcommand{\indexgeneric}[3]{%
+  \mbox{{\mbox{\textit{#1}}%
+      $^{\mbox{\textit{\tiny #2}}}%
+       _{\mbox{\textit{\tiny #3}}}$}\/}}
+
+\newcommand{\itindex}   [2]{{\indexgeneric{#1}{}{#2}}}
+\newcommand{\itindexlst}[1]{{\indexgeneric{#1}{}{lst}}}
+\newcommand{\isindex}   [2]{{\indexgeneric{#1}{is}{#2}}}
+
+\newcommand{\clsname}{\textit{clsname\/}\xspace}
+\newcommand{\hierSet}{\itindex{hier}{set}\xspace}
+\newcommand{\hier}{\textit{hier\/}\xspace}
+\newcommand{\idxclsSet}{\itindex{idxcls}{set}\xspace}
+\newcommand{\idxcls}{\textit{idxcls\/}\xspace}
+\newcommand{\idxentSet}{\itindex{idxent}{set}\xspace}
+\newcommand{\idxent}{\textit{idxent\/}\xspace}
+\newcommand{\idxname}{\textit{idxname\/}\xspace}
+\newcommand{\idxstyle}{\textit{idxsty\/}\xspace}
+\newcommand{\indeX}{\textit{index\/}\xspace}
+\newcommand{\isbasetypes}{\isindex{Basetypes}{}\xspace}
+\newcommand{\isbasetype}{\isindex{basetype}{}\xspace}
+\newcommand{\isbasetypeSet}{\isindex{basetype}{set}\xspace}
+\newcommand{\isidxclsSet}{\isindex{idxcls}{set}\xspace}
+\newcommand{\isidxclsname}{{\isindex{idxclsname}{}\/}\xspace}
+\newcommand{\isidxcls}{{\isindex{idxcls}{}\/}\xspace}
+\newcommand{\isidxgram}{{\isindex{idxgram}{}\/}\xspace}
+\newcommand{\isidxtagSet}{{\isindex{idxtag}{lst}\/}\xspace}
+\newcommand{\islaystrucSet}{\isindex{laystruc}{set}\xspace}
+\newcommand{\islaystruc}{\isindex{laystruc}{}\xspace}
+\newcommand{\islocclsSet}{\isindex{loccls}{set}\xspace}
+\newcommand{\islocclsname}{\isindex{locclsname}{}\xspace}
+\newcommand{\isloccls}{\isindex{loccls}{}\xspace}
+\newcommand{\isloclsortorderSet}{\isindex{sortorder}{lst}\xspace}
+\newcommand{\islocrefruleSet}{\isindex{locrefrule}{set}\xspace}
+\newcommand{\islocrefrule}{\isindex{locrefrule}{}\xspace}
+\newcommand{\ismapruleSet}{{\isindex{maprule}{lst}\/}\xspace}
+\newcommand{\ismaprule}{{\isindex{maprule}{}\/}\xspace}
+\newcommand{\ispattern}{{\isindex{pattern}{}\/}\xspace}
+\newcommand{\isreplace}{{\isindex{replace}{}\/}\xspace}
+\newcommand{\isruletypes}{{\isindex{Ruletypes}{}\/}\xspace}
+\newcommand{\isruletype}{{\isindex{ruletype}{}\/}\xspace}
+\newcommand{\issep}{\isindex{separator}{}\xspace}
+\newcommand{\keyK}{\textit{k\_key\/}\xspace}
+\newcommand{\keyM}{\textit{m\_key\/}\xspace}
+\newcommand{\keyP}{\textit{p\_key\/}\xspace}
+\newcommand{\keyS}{\textit{s\_key\/}\xspace}
+\newcommand{\keyword}{\textit{keyword\/}\xspace}
+\newcommand{\layerSet}{\itindex{layer}{set}\xspace}
+\newcommand{\layer}{\textit{layer\/}\xspace}
+\newcommand{\laystr}{\textit{laystr\/}\xspace}
+\newcommand{\lettergrpSet}{\itindex{keywordgrp}{set}\xspace}
+\newcommand{\lettergrp}{\textit{keywordgrp\/}\xspace}
+\newcommand{\locclsSet}{\itindex{loccls}{set}\xspace}
+\newcommand{\loccls}{\textit{loccls\/}\xspace}
+\newcommand{\loclrulesSet}{\itindex{locclrules}{set}\xspace}
+\newcommand{\loclsortorderSet}{\itindex{locclsrtord}{set}\xspace}
+\newcommand{\loclstrucSet}{\itindex{locclstruc}{set}\xspace}
+\newcommand{\locrefSet}{\itindexlst{locref}\xspace}
+\newcommand{\locrefrule}{\textit{locrefrule\/}\xspace}
+\newcommand{\locref}{\textit{locref\/}\xspace}
+\newcommand{\markup}{\textit{markup\/}\xspace}
+\newcommand{\mergeruleSet}{\itindex{mergerule}{set}\xspace}
+\newcommand{\numberarg}{\textit{number\/}\xspace}
+\newcommand{\optattrSet}{\itindex{catattr}{set}\xspace}
+\newcommand{\optattr}{\textit{catattr\/}\xspace}
+\newcommand{\ordnum}{\textit{ordnum\/}\xspace}
+\newcommand{\outputspec}{\textit{outputspec\/}\xspace}
+\newcommand{\range}{\textit{range\/}\xspace}
+\newcommand{\refargSet}{\itindexlst{refarg}\xspace}
+\newcommand{\refarg}{\textit{refarg\/}\xspace}
+\newcommand{\refattrSet}{\itindex{refattr}{set}\xspace}
+\newcommand{\refattrtype}{\textit{ratype\/}\xspace}
+\newcommand{\refattr}{\textit{refattr\/}\xspace}
+\newcommand{\ruleargSet}{\itindex{rulearg}{set}\xspace}
+\newcommand{\rulearg}{\textit{rulearg\/}\xspace}
+\newcommand{\rulename}{\textit{rulename\/}\xspace}
+\newcommand{\sepstr}{\textit{sepstr\/}\xspace}
+\newcommand{\sortruleSet}{\itindex{sortrule}{set}\xspace}
+\newcommand{\strref}{\textit{strucref\/}\xspace}
+\newcommand{\targetattrSet}{\itindex{tgtattr}{set}\xspace}
+\newcommand{\targetattr}{\textit{tgtattr\/}\xspace}
+\newcommand{\targethierSet}{\itindex{tgthier}{set}\xspace}
+\newcommand{\targethier}{\textit{tgthier\/}\xspace}
+
+
+%\newcommand{\mkxvier}{%
+%    {\sffamily makeinde%
+%    \kern-.1em\raisebox{-0.55ex}{x}%
+%    \kern-.3em\raisebox{0.07ex}{4}
+%    }
+%}
+%\newcommand{\mkxvier}{%
+%  {\sffamily makeindex%
+%    \kern-.07em\raisebox{-0.55ex}%
+%    {\rmfamily\footnotesize\bfseries\slshape 4\/}}}
+%\newcommand{\MKXVIER}{%
+%  {\sffamily\Huge makeindex%
+%    \kern-.07em\raisebox{-0.55ex}%
+%    {\rmfamily\LARGE\bfseries\slshape 4}}}
+
+\newcommand{\mkxvier}{%%
+   \mbox{\normalfont%%
+        \textbf{\textsf{x\kern-0.7pt%%
+        \shortstack{{\scriptsize$\circ$}\\[-2pt]\i}%%
+        \kern-1pt%%
+        ndy}}}}
+\newcommand{\MKXVIER}{%
+   \mbox{\normalfont\Huge%%
+         \textbf{\textsf{x\shortstack{{\Large$\circ$}\\\i}ndy}}}}
+
+%\newcommand{\MKXVIER}{%
+%  {\Huge\bfseries%%
+%    M\kern-0.05em\raisebox{0.4ex}{\huge ac}Index}}
+%\newcommand{\mkxvier}{%
+%  {\bfseries M\kern-0.1em\raisebox{0.4ex}{\small ac}Index}}
+
+
+\newcommand{\Makeindex}{{\sffamily makeindex}}
+
+\newcommand{\LISP}{\textsc{Lisp}}
+
+
+\newcommand{\HRule}{\noindent\rule{\linewidth}{0.7mm}}
+\newcommand{\Hrule}{\noindent\rule{\textwidth}{0.8pt}}
+
+\newcommand{\cpp}{\mbox{\textsf{C}\kern-0.05em%
+    {\raisebox{0.20ex}{\scriptsize\texttt{++}}}}\xspace}
+
+\newcommand{\Braces}[1]{%
+  {\tt (}#1{\tt )}}
+
+\newcommand{\Hopen} {{\tt (}}
+\newcommand{\Hclose}{{\tt )}}
+\newcommand{\Hdelim}{{\tt :}}
+
+\newcommand{\Hiereins}[1]{%
+  \Hopen{}#1\Hclose}
+\newcommand{\Hierzwei}[2]{%
+  \Hopen{}#1\Hdelim#2\Hclose}
+\newcommand{\Hierdrei}[3]{%
+  \Hopen{}#1\Hdelim{}#2\Hdelim{}#3\Hclose}
+
+\newcommand{\Stopen} {{\tt (}}
+\newcommand{\Stclose}{{\tt )}}
+
+\newcommand{\Strukebene}[1]{\mbox{$[$#1$]$}}
+
+\newcommand{\Strukeins}[1]{%
+  \Stopen{}\Strukebene{#1}\Stclose{}}
+\newcommand{\Strukzwei}[3]{%
+  \Stopen{}\Strukebene{#1}#2\Strukebene{#3}\Stclose{}}
+\newcommand{\Strukdrei}[5]{%
+  \Stopen{}\Strukebene{#1}#2\Strukebene{#3}#4\Strukebene{#5}\Stclose{}}
+\newcommand{\Strukvier}[7]{%
+  \Stopen{}\Strukebene{#1}#2\Strukebene{#3}#4\Strukebene{#5}#6\Strukebene{#7}\Stclose{}}
+
+\newcommand{\Metaclass}[1]{#1{\tt *}}
+
+\newcommand{\Vwopen} {{\tt (}}
+\newcommand{\Vwclose}{{\tt )}}
+
+\newcommand{\VwRef}[2]{%
+  {\Vwopen{}{#1 $\rightarrow$ #2}\Vwclose}}
+
+\newcommand{\AttrStruk}[2]{%
+  {\tt (}#1{\tt ;}#2{\tt )}}
+
+\newcommand{\remark}[1]{%
+  \mbox{}\marginpar{\footnotesize\raggedright\hspace{0pt}\textsl{#1}}}
+
+\newcommand{\Range}[2]{%
+  \mbox{\mbox{$[$}\mbox{#1}\mbox{\normalfont:}\mbox{#2}\mbox{$]$}}}
+
+%\newcommand{\topfigrule}{\vspace*{2mm}\Hrule}
+
+\newcommand{\Lokklasse}[1]{{\normalfont\textbf{[}\texttt{#1}\textbf{]}}}
+
+%
+% Nicht zuviele Abbildungen alleine auf einer Seite
+%
+\renewcommand{\floatpagefraction}{0.8}
+%\renewcommand{\topfraction}{0.9}
+
+% Ich mag's lieber wenn's Literaturverzeichnis heißt
+\renewcommand{\refname}{\bibname}
+
+\makeatletter
+%  \renewcommand{\theenumi}  {\arabic{enumi}}
+  \renewcommand{\theenumii} {\roman{enumii}}
+%  \renewcommand{\theenumiii}{\arabic{enumiii}}
+%  \renewcommand{\labelenumi}  {\theenumi)}
+  \renewcommand{\labelenumii} {\theenumii.}
+%  \renewcommand{\labelenumiii}{\theenumi.\theenumii.\theenumiii)}
+\makeatother
+
+                                %
+% Für die Grammatikbeschreibungen
+%
+\newcommand{\opt}[1]{{\normalfont\{#1\}}}
+\newcommand{\argplus}[1]{{\normalfont(#1){\tt +}}}
+
+\newcommand{\Frage}[1]{\noindent\fbox{\emph{#1}}}
+
+\newcommand{\sym}[1]{\quasi{#1}}
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:

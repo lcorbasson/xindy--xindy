@@ -1,0 +1,46 @@
+#ifndef IMAKEFILE_INCLUDED			/* -*- Indented-Text -*- */
+#define IMAKEFILE_INCLUDED
+
+XCOMM ======================================================================
+XCOMM Imake module for Presentation slides of the xindy-project
+XCOMM $Id$
+
+/* history at end */
+
+#include <Project.imk>
+
+/* ============================================================
+ *
+ * rules
+ *
+ */
+
+
+setup:: bslash.sty
+setup:: environments.sty
+setup:: stdwrk.sty
+setup:: xindy.sty
+setup:: datenfluss.eps
+
+FileLinkTarget(bslash.sty,      ../Report/bslash.sty)
+FileLinkTarget(environments.sty,../Report/environments.sty)
+FileLinkTarget(stdwrk.sty,      ../Report/stdwrk.sty)
+FileLinkTarget(xindy.sty,       ../Report/xindy.sty)
+FileLinkTarget(datenfluss.eps,  ../Report/datenfluss.eps)
+
+
+TeXSpreadTarget(latex,xindy-slides,\
+	bslash.sty environments.sty xindy.sty stdwrk.sty datenfluss.eps)
+
+CVSAdd(xindy-slides.tex Imakefile)
+CVSCommentLeader("%% ", xindy-slides.tex)
+
+/* ============================================================
+
+$Log$
+Revision 1.1  1995/10/16 17:31:42  kehr
+Initial checkin of Report and Presentation.
+
+*/
+
+#endif  /* already imported */

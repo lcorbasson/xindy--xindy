@@ -1,0 +1,110 @@
+%%
+%% $Id$
+%%
+%% Document: Zusammenfassung des `makeindex4' - Projekts
+%%
+
+
+
+\chapter{Zusammenfassung}
+\label{sec:zusammenfassung}
+
+Das \mkxvier-System ist eine Weiterentwicklung der \textsf{makeindex}-
+und \textit{International MakeIndex}-Systeme.
+%%Dies soll durch die Namensgebung der Zahl vier im Index dargestellt
+%%werden, da die Vorgängerversionen unter den Bezeichnungen 2.x und 3.x
+%%verfügbar sind.
+
+Durch eine komplette theoretische Neuanalyse von Indexen konnten die
+Erfordernisse an ein Indexsystem überarbeitet werden. Die intensive
+Analyse von Lokationsklassen und deren Verarbeitungsprozesse sowie die
+neuartige universelle Ausgabeformatierung bilden den Hauptteil dieser
+Studienarbeit.
+
+%Daraus entstand nach einer datengerechten Modellierung das vorliegende
+%System, welches auch dem Bedarf nach höchstmöglicher
+%Konfigurierbarkeit gerecht wird. Es stellt dem Benutzer ein
+%leistungsfähiges Werkzeug zur Indexerstellung zur Verfügung, dessen
+%Grundstruktur möglichst wenig Einschränkungen unterliegt.
+
+Die Implementierungszeit konnte durch die vollständige theoretische
+Erarbeitung des Modells und der Verarbeitungsverfahren drastisch
+verkürzt werden.
+
+Während der Modellierung führte vor allen Dingen die semantische
+Bedeutung, die bestimmten Ausgabeformen von Lokationsreferenzen
+zugeordnet werden mußte, zu Problemen. Besondere Schwierigkeit lag in
+der Kategorisierung von Ausgabeformen und inwieweit
+Lokationsreferenzen unterdrückbar sein sollten. Wir haben uns hier zum
+einen an existierende Indexe gehalten und zum anderen auch eigene
+Überlegungen angestellt, die in die Modellierung eingeflossen sind.
+Um die Komplexität niedrig zu halten und auch den Benutzer nicht mit
+übertriebener Konfigurierbarkeit zu überfordern, haben wir uns
+letztendlich für pragmatische, aber leistungsfähige Lösungen
+entschieden.
+
+Die Erstellung eines Indexes ist generell auch eine Geschmacksfrage.
+An dieser Stelle ist es aufgrund der Vielfalt der potentiellen Wünsche
+der Autoren schwierig, eine zufriedenstellende Gesamtlösung
+auszuarbeiten.
+
+
+\section*{Weiterführende Arbeiten}
+\label{sec:weiterArbeiten}
+
+Im Rahmen der Modellierung eines Indexes und der damit verbundenen
+Algorithmen sind zwei Probleme grundsätzlicher Natur in den
+Vordergrund getreten.
+
+Das erste Problem ist die Erkenntnis, daß die Lokationsreferenzen als
+Informationsträger über das zu indizierende Dokument nicht ausreichend
+sind, um bestimmte in der Praxis vorkommende Indexe nachzubilden. Das
+Hauptproblem ist in fehlendem Dokumentwissen\remark{Dokument\-wissen}
+begründet. Bereits die einfachste Gliederungsform in Punktnotation
+(\textsf{1.2.3}\ldots) mit verschiedenen Gliederungstiefen macht die
+Bestimmung des Nachfolgers einer Lokation unlösbar, sofern dem System
+die benötigten Informationen nicht zus"atzlich zugeführt werden.
+
+Das zweite Problem besteht darin, daß ein Index sich auch
+typographischen Satzregeln unterwerfen muß, die \zB verlangen, daß die
+Ersetzung von Stichwörtern durch Wiederholungssymbole (\emph{siehe
+  Abschnitt \ref{sec:travAusgabebaum}}) an Seiten- und
+Spaltenanfängen unterdrückt werden sollte.\remark{textsatz\-abhängige
+  Indexausgabe} Um dieses Problem zu lösen, benötigt das
+Textsatzsystem allerdings Informationen, die während des
+Indexierungsvorgangs ermittelt werden.
+
+Wie man sieht sind diese Probleme nur dann lösbar, wenn ein geeigneter
+Informationsaustausch zwischen beiden Systemen stattfindet. Die
+untersuchten Textsatzsysteme bieten allerdings keine direkte
+Unterstützung, um ein Indexierungssystem direkt an den Textsatzprozeß
+anzukoppeln.
+
+Interessant ist es die Spezifikation der Ausgabeformatierung und der
+Regeln zum Sortieren und Mischen der Lokationsreferenzen zu
+"uberarbeiten. Im Moment ist Wissen "uber die zugrundeliegenden
+Algorithmen n"otig, um eine solche Spezifikation zu erstellen. Dies
+ist jedoch f"ur einen Benutzer eine sehr unbefriedigende L"osung und
+eine Untersuchung, ob \emph{interaktive} Werkzeuge dieses Problem
+vereinfachen k"onnen, ist mit Sicherheit sinnvoll.
+
+Des weiteren könnte es sinnvoll sein, das Konzept der Indexklassen
+weiter zu untersuchen. Insbesondere könnte man sich mit der Bildung
+einer Hierarchie von Klassen beschäftigen, um Klasseneigenschaften
+durch Vererbung\remark{Indexklassen\-vererbung} weiterzugeben. In
+diesem Zusammenhang kann man auch die Gesamt- und Masterindexe und
+ihre Eigenschaften vertieft untersuchen.
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: "makeindex4.tex"
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:32:00  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%%
+

@@ -1,0 +1,55 @@
+%%
+%% $Id$
+%%
+%% LaTeX-Style: tableofcontents
+%%
+%% Styledescription:
+%%    Dieser Style enthält Parameter für die Gestaltung des
+%%    Inhaltsverzeichnisses. Es existieren die Style-Optionen
+%%    - level3, level4, level5 : Erweiterung des Inhaltsverzeichnisses
+%%      auf die angegebenen Gliederungstiefen
+%%
+%%
+
+\NeedsTeXFormat{LaTeX2e}[1994/01/01]
+\ProvidesPackage{tableofcontents}[1995/07/01 v1.0 tableofcontents RK]
+
+%%
+%% Setzen der Gliederungstiefe, die für das Schreiben von
+%% Informationen in das .toc-file verwendet werden.
+%%
+%%  \setcounter{secnumdepth}{num}
+%%
+%% Setzen der Gliederungstiefe für das Inhaltsverzeichnis
+%%
+%%  \setcounter{tocdepth}{num}
+
+\newcommand{\SetDepthOfTableofcontents}[1]{%
+  \setcounter{secnumdepth}{#1}%
+  \setcounter{tocdepth}{#1}}
+
+\DeclareOption{level3}{\SetDepthOfTableofcontents{3}}
+\DeclareOption{level4}{\SetDepthOfTableofcontents{4}}
+\DeclareOption{level5}{\SetDepthOfTableofcontents{5}}
+
+\DeclareOption{help}{%
+  \typeout{Package: `tableofcontents'}%
+  \typeout{Options: level3 level4 level5}}
+
+\ProcessOptions
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: t
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:57  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.2  1995/07/04  09:46:32  kehr
+%% Weitere Änderungen. Bin aber fast fertig.
+%%
+%%
+

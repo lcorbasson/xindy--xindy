@@ -1,0 +1,24 @@
+Mon Oct 16 17:49:43 1995  Roger Kehr  (kehr@spelunke)
+
+	* I'll check in the whole project into CVS. Sources will be added
+	  later.
+
+Fri Oct 13 17:58:06 1995  Roger Kehr  (kehr@spelunke)
+
+	* Today I started setting up a completely new imake-environment
+ 	  for the xindy-project. After finally choosing the project-name
+ 	  and just before the theoretical project-presentation some
+ 	  housekeeping was absolutely neccessary to keep everything under
+ 	  control.
+
+	  The complete project will be checked into CVS next week and I'll
+	  continue implementing the LISP-kernel.
+
+	  There will be a special directory for the paper (Report) and for
+	  the presentation (Presentation).
+
+	  I also changed the TeX-imake-module to be capable of managing a
+	  TeX-source that is spread over multiple files. The modified
+	  version now is part of the config-directory.
+
+

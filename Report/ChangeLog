@@ -1,0 +1,104 @@
+Tue Jul  4 01:49:30 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Ich habe das ganze Projekt nach der Umstellung auf LISP jetzt
+	  anpassen müssen, weil die Eingaberkennung obsolet geworden ist.
+	  Desweiteren blicke ich jetzt voll durch den ganzen Kram durch
+	  und hoffe, daß die Implementierung nach all der Vorarbeit
+	  entsprechend schnell vonstatten geht...
+
+Mon Jun 19 00:30:57 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* So ich bin mehr oder weniger fertig (fix und ~).
+
+Sun Jun 18 20:08:29 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Endlich habe ich die Mischung der Lokationsreferenzen
+	  vollständig geblickt. Die Strukturierung ist jetzt wesentlich
+	  verständlicher geworden und ich kann sie jezt endlich
+	  formulieren.
+
+Thu Jun 15 11:21:08 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Heute will ich das Thema Ausgabe-Tagging vollständig
+	  abschließen.
+
+Fri Jun  9 21:57:54 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Habe die Rohindexanalyse und -verarbeitung hinzugenommen und bin
+	  sehr zufrieden. Bin gerade an der Formulierung des
+	  Traversierung-Algorithmus, bin aber jetzt zu müde und
+	  überschlafe das ganze nochmal...
+
+Wed Jun  7 00:48:15 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Modellentwurf ist jetzt nahezu fertig...
+
+	* Erste Definitionen des Indexstyles fertiggestellt. Die
+	  Darstellung der Eingabegrammatik gebe ich sinnvollerweise durch
+	  eine Grammatik an!
+
+	* Bin sehr weit mit dem Modellentwurf gekommen und habe auch noch
+	  Styleinformationen in stdwrk.sty geändert.
+
+Tue Jun  6 12:47:42 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Habe den Modellentwurf und die hierarchische Darstellung
+	  entwickelt.
+
+Wed May 31 17:11:00 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* So für heute reichts. Ich habe die offenstehenden Punkte und
+	  Formulierungen fertiggestellt und bin ganz zufrieden.
+
+	* Heute habe ich die verbesserte Definition des Dokumentalphabets
+	  und der Sortieralphabets entwickelt. Bin soweit ganz zufrieden,
+	  aber habe mich lange mit TeX-Problemen rungeschlagen. Dafür sind
+	  jetzt allerdings etliche Makros sauberer implementiert und das
+	  ganze sieht auch sowie aus...
+	  Ich muß jetzt noch einige ander Teile bzgl. dieser Änderungen
+	  überprüfen.
+
+Mon May 29 01:19:40 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Es ist schon spät und der Wein wirkt langsam ;-). Also ich muß
+	  die Definition des Dokumentalphabets weiter bearbeiten und zum
+	  Abschluß bringen, damit ich mit dem Modellentwurf weitermachen
+	  kann.
+
+Sun May 28 22:37:28 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Lange hier nichts mehr eingetragen. Na ja ! Nach der Besprechung
+	  mit Joachim über die ersten 20 Seiten habe ich auf seinen
+	  Vorschlag hin mit einem Glossar der wichtigsten Begriffe
+	  begonnen. Desweiteren habe ich einen Datenflußgraphen
+	  hinzugefügt der das prinzipielle Verfahren der Indexbearbeitung
+	  darstellen soll. Die Erklärung dazu muß noch überarbeitet
+	  werden.
+
+Sat May  6 00:09:24 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Heute abend habe ich den Datenstrukturteil endlich halbwegs
+	  fertiggestellt. Bin zwar noch nicht damit zufrieden, aber werde
+	  jetzt erst mal anfangen mit LEDA zu programmieren und die
+	  unteren Module aufzusetzen.
+
+Mon May  1 21:37:30 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* Heute habe ich die ganze Lokationsmischung und Sortierung
+	  durchgekaut und bin einigermaßen zufrieden. Dieser Abschnitt muß
+	  aber nochmal komplett überarbeitet werden.
+
+Tue Apr 25 02:07:41 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* So für heute abend reicht es. Habe den Analyseteil wesentlich
+	  weitergebracht und schon mit dem Modellentwurf angefangen. Es
+	  wird so langsam. Ich komme wieder rein.
+
+Mon Apr 24 11:46:07 1995    (kehr@eliade.hrz.th-darmstadt.de)
+
+	* 19.25: Habe den Analyseteil nochmal didaktischer aufgebaut und
+	  komplett umgestaltet. Werde erst mal diese Sache beenden.
+
+	* Heute will ich den Überblick über die Struktur der Studienarbeit
+	  aufbauen und den Analyseteil möglichst weit fertigstellen.
+

@@ -1,0 +1,289 @@
+%%
+%% $Id$
+%%
+%% LaTeX-Style: XXX
+%%
+%% Styledescription:
+%%
+%%
+
+%
+% This environment `deflist' is similar to a description environment.
+% The generic form `deflistgeneric' can be used to set up different
+% instances of this environment. Its syntax is
+%
+% \begin{deflistgeneric}
+%   {longest label}   dummy label which length we use to set up the environment
+%   {leftmargin}      e.g. 0.5cm, 1em
+%   {labelmacro}      e.g. \Deflistlabelplain
+%
+% The following labelmacroes are pre-defined
+\newcommand{\Deflistlabelplain}[1]{#1\hfill}  % just leftflushed label
+\newcommand{\Deflistlabelcolon}[1]{#1\hfill:} % label with rightflushed `:'
+\newcommand{\Deflistlabel}[1]{\Deflistlabelplain{#1}}
+
+\newenvironment{deflistgeneric}[3]{%
+  \begin{list}{#1\hfill}{%
+      \settowidth{\labelwidth}{\bf #1}
+      \setlength{\leftmargin}{#2}
+      \addtolength{\leftmargin}{\labelwidth}
+      \addtolength{\leftmargin}{\labelsep}
+      \setlength{\parsep}{0.2ex plus 0.1ex minus 0.1ex}
+      \setlength{\itemsep}{0.25ex plus 0.1ex minus 0.1ex}
+      \renewcommand{\makelabel}{#3}}}
+{\end{list}}
+
+%
+% This environment `genericlist' is similar to a description environment.
+% It can be used to set up different instances of this environment.
+% Its syntax is
+%
+% \begin{genericlist}
+%   {labelwidth}  length of the label
+%   {labelsep}    length of the separator between label and text
+%   {leftmargin}  left margin
+%   {labelmacro}  e.g. \Deflistlabelplain
+%
+%    <labelwidth><labelsep>!
+%  <leftmargin>----------->!
+%
+\newenvironment{genericlist}[4]{%
+  \begin{list}{#1\hfill}{%
+      \setlength{\labelwidth}{#1}%%
+      \setlength{\labelsep}{#2}%%
+      \setlength{\leftmargin}{#3}%%
+      \setlength{\parsep}{0.2ex plus 0.1ex minus 0.1ex}%%
+      \setlength{\itemsep}{0.25ex plus 0.1ex
+        minus 0.1ex} \renewcommand{\makelabel}{#4}}}%%
+  {\end{list}}
+
+%
+% Some instances of the generic list environment
+%
+\newenvironment{deflistnoindent}[1]{%
+  \begin{deflistgeneric}{#1}{0em}{\Deflistlabelplain}}
+  {\end{deflistgeneric}}
+\newenvironment{deflistcolon}[1]{%
+  \begin{deflistgeneric}{#1}{1em}{\Deflistlabelcolon}}
+  {\end{deflistgeneric}}
+\newenvironment{deflist}[1]{%
+  \begin{deflistgeneric}{#1}{1em}{\Deflistlabelplain}}
+  {\end{deflistgeneric}}
+
+
+\newcommand{\DeflistlabelNull}[1]{#1\hfill}
+\newenvironment{deflistNull}[1]{
+        \begin{list}{#1\hfill}{
+                \settowidth{\labelwidth}{\bf #1}
+                \setlength{\leftmargin}{0em}
+                \setlength{\topsep}{0em}
+                \addtolength{\leftmargin}{\labelwidth}
+                \addtolength{\leftmargin}{\labelsep}
+                \setlength{\parsep}{0.2ex plus 0.1ex minus 0.1ex}
+                \setlength{\itemsep}{0.25ex plus 0.1ex minus 0.1ex}
+                \renewcommand{\makelabel}{\DeflistlabelNull}
+        }
+}
+{ \end{list} }
+
+%
+% Dieses Kommando sorgt für die Neudefinition des description-labels
+% in der Schriftform Serifenlos mit
+%
+\renewcommand{\descriptionlabel}[1]{\hspace{\labelsep}\textsf{#1}}
+
+\newenvironment{hinweis}{%
+\begin{sloppypar}\begin{quote}\sl}
+{\end{quote}\end{sloppypar}}
+
+\newcommand{\Deslistlabel}[1]{\bf #1\hfill}
+\newenvironment{deslist}{
+        \begin{list}{}{
+                \setlength{\leftmargin}{1em}
+                \setlength{\labelwidth}{1em}
+                \addtolength{\leftmargin}{\labelwidth}
+                \addtolength{\leftmargin}{\labelsep}
+                \setlength{\parsep}{0.2ex plus 0.1ex minus 0.1ex}
+                \setlength{\itemsep}{0.25ex plus 0.1ex minus 0.1ex}
+                \renewcommand{\makelabel}{\Deslistlabel}
+        }
+}
+{ \end{list} }
+
+%
+% \begin{lindent}{Einrückung}
+%
+% Diese Umgebung ist nur dann funktionsfähig, wenn in den
+% nachfolgenden \item-Kommandos keine Labels durch [...] angegeben
+% werden ! Es kann dann zur falschen Umdefinition der
+% \description-Umgebung kommen !
+%
+%\def\lindentlabel#1{\hspace\labelsep #1}
+\def\LIndentLabel#1{#1}
+\def\lindent#1{\list{}{%
+                    \leftmargin#1%
+                    \labelwidth\z@ \itemindent-\leftmargin%
+                    \listparindent1em%
+                    \let\makelabel\LIndentLabel%
+                    \parsep 0mm plus 0.5mm%
+                    \itemsep 1mm plus 0.3mm minus 0.2mm}}
+
+
+\newcounter{romenumcounter}
+\newenvironment{romenumerate}{\begin{list}{\hfill(\roman{romenumcounter})}
+{\usecounter{romenumcounter}
+ \setlength{\topsep}{0.7ex plus 0.2ex minus 0.1ex}
+ \setlength{\leftmargin}{1.0em}
+ \setlength{\labelwidth}{1.7em}
+ \addtolength{\leftmargin}{\labelwidth}
+ \addtolength{\leftmargin}{\labelsep}
+ \setlength{\parsep}{0.1ex plus 0.1ex minus 0.1ex}
+ \setlength{\itemsep}{0.1ex plus 0.1ex minus 0.1ex}
+}}{\end{list}}
+
+\newcounter{denseenumcounter}
+\newenvironment{denseenumerate}{\begin{list}{\hfill\arabic{denseenumcounter}.}
+{\usecounter{denseenumcounter}
+ \setlength{\topsep}{0.7ex plus 0.2ex minus 0.1ex}
+ \setlength{\leftmargin}{0.7em}
+ \setlength{\labelwidth}{1.0em}
+ \addtolength{\leftmargin}{\labelwidth}
+ \addtolength{\leftmargin}{\labelsep}
+ \setlength{\parsep}{0.1ex plus 0.1ex minus 0.1ex}
+ \setlength{\itemsep}{0.1ex plus 0.1ex minus 0.1ex}
+}}{\end{list}}
+
+\newenvironment{itemizegeneric}[2]{%
+  \renewcommand{\labelitemi}{#1}%
+  \setlength{\itemsep}{#2}%
+  \begin{itemize}}{\end{itemize}}
+
+\newenvironment{circleitemize}{%
+  \begin{itemizegeneric}{\mbox{$\circ$}}{0mm}}{\end{itemizegeneric}}
+
+\newenvironment{algorithm}{%
+\vspace{4pt}\begin{tabbing}}
+{\end{tabbing}\vspace{4pt}}
+
+\newcommand{\RESWORD}[2]{\mbox{\textbf{#1}}\=\mbox{\textbf{#2}}\xspace}
+\newcommand{\SRESWORDX}[1]{\mbox{\textbf{#1}}\=}
+\newcommand{\SRESWORD}[1]{\mbox{\textbf{#1}}\xspace}
+\newcommand{\ACTION}[1]{{\small\mbox{$\ll$}\mbox{#1}\mbox{$\gg$}}\xspace}
+\newcommand{\EXPR}[1]{\mbox{$<$}\mbox{\textsl{#1}\/}\mbox{$>$}\xspace}
+
+\newcommand{\AND}{\SRESWORDX{and}}
+\newcommand{\BEGIN}{\RESWORD{be}{gin}}
+\newcommand{\DO}{\SRESWORD{do}}
+\newcommand{\ELSE}{\SRESWORDX{else}}
+\newcommand{\ENDDO}{\mbox{\textbf{enddo}}}
+\newcommand{\ENDFUNC}{\SRESWORD{endfunc}.}
+\newcommand{\ENDIF}{\SRESWORD{endif}}
+\newcommand{\ENDWHILE}{\SRESWORD{endwhile}}
+\newcommand{\ENUM}{\SRESWORDX{enum\ }}
+\newcommand{\FORALL}{\RESWORD{for}{all}}
+\newcommand{\FUNC}{\RESWORD{fun}{ction}}
+\newcommand{\F}[1]{\mbox{\normalfont\textit{#1\/}}}
+\newcommand{\IF}{\RESWORD{if\ }{}}
+\newcommand{\NOT}{\SRESWORDX{not}}
+\newcommand{\OR}{\SRESWORDX{or}}
+\newcommand{\REPEAT}{\RESWORD{re}{peat}}
+\newcommand{\RETURN}{\SRESWORD{return}}
+\newcommand{\THEN}{\SRESWORDX{then}}
+\newcommand{\UNTIL}{\SRESWORD{until}}
+\newcommand{\VAR}{\SRESWORDX{var\ }}
+\newcommand{\WHILE}{\RESWORD{wh}{ile}}
+
+\newenvironment{ind}{\begin{quote}}{\end{quote}}
+
+
+\newcommand{\Deflistlabeltt}[1]{\texttt{#1} --\ }
+
+\newcommand{\dhrule}{\noindent\raisebox{0.6ex}{\rule{\textwidth}{0.7pt}}}
+
+\newenvironment{describeClass}[1]{%
+  \bigskip\dhrule\par\noindent%
+  {\large\normalfont\texttt{#1}}\par
+  \dhrule\par\medskip\noindent\ignorespaces} {}
+
+\newcommand{\DescrLabel}[1]{\textsf{#1\/}\hfill :}
+
+\newenvironment{describeComponents}{%
+  \begin{genericlist}{1em}{0mm}{1em}{\DescrLabel}\item[Komponenten]\mbox{}%
+  \begin{genericlist}{2em}{0mm}{2em}{\Deflistlabeltt}}
+  {\end{genericlist}\end{genericlist}}
+
+\newenvironment{describeMethods}{%
+  \begin{genericlist}{1em}{0mm}{1em}{\DescrLabel}\item[Methoden]\mbox{}\\}
+  {\end{genericlist}}
+
+\newcommand{\func}[1]{\mbox{\texttt{#1}}}
+\newcommand{\functype}[1]{\mbox{$[\emph{#1}]$}}
+\newcommand{\farg}[1]{\mbox{\emph{#1}}}
+
+\newcommand{\NullLabel}[1]{}
+
+\newenvironment{function}[3]{%
+  %\smallskip
+  \func{#1}\hspace*{0.7em}#3 \hfill \functype{#2}%%\\[0.1ex]%%
+  \begin{genericlist}{0mm}{0mm}{2em}{\NullLabel}\item[]\mbox{}\ignorespaces}%%
+  {\end{genericlist}}
+
+\newenvironment{defunc}[2]{%
+  \begin{function}{#1}{Funktion}{#2}}
+  {\end{function}}
+
+\newenvironment{defmethod}[2]{%
+  \begin{function}{#1}{Methode}{#2}}
+  {\end{function}}
+
+\newenvironment{defgen}[2]{%
+  \begin{function}{#1}{Generische Funktion}{#2}}
+  {\end{function}}
+
+
+
+%% Local Variables:
+%% mode: latex
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:50  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.9  1995/10/06  23:05:12  kehr
+%% Korrektur nach der Durchsicht von Karin.
+%%
+%% Revision 1.8  1995/09/22  01:12:02  kehr
+%% Zweite Überarbeitung nch der inhaltlichen Korrektur. Außerdem habe
+%% ich das Logo zu MacIndex verändert. Hat jetzt mehr pepp !
+%%
+%% Revision 1.7  1995/09/06  18:52:49  kehr
+%% Made final changes before giving for correction.
+%%
+%% Revision 1.6  1995/07/04  00:46:49  kehr
+%% Bald ist's soweit ;-)
+%% Ich habe heute die generelle Umstrukturierung vorgenommen und einige
+%% Teile herausgeschmissen. Die Indexverarbeitung muß noch überarbeitet werden.
+%%
+%% Revision 1.5  1995/06/18  23:32:22  kehr
+%% Schluß für heute. Genug geschafft.
+%%
+%% Revision 1.4  1995/06/15  12:58:41  kehr
+%% Erweiterung der Ausgabematrix und kleinere Änderungen am Layot.
+%% Überprüfe jetzt das ganze Dokument, um mich auf die beiden letzten
+%% Probleme einzulesen.
+%%
+%% Revision 1.3  1995/06/13  21:55:15  kehr
+%% Habe heute die Formulierung des Algorithmus controlled-jojo-traverse
+%% fertiggestellt. Desweiteren Fehler in der Anwendung der \lindent-Umgebung
+%% gefunden. Ich muß noch die Matrix für die Definition der Ausgabekommandos
+%% und der Angabe im Indexstyle entwickeln.
+%%
+%% Revision 1.2  1995/06/09  20:59:49  kehr
+%% Superviel gemacht heute ;-)
+%%
+%% Revision 1.1  1995/06/06  23:50:14  kehr
+%% Modellentwurf weitergebracht.
+%%
+%%

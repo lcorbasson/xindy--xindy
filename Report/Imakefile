@@ -1,0 +1,55 @@
+#ifndef IMAKEFILE_INCLUDED			/* -*- Indented-Text -*- */
+#define IMAKEFILE_INCLUDED
+
+XCOMM ======================================================================
+XCOMM Imake module for Report
+XCOMM $Id$
+
+/* history at end */
+
+#include <Project.imk>
+
+
+/* ============================================================
+ *
+ * rules
+ *
+ */
+
+/* These are the definitions of all Report-TeXsources */
+
+#define SRC \
+	 abstract.tex           implementierung.tex    prefix.tex\
+	 analyse.tex            indexverarbeitung.tex  title.tex\
+	 einleitung.tex         modellentwurf.tex      \
+	 glossar.tex            postfix.tex            xindy.tex\
+	 hyphenations.tex	zusammenfassung.tex
+
+#define EPS \
+	ausgabebaum.eps datenmodell.eps vererbungsgraph.eps datenfluss.eps\
+	modulgraph.eps
+
+#define STY \
+	a4.sty               figsect.sty          stdwrk.sty\
+	bslash.sty           footnotelist.sty     tableofcontents.sty\
+	environments.sty     sectioning.sty       xindy.sty
+
+#define BIB bibliographie.bib
+
+TeXSpreadTarget(latex,xindy, SRC EPS STY BIB)
+
+tmp-xindy.dvi: xindy.dvi
+	       cp xindy.dvi tmp-xindy.dvi
+
+CVSAdd(SRC EPS STY BIB Imakefile)
+CVSCommentLeader("%% ", SRC STY)
+
+/* ============================================================
+
+$Log$
+Revision 1.1  1995/10/16 17:31:43  kehr
+Initial checkin of Report and Presentation.
+
+*/
+
+#endif  /* already imported */

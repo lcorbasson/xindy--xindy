@@ -1,0 +1,269 @@
+%%
+%% $Id$
+%%
+%% Document: Indexverarbeitung `makeindex4' - Projekt
+%%
+
+\chapter{Indexverarbeitung}
+\label{sec:indexverarbeitung}
+
+Wir kommen nach der Daten- und Strukturmodellierung in
+Abschnitt~\ref{sec:modellentwurf} zu den einzelnen Verfahren der
+Indexverarbeitung. Vergegenwärtigen wir uns dazu noch die Einbettung
+des Indexierungssystems in den Prozeß der Indexerstellung, wie er in
+Abbildung~\ref{fig:datenfluss} auf Seite~\pageref{fig:datenfluss}
+dargestellt ist.
+
+Wir betrachten nun die einzelnen Abschnitte der Indexverarbeitung und
+behandeln insbesondere die Verarbeitung der Lokationsreferenzen
+vertieft, weil sie im Hinblick auf die bestehenden Systeme neu
+entwickelt wurde. Wir verwenden dazu formale Beschreibungen und eine
+pascal-ähnliche, algorithmische Notation.\footnote{Diese Algorithmen
+  sollen das grundsätzliche Verfahren aufzeigen und sind in der
+  tatsächlichen Implementierung teilweise anders gelöst.}
+
+
+\section{Indexstyle einlesen}
+
+Das Einlesen des Indexstyles dient dazu, dem System alle Parameter
+bekannt zu machen, die von Benutzerseite spezifiziert wurden. Der
+Indexstyle ist eine Menge von Dateien, in denen in deklarativer Form
+die Angaben über die Parameter des Indexsystems spezifiziert sind.
+Diese Spezifikationen werden eingelesen und geeignet abgelegt.
+
+
+\section{Indexeinträge einlesen und normalisieren}
+
+%Durch das Einlesen des Indexstyles sind auch Informationen eingelesen
+%worden, sie das Format der Datei beschreibt, welche die Rohindexdaten
+%enthält. Anhand dieser Beschreibung werden die Indexeinträge
+%und deren Komponenten eingelesen.
+
+Die Indexeinträge werden eingelesen und jeweils ein internes Objekt
+\idxent erzeugt. Dabei fallen noch die folgenden Aufgaben an:
+%
+\begin{circleitemize}
+%\item Filterung aller Einträge der Indexklasse die bearbeitet werden soll.
+\item Der Indexeintrag muß auf Gültigkeit überprüft werden.
+\item Die Indexschlüssel müssen durch die Sortier- und Mischregeln
+  gegebenenfalls normalisiert werden.
+\item Dem Indexeintrag muß die passende Lokationsklasse zugeordnet werden.
+\item Die Ordnungsnummern der einzelnen Strukturkomponenten müssen anhand
+  der Lokationsklassendefinition errechnet werden.
+\end{circleitemize}
+%
+Das \emph{Normalisieren}\remark{Normalisieren} der Indexschlüssel wird
+analog zum Verfahren des \emph{International Makeindex} durchgeführt.
+Aus dem Schlüssel \keyK wird mit den Mischregeln der Mischschlüssel
+gebildet, aus welchem mit Hilfe der Sortierregeln der Sortierschlüssel
+generiert wird.
+
+%Das \textit{Normalisieren} der Indexschlüssel wird nach dem Schema des
+%\textit{International MakeIndex} vorgenommen, wo aus dem
+%Indexschlüssel \keyK der Indexschlüssel \keyM mit Hilfe der
+%Abbildungsregeln \ismapruleSet vorgenommen wird. Eine
+%Regel\remark{Regel} ist eine Abbildung $\phi : \emph{Stichwort\/} \to
+%\emph{Stichwort\/}$ und wird durch die Anwendung von regulären
+%Ausdrücken auf ein Stichwort. Wir betrachten die Mengen der Misch-
+%und Sortierregeln, die wir folgt definiert sind:
+%%
+%\[ {\cal M} = \{ r \in \ismapruleSet\ \mid\ r.\isruletype =
+%\textsf{merge} \}.\]
+%%
+%Analog definieren wir
+%%
+%\[ {\cal S} = \{ r \in \ismapruleSet\ \mid\ r.\isruletype =
+%\textsf{sort} \}.\]
+%%
+%Fassen wir das Applizieren dieser Regeln als Funktionen auf, so gilt
+%allgemein für die Normalisierung eines Schlüssels $k$ durch eine
+%Regelmenge ${\cal R}$:
+
+%\begin{algorithm}
+%  \FUNC \F{apply}( $k, {\cal R}$ )\\
+%  \BEGIN\\
+%  \>\FORALL $ r \in {\cal R} $ \DO \\
+%  \>\> \textit{subst}( $r$, $k$ ) \\
+%  \>\ENDDO\\
+%  \ENDFUNC
+%\end{algorithm}
+
+
+%\noindent Die Funktion \F{subst}() wendet die Regulären
+%Ausdrücke $r$.\ispattern und $r$.\isreplace auf den Schlüssel $k$ an.
+%Wir können jetzt den kompletten Normalisierungsprozeß algorithmisch
+%beschreiben:
+
+%\begin{algorithm}
+%  \FUNC \F{normalize}( \VAR $i :$ \idxent )\\
+%  \BEGIN\\
+%  \>\IF \F{empty}($i$.\keyM) \THEN\\
+%  \>\> $i$.\keyM $\equiv$ $i$.\keyK\\
+%  \>\> \F{apply}( $i$.\keyM, ${\cal M}$ )\\
+%  \>\ENDIF\\
+%  \>$i$.\keyS $\equiv$ $i$.\keyM\\
+%  \>\F{apply}( $i$.\keyS, ${\cal S}$ )\\
+%  \ENDFUNC\\
+%\end{algorithm}
+
+
+\section{Stichwortmischung und -sortierung}
+\label{sec:stwmischung}
+
+Stichwortmischung dient dazu, alle Indexeinträge zusammenzufassen,
+deren Mischschlüssel \keyM identisch ist. Wir definieren dazu eine
+Funktion \textit{join}, die zwei Indexeinträge miteinander vereinigt.
+
+\newcommand{\Ione}{\mbox{${\cal I}_1$}}
+\newcommand{\Itwo}{\mbox{${\cal I}_2$}}
+\newcommand{\joinsymbol}{\mbox{$\triangleleft$}\xspace}
+
+Diese Funktion kann folgendermaßen beschrieben werden. Seien \Ione{}
+und~\Itwo{} Indexeinträge, so ist
+\[\begin{array}{rl}
+  \mbox{\textit{join}}(\Ione,\Itwo) \equiv (&\Ione.\keyK\ \joinsymbol\
+  \Itwo.\keyK,\ \Ione.\keyM,\\
+  & \Ione.\keyS\ \joinsymbol\ \Itwo.\keyS,\ \Ione.\keyP\ \joinsymbol\
+  \Itwo.\keyP,\ \\ & \Ione.\locrefSet\ \cup\
+  \Itwo.\locrefSet ).
+\end{array}\]
+
+\noindent Die Funktion \joinsymbol ist hier wie folgt definiert:
+%
+\[ x\ \joinsymbol\ y = \left\{
+  \begin{array}{ll}
+    y & \textrm{falls}\ x\ \textrm{leer}\\ x & \textrm{sonst} .
+  \end{array}
+\right.\]
+
+\noindent Nach dem Mischen der zusammengehörenden Indexeinträge wird der Index
+lexikographisch anhand der Sortierschlüssel sortiert.
+
+
+%Folgende Beschreibung verdeutlicht dies:
+%\begin{algorithm}
+%  \FUNC \F{sortindex} ( \VAR \F{idx} : \indeX )\\
+%  \BEGIN\\[6pt]
+%  \>\FUNC \F{compare} ( \F{i,j} : \idxent ) : int\\
+%  \>\BEGIN\\
+%  \>\> return ( $i$.\keyS $\leq$ $j$.\keyS )\\
+%  \>\ENDFUNC\\[6pt]
+%  \>\F{sort} ( \textit{idx, compare} )\\
+%  \ENDFUNC\\
+%\end{algorithm}
+%\noindent Hinter der Funktion \F{sort} kann sich eine geeignete
+%Sortierroutine wie \zB \textit{Quicksort} verbergen.
+
+
+\section{Lokationsreferenzmischung und -sortierung}
+\label{sec:locrefmischung}
+
+Durch die Hinzunahme von verschiedenen Lokationsklassen muß die
+Mischung und Sortierung von Lokationsreferenzen anhand der in
+Abschnitt~\ref{sec:lokationsverarbeitung:regeln} definierten Misch-
+und Sortierregeln erfolgen. Der Verarbeitungsprozeß der
+Lokationsreferenzen eines Indexeintrags gliedert sich in die folgenden
+Phasen:
+
+\begin{enumerate}
+\item Lokationsklassenmatrix (\emph{siehe
+    Abbildung~\ref{tab:Lokationsreferenzmatrix:eins}}) aufstellen. Den
+  Lokationsreferenzen wird ihre Lokationsklasse zugeordnet. Die
+  Kategorieattribute werden bei diesem Klassifizierungsprozeß noch
+  nicht beachtet.
+
+\item Auf"|lösen der Matrix und Mischen und Sortieren jeder einzelnen
+  Lokationsklasse gemäß ihrer Kategorieattribute. Dieser Prozeß läuft
+  in folgender Weise ab:
+
+  \begin{enumerate}
+  \item Unterteilung der Lokationsreferenzen in Mengen, deren Elemente
+    zu einer Lokationsklasse gehören.
+
+  \item Die gebildeten Lokationsreferenzmengen werden gemäß der
+    Unterscheidung in Separate- und Mixedsorting bezüglich ihrer
+    Kategorieattribute unterteilt.
+
+  \item Auflösen der \textsf{merge-to}-Regeln, indem die
+    entsprechenden Referenzen zusätzlich in die Referenzmengen der
+    Kategorie-Nachbarn eingefügt werden (Primärattribut), wobei ein
+    Hinweis auf ihr originales Kategorieattribut beibehalten wird
+    (Sekundärattribut).
+
+  \item Sortieren dieser Mengen gemäß der definierten Totalen Ordnung.
+
+  \item Erzeugung von Bereichen durch das Zusammenfassen von
+    aufeinander folgenden Lokationsreferenzen. Dabei werden sowohl das
+    Primärattribut als auch die Sekundärattribute verwendet.
+
+  \item Verdrängung von Lokationsreferenzen innerhalb von virtuellen
+    Attributen durch Referenzen mit höherer Vorrangstufe.
+
+  \item Eliminierung von Lokationsreferenzen, welche durch eine
+    \textsf{merge-to}-Regel nicht in einem Bereich aufgenommen werden
+    konnten oder die aufgrund einer erfolgreichen
+    \textsf{drop-if-merged}-Regel wegfallen. Des weiteren Eliminierung
+    von Lokationsreferenzen aufgrund der \textsf{substitite}-Regel.
+
+  \end{enumerate}
+
+\end{enumerate}
+
+\noindent Nach diesem Arbeitsabschnitt ist die grundsätzliche Arbeit
+am Index vollendet. Wir müssen uns zum Abschluß mit der Ausgabe des
+kompletten Indexes in den Ausgabestrom befassen.
+
+\section{Ausgabeformatierung}
+
+Die Ausgabe des Indexes ist im wesentlichen die in
+Abschnitt~\ref{sec:ausgabe-tagging} beschriebene Traversierung des
+Ausgabebaums. Wir müssen dem Ausgabestrom noch zusätzliche
+Informationen beifügen, die im Indexstyle definiert sind. Desweiteren
+müssen die Stichwortgruppen während der Traversierung korrekt erkannt
+und die entsprechenden Ausgabekommandos aufgerufen werden.
+
+%%Da sich aber prinzipiell das hier verwendete Verfahren mit Ausnahme
+%%des Ausgabebaums nicht vom \textsf{makeindex}- und
+%%\emph{International MakeIndex} unterscheidet, werden wir hier keine
+%%besonderen Beschreibungen dieses Prozesses beifügen.
+
+
+%% Local Variables:
+%% mode: latex
+%% TeX-master: "makeindex4.tex"
+%% End:
+
+%%
+%% $Log$
+%% Revision 1.1  1995/10/16 17:31:53  kehr
+%% Initial checkin of Report and Presentation.
+%%
+%% Revision 1.8  1995/10/06  23:05:14  kehr
+%% Korrektur nach der Durchsicht von Karin.
+%%
+%% Revision 1.7  1995/09/22  01:12:04  kehr
+%% Zweite Überarbeitung nch der inhaltlichen Korrektur. Außerdem habe
+%% ich das Logo zu MacIndex verändert. Hat jetzt mehr pepp !
+%%
+%% Revision 1.6  1995/09/21  00:05:44  kehr
+%% Erste Veränderungen nach der inhaltlichen Korrektur durch Joachim am
+%% 20.Sep.95. Fast alle Dateien d'sind davon betroffen. Außerdem sind noch zwei
+%% neue Abbildungen hinzugekommen.
+%%
+%% Revision 1.5  1995/09/06  18:52:50  kehr
+%% Made final changes before giving for correction.
+%%
+%% Revision 1.4  1995/08/28  18:08:15  kehr
+%% Neue Einspielung der xfig-Dateien
+%%
+%% Revision 1.3  1995/07/04  09:46:29  kehr
+%% Weitere Änderungen. Bin aber fast fertig.
+%%
+%% Revision 1.2  1995/06/18  23:32:23  kehr
+%% Schluß für heute. Genug geschafft.
+%%
+%% Revision 1.1  1995/06/18  22:50:20  kehr
+%% HuHu. habe das cvs add die ganze Zeit vergessen...
+%%
+%%
+
