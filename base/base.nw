@@ -29,9 +29,9 @@ the project.
 \section{Part \module{Base}}
 
 <<export-list of module \module{base}>>=
-(export '(get-next-ordnum show))
+(export '(show))
 (export '(*default-class-name* *indexclasses*
-          *active-idxcls-name* *curr-loccls-ordnum*))
+          *active-idxcls-name* ))
 @
 
 \subsection{Introduction}
@@ -47,18 +47,8 @@ the project.
 
 <<export-list of module \module{base}>>
 <<global definitions>>
-<<help functions>>
 <<show generic functions>>
 @
-
-To give an easy way to get the value of [[*curr-loccls-ordnum*]] and
-incrementing it we define the following function. It is the only
-allowed access to this counter.
-
-<<help functions>>=
-(defun get-next-ordnum ()
-  (incf *curr-loccls-ordnum*))
-@ %def get-next-ordnum
 
 This is a simple abbreviation to print the currently active
 indexclass.
@@ -105,7 +95,6 @@ indexclass.
 (defparameter *default-class-name* "default")
 (defvar *indexclasses* '())
 (defvar *active-idxcls-name*)
-(defparameter *curr-loccls-ordnum* 0)
 @
 
 %% Local Variables:
@@ -114,7 +103,10 @@ indexclass.
 %% End:
 %%
 %% $Log$
-%% Revision 1.1  1995/11/19 18:38:55  kehr
+%% Revision 1.2  1995/11/29 16:51:04  kehr
+%% Moved get-next-ordnum to module `locref'.
+%%
+%% Revision 1.1  1995/11/19  18:38:55  kehr
 %% Introduced packages base and locref.
 %%
 %% Revision 1.2  1995/11/08  16:17:56  kehr
