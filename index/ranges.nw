@@ -596,6 +596,7 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 \subsection{Pretty-printing}
 
 <<Pretty-printing>>=
+#+:XP
 (defun pprint-location-range (s range)
   (pprint-logical-block
    (s nil :prefix "[" :suffix "]")
@@ -629,6 +630,7 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
     (write (get-last range) :stream s))
    (pprint-newline :mandatory s)))
 
+#+:XP
 (set-pprint-dispatch 'location-range #'pprint-location-range)
 @
 
@@ -638,7 +640,10 @@ successor-predicate on numbers then [[ordnums-2]] is successor of
 %% End:
 %%
 %% $Log$
-%% Revision 1.5  1996/06/03 10:01:39  kehr
+%% Revision 1.6  1996/07/01 09:19:34  kehr
+%% Added support for flat indexes and modified logfile-support.
+%%
+%% Revision 1.5  1996/06/03  10:01:39  kehr
 %% Added support for treeing layered-location-references.
 %%
 %% Revision 1.4  1996/05/29  14:15:46  kehr

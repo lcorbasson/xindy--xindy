@@ -66,6 +66,8 @@ following slots:
 \end{slots}
 
 <<Class \class{base-index}>>=
+(defconstant *all-hierarchy-layers* MOST-POSITIVE-FIXNUM)
+
 (defclass base-index ()
     ((entry-table :reader get-entry-table
                   :writer set-entry-table
@@ -73,7 +75,7 @@ following slots:
      (entry-list  :reader get-entry-list :writer set-entry-list)
      (entries     :reader get-entries    :writer set-entries)
      (idxclass    :reader get-idxclass   :initarg  :idxclass)
-     (hierdepth                          :initform *index-hierdepth-default*)))
+     (hierdepth   :initform *all-hierarchy-layers*)))
 
 (defun make-base-index (idxclass)
   (make-instance 'base-index :idxclass idxclass ))
@@ -85,7 +87,6 @@ following slots:
 
 \subsubsection{Global index definitions}
 <<Global index definitions>>=
-(defparameter *index-hierdepth-default* MOST-POSITIVE-FIXNUM) #|make all trees|#
 (defparameter *index-entry-table*       nil) #| faster access to the entry-table |#
 @
 
@@ -165,35 +166,62 @@ of functions:
 <<Raw-index interface>>=
 (defmacro indexentry (&rest args)
   (destructuring-switch-bind (&key
-                              key print merge attr locref xref
+                              key print tkey merge attr locref xref
                               &switch
                               (open-range  :open-range)
                               (close-range :close-range))
       args
-    (cond ((not key)
-             (error "missing argument :key !"))
+    (cond ((not (or key tkey))
+             (error "missing argument :key or :tkey!"))
+          ((and key tkey)
+             (error "you can't specify :key and :tkey at the same time !"))
           ((and locref xref)
              (error "you can't specify :locref and :xref at the same time !"))
-          (locref `(ADD-LAYERED-LOCREF-INDEXENTRY
-                    :MAIN-KEY    ',key
-                    :PRINT-KEY   ',print
-                    :MERGE-KEY   ',merge
-                    :CATATTR     ',attr
-                    :LOCREF      ',locref
-                    :OPEN-RANGE  ',open-range
-                    :CLOSE-RANGE ',close-range))
-          (xref (when (or open-range close-range)
-                  (error "you can't specify :open-range or :close-range with :xref at the same time !"))
-                (unless attr
-                  (error "missing :attr in combination with :xref !"))
-                `(ADD-CROSSREF-INDEXENTRY
-                  :MAIN-KEY  ',key
-                  :PRINT-KEY ',print
-                  :XREF      ',xref
-                  :XREF-CLASS-NAME ',attr))
-          (t (error "you must at least specify :locref or :xref !")))))
-
+          (t (progn
+               (when tkey (multiple-value-setq (key print)
+                            (tkey-to-normal-key tkey)))
+               (cond (locref `(ADD-LAYERED-LOCREF-INDEXENTRY
+                               :MAIN-KEY    ',key
+                               :PRINT-KEY   ',print
+                               :MERGE-KEY   ',merge
+                               :CATATTR     ',attr
+                               :LOCREF      ',locref
+                               :OPEN-RANGE  ',open-range
+                               :CLOSE-RANGE ',close-range))
+                     (xref (when (or open-range close-range)
+                             (error "you can't specify :open-range or :close-range with :xref at the same time !"))
+                           (unless attr
+                             (error "missing :attr in combination with :xref !"))
+                           `(ADD-CROSSREF-INDEXENTRY
+                             :MAIN-KEY  ',key
+                             :PRINT-KEY ',print
+                             :XREF      ',xref
+                             :XREF-CLASS-NAME ',attr))
+                     (t (error "you must at least specify :locref or :xref !"))))))))
 @ %def indexentry
+
+\no The following function transporms a list of the structure
+\begin{center}
+  \texttt{( (main-key [print-key])+ )}
+\end{center}
+into two separate lists for the main- and print-keys. If one of the
+print-keys is missing the corresponding main-key is used as the
+print-key.
+
+<<Raw-index interface>>=
+(defun tkey-to-normal-key (tkey)
+  (let ((main-key  '())
+        (print-key '()))
+    (mapc #'(lambda (key-elt)
+              (cond ((listp key-elt)
+                       (push (car key-elt) main-key)
+                       (if (cdr key-elt)
+                           (push (cadr key-elt) print-key)
+                           (push (car  key-elt) print-key)))
+                    (t (error "invalid structure of :tkey `~S' !" tkey))))
+          tkey)
+    (values (nreverse main-key) (nreverse print-key))))
+@ %def tkey-to-normal-key
 
 <<Raw-index interface-definitions>>=
 (defparameter *raw-index-interface-definitions*
@@ -299,22 +327,28 @@ supporting cross-references is implemented in a separate function.
 #-:ORDRULES (unless merge-key (setq merge-key main-key))
 @
 
-\no These functions perform the keword-rewriting on a list of strings.
+\no These functions perform the keyword-rewriting on a list of strings.
 
 <<Adding an indexentry>>=
 #+:ORDRULES
 (defun gen-keyword-mergekey-list (list-of-strings)
-  #+ASSERT! (assert! (listp list-of-strings))
-  (mapcar #'(lambda (str)
-              (gen-keyword-mergekey str))
-          list-of-strings))
+  #+ASSERT! (assert! (and (not (null list-of-strings))
+                          (listp list-of-strings)))
+  (let ((res (mapcar #'(lambda (str)
+                         (gen-keyword-mergekey str))
+                     list-of-strings)))
+    (gol t "~&merge-mapping: ~S -> ~S~%" list-of-strings res)
+    res))
 
 #+:ORDRULES
 (defun gen-keyword-sortkey-list (list-of-strings)
-  #+ASSERT! (assert! (listp list-of-strings))
-  (mapcar #'(lambda (str)
-              (gen-keyword-sortkey str))
-          list-of-strings))
+  #+ASSERT! (assert! (and (not (null list-of-strings))
+                          (listp list-of-strings)))
+  (let ((res (mapcar #'(lambda (str)
+                         (gen-keyword-sortkey str))
+                     list-of-strings)))
+    (gol t "~&sort-mapping: ~S -> ~S~%" list-of-strings res)
+    res))
 @ %def gen-keyword-mergekey-list gen-keyword-sortkey-list
 
 \no Function [[join-indexentries]] implements a
@@ -469,25 +503,28 @@ top-level indexentries into the appropriate letter-groups.
 <<Processing an index>>=
 (defmethod build-indexentry-tree ((index base-index))
   (let ((index-hierdepth (get-hierdepth index)))
-    (when (> index-hierdepth 0)
-      (set-entries (build-indexentry-tree-recursive (get-entry-list index)
-                                                    index-hierdepth)
-                   index)))
-  (let ((letter-groups (split-list #'(lambda (idxent)
-                                       (lookup-letter-group
-                                        *indexstyle*
-                                        (car (get-sort-key idxent))))
-                                   #'<
-                                   (get-entries index))))
-    (set-entries (mapcar #'(lambda (lg-indexentries)
-                             (make-letter-group
-                              :members  (sort-indexentries lg-indexentries)
-                              :group-id (lookup-letter-group
-                                         *indexstyle*
-                                         (car (get-sort-key
-                                               (car lg-indexentries))))))
-                         letter-groups)
-                 index)))
+    (gol t "~&~%--------------------~%Building indexentry-tree:~%")
+    (gol t "hierdepth of index is ~S.~%" index-hierdepth)
+    (set-entries (build-indexentry-tree-recursive (get-entry-list index)
+                                                  index-hierdepth)
+                 index)
+    (gol t "~&forming letter-groups...")
+    (let ((letter-groups (split-list #'(lambda (idxent)
+                                         (lookup-letter-group
+                                          *indexstyle*
+                                          (car (get-sort-key idxent))))
+                                     #'<
+                                     (get-entries index))))
+      (gol t "(done)")
+      (set-entries (mapcar #'(lambda (lg-indexentries)
+                               (make-letter-group
+                                :members  (sort-indexentries lg-indexentries)
+                                :group-id (lookup-letter-group
+                                           *indexstyle*
+                                           (car (get-sort-key
+                                                 (car lg-indexentries))))))
+                           letter-groups)
+                   index))))
 @ %def build-indexentry-tree
 
 \no The following function is responsible to build the desired tree
@@ -528,7 +565,7 @@ slots with the neccessary data.
                                         &optional (curr-depth 1))
   (if (or (endp idxent-list)          #| nothing more to do |#
           (> curr-depth max-depth))   #| we reached the end |#
-      idxent-list   #| this is the then case |#
+      (gen-all-sort-keys idxent-list) #| this is the then case |#
       (let ((idxent-slist (split-list #'(lambda (idxent)
                                           (car (get-merge-key idxent)))
                                       #'string<
@@ -587,6 +624,27 @@ slots with the neccessary data.
   idxent-list)
 @ %def remove-first-keywords
 
+\no Function [[build-indexentry-tree-recursive]] builds the
+indexentry-tree and generates the sort-keys when needed. This function
+is necessary to generate the sort-keys that are left over. For
+example, if the index is not to be converted into a tree, all sortkeys
+have to be generated to allow sorting the flat index.
+
+The following function takes a list of indexentries and destructively
+modified their sort-key according to the sort-mapping.
+
+<<Processing an index>>=
+(defun gen-all-sort-keys (idxent-list)
+  (when idxent-list
+    (mapc #'(lambda (idxent)
+              (set-sort-key #-:ORDRULES (get-merge-key idxent)
+                            #+:ORDRULES (gen-keyword-sortkey-list
+                                         (get-merge-key idxent))
+                            idxent))
+          idxent-list))
+  idxent-list)
+@ %def gen-all-sort-keys
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 <<Sorting an index>>=
@@ -620,9 +678,9 @@ slots with the neccessary data.
 (lisp:provide 'index)
 
 (lisp:use-package "CLOS")
-(lisp:use-package "XP")
 (lisp:require "base")
 (lisp:use-package "BASE")
+#+:XP (lisp:use-package "XP")
 (lisp:require "locref")
 (lisp:use-package "LOCREF")
 ;(eval-when (compile load eval)
@@ -671,7 +729,10 @@ slots with the neccessary data.
 
 
 %% $Log$
-%% Revision 1.17  1996/06/24 09:12:48  kehr
+%% Revision 1.18  1996/07/01 09:19:31  kehr
+%% Added support for flat indexes and modified logfile-support.
+%%
+%% Revision 1.17  1996/06/24  09:12:48  kehr
 %% Several changes in all Lisp-modules due to the new startup-module and
 %% the implementation of the percentage bar appearing in the processing
 %% phases.

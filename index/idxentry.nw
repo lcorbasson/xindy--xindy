@@ -1052,6 +1052,7 @@ despite the fact that we use a temporary array with a fill-pointer.
 \subsubsection{Pretty-printing}
 
 <<Pretty-printing>>=
+#+:XP
 (set-pprint-dispatch 'index-entry
                      #'(lambda (s idxent)
                          (pprint-logical-block
@@ -1093,6 +1094,7 @@ needed to add the class-types into the dispatch-table for the
 pretty-printer.
 
 <<Pretty-printing>>=
+#+:XP
 (defun pprint-locref-group (s grp name)
   (pprint-logical-block
    (s nil :prefix "(" :suffix ")")
@@ -1106,6 +1108,7 @@ pretty-printer.
    (pprint-indent :block -1 s)
    (pprint-newline :mandatory s)))
 
+#+:XP
 (defun set-pprint-locref-group-dispatch (class name &optional (rank 0))
   (set-pprint-dispatch class
                        #'(lambda (s grp)
@@ -1126,19 +1129,26 @@ sort of the class-relationships.
 This section is placed here before the definition of all classes.
 
 <<Pretty-printing>>=
+#+:XP
 (set-pprint-locref-group-dispatch 'locref-group
                                   "LOCREF-GROUP"               0)
+#+:XP
 (set-pprint-locref-group-dispatch 'locref-class-group
                                   "LOCREF-CLASS-GROUP"         1)
+#+:XP
 (set-pprint-locref-group-dispatch 'crossref-class-group
                                   "CROSSREF-CLASS-GROUP"       2)
+#+:XP
 (set-pprint-locref-group-dispatch 'category-attribute-group
                                   "CATEGORY-ATTRIBUTE-GROUP"   3)
 @
 
 
 %% $Log$
-%% Revision 1.18  1996/06/24 09:12:44  kehr
+%% Revision 1.19  1996/07/01 09:19:26  kehr
+%% Added support for flat indexes and modified logfile-support.
+%%
+%% Revision 1.18  1996/06/24  09:12:44  kehr
 %% Several changes in all Lisp-modules due to the new startup-module and
 %% the implementation of the percentage bar appearing in the processing
 %% phases.
