@@ -1,0 +1,2587 @@
+<!doctype linuxdoc system>
+
+<!-- This is the manual of the xindy-system
+
+     $Id$
+
+ -->
+
+<article>
+
+<!-- Title information -->
+
+<title><sf/xindy/
+
+<subtitle>A Flexible Indexing System
+
+<author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
+
+<date>Edition July 1996 for xindy version 0.9
+
+<abstract>
+This document describes the indexing system <sf/xindy/. It is a
+powerful and flexible framework for generating indexes for many kinds
+of documents. This is edition June 1996 and describes the features of
+<sf/xindy/ version 0.9. Please email comments, suggestions and
+bug-reports to the following address:
+<tt/xindy@iti.informatik.th-darmstadt.de/.
+
+</abstract>
+
+<!-- Table of contents -->
+<toc>
+
+<!-- Begin the document -->
+
+
+<!-- ================================================================= -->
+
+<sect>About <sf/xindy/
+
+<p>
+<sf/xindy/ means fle<bf/X/ible <bf/IND/exing s<bf/Y/stem. It is an
+indexing system that can be used to generate book-like indexes for
+arbitrary document-preparation systems. This term includes systems
+such as TeX and LaTeX, the roff-family or SGML-based systems (e.g.
+HTML) that process some kind of text and generate indexing
+information. It is not fixed to any specific system, but can be
+configured for a wide variety of purposes.
+
+Autors very often wish to include an index into their document, but
+very often their document-preparation systems aren't able to produce
+indexes on their own, or the capabilities of the built-in indexers are
+very limited or ugly-looking. More often they use separate specialised
+tools for this purpose.
+
+Usually the document systems produce some form data that describe the
+<em/indexentries/ and the <em/locations/ they point to. This data is
+called the <em/raw-index/ since it consists of a bunch of structured
+information about the entries of the index. This raw-index is fed into
+the indexer and processed accordingly to a specification called the
+<em/indexstyle/. This is a user-definable description how the index is
+to be processed, what sort-rules for the keywords should be used,
+which kind of locations may appear, and finally, what tags should be
+emitted when writing the index down to the output stream. The result
+is sometimes fed back into the document preparation system (as it is
+in the case of TeX) or used otherwise.
+
+The <sf/xindy/ system is oriented on book-like indexes in a form that
+is described later in detail. The format of the input data is fixed
+and a small tool that converts the raw-index in a form suitable for
+<sf/xindy/ should not be a hurdle at all. The user is normally not
+involved in the correct format suitable for <sf/xindy/ and some tools
+will make this work invisible to him. The exact specification is given
+in section <ref id="raw-index" name="<em>Raw index</em>">.
+
+In contrast, the output of the <sf/xindy/ system is highly
+configurable and can produce a variety of different markups for an
+index. Additionally, the way <sf/xindy/ processes the index data can
+be parametrised and controlled in many ways and gives the user a
+powerful framework for describing complex indexes. The user can learn
+to tell <sf/xindy/ how it should produce an output according to his
+wishes or simply use some of the predefined styles that come with the
+distribution.
+
+Enjoy!
+
+
+
+<!-- ================================================================= -->
+
+<sect>Introduction
+
+<p>
+
+This section should give you some general information about indexing.
+
+
+<!-- ================================================================= -->
+
+<sect1>A brief overview on indexing
+
+<p>
+The index of a book is sometimes as valuable as the contents of the
+book. A good index supports the readers work and guides him quickly to
+the desired information.
+
+Compiling an index can be separated into two different tasks. The
+first one is to figure out what terms should appear in the index. As
+D. E. Knuth tells us
+
+<quote><em>Sometimes it is desirable to index words that don't
+actually appear on the page. ... For example, Appendix I lists page 1
+under `beauty', even though page 1 only contains the word `beautiful'.
+(The author felt that it was important to index `beauty' because he
+had already indexed `truth'.) </em>
+</quote>
+
+<quote>
+<sc/Donald E. Knuth/, <em/The TeXbook/ (1984)
+</quote>
+
+The second task to be mastered is to actually compile the index, which
+is a rather teduios and error-prone process that should be entirely
+left to computers. Indexing systems such as <sf/xindy/ don't support
+the author in deciding which terms should appear in the index. They
+master the second task after one has written a specification how the
+indexentries should be sorted, merged and finally tagged with an
+appropriate markup.
+
+
+<!-- ================================================================= -->
+
+<sect1>History
+
+<p>
+In 1987, the <tt/makeindex/-system was developed by Pheong Chen and
+others. It gave the large community of TeX/LaTeX users a tool to
+easily build indexes and include them into their own documents. In the
+following years it became a de facto standard in the TeX-community.
+Its markup is configurable and one can build a lot of pretty indexes
+with it.
+
+But some problems were discovered right soon after users in
+non-english speaking countries tried to use it for their own purposes.
+Since <tt/makeindex/ was not intended to be used for other languages
+with other underlying alphabets, many people wished an international
+version of this system. In 1991, Joachim Schrod and Gabor Herr
+implemented the <em/International MakeIndex/. It was called
+<tt/makeindex-3/ since it was a rewrite of some parts of the older
+<tt/makeindex-2/ by Chen. Some of the general problems concerning this
+topic were solved and its major contribute was the fact that the
+system was able to manage arbitrary alphabets and sort them by
+user-definable rules.
+
+But there were still a lot of wishes and it turned out, that the old
+system was not extensible enough to allow major rewrites of the
+source. In 1994, we started a project to reimplement the old
+<tt/makeindex/-system and to introduce a bunch of new features. So
+<sf/xindy/ can be viewed as the third step in the tradition of
+<tt/makeindex/.
+
+
+
+<!-- ================================================================= -->
+
+<sect>How the index processor works
+<label id="how-works">
+
+<p>
+
+
+<!-- ================================================================= -->
+
+<label id="general-concepts">
+<sect1>General concepts and terms
+
+<p>
+
+In the following sections we introduce some terms that are necessary
+to understand the way xindy works.
+
+
+The development of xindy started with a model an an book-like index.
+This vague term will now be fleshed out by giving a semi-formal
+description of the model. If the structure of an index conforms to
+this model it can be processed by xindy. The model can be expressed as
+follows:
+
+
+<descrip>
+
+<!-- ================================================================= -->
+
+<tag/index/ An index consists of a list of <bf/letter-groups/.
+
+
+<!-- ================================================================= -->
+
+<label id="def letter-group">
+<tag/letter-group/ The letter groups serve as a container for
+<bf/indexentries/. The letter groups are intended to group all
+indexentries sharing a common <bf/keyword/ prefix, allowing to assign
+a specific markup. For example, indexes are often organised in a way
+that new indexentries beginning with a new letter are separated by a
+specific markup. The following example illustrates this style.
+
+<tscreen><verb>
+ B
+    bread      25, 27
+    butter     26
+
+ M
+    marmalade  19
+    milk       21
+</verb></tscreen>
+
+This shows us examples of two letter groups for the letters `B' and
+`M'. The keywords `bread' and `butter' share the same prefix `b' and
+`marmalade' and `milk' share the prefix `m'. xindy can be advised to
+define arbitrary letter-groups with a particular markup for each of
+them. It can be advised to define the headers of the letter groups are
+`all what you need for breakfast' instead of `b' and `a better
+breakfast with this' instead of `m'. Its freely configurable. See
+command <tt/define-letter-group/ for further details.
+
+<!-- ================================================================= -->
+
+<tag/indexentry/ An indexentry consists of three components: the
+<bf/keyword/ and optionally the list of <bf/location-class-groups/ and
+the sub-<bf/indexentries/. An example:
+
+<tscreen><verb>
+  bread   25-30
+     brown   26
+     white   27
+</verb></tscreen>
+
+This indexentry consists of the keyword `bread', the
+location-class-list `25-10' and the subentries `brown 26' and `white
+27'. The subentries are also complete indexentries forming a recursive
+data-structure.
+
+<!-- ================================================================= -->
+
+<tag/keyword/ The keyword is the identifier of an indexentry. It
+consists of a list of strings. It is actually the index-key into an
+index. The keyword is used to look up information quickly. In our
+model the keyword constists of a list of strings, since indexes are
+often organised hierarchically with different layers. In the example
+
+<tscreen><verb>
+  bread         25-30
+  bread, brown     26
+  bread, white     27
+</verb></tscreen>
+
+we have keywords `bread', `bread, brown' and `bread, white'.
+
+The keyword is actually separated into four different keys. The
+<bf/main-key/ is the key that is specified from the author who indexes
+a document. The <bf/merge-key/ is derived from the main-key with the
+so-called <em/merge-mapping/. It is acomplished with a set of
+rewrite-rules. The <bf/sort-key/ is derived from the merge-key with
+another set of rewrite-rules called the <em/sort-mapping/. The
+<bf/print-key/ can be specified by the user explicitely or, if it is
+ommited, equals the main-key. The rewrite-rules consist of
+string-substitutions that also include regular-expression features.
+
+The <bf/merge-key/ is necessary to define the equality of
+indexentry-keys. For a list of indexentries in an index holds: forall
+x,y indexentry: merge-key(x) != merge-key(y). See command
+<tt/merge-rule/ for further details.
+
+The <bf/sort-key/ is necessary to define the total order on the
+keywords. Since we need a scheme that is independent from any specific
+character set such as ASCII or ISO-Latin, we must be able to define
+completely new alphabets. The indexentries are then sorted according
+to the ISO-Latin alphabet. See the command <tt/sort-rule/ for an
+explanation how these mapping can be specified.
+
+The <bf/print-key/ is used for the final markup and contains the
+string that appears in the generated markup.
+
+<!-- ================================================================= -->
+
+<tag/location-class-group/ There exist two kinds of
+location-class-groups namely <bf/location-reference-groups/ and
+<bf/cross-reference-groups/.
+
+<tag/location-reference-group/ is a container for all
+<bf/location-references/ of a particular
+<bf/location-reference-class/. It consists of a list of
+<bf/attribute-groups/.
+
+<label id="def locref-class">
+<tag/location-reference-class, location-reference, location/ Each
+indexentry of an index references at least one <bf/location/ in the
+document. A <bf/location/ is a logical or physical part of a document,
+such as a single page, a section or subsection, etc. The symbolic name
+of a location is called a <bf/location-reference/. The
+location-reference is always represented as a string (a sequence of
+characters). Each location-reference is associated a special tag
+called <bf/attribute/. The following examples may give you an idea how
+location-references could look like.
+
+<quote>
+<tt/"25"       / represents a page-number.
+</quote>
+
+<quote>
+<tt/"Chapter-3"/ represents the third chapter of a document.
+</quote>
+
+<quote>
+<tt/"A-I"      / represents the first page, written in uppercase roman
+numbers of the appendix `A', separated by a hyphen.
+</quote>
+
+<quote>
+<tt/"2.3.4"    / represents the sub-sub-section 2.3.4 of a document.
+</quote>
+
+As we can see the location-references often are hierarchially composed
+of smaller entities, such as numbers or names. All location-references
+that belong to the same class form a <bf/location-class/. A
+location-class is composed of <bf/alphabets/ and <bf/separators/. See
+command <tt/define-location-class/ for a description how classes can
+be defined.
+
+<!-- ================================================================= -->
+
+<tag/alphabet, separator/ As we have seen in the previous section,
+location-classes consist of alphabets and separators. xindy has the
+following built-in set of basic alphabets.
+
+<quote>
+<quote>
+<ttdesc>
+<tag/<tt/arabic-numbers// contains all positive numbers beginning with
+zero: 0, 1, 2, ....
+
+<tag/<tt/roman-numbers-uppercase// the roman numbers I, II, III,
+(IIII/IV), V, ... It recognises the old and new roman number system.
+
+<tag/<tt/roman-numbers-lowercase// the same for the lowercase roman
+numbers.
+
+<tag/<tt/ALPHA// the english alphabet (uppercase letters).
+
+<tag/<tt/alpha// the english alphabet (lowercase letters).
+
+<tag/<tt/digits// the digits 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9 in that
+order.
+
+</ttdesc>
+</quote>
+</quote>
+
+The user is free to define new alphabets as he wishes. See the
+commands <tt/define-alphabet/ and <tt/define-enumeration/ for further
+details.
+
+A complete location-class can be defined by composing alphabets and
+separators. The location-class of the example <tt/"A-I"/ is defined as
+follows
+
+<quote>
+<tt/(ALPHA "-" roman-numbers-uppercase)/
+</quote>
+
+This is a list that completely describes all possible instances of
+this location-class. Other valid members are <tt/A-II/, <tt/B-VI/,
+etc. Location-classes are defined with the command
+<tt/define-location-class/.
+
+The indexer now reads the incoming strings representing
+location-references and tries to match them against a previously
+defined location-class. There exist no predefined location-classes.
+This is necessary to be able to sort the location-references and
+possibly build ranges.
+
+
+<!-- ================================================================= -->
+
+<tag/cross-reference-group/ is a container for all
+<bf/cross-references/ of a particular <bf/cross-reference-class/.
+
+<!-- ================================================================= -->
+
+<label id="def crossref-class">
+<tag/cross-reference-class, cross-reference/ A <bf/cross-reference/ is
+an unstructured reference. <bf/Cross-reference-classes/ are used
+define different classes of cross-references. All elements of a
+cross-reference-class appear together in the index. A cross-reference
+consists of a list of strings.
+
+<!-- ================================================================= -->
+
+<tag/attributes/ Each location-reference is associated a so-called
+<bf/attribute/. Attributes may be used to give a location-reference a
+different meaning that may influence the processing and markup of this
+reference. Sometimes location-references pointing to semantically
+different locations such as a definition or a usage of a term are
+tagged differently. They often appear in italics of boldface
+indicating their differences. An attribute may now be used to express
+this difference. Since <sf/xindy/ needs the possible attributes before
+the indexentries are read in, the command <tt/define-attributes/ must
+be used to define a set of attributes and how they interact.
+
+<!-- ================================================================= -->
+
+<tag/attribute-groups/ Each <bf/location-reference-group/ consists of
+a list of <bf/attribute-groups/. Attribute-groups are defined by a set
+of <bf/attributes/. In the markup-phase, all location-references are
+sorted according to the group-number their attributes belong to.
+Additionally all location-references of a particular attribute-group
+appear in the index together.
+
+See command <tt/define-attribute-groups/ and section <ref
+id="sort-merge-locrefs" name="<em>Sorting location-references</em>">
+for further information about the handling of attribute-groups.
+
+An attribute-group consists of a list of <bf/location-references/
+and/or <bf/ranges/.
+
+<tag/range/ A <bf/range/ is a pair of <bf/location-references/. A
+sequence of location-references whose length exceeds a certain number
+is transformed into a range. See command <tt/define-location-class/
+for further details.
+
+</descrip>
+
+
+<!-- ================================================================= -->
+
+<sect1>Processing phases
+
+<!-- ================================================================= -->
+
+<label id="startup-phase">
+<sect2>The startup phase
+
+<p>
+After the system is started, <sf/xindy/ reads in the indexstyle that
+is passed as a command-line argument. Each <tt/require/-command is
+executed and the internal data-structures representing the indexstyle
+are built up. The indexstyle must completely be read in before the
+raw-index can be read.
+
+<!-- ================================================================= -->
+
+<label id="processing-phase">
+<sect2>The processing phase
+
+<p>
+The processing phase starts with reading the complete raw-index. The
+raw-index stream must be passed via the command-line. All indexentries
+are read in and preprocessed. All attributes and cross-reference
+classes are checked if they are already known to the system. All
+strings representing location-references are matched against all known
+location-classes. Appropriate Warnings are issued, if errors are
+encountered.
+
+After the raw-index has completely be read in, the location-references
+of each indexentry are merged, separated and sorted and the building
+of ranges takes place. This phase is the most complex one and we will
+describe it into more detail:
+
+<enum>
+<item> All location-references are separated according to the class
+they belong to. These groups are called <em/location-class-groups/.
+Possible groups are all defined location- and crossref-classes. See
+the commands <tt>define-location-class</tt> and
+<tt>define-crossref-class</tt> for a description how these classes can
+be defined.
+
+The classes are sorted according to the order that can be defined with
+the command <tt>define-location-class-order</tt>.
+
+<item> The further processing of each location-class group is
+different for the location-classes and the crossref-classes.
+
+<itemize>
+
+  <item> The cross-references are sorted lexicographically.
+
+  <label id="sort-merge-locrefs">
+
+  <item> To illustrate the processing of location-references we assume
+  the following list:
+
+  <quote>
+  "13", "14", "15", "18", `12', `13', `14', `16', 14, 16
+  </quote>
+
+   The location-references without quotes own the attribute `default',
+   those with quotes have attribute `important' and those with
+   double-quotes have attribute `definition'. The attribute-groups were
+   defined with the commands
+
+   <tscreen><verb>
+   (define-attribute-groups (("definition" "important")
+   		 	     ("default")))
+
+   (merge-to "definition" "default" :drop)
+   </verb></tscreen>
+
+   See commands <tt>define-attributes</tt> and <tt>merge-to</tt> for a
+   detailed description.
+
+   The <tt/substitute-if-double/-rules are applied. This means that
+   location-references `13' and `14` with attribute `important' are
+   <em/substituted/ by the location-references "13" and "14" with
+   attribute `definition'. Substitution means removing from the
+   list of location-references.
+
+   Substitution occurs because the definition of the attribute groups
+   implicitly defines <tt/substitute-if-double "definition" "important"/.
+
+   The resulting list is now
+
+   <quote>
+   "13", "14", "15", "18", `12' `16', 14, 16
+   </quote>
+
+   <label id="def merge-to">
+   The <tt/merge-to/-rules are applied. Their meaning is to make
+   them appear with another attribute as well, but only in the function
+   of supporting the building of ranges. They disappear after the ranges
+   are built. The location-references that cause new
+   location-refererences to be added are called <em/parents/, whereas the
+   new ones are called <em/childs/. The example-rule results in the
+   adding of all refernces with attribute `definition' to the attribute
+   `default' which results in the list
+
+   <quote>
+   "13", "14", "15", "18", `12' `16', (13), 14, (15), 16, (18)
+   </quote>
+
+   The childs are braced since they may only be used to build up ranges.
+
+   For each attribute we now try to build ranges. Since the switch
+   <tt/:drop/ was specified we must start with the attribute
+   `default', because a successful merging of location-references may
+   result in dropping the parents. This results in the range `13--16'.
+   The childs
+   (13) and (15) were used in the building of ranges, so their parents
+   "13" and "15" have to be removed from the list of location-references.
+   This step would be omitted if the switch <tt/:drop/ were not
+   specified. After unsucessfully trying to build more ranges and
+   dropping the location-references "13", "15" and (18)--which was only
+   meant to build ranges--we obtain the list
+
+   <quote>
+   "14", "18", `12' `16', 13--16
+   </quote>
+
+   Finally the attributes are brought into the right order. In our
+   example the location-references of the first attribute-group are
+   merged and sorted lexicographically resulting in the grouped list
+
+   <quote>
+   (`12', "14", `16', "18") (13--16)
+   </quote>
+
+   The first braced list is the result of the attribute-group
+   <tt/("definition" "important")/ and the second one is the result of
+   group <tt/("default")/. The braces are only used to emphasise the
+   analogy to the attribute-groups.
+
+</itemize>
+
+</enum>
+
+Finally the letter-groups are formed and the indexentries and
+location-references are transformed into tree-like structures as
+defined in the indexstyle.
+
+
+<!-- ================================================================= -->
+
+<label id="markup-phase">
+<sect2>The markup phase
+
+<p>
+After the index has completely been processed, the markup-phase
+traverses the tree-like structure of the index. Each step triggers the
+appropriate markup-events resulting in the emitting of markup tags.
+This phase can be traced by using the command-line option <tt/-t/.
+
+<!-- ================================================================= -->
+
+
+<sect>Command list
+
+<p>
+Here is the complete list of xindy's commands that may be used in the
+indexstyle. The symbol <tt/name/ always refers to a string. We
+deparate the commands into the <em/processing/ and
+<em/markup/-commands. The commands are listed in alphabetical order.
+
+
+<!-- ================================================================= -->
+
+<sect1>Processing commands
+<p>
+
+Here follow no all the processing commands in alphabetical order.
+
+<label id="define-alphabet">
+<cmddesc>
+(define-alphabet name string-list)
+</cmddesc>
+
+Defines <tt/name/ to be the alphabet consisting of all elements of the
+<tt/string-list/. See section <ref id="def locref-class"
+name="<em>location-reference classes</em>"> for more information.
+Examples:
+
+<verb>
+(define-alphabet "example-alphabet" ("An" "Example" "Alphabet"))
+</verb>
+
+defines an alphabet consisting of exactly three symbols. For the
+successor-relationship holds: <tt/succ("An")="Example"/ and
+<tt/succ("Example")="Alphabet"/. The built-in alphabet <tt/digits/ is
+defined as follows:
+
+<verb>
+(define-alphabet "digits"
+                 ("0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
+</verb>
+
+
+<!-- ================================================================= -->
+
+<label id="define-attributes">
+<cmddesc>(define-attributes attribute-list)</cmddesc>
+
+Defines the attributes the raw-index may contain. Parameter
+<tt/attribute-list/ is a list of list of strings. The nesting level
+mustn't be more than 2. So <tt/(..(..)..)/ is allowed, whereas
+<tt/(..((..))..)/ is not.
+
+The list has two kinds of elements: strings and list of strings. A
+single string is treated as if it were a single element list. So the
+lists <tt/("definition")/ and <tt/( ("definition") )/ are equivalent.
+All elements forming a list are so-called <em/attribute-groups/. The
+members of a group are written to the output-stream before any member
+of the following groups are written.
+
+Examples of valid attributes lists are:
+
+<tt/("definition" "usage")/ defines two attribute groups. The first
+one contains all references with the attribute <tt/definition/ and the
+second one all with the attribute <tt/usage/.
+
+
+<tt/(("definition" "important") "usage")/ defines two attribute
+groups. The first one contains all references with the attributes
+<tt/definition/ or <tt/important/ and the second one all with the
+attribute <tt/usage/. In the attribute group <tt/("definition"
+"important")/ the attribute <tt/definition/ overrides <tt/important/.
+See section <ref id="sort-merge-locrefs" name="Processing
+location-references"> for exact semantics.
+
+
+<!-- ================================================================= -->
+
+<label id="define-crossref-class">
+<cmddesc>(define-crossref-class name [:unverified])</cmddesc>
+
+Defines <tt/name/ to be a class of cross-references. We distinguish
+two types of cross-reference classes. <em/Verified/ cross-reference
+classes can be checked for dangling references. If for instance a
+cross-reference points to the non-existent keyword `foo' a warning is
+issued and the user is advised to correct the invalid cross-reference.
+This is the default. If for some reasons this mechanism must be
+deactivated the switch <tt/:unverified/ can be used to suppress this
+behaviour. See section <ref id="def crossref-class"
+name="<em>Cross-reference classes</em>"> for more information.
+
+
+<!-- ================================================================= -->
+
+<label id="define-letter-group">
+<cmddesc>
+(define-letter-group name [:before lgname] [:after lgname]
+			  [:prefixes list-of-prefixes])
+
+(define-letter-groups list-of-letter-groups)
+</cmddesc>
+
+This command defines a letter group with name <tt/name/, which must be
+string value, grouping all indexentries that have a <em/sort-key/
+beginning with the prefix <tt/name/. The command
+<tt/(define-letter-group "a")/ is equivalent to the command
+<tt/(define-letter-group "a" :prefixes ("a"))/. In the latter form one
+can associate more prefixes with a given letter-group. Also further
+prefixes can be added to an already existing letter group by simply
+define the same letter group again. This results not in a redefinition
+but in adding prefixes to the currently defined prefixes.
+
+Example:
+
+<tt/(define-letter-group "a")/ defines a letter-group containing all
+indexentries beginning with the string <tt/"a"/.
+
+<tt/(define-letter-group "c" :after "a")/ defines a letter-group
+containing all indexentries beginning with the string <tt/"c"/. The
+letter group appears behind the letter group "a"
+
+<tt/(define-letter-group "b" :after "a" :before "c")/ inserts
+letter-group "b" between letter group "a" and "c". This allows modular
+definition of letter groups by extending already defined letter
+groups.
+
+The definitions of the <tt/:after/ and <tt/:before/ define a partial
+order on the letter groups. The algorithm tries to convert this
+partial order into a total one. If this is impossible due to circular
+definitions, an error is reported. If more than one possible total
+orderings can result, it is left open which one is used, so one should
+always define a correct total order.
+
+The command <tt/define-letter-groups/ (with an `s' at the end) is
+simply an abbreviation for a sequence of
+<tt/define-letter-group/-definitions where the elements are ordered in
+the ordering given by the list. Example:
+
+<tt/(define-letter-groups ("a" "b" "c")/
+
+equals the definitions
+
+<verb>
+(define-letter-group "a")
+(define-letter-group "b" :after "a")
+(define-letter-group "c" :after "b")
+</verb>
+
+See section <ref id="def letter-group" name="<em>Letter group</em>">
+for a description of letter groups and see also commands
+<tt>markup-letter-group-list</tt> and "<tt>markup-letter-group</tt>
+for further information.
+
+
+<!-- ================================================================= -->
+
+<label id="define-location-class">
+<cmddesc>
+(define-location-class name layer-list
+                       [:min-range-length num]
+		       [:hierdepth depth]
+		       [:var])
+</cmddesc>
+
+Defines <tt/name/ to be a location-class consisting of the given list
+of layers. A list of layers may consists of names of basetypes and/or
+strings representing separators. All strings that are no valid
+alphabet names are used as separators. If the keyword
+<tt/:min-range-length/ is specified we define the <em/minimum
+range-length/ to be used when building ranges. The argument <tt/num/
+must be a positive integer number or the keyword <tt/none/ in which
+case the building of ranges is disallowed. If the switch <tt/:var/ is
+specified the declared class is of type <em/variable/, i.e. it is a
+<em/var-location-class/. Since building of ranges is currently only
+allowed for standard classes <tt/:var/ and <tt/:min-range-length/
+mustn't be used together. The keyword-argument <tt/:hierdepth/ can be
+used to declare that the location-references have to be tagged in a
+hierarchical form. Its argument <tt/depth/ must be an integer number
+indicating the number of layers the hierarchy does contain. See
+command <tt>markup-locref-list</tt> for more information. See also
+section <ref id="def locref-class" name="<em>location-reference
+classes</em>"> for more information on location-classes.
+
+ Examples:
+
+<verb>
+(define-location-class "page-numbers" ("arabic-numbers")
+		       :minimum-range-length 3)
+</verb>
+
+Defines the location-class <tt/page-numbers/ consisting of one layer.
+Since the minimum range-length is set to 3 the location-references 2,
+3 and 4 don't form a range because the range-length is only 2. But the
+references 6, 7, 8, and 9 are enough to form a range. Some example
+instances are <tt/0/, <tt/1/, ... <tt/2313/, etc.
+
+<verb>
+(define-location-class "sections" :var
+   ("arabic-numbers" "." "arabic-numbers" "." "arabic-numbers"))
+</verb>
+
+defines a variable location-class. Valid instances are <tt/1/,
+<tt/1.1/, <tt/1.2/, <tt/2/, <tt/2.4.5/, but none of <tt/2-3/ (wrong
+separator), <tt/1.2.3.4/ (more than 3 layers), <tt/2.3-iv/ (roman
+number instead of arabic one).
+
+
+<!-- ================================================================= -->
+
+<label id="define-location-class-order">
+<cmddesc>
+(define-location-class-order list)
+</cmddesc>
+
+Defines the order in which the location-classes are written to the
+output stream. The parameter <tt/list/ is a list of names of
+location-classes. Examples:
+
+<verb>
+(define-location-class-order
+    ("page-numbers" "sections" "xrefs"))
+</verb>
+
+tells the system that the page-numbers should appear before the
+section-numbers and that the cross-references should appear at the
+end. If this command is ommitted, the declaration order of the
+location-classes in the indexstyle is implicitely used as the output
+order. In the case that a location-class does not appear in the list,
+the output may behave unexpectedly, so you should always enumerate all
+used location-classes when using this command.
+
+
+<!-- ================================================================= -->
+
+<label id="merge-rule">
+<cmddesc>
+(merge-rule pattern replacement [:again])
+</cmddesc>
+
+Defines a keyword mapping rule that can be used to generate the
+<em/merge-key/ of an indexentry from the <em/main-key/. This mapping
+is necessary to map all keywords that are differently written but
+belong to the same keyword to the same canonical keyword. The
+parameter <tt/pattern/ can be a POSIX-compliant regular expression.
+Parameter <tt/replacement/ must be a string possibly contaiing the
+special characters <tt/&amp;/ (substitutes for the complete match) and
+<vb>\1</vb>,...,<vb>\9</vb> (substituting for the <em/n/-th submatch.
+Examples:
+
+<verb>
+(merge-rule "A" "a")
+</verb>
+replaces each occurrence of the uppercase letter `<tt/A/' with its
+lowercase counterpart.
+
+<verb>
+(merge-rule "\\\"([AEOUaeou])" "\\1")
+</verb>
+tranforms the TeX umlaut-letters to their stripped counterparts, such
+that `<tt/\"A/' is treated as an `<tt/A/' afterwards.
+
+As an escape symbol for the specification of rules, backslash is used.
+The following sequences have a special meaning:
+
+`<vb>\n</vb>' : End of line symbol (<em/linefeed/).
+
+`<vb>\b</vb>' : The ASCII character with the least ordinal number.
+
+`<vb>\e</vb>' : The ASCII character with the highest ordinal number.
+
+Backslashes and double quotes have to be quoted themselves with a
+backslash. The special characters `<vb>\b</vb>' and `<vb>\e</vb>'
+allow the definition of arbitrary sorting orders by rules. In
+connection with an additional character every position in the alphabet
+can be described. E.g. `<vb>m\e</vb>' is lexicographically placed
+between `<tt/m/' and `<tt/n/'.
+
+Due to efficiency, rules that just exchange characters or substitute
+constant character sequences are not treated as regular expressions.
+Therefore, instead of using the rule
+
+<verb>
+  (merge-rule "[A-Z]" "&amp;x")
+</verb>
+
+it is more efficient (though less comfortable) to use
+
+<verb>
+  (merge-rule "A" "Ax")
+  (merge-rule "B" "Bx")
+  ...
+  (merge-rule "Z" "Zx")
+</verb>
+
+Usually rules are applied in order of their definition. Rules with a
+special prefix precede those that begin with a class of characters, so
+that the search pattern `<tt/alpha/' is checked before `<tt/.*/', but
+`<tt/auto/' and `<tt/a.*/' are checked in order of their definition.
+
+The first rule from a style file that matches the input is
+applied and the process restarts behind the substituted text. If no
+rule could be applied, the actual character is copied from the input
+and the process continues with the next character.
+
+Sometimes it is necessary to apply rules anew to the result of a
+transformation. By specifying the keyword argument <tt/:again/ in the
+merge-rule the rule is marked as <em/mutable/, which means that after
+using this rule the transformation process shall restart at the same
+place. E.g. the rule
+
+<verb>
+  (merge-rule "\\$(.*)\\$" "\\1" :again)
+</verb>
+
+deletes <em/all/ surrounding `<vb>$</vb>' symbols from the input.
+
+See also command <tt>sort-rule</tt> for more information about keyword
+rules.
+
+
+<!-- ================================================================= -->
+
+<label id="merge-to">
+<cmddesc>
+(merge-to attr-from attr-to [:drop])
+</cmddesc>
+
+A <em/merge-rule/ says that the attribute <tt/attr-from/ can be used
+to build ranges in <tt/attr-to/. Both attributes must name valid
+attribute names. The switch <tt/:drop/ indicates, that the original
+location-reference with attribute <tt/attr-from/ has to be dropped
+(removed), if a successful range was built with location-references in
+attribute <tt/attr-to/. The detailed semantics a described in section
+<ref id="def merge-to" name="<em>Merging of
+location-references</em>">.
+
+
+<!-- ================================================================= -->
+
+<label id="require">
+<cmddesc>
+(require filename)
+</cmddesc>
+
+This command allows to load more indexstyle modules. The module is
+searched in the directories defined in the searchpath. The file is
+read in and processing of the current file continues. The argument
+<tt/filename/ must be a string. This allows to decompose the
+indexstyle into several modules that can be included into the topmost
+indexstyle-file. Example:
+
+<tscreen><verb>
+(require "french/alphabet.xdy")
+(require "french/sort-rules.xdy")
+(require "tex/locations.xdy")
+(require "tex/markup.xdy")
+</verb></tscreen>
+
+Submodules can load other submodules as well. If a file is required
+that was already loaded, the <tt/require/-command simply ignores this
+the command and continues without including this file twice. See
+section <ref id="def searchpath" name="<em>Searchpath</em>"> for more
+information about where <sf/xindy/ searches for files.
+
+<!-- ================================================================= -->
+
+<label id="searchpath">
+<cmddesc>
+(searchpath {path-string | path-list})
+</cmddesc>
+
+This command adds the given paths to the list of paths, xindy searches
+for indexstyle-files. Only one version of the command is accepted. The
+argument <tt/path-string/ must be a colon-separated string of
+directory names. If this path ends with a colon the default path-list
+is added to the end of the path-list. Example:
+
+<tscreen><verb>
+(searchpath ".:/usr/local/lib/xindy:/usr/local/lib/xindy/english:")
+</verb></tscreen>
+
+adds the specified directories to the searchpath. Since the last path
+ends with a colon, the built-in searchpath is added at the end. See
+also section <ref id="def searchpath" name="<em>Searchpath</em>"> for
+more information about the searchpath. Specifying
+
+<tscreen><verb>
+(searchpath ("."
+             "/usr/local/lib/xindy"
+	     "/usr/local/lib/xindy/english"
+	     :default))
+</verb></tscreen>
+
+yields exactly the same result as the example above. Here
+<tt/path-list/ must be a list of strings and/or the keyword(s)
+<tt/:default/ and <tt/:last/. The keyword <tt/:default/ signifies that
+the default-pathnames are to be inserted at the specified position in
+the list. The keyword <tt/:last/ allows to insert the currently active
+paths at the indicated position. Since this allows to insert the
+built-in paths at any position and incrementally adding new paths to
+the searchpath, this version of the command ist more flexible than the
+first version.
+
+<!-- ================================================================= -->
+
+<label id="sort-rule">
+<cmddesc>
+(sort-rule pattern replacement [:again])
+</cmddesc>
+
+Defines a keyword mapping rule that can be used to generate the
+<em/sort-key/ of an indexentry from the <em/merge-key/. This key is
+used to sort the indexentries lexicographically after they have been
+merged using the merge-key. See command <tt>merge-rule</tt> for more
+information about keyword rules.
+
+
+<!-- ================================================================= -->
+
+<sect1>Markup commands
+<p>
+
+The following commands can be used to define the markup of the index.
+They don't have any influence on the indexing process. Since the
+markup-scheme is characterised by the concept of <em/environments/ the
+syntax and naming-scheme of all commands follows a simple structure.
+
+The commands can be separated into <em/environment/- and
+<em/list-environment/-commands. All commands of the first group
+support the keyword-arguments <tt/:open/ and <tt/:close/, whereas the
+second group additionally supports the keyword-argument <tt/:sep/. If
+one of these keyword-arguments is missing, the default markup tag is
+<em/always/ the empty tag. The <tt/:open/-tag is always printed before
+the object itself and the <tt/:close/-tag is always printed after the
+object has been printed. If a list is printed the <tt/:sep/-tag is
+printed between two elements of the list but not before the first
+element, or after the last one. All commands dealing with a list have
+the suffix `<tt/-list/' as part of their command name.
+
+Since the number of commands and the heavy usage of <em/default/
+and <em/specialised/ tags makes the markup somehow complex (but very
+powerful) we have required a general mechanism to trace the
+markup-tags <sf/xindy/ omits during its markup-phase with the
+command <ref id="markup-trace" name="<tt>markup-trace</tt>">.
+
+Here follows the list of markup-commands in alphabetical order with
+some of the commands grouped together.
+
+<!-- ================================================================= -->
+
+<label id="markup-attribute-group">
+<label id="markup-attribute-group-list">
+<cmddesc>
+(markup-attribute-group-list [:open string] [:close string]
+                             [:sep string])
+
+(markup-attribute-group      [:open string] [:close string]
+                             [:group group-num])
+</cmddesc>
+
+Location-class groups consist of lists of attribute-groups. The
+command <tt/markup-attribute-group-list/ can be used to define the
+markup of these lists.
+
+To allow different markup for the different attribute-groups the
+command <tt/markup-attribute-group/ can be specialised on the
+group-number with the keyword-argument <tt/:group/ which must be an
+integer number. E.g., given are the groups <tt/("definition"
+"theorem")/ and <tt/("default")/ with group-numbers 0 and 1, then
+
+<tscreen><verb>
+(markup-attribute-group :open "<group0>" :close "&lt;/group0>"
+			:group 0)
+
+(markup-attribute-group :open "<group1>" :close "&lt;/group1>"
+			:group 1)
+</verb></tscreen>
+
+can be used to assign different markup for both groups in a SGML-based
+language.
+
+<!-- ================================================================= -->
+
+<label id="markup-crossref-layer">
+<label id="markup-crossref-layer-list">
+<label id="markup-crossref-list">
+<cmddesc>
+(markup-crossref-list       [:open string] [:close string]
+		            [:sep string]
+			    [:class crossref-class])
+
+(markup-crossref-layer-list [:open string] [:close string]
+		            [:sep string]
+			    [:class crossref-class])
+
+(markup-crossref-layer      [:open string] [:close string]
+		            [:class crossref-class])
+</cmddesc>
+
+A crossref-class group contains cross-references of the same class.
+The separator between the classes is defined with the
+<tt/(markup-locclass-list :sep)/-parameter. A list of cross-references
+can be tagged with the command <tt/markup-crossref-list/ that
+specialises on the <tt/:class/-argument.
+
+Each crossref-reference is determined by a list of layers indicating
+the target of the cross-reference. To define a suitable markup for
+such a list the command <tt/markup-crossref-layer-list/ can be used.
+
+Each layer of a cross-reference can be assigned two tags that
+specialise on the class of the reference, like all other commands.
+
+A suitable markup for a cross-reference-class <tt/see also/ within LaTeX2e
+could look like that:
+
+<tscreen><verb>
+(markup-crossref-list :class "see" :open "\\emph{see also} "
+                        	   :sep  "; ")
+(markup-crossref-layer-list :class "see" :sep ",")
+(markup-crossref-layer :class "see"
+		       :open "\\textbf{" :close "}")
+</verb></tscreen>
+
+An example output could look like
+
+<quote>
+<em/see also/  <bf/house/; <bf/garden/,<bf/winter/; <bf/greenhouse/
+</quote>
+
+<!-- ================================================================= -->
+
+<label id="markup-index">
+<cmddesc>
+(markup-index [:open string] [:close string]
+	      [ [:flat] | [:tree] | [:hierdepth depth] ])
+</cmddesc>
+
+Defines the markup tags that enclose the whole index via the
+<tt/:open/ and <tt/:close/ parameters. Examples:
+
+<tscreen><verb>
+(markup-index :open  "Here comes the index\n"
+              :close "That's all folks!\n")
+</verb></tscreen>
+
+defines that the <tt/:open/-string is printed before the rest of the
+index and the <tt/:close/-string appears after the index is printed.
+
+The command <tt/(markup-index)/ defines that nothing is printed
+surround the entire index.
+
+Additionally one can specify the form of the generated index. It is
+possible to produce flat indexes by specifying the switch <tt/:flat/,
+to generate a tree with the <tt/:tree/ switch or any kind of mixture
+between both by specifying the depth up to trees should be built with
+the parameter <tt/:hierdepth/. Its argument <tt/depth/ is the number
+of layers that can be formed into a tree. Therefore <tt/:flat/ is an
+abbrevation of <tt/:hierdepth 0/ and <tt/:tree/ is an abbrevation of
+<tt/:hierdepth max-depth/, with <tt/max-depth/ being the maximum
+number of layers a keyword has. An example, the keywords
+
+<tscreen><verb>
+("tree" "binary" "AVL")
+("tree" "binary" "natural")
+</verb></tscreen>
+
+can be transformed in the following ways:
+
+A flat index (<tt/:flat/ or <tt/:hierdepth 0/)
+
+<tscreen><verb>
+tree binary AVL
+tree binary natural
+</verb></tscreen>
+
+with <tt/:hierdepth 1/
+
+<tscreen><verb>
+tree
+    binary  AVL
+    binary  natural
+</verb></tscreen>
+
+and a tree (<tt/:tree/ or <tt/:hierdepth/ &gt; 1)
+
+<tscreen><verb>
+tree
+    binary
+        AVL
+        natural
+</verb></tscreen>
+
+Most often one will create flat indexes or ones that are in a
+tree-like form.
+
+<!-- ================================================================= -->
+
+<label id="markup-indexentry-list">
+<label id="markup-indexentry">
+<cmddesc>
+(markup-indexentry-list [:open string] [:close string]
+			[:sep string]  [:depth integer])
+
+(markup-indexentry      [:open string] [:close string]
+		        [:depth integer])
+</cmddesc>
+
+Letter-groups consists of a list of indexentries. The command
+<tt/markup-indexentry-list/ defines the markup of these lists. The
+markup can be specialised on the depth if the index is hierarchically
+organised. The command
+
+<tscreen><verb>
+(markup-indexentry-list :open  "\\begin{IdxentList}"
+			:close "\\end{IdxentList}"
+			:sep   "\n")
+</verb></tscreen>
+
+defines that the indexentries of all layers are wrapped into the
+given markup-tags. If additionally
+
+<tscreen><verb>
+(markup-indexentry-list :open  "\\begin{IdxentListII}"
+			:close "\\end{IdxentListII}"
+			:sep   "\n"
+			:depth 2)
+</verb></tscreen>
+
+is defined, all indexentry lists of all layers (except layer 2) are
+tagged according to the first specification, and the indexentry-list
+with depth 2 is tagged according to the second rule.
+
+The command <tt/markup-indexentry/ defines the markup of an indexentry
+at a given depth. Since indexentries may also contain subentries and
+the markup for subentries may be different in different layers the
+optional keyword-argument <tt/:depth/ can be used to assign different
+markup for different layers. If depth is ommited the default markup
+for all possible depths is defined. The top-most indexentries have
+depth 0.
+
+<tscreen><verb>
+(markup-indexentry :open  "\\begin{Indexentry}"
+		   :close "\\end{Indexentry}")
+</verb></tscreen>
+
+defines that the indexentries of all layers are wrapped into the
+given markup-tags. If additionally
+
+<tscreen><verb>
+(markup-indexentry :open  "\\begin{IndexentryII}"
+		   :close "\\end{IndexentryII}"
+		   :depth 2)
+</verb></tscreen>
+
+is defined, all indexentries of all layers (except layer 2) are tagged
+according to the first specification, and the indexentries with depth
+2 are tagged according to the second rule.
+
+<!-- ================================================================= -->
+
+<label id="markup-keyword-list">
+<label id="markup-keyword">
+<cmddesc>
+(markup-keyword-list [:open string] [:close string]
+		     [:sep string] [:depth integer])
+
+(markup-keyword      [:open string] [:close string]
+	             [:depth integer])
+</cmddesc>
+
+
+The keyword of an indexenty consists of a list of strings. The markup
+of this list can be defined with the command <tt/markup-keyword-list/.
+The keyword-argument <tt/:depth/ may be specified to define the markup
+of the list at a particular depth.
+
+The keyword of an indexenty consists of a list of strings. Each of
+these components is tagged with the strings defined with the command
+<tt/markup-keyword/. Since we maybe need different markup for
+different layers, the optional keyword-argument can be used to
+specialise this markup for some depth.
+
+<!-- ================================================================= -->
+
+<label id="markup-letter-group-list">
+<label id="markup-letter-group">
+<cmddesc>
+(markup-letter-group-list [:open string] [:close string]
+                          [:sep string])
+
+(markup-letter-group  [:open string] [:close string] [:group group-name]
+                      [:open-head string] [:close-head string]
+		      [:upcase | :downcase | :capitalize])
+</cmddesc>
+
+The first command defines the markup of the letter-group with name
+<tt/group-name/. Since the marup of letter-groups often contains the
+name of the letter-group as a part of it, the other keyword-arguments
+allow an additional markup for this group-name. If one of the
+parameters <tt/:open-head/ and <tt/:close-head/ is specified the
+markup-sequence that is generated is
+
+<verb>
+<OPEN>
+   <OPEN-HEAD>
+     transformer-of(<GROUP-NAME>)
+   <CLOSE-HEAD>
+   <INDEXENTRIES...>
+<CLOSE>
+</verb>
+
+compared to the default sequence
+
+<verb>
+<OPEN>
+   <INDEXENTRIES...>
+<CLOSE>
+</verb>
+
+with <tt/transformer-of/ being a function that possibly transforms the
+string representing the group-name into another string. The
+transformers we currently support can be specified with the switches
+<tt/:upcase/, <tt/downcase/ and <tt/:capitalize/ which result in the
+corresponding string-conversions. If none of them is specified no
+transformation is done at all.
+
+The command <tt/markup-letter-group/
+defines the markup of the list of letter groups. See also section <ref
+id="def letter-group" name="<em>Letter group</em>"> for a description
+of letter groups and the associated sort-rules.
+
+<!-- ================================================================= -->
+
+<label id="markup-locclass">
+<cmddesc>
+(markup-locclass-list [:open string] [:close string]
+                      [:sep string])
+</cmddesc>
+
+Each indexentry contains a list of location-class-groups. This markup
+command can be used to define the markup of this list.
+
+<!-- ================================================================= -->
+
+<label id="markup-locref">
+<cmddesc>
+(markup-locref [:open string] [:close string]
+	       [:class locref-class]
+	       [:attr  attribute]
+	       [:depth integer])
+</cmddesc>
+
+The markup tags of a location-reference can be specialised on the
+three arguments <tt/:class/, <tt/:attr/ and additionally, if
+sub-references are used, <tt/:depth/. Most often one will only use a
+tag depending on the attribute. For example, all location-references
+with the attribute <tt/definition/ should appear in font-shape like
+bold, emphasising the importance of this location-reference; those
+with the attribute default in italic shape. The markup in this case
+would not specialise on the depth or a particular class resulting in
+the following definition, suitable for a usage within HTML.
+
+<verb>
+(markup-locref :open "&lt;B>" :close "&lt;/B>" :attr "definition")
+(markup-locref :open "&lt;I>" :close "&lt;/I>" :attr "default")
+</verb>
+
+<!-- ================================================================= -->
+
+<label id="markup-locref-class">
+<cmddesc>
+(markup-locref-class [:open string] [:close string]
+		     [:class locref-class])
+</cmddesc>
+
+All location-references of a particular location-reference class can
+be wrapped into the tags defined by this command. It specialises on
+the keyword-argument <tt/:class/.
+
+<!-- ================================================================= -->
+
+<label id="markup-locref-layer-list">
+<cmddesc>
+(markup-locref-layer-list [:open string] [:close string]
+			  [:sep string]
+		          [:depth integer] [:class locref-class])
+</cmddesc>
+
+A location-reference contains a list of location-reference layers.
+This markup command can be used to markup this list. It specialises on
+the class of the location-references and the depth (if sub-references
+are used).
+
+<!-- ================================================================= -->
+
+<label id="markup-locref-list">
+<cmddesc>
+(markup-locref-list [:open string] [:close string] [:sep string]
+		    [:depth integer] [:class locref-class])
+</cmddesc>
+
+An attribute-group contains a list of location-references and/or
+ranges. Additionally a layered-location-reference itself may contain
+sub-references that are stored as a list of location-references. We
+specialise the markup for these lists on the location-class they
+belong to with the keyword-argument <tt/:class/, and on the
+<tt/:depth/ that specialises the different subentr-levels when using
+location-references with sub-references.
+
+Given is a list of location-references that have the class-desription
+
+<verb>
+(define-location-class "Appendix"
+		       ("ALPHA" "-" "arabic-numbers")
+		       :hierdepth 2)
+</verb>
+
+This location-class has instances like <tt/A-1/, <tt/B-5/, etc. The
+keyword-argument <tt/:hierdepth 2/ informs <sf/xindy/ to markup these
+location-references in a hierarchical form. With the commands
+
+<verb>
+(markup-locref-list           :sep "; "
+		    :depth 0  :class "Appendix")
+(markup-locref-list :open " " :sep ","
+                    :depth 1  :class "Appendix")
+</verb>
+
+we obtain a markup-sequence for some example data that could look like
+
+<tscreen><verb>
+A 1,2,5; B 5,6,9; D 1,5,8; ...
+</verb></tscreen>
+
+
+<!-- ================================================================= -->
+
+<label id="markup-range">
+<cmddesc>
+(markup-range [:open string] [:close string] [:sep string]
+              [:class locref-class]
+</cmddesc>
+
+A range consists of two location-references. Therfore, we need the
+<tt/:open/ and <tt/:close/-arguments and one separator given by the
+argument <tt/:sep/. Since the location-references are tagged with the
+tags given by the commands <tt/markup-locref/ a specialisation on
+attributes or depth should not be necessary. The only specialisation
+allowed is the class they belong to, because the separator between two
+location-refences may be different for each the location-class. The
+following tags can be used to define a range of page-numbers (given in
+a location-class <tt/page-numbers/) without considering the open- and
+close-parameters.
+
+<tscreen><verb>
+(markup-range :sep "-" :class "page-numbers")
+</verb></tscreen>
+
+Location-ranges then appear separated by a hyphen in a form like this:
+
+<tscreen><verb>
+ ..., 5-8, 19-23, ...
+</verb></tscreen>
+
+<!-- ================================================================= -->
+
+<label id="markup-trace">
+<cmddesc>
+(markup-trace [:on] [:open string] [:close string])
+</cmddesc>
+
+This command can be used to activate the tracing of all
+markup-commands <sf/xindy/ executes. The switch <tt/:on/ activates the
+trace. If <tt/:on/ is omitted, the command-line flag <tt/-t/ can be
+used as well (<em/see/ <ref id="cmdline" name="<em>Invoking
+xindy</em>">). All tags which are emitted but not yet defined
+explicitely by the user are tagged with a symbolic notation indicating
+the commands that must be used to define this tag. The defaults for
+the keyword-argument <tt/:open/ is `<tt/&lt;/' and for <tt/:close/ is
+`<tt/>/'. The beginning of an example output could look like:
+
+<tscreen><verb>
+<INDEX:OPEN>
+  <LETTER-GROUP-LIST:OPEN>
+    <LETTER-GROUP:OPEN [0]>
+      <INDEXENTRY-LIST:OPEN [0]>
+        <INDEXENTRY:OPEN [0]>
+          <KEYWORD-LIST:OPEN [0]>
+            <KEYWORD:OPEN [0]>
+ ...
+</verb></tscreen>
+
+We use a simple indentation scheme to make the structure of the tags
+visible. The symbolic tag <tt/&lt;LETTER-GROUP:OPEN [0]>/ for example
+indicates that the tag that can be specified with the command
+
+<tscreen><verb>
+(markup-letter-group :open "XXX :group 0 ... )
+</verb></tscreen>
+
+is emitted at this point in the markup process. By incrementally
+adding markup-commands to the index, more and more tags can be defined
+until the whole markup is defined. This general mechanism should allow
+everybody to understand the markup-process. The best is to start with
+a small index, define the complete markup and finally process the
+whole index. Additionally one can enclose the symbolic tags into a
+closure that is neutral to or the document-preparation system, such as
+comment. For TeX this could be
+
+<tscreen><verb>
+(markup-trace :open "%%" :close "\n")
+</verb></tscreen>
+
+or a definition in the TeX-document like
+
+<tscreen><verb>
+\def\ignore#1{}
+</verb></tscreen>
+
+combined with the command
+
+<tscreen><verb>
+(markup-trace :open "\\ignore{" :close "}")
+</verb></tscreen>
+
+
+<!-- ================================================================= -->
+
+<label id="raw-index">
+<sect1>Raw-index interface
+
+<p>
+
+This section can be skipped if the reader is not interested in
+adapting <sf/xindy/ to a new document-preparation system.
+
+The raw-index is the stream of data that represents the index that is
+to be processed. Since many different document preparation systems may
+use different forms of index representations, their output must be
+transformed in a form readable by <sf/xindy/. We also could have
+written an configurable parser performing this task, but usually a
+tool written with some text processing tools such as <tt/perl/,
+<tt/sed/ or <tt/awk/ can achieve the same task as well. Therefore,
+adapting <sf/xindy/ to a completely different system can mostly be
+done by writing an appropriate raw-index filter.
+
+The format of the raw-index interface of <sf/xindy/ defined as follows:
+
+<cmddesc>
+(indexentry { :key string-list [:print string-list]
+	    | :tkey list-of-layers }
+	    [:attr string]
+	    { { :locref string | [:open-range | :close-range] }
+	    | { :xref string-list [:xref-type string] } } )
+</cmddesc>
+
+Here the braces <tt/[/ and <tt/]/ denote optional parts of the syntax
+and <tt/{/ and <tt/}/ denote the groups of elements. However the
+enclosing round braces <em/are/ part of the syntax and must be
+supplied. The pseudo-variable <em/string/ is a sequence of characters
+surrounded by double-quotes, e.g.
+
+<tscreen><verb>
+"Hi, it's me"  "one"  "a string with two \"double quotes\""
+</verb></tscreen>
+
+are three examples of valid strings. If you need to include a
+double-qoute as a literal character, you must quote it itself with a
+backslash as shown in the third example. A <em/string-list/ is simply
+a list of strings separated by whitespaces and surrounded by round
+braces. An example of a string-list is
+
+<tscreen><verb>
+("This" "is" "a" "list" "of" "strings")
+</verb></tscreen>
+
+So far about the syntax. The semantics of the different elements are
+described here.
+
+<p>
+<descrip>
+
+<tag/<tt/:key//The argument <em/string-list/ defines the keyword of
+the indexentry. Is is a list of strings, since the keyword may consist
+of different layers such as <tt>("heap" "fibonacci")</tt>. This
+argument is mandatory.
+
+<tag/<tt/:print//The optional <em/print-key/ defines the way the
+keyword has to be printed in the markup phase.
+
+<tag/<tt/:tkey//Another possibility to the define the keys of an
+indexentry is with the <tt/:tkey/-keyword-argument. It can be used
+instead of the <tt/:key/ and <tt/:print/-arguments. Instead of
+specifying separately the key and the corresponding print-key, we
+define the keyword by its layers. Each layer consist of a list of one
+or two strings. The first string will be interpreted as the main-key,
+whereas the second one will become the print-key. If the print-key is
+ommited, the main-key is taken instead. So the definitions
+
+<tscreen><verb>
+:tkey (("This") ("is") ("a") ("bang" "BANG !!!"))
+</verb></tscreen>
+
+is equivalent to
+
+<tscreen><verb>
+:key   ("This" "is" "a" "bang")
+:print ("This" "is" "a" "BANG !!!")
+</verb></tscreen>
+
+
+<tag/<tt/:locref//The reference an indexentry describes can be a
+<em/location-reference/ or a <em/cross-reference/. The switch
+<tt/:locref/ describes a location-reference. Its optional arguments
+are <tt/:open-range/ and <tt/:close-range/. The <em/string/ that must
+be supplied must somehow encode the location-reference. It might look
+like the string <tt/"25"/ representing the page number 25, or
+<tt/"Appendix-I"/ representing the first appendix numbered in
+uppercase roman numbers.
+
+<tag/<tt/:open-range/,<tt/:close-range//These are switches that do not
+take any arguments. They describe the beginning and ending of a
+<em/range/, starting or ending from the location-reference that is
+given by the argument <tt/:locref/. If they are supplied, the
+location-reference may have influence on the way ranges are build.
+
+<tag/<tt/:xref/,<tt/:xref-type//These arguments choose the second
+alternative. The argument <em/string-list/ of parameter <tt/:xref/
+describes where the indexentry should point to. The optinal parameter
+<tt/:xref-type/ may be used to declare the cross-reference to be of a
+certain type.
+
+<tag/<tt/:attr//This parameter may be used to tag a location-reference
+or a cross-reference with a certain attribute. For location-references
+it parametries the way ranges are built. It may also used to associate
+different markup for different attributes in the markup phase.
+
+</descrip>
+
+Some examples:
+
+<tscreen><verb> (indexentry :key ("airplane") :locref "25") </verb></tscreen>
+defines an indexentry with the key 'airplane' and indexed on page
+'25'.
+
+<tscreen><verb> (indexentry :key ("house") :xref ("building"))
+</verb></tscreen> defines a cross-reference with the key 'house'
+pointing to the term 'building'.
+
+<tscreen><verb> (indexentry :key ("house") :xref ("building") :open-range)
+</verb></tscreen> is an invalid specification, since <tt/:open-range/
+mustn't be used together with cross-references.
+
+
+<!-- ================================================================= -->
+
+<sect>Invoking <sf/xindy/
+
+<p>
+
+<!-- ================================================================= -->
+
+<label id="cmdline">
+<sect1>Command-line options
+
+<p>
+The following command-line options are accepted
+
+<cmddesc>
+xindy  [-h] [-t] [-v] { indexstyle raw-index
+		        | -c indexstyle }
+</cmddesc>
+
+The argument <tt/indexstyle/ names a file, containing the indexstyle
+description. The argument <tt/raw-index/ names a file, containing the
+raw-index. Both commands are mandatory.
+
+<ttdesc>
+<tag/<tt/-h// gives a short summary of all command-line options.
+
+<tag/<tt/-t// enters tracing-mode of the symbolic markup-tags. The
+format of the emitted tags can be defined with the command
+<tt>markup-trace</tt>.
+
+<tag/<tt/-v// turns on the verbose-mode. This mode is more talkative
+and issues more information about what <sf/xindy/ is currently doing.
+
+</ttdesc>
+
+The final tagged index is written to <tt/stdout/. Errors and warnings
+are reported to <tt/stderr/.
+
+<!-- ================================================================= -->
+
+<label id="def searchpath">
+<sect1>Searchpath
+
+<p>
+The system uses the concept of a <em/searchpath/ for finding the
+indexstyle-files and -modules. The searchpath can be set with the
+environment-variable <tt/XINDY_SEARCHPATH/ which must contain a list
+of colon-separated directories. If it ends with a colon, the built-in
+searchpath is added to the entire searchpath. Additionally the
+searchpath can be set with the command <tt>searchpath</tt>.
+
+<!-- ================================================================= -->
+
+<sect>Installation notes
+
+<p>
+The <sf/xindy/ is written in <tt/clisp/ which is a Common Lisp
+implementation, using the Literate-Programming system <tt/noweb/. It
+makes heavy use of CLOS the Common Lisp Object System. The
+<tt/clisp/-system was extended by some libraries that integrate
+regular expression features to the basic Lisp. Since the integration
+of these libraries into the <tt/clisp/-system is not trivial, the
+source-package includes a extended version of <tt/clisp/ that already
+includes all necessary features. Currently we offer binary packages
+for the following platforms:
+
+<tscreen><verb>
+rs6000         AIX-3.2
+Sun4 (Sparc)   SunOS 5.2-4
+i386           Linux-ELF
+HPPA-RISC      HP-UX 9.0
+</verb></tscreen>
+
+They are available at the <sf/xindy/-hompage at
+
+<tscreen><verb>
+www://www.iti.informatik.th-darmstadt.de/~xindy
+</verb></tscreen>
+
+and everyone is encouraged to send us more binary packages.
+
+
+
+<!-- ================================================================= -->
+
+<sect>References and acknowledgements
+
+<p>
+
+The following books and papers were referenced in this document.
+
+<enum>
+<item> D. E. Knuth, <em/The TeXbook/, Addison-Wesley, 1984
+<item> Pehong Chen and Michael A. Harrison, <em/Automating Index
+Preparation/, TR-87/347, University of California Berkeley, 1987<label
+id="makeindex">
+<item> Joachim Schrod, <em/An International Version of MakeIndex/,
+Cahiers GUTenberg, 10, p81-90, 1991
+<item> Roger Kehr, <sf/xindy/, <em/Ein flexibles Indexierungssystem/,
+Studienarbeit FB Informatik, TH-Darmstadt.
+</enum>
+
+</article>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:nil
+sgml-shorttag:t
+End:
+-->
+<!doctype linuxdoc system>
+
+<!-- This is the tutorial of the xindy-system
+
+     $Id$
+
+ -->
+
+<article>
+
+<!-- Title information -->
+
+<title><sf/xindy/
+
+<subtitle>A Flexible Indexing System
+
+<author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
+
+<date>Tutorial Edition July 1996 for xindy version 0.9
+
+<abstract>
+This is a tutorial for the <sf/xindy/ indexing system. <sf/xindy/ is a
+general purpose index processor that can be configured for a variety
+of document preparation system. We will demonstrate step by step the
+incremental specification of a complete indexstyle. The examples are
+based on indexes that are delivered with the system so one can get
+acquainted with it practically.
+</abstract>
+
+<!-- Table of contents -->
+<toc>
+
+<!-- Begin the document -->
+
+<!-- ================================================================= -->
+
+
+<sect>About <sf/xindy/
+<p>
+<sf/xindy/ means fle<bf/X/ible <bf/IND/exing s<bf/Y/stem. It is an
+indexing system that can be used to generate book-like indexes for
+arbitrary document-preparation systems. This term includes systems
+such as TeX and LaTeX, the roff-family or SGML-based systems (e.g.
+HTML) that process some kind of text and generate indexing
+information. It is not fixed to any specific system, but can be
+configured for a wide variety of purposes.
+
+Autors very often wish to include an index into their document, but
+very often their document-preparation systems aren't able to produce
+indexes on their own, or the capabilities of the built-in indexers are
+very limited or ugly-looking. More often they use separate specialized
+tools for this purpose.
+
+Usually the document systems produce some form data that describe the
+<em/indexentries/ and the <em/locations/ they point to. This data is
+called the <em/raw-index/ since it consists of a bunch of structured
+information about the entries of the index. This raw-index is fed into
+the indexer and processed accordingly to a specification called the
+<em/indexstyle/. This is a user-definable description how the index is
+to be processed, what sort-rules for the keywords should be used,
+which kind of locations may appear, and finally, what tags should be
+emitted when writing the index down to the output stream. The result
+is sometimes fed back into the document preparation system (as it is
+in the case of TeX) or used otherwise.
+
+The <sf/xindy/ system is oriented on book-like indexes in a form that
+is described later in detail. The format of the input data is fixed
+and a small tool that converts the raw-index in a form suitable for
+<sf/xindy/ should not be a hurdle at all. The user is normally not
+involved in the correct format suitable for <sf/xindy/ and some tools
+will make this work invisible to him.
+
+In contrast, the output of the <sf/xindy/ system is highly
+configurable and can produce a variety of different markups for an
+index. Additionally, the way <sf/xindy/ processes the index data can
+be parametrized and controlled in many ways and gives the user a
+powerful framework for describing complex indexes. The user can learn
+to tell <sf/xindy/ how it should produce an output according to his
+wishes or simply use some of the predefined styles that come with the
+distribution.
+
+Enjoy!
+
+
+<sect1>A brief overview on indexing
+<p>
+The index of a book is sometimes as valuable as the contents of the
+book. A good index supports the readers work and guides him quickly to
+the desired information.
+
+Compiling an index can be separated into two different tasks. The
+first one is to figure out what terms should appear in the index. As
+D. E. Knuth tells us
+
+<quote><em>Sometimes it is desirable to index words that don't
+actually appear on the page. ... For example, Appendix I lists page 1
+under `beauty', even though page 1 only contains the word `beautiful'.
+(The author felt that it was important to index `beauty' because he
+had already indexed `truth'.) </em>
+</quote>
+
+<quote>
+<sc/Donald E. Knuth/, <em/The TeXbook/ (1984)
+</quote>
+
+The second task to be mastered is to actually compile the index, which
+is a rather tedious and error-prone process that should be entirely
+left to computers. Indexing systems such as <sf/xindy/ don't support
+the author in deciding which terms should appear in the index. They
+master the second task after one has written a specification how the
+indexentries should be sorted, merged and finally tagged with an
+appropriate markup.
+
+
+<!-- ================================================================= -->
+
+<sect1>History
+<p>
+In 1987, the <tt/makeindex/-system was developed by Pheong Chen and
+others. It gave the large community of TeX/LaTeX users a tool to
+easily build indexes and include them into their own documents. In the
+following years it became a de facto standard in the TeX-community.
+Its markup is configurable and one can build a lot of pretty indexes
+with it.
+
+But some problems were discovered right soon after users in
+non-english speaking countries tried to use it for their own purposes.
+Since <tt/makeindex/ was not intended to be used for other languages
+with other underlying alphabets, many people wished an international
+version of this system. In 1991, Joachim Schrod and Gabor Herr
+implemented the <em/International MakeIndex/. It was called
+<tt/makeindex-3/ since it was a rewrite of some parts of the older
+<tt/makeindex-2/ by Chen. Some of the general problems concerning this
+topic were solved and its major contribute was the fact that the
+system was able to manage arbitrary alphabets and sort them by
+user-definable rules.
+
+But there were still a lot of wishes and it turned out, that the old
+system was not extensible enough to allow major rewrites of the
+source. In 1994, we started a project to reimplement the old
+<tt/makeindex/-system and to introduce a bunch of new features. So
+<sf/xindy/ can be viewed as the third step in the tradition of
+<tt/makeindex/.
+
+
+
+<sect>Why using <sf/xindy/?
+<p>
+In comparison to other index processors <sf/xindy/ has several
+powerful features that make it an ideal framework for describing and
+generating complex indices. Its most interesting features are
+
+<descrip>
+
+<tag/Internationality/ <sf/xindy/ can be configured to process indices
+for many languages with different letter sets and different sorting
+rules. For example, many roman languages such as Italian, French,
+Portuguese or Spanish contain accentuated letters such as &Agrave;,
+&Aacute;, &ntilde; other languages from northern Europe have letters
+like &Auml;, &Oslash;, &aelig; or &szlig; which often can't be
+processed by many index processors not talking about sorting them
+correctly into an index. The <sf/xindy/-system can be configured to
+process these alphabets by defining <em/sort-/ and <em/merge-rules/
+that allow expressing of language specific rules. One example of such
+a rule would be
+
+<tscreen><verb>
+(sort-rule "ä" "ae")
+</verb></tscreen>
+
+defining that a word containing the umlaut-a will be sorted as if it
+contained the letters <tt/ae/ instead. This is one form of how the
+umlaut-a is sorted into german indices. With an appropriate set of
+rules on can express the complete rules of a specific language.
+
+<tag/User-definable Location Types/ Locations are the entities an
+indexentry points to. Often used locations are <em/page numbers/,
+<em/section-numbers/, etc. <sf/xindy/ allows to define new kinds of
+types to be compiled of smaller entities like arabic numbers, roman
+numbers, letters, etc. which can be used to describe new index types.
+Examples of these entities can be books that have a page numbering
+scheme that starts from 1 for each new chapter resulting in page
+numbers of the form <em/1-13, 2-15, 2-20/, etc. This type of locations
+can often be found in computer manuals. A more complex structure is
+represented by the locations <em/Psalm 46, 1-8/ and <em/Genesis 1,
+31/. Even the structure of bible verses can be described allowing
+<sf/xindy/ to correctly sort and process indices for documents with a
+completely different structure.
+
+<tag/Highly Configurable Markup/ Since a index processor is only one
+component in a document preparation system it ought to fit smoothly
+into the complete environment. Many text processing systems use the
+concept of <em/environments/ that can be used to describe the markup
+of the text entities. Our approach is based on this concept which has
+proved to be expressive enough for most applications. As an example
+one can view systems such as TeX, SGML and its instance HTML, GNU
+Info, RTF and the Nroff-familiy of document formatters. The markup of
+an index can be defined for all of these systems in a very comfortable
+though powerful way.
+
+</descrip>
+
+
+
+<sect>A Basic Introduction
+<p>
+This section incrementally introduces the most important parts of the
+system. After reading and practicing this chapter you should be able
+to specify about 80% of the commonly used indices. The examples are
+demonstrated with a TeX-markup such that one can easily typeset the
+results <sf/xindy/ produces. You need LaTeX 2e and the ISO-Latin
+enhancements that come with the <tt/inputenc/-package to run the
+following examples. Also the <sf/xindy/-system must already be
+installed.
+
+
+<sect1>Running <sf/xindy/
+<p>
+Create a new directory somewhere and copy some files from the
+distribution directory <tt>Doc/tutorial/</tt> by typing
+
+<tscreen><verb>
+eg$ mkdir tutorial
+eg$ cd tutorial
+eg$ cp <distrib-dir>/Doc/tutorial/* .
+</verb></tscreen>
+
+with <tt/distrib-dir/ replaced by the actual location. Now create a
+file <tt/style1.xdy/ with the following content:
+
+<tscreen><verb>
+;; This is a first example using `xindy'.
+
+(define-location-class "page-numbers" ("arabic-numbers"))
+(define-attributes (("definition" "usage")))
+</verb></tscreen>
+
+Now run <sf/xindy/ by typing
+
+<tscreen><verb>
+eg$ xindy -l ex1.xlg style1.xdy ex1.raw
+</verb></tscreen>
+
+You should see something like
+
+<tscreen><verb>
+This is `xindy' version 0.9 June 1996 (test-arch).
+Copyright (c) 1996  Roger Kehr
+
+Opening logfile "ex1.xlg" (done)
+Reading indexstyle...
+Loading module "style1.xdy"...
+Finished loading module "style1.xdy".
+Finished reading indexstyle.
+Finalizing indexstyle... (done)
+
+Reading raw-index "ex1.raw"...
+Finished reading raw-index.
+
+Processing index... [10%] [20%] [30%] [40%] [50%] [60%] [70%] [80%]
+Finished processing index.
+
+Writing markup... [10%] [20%] [30%] [40%] [50%] [60%] [70%] [80%]
+Markup written into file "ex1.ind".
+</verb></tscreen>
+
+<sf/xindy/ has now successfully compiled the index <tt/ex1.raw/ using
+your indexstyle <tt/style1.xdy/. The result is now stored in file
+<tt/ex1.out/. You can view this file but currently it only contains an
+unreadable mix of data.
+
+But now let's come back to our indexstyle. What is the meaning of the
+two commands we specified? The first command informed <sf/xindy/ that
+we like to process page numbers. We do this by defining a new
+<em/location-class/ named <tt/page-numbers/. The page numbers consist
+of <tt/arabic-numbers/ as we might expect. When reading the
+<em/raw-index/ contained in file <tt/ex1.raw/ <sf/xindy/ checks all
+locations if they match all known location-classes. Since in our
+example the only known location-class is the class of page numbers
+which are written using arabic digits, all locations will be checked
+if they are correct page numbers.
+
+The second command tells <sf/xindy/ that we use two types of
+attributes for location-references. Most often the locations in an
+index denote different meanings. For example, in mathematical texts
+one will distinguish the <em/definition/ of a term from the <em/usage/
+of a term. Sometimes these are typeset using different font-shapes
+such as <em/italic/ or <em/boldface/. Each location has an associated
+attribute which, if it is unspecified, defaults to the attribute
+<tt/default/. With this command you have made these attributes known
+to the system, which later on makes it possible to assign different
+markup for these attributes.
+
+
+<sect1>Adding some Markup
+<p>
+Until now you haven't seen something exciting, so its time to specify
+some markup. Add the following lines to our indexstyle:
+
+<tscreen><verb>
+(markup-index :open  "\n\\begin{theindex}\n"
+	      :close "\n\\end{theindex}\n"
+	      :tree)
+
+(markup-locref :class "page-numbers" :attr "definition"
+	       :open  "{\\bf " :close "}")
+
+(markup-locref-list :sep ", ")
+(markup-locclass-list :open "\\quad")
+</verb></tscreen>
+
+Now run <sf/xindy/ again and run LaTeX for a first test.
+
+<tscreen><verb>
+eg$ xindy -l ex1.xlg style1.xdy ex1.raw
+eg$ latex ex1.tex
+</verb></tscreen>
+
+Now you can view <tt/ex1.dvi/ with your prefered viewer to get a first
+impression of your results. Maybe your are not satisfied (for sure you
+aren't) 'cause it still looks very confusing. What did the above rules
+tell <sf/xindy/? When you view the file <tt/ex1.ind/ which is the
+result <sf/xindy/ generates, you'll recognize some of the <em/markup
+tags/ you specified. First of all you'll see that the file starts with
+the string <vb>\begin{theindex}</vb> and ends with
+<vb>\end{theindex}</vb>. Additionally some locations are correctly
+enclosed into a TeX-macro that typesets them in shape boldface,
+whereas others aren't. The boldface ones are all those locations from
+the raw-index that have the attribute <tt/definition/.
+
+The <tt/:open/ and <tt/:close/ keyword-arguments each take a string as
+argument. The first one is written to the file when <em/opening/ an
+enviroment whereas the latter one <em/closes/ an environment. What we
+have specified is the markup for the whole index (which is actually
+printed only once) and the markup for all locations of class
+<tt/page-numbers/ which own the attribute <tt/definition/. Here we
+have cleanly separated the structured markup from the visual one
+allowing an easy redefinition of we decide to markup the definition
+locations in italic instead of boldface.
+
+The third command caused <sf/xindy/ to insert a horzontal space
+between the keword and the locations. The last command caused
+<sf/xindy/ to separate all location-references from each other with a
+comma followed by a blank independently of any location-class.
+
+As you already have observed the backslashes serve as a <em/quoting
+character/.
+
+We continue specifying markup to get a printable result by adding more
+markup:
+
+<tscreen><verb>
+(markup-indexentry :open "\n  \\item "           :depth 0)
+(markup-indexentry :open "\n    \\subitem "      :depth 1)
+(markup-indexentry :open "\n      \\subsubitem " :depth 2)
+</verb></tscreen>
+
+This assigns different markup for the different hierarchy layers of
+the indexentries. Our index is hierarchically organizes. It contains
+items which themselves contain more subitems which also might contain
+subsubitems. Each layer is started by a different markup which is
+correctly assigned with the <tt/:depth/ keyword-argument. The layers
+are numbered by their <em/depth/ starting from zero.
+
+The last command instructs <sf/xindy/ to indicate ranges of page
+numbers by inserting a hyphen between them.
+
+Now run <sf/xindy/ and TeX again and enjoy your first index. It's
+easy, isn't it. The output <tt/ex1.ind/ looks like the following:
+
+<tscreen><verb>
+\begin{theindex}
+
+ \item academia\quad{}{\bf 1}
+ \item acafetado\quad{}{\bf 2}
+ \item acalmar\quad{}{\bf 4}
+ \item açafrão\quad{}{\bf 3}
+ \item index
+    \subitem flat\quad{}1
+    \subitem hierarchical\quad{}2
+    \subitem very
+      \subsubitem hierarchical\quad{}3
+      \subsubitem impressive\quad{}4
+ \item saber\quad{}{\bf 7}
+ \item sabor\quad{}{\bf 8}
+ \item sabão\quad{}{\bf 6}
+ \item sábado\quad{}{\bf 5}
+
+\end{theindex}
+</verb></tscreen>
+
+Hmm, as you might have seen there are several problems that need
+further investigation. The index contains some Portuguese words that
+are printed correctly but should appear at other positions inside the
+index. For instance, the word <em/sábado/ should appear before the
+word <em/saber/ since <em/á/ must be sorted as if it were simply an
+<em/a/. The reason is simple---the accentuated letters have codes
+beyond position 128 in the ISO-Latin alphabet. Sorting based on these
+codes yields this order.
+
+What to do? We can define for each of the words containing these
+special characters an explicit <em/print-key/. The print-key describes
+the printed representation of the keyword whereas the <em/key/ or
+<em/main-key/ is used for sorting and merging. A very tedious task
+which is not a very clever solution since in a non-english language
+many many words contain these special cases. We follow the way
+<sf/xindy/ offers---<em/keyword-mappings/.
+
+<sect1>Keyword mappings
+<p>
+What good are keyword-mappings for? A good question. I'll try to give
+some answers.
+
+<itemize>
+
+<item> <em/Merging of differently written words/. Some text-formatting
+systems allow different writings for the same word. For example, TeX
+can be used with ISO-Latin characters as well as with its own
+character sequences. If a document is composed from smaller ones
+possibly written by different authors using different forms of writing
+the indexentries, the same terms may happen to be written differently
+and consequently we need a mechanism to identify them as equal.
+
+<item> <em/Specifying the sort order/. As outlined in the previous
+section it is really difficult and error-prone to specify the sort-key
+for each keyword explicitly. Sometimes the sort order is even
+different for the type of the document, as it happens in German, where
+two different types of sortings exist, one for everyday indexes and
+one for dictionaries. The sort order actually defines the position of
+arbitrary language-specific letters inside of an index.
+
+</itemize>
+
+A detailed development of the here only sketched ideas can be found in
+the paper <em/An International Version of MakeIndex/ by Joachim
+Schrod. It describes the ideas that lead to modifications on one of
+the ancestors of the <sf/xindy/-system---<tt/makeindex/.
+
+The keyword-mappings are as follows. The <em/merge-key/ is generated
+from the <em/main-key/ with the so called <em/merge-mapping/. The
+merge-mapping can be specified with the command <tt/merge-rule/. The
+<em/sort-key/ is derived from the merge-key using the
+<em/sort-mapping/ specified with the <tt/sort-rule/ command. We will
+use this command now to define a suitable sort-mapping that fits our
+needs.
+
+<tscreen><verb>
+(sort-rule "à" "a")
+(sort-rule "á" "a")
+(sort-rule "ã" "a")
+(sort-rule "è" "e")
+(sort-rule "é" "e")
+(sort-rule "ç" "c")
+</verb></tscreen>
+
+These rules define mappings from a keyword to a <em/normalized/
+version. In the logfile <tt/ex1.xlg/ these transformations are logged so
+that one can see how these mappings are performed. In this example we
+do not need any <tt/merge-rule/ but we will see applications in
+further examples.
+
+Running <sf/xindy/ and TeXing the result now places the indexentries
+at the right positions.
+
+The result is now quite satisfying if the indexentries weren't clumped
+together that much. We usually want the different indexentries
+beginning with a letter separated optically from the ofhers. This
+improves clarity and there must be a way to accomplish this---the
+<em/letter groups/.
+
+<sect1>Letter Groups
+<p>
+To cluster the indexentries we must define what indexentries form a
+group. The clustering is done by matching the keywords' prefixes with
+a user-defined table and define appropriate markup that separates the
+groups from each other.
+
+<tscreen><verb>
+(define-letter-groups
+  ("a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m"
+   "n" "o" "p" "q" "r" "s" "t" "u" "v" "w" "x" "y" "z"))
+
+(markup-letter-group-list :sep "\n\\indexspace")
+</verb></tscreen>
+
+This defines the given list of letter groups. When forming the letter
+groups each letter group is checked if it matches a prefix of the
+indexentries' sort-key. The longest match assigns the indexentry to
+this letter group.
+
+The result looks now much better than before. You have now learned the
+basic features that you need to specify everyday indices. In the next
+chapter we'll continue to make you an expert in indexing.
+
+
+<sect>Advanced Features
+<p>
+In the following sections you'll learn more about the features of
+<sf/xindy/. We'll show you how you can define your own
+location-classes, specify the letter-groups in more detail and bring
+you close to more specfic markup-features. After reading this chapter
+you should be able to master about 95% of the commonly used indices.
+
+
+<sect1>Location-classes
+<p>
+We continue using a more complex index. Copy the current style to a
+new file (now <tt/ex2.raw/) and run <sf/xindy/ by typing
+
+<tscreen><verb>
+eg$ cp style1.xdy style2.xdy
+eg$ xindy -l ex2.xlg style2.xdy ex2.raw
+</verb></tscreen>
+
+You should see some error messages indicating that something is
+unknown to <sf/xindy/. What has happend? The messages should be
+similar to the following snapshot:
+
+<tscreen><verb>
+ ...
+WARNING:
+location-reference "B-5" did not match any location-class! (ignored)
+WARNING:
+location-reference "C-8" did not match any location-class! (ignored)
+WARNING:
+location-reference "iv" did not match any location-class! (ignored)
+WARNING:
+location-reference "ii" did not match any location-class! (ignored)
+ ...
+</verb></tscreen>
+
+The index contains different location-classes. The first one has an
+appendix-like style, whereas the second one seems to be lowercase
+Roman numbers. <sf/xindy/ reported, that it doesn't know these
+locations and therefore knows nothing about their internal structure.
+We make them known to the system by adding the following commands to
+the style-file.
+
+<tscreen><verb>
+(define-location-class "roman-pages" ("roman-numbers-lowercase"))
+(define-location-class "appendices" ("ALPHA" :sep "-" "arabic-numbers"))
+</verb></tscreen>
+
+The first command tells <sf/xindy/ that there exist some page-numbers
+that are written with roman lowercase letters. The second one defines
+the structure of the appendix-locations. They consist of three
+elements, a capital letter, a separator---which is a hyphen in our
+case---and finally an arabic number. To be able to correctly
+distinguish separator strings from the names of the known
+<em/basetypes/, the argument <tt/:sep/ indicates, that the following
+is a separator. So far we know three different basetypes. The built-in
+basetypes of <sf/xindy/ are:
+
+<descrip>
+<tag/<tt/arabic-numbers// contains all positive numbers beginning with
+zero: 0, 1, 2, ....
+
+<tag/<tt/roman-numbers-uppercase/, <tt/roman-numbers-lowercase// the
+roman numbers I, II, III, (IIII/IV), V, ... It contains the old and
+new roman number system. Two versions for uppercase and lowercase
+letters are supported.
+
+<tag/<tt/ALPHA/, <tt/alpha// The English alphabet (uppercase and
+lowercase letters).
+
+<tag/<tt/digits// the digits 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9 in that
+order.
+</descrip>
+
+`Fine,', you'll say, `but what if my basetypes are completely
+different?'. You're right! But <sf/xindy/ offers you to define your
+own alphabets. For example, you can define a new alphabet by writing
+
+<tscreen><verb>
+(define-alphabet "my-personal-alphabet" ("Hi" "ho" "here" "I" "go"))
+</verb></tscreen>
+
+This is a valid alphabet that consists of 5 <em/letters/. You can now
+define a location-class
+
+<tscreen><verb>
+(define-location-class "my-personal-class"
+    ("my-personal-alphabet" :sep "-" "arabic-numbers"))
+</verb></tscreen>
+
+to match all of the following locations: <em/Hi-12, ho-2, here-709,
+I-9, go-42/. <sf/xindy/ will recognize them and be able to sort them
+according to your specification which says that <em/Hi/ comes before
+all others and <em/here/ is exactly at the third position. So they
+will be sorted lexicographically, layer by layer, until it can decide
+which one is before or after the other. We have prepared a concrete
+example. Do you remember the example we gave when we spoke about
+indexing bible verses? This exactly matches the situation of such a
+self-defined alphabet which could look like the following definitions:
+
+<tscreen><verb>
+(define-alphabet "bible-chapters"
+    ("Genesis" "Exodus" "Leviticus" "Numbers" "Deuteronomy"
+     ... ))
+(define-location-class "bible-verses"
+    ("bible-chapters" :sep " " "arabic-numbers" :sep "," "arabic-numbers"))
+</verb></tscreen>
+
+This description would match locations like <em/Genesis 1,3/,
+<em/Exodus 7,8/, etc.
+
+Now run LaTeX on <tt/ex2.tex/ and view the results. It looks a little
+bit strange since <sf/xindy/ has automatically build ranges of
+successive locations. The first locations of the indexentry <em/roman/
+actually denote the range <em/ii/ until <em/iv/. <em/Ranges/ consist
+of location-references. To typeset them correctly you can specify
+
+<tscreen><verb>
+(markup-range :sep "--")
+</verb></tscreen>
+
+This indicates that location-reference forming a range shall be
+separated by a hyphen. Running <sf/xindy/ and LaTeX again gives a
+better idea of how it should look like. Here is a part of the
+generated output.
+
+<tscreen><verb>
+  ...
+ \item appendices\quad{}A-1, A-7, A-11, B-3--B-5, C-1, C-8, C-12,
+	 C-13, C-22, D-2, D-3, D-5, D-10
+  ...
+</verb></tscreen>
+
+<sect1>Hierarchical Location-classes
+<p>
+Somehow a lot of space is wasted when looking at the first indexentry.
+Modify the definition of the location-class for appendices as follows
+an add the other commands as well.
+
+<tscreen><verb>
+(define-location-class "appendices"
+                       ("ALPHA" :sep "-" "arabic-numbers")
+		       :hierdepth 2)
+(markup-locref-list           :sep "; " :depth 0 :class "appendices")
+(markup-locref-list :open "~" :sep ", " :depth 1 :class "appendices")
+</verb></tscreen>
+
+Run <sf/xindy/ and view the output stored in <tt/ex2.ind/. The output
+looks similar to the following:
+
+<tscreen><verb>
+  ...
+ \item appendices\quad{}A~1, 7, 11; B~3--5; C~1, 8, 12, 13, 22;
+	D~2, 3, 5, 10
+  ...
+</verb></tscreen>
+
+You can see that the location-references of this class have been
+formed into a hierarchical structure caused by the
+<tt/:hierdepth/-argument. Additionally we have specified markup for
+the layers of this class separately for the depths 0 and 1. The
+locations at depth 0 are separated by a `;' whereas the ones at depth
+1 are separated by a `,'.
+
+Maybe you get an impression why we named <sf/xindy/ a <em/flexible/
+system.
+
+<sect1>More about Letter-groups
+<p>
+More problems arise when using languages with different letter
+schemes. Hungarian is an example. In hungarian indices the words
+beginning with the letters <em/Cs, Ly, Ny/ and more are printed in a
+separate block. The words beginning with <em/Ly/, for example, appear
+behind the words beginning with an <em/L/. <sf/xindy/ allows to define
+this kind of letter-groups as well. Add the following lines to the
+style-file.
+
+<tscreen><verb>
+(define-letter-group "ly" :after "l" :before "m")
+(define-letter-group "ny" :after "n" :before "o")
+
+(markup-letter-group :open-head "\n {\\bf " :close-head "}"
+	             :capitalize)
+</verb></tscreen>
+
+The result looks like the following:
+
+
+<tscreen><verb>
+ ...
+{\bf Ly}
+ \item lyuk\quad{}1
+ \item lyukas\quad{}2
+
+ \indexspace
+
+ {\bf M}
+ \item maga\quad{}1
+ \item magyar\quad{}2
+
+ \indexspace
+
+ {\bf N}
+ \item nagy\quad{}1
+ \item nagyon\quad{}9
+ \item negy\quad{}4
+
+ \indexspace
+
+ {\bf Ny}
+ \item nyelv\quad{}1
+ \item nyolc\quad{}8
+  ...
+</verb></tscreen>
+
+The result describes what the purpose of the above commands is. It
+becomes prettier from step to step, doesn't it?
+
+You have now learned most of the features of <sf/xindy/. Go playing
+around a little bit. For a detailed description of all commands and
+all their arguments and switches you should use the manual that comes
+with this distribution.
+
+
+<sect1>More Tips and Tricks
+<p>
+This section contains a collection of tips and tricks that are not
+guided by examples.
+
+<sect2>Advanced Keyword Mappings
+<p>
+Sometimes it is necessary to specify keyword-mappings tell the system
+to put something <em/behind/ something else. For instance. we like to
+map the character <em/ö/ behind the letter <em/o/. No problem if you
+use the special characters <vb>\b</vb> and <vb>\e</vb> which are
+called the <em/beginning-/ and <em/ending/-characters. The first
+letter lexicographically precedes all other letters whereas the latter
+one comes after all others. Our mapping problem can now be specified
+as follows.
+
+<tscreen><verb>
+(sort-rule "ö" "o\\e")
+</verb></tscreen>
+
+Now the <em/ö/ is directly positioned after the <em/o/. See the manual
+for a detailed description of this feature. Also be informed that the
+keyword-mappings can be specified with regular expressions. Rules of
+the form
+
+<tscreen><verb>
+(merge-rule "[-$(){}\\]" "")
+</verb></tscreen>
+
+are possible. This on removes all letters of the defined letter class.
+Regular expression substitutions are possible as well. Refer to the
+manual for an exact description.
+
+
+<sect2>Tracing the Markup-Tags
+<p>
+A very important feature is the ability to trace all markup-tags
+<sf/xindy/ emits in the markup-phase. Simply use the command-line
+switch <tt/-t/ or insert the command
+
+<tscreen><verb>
+(markup-trace :on)
+</verb></tscreen>
+
+into the indexstyle. This informs <sf/xindy/ to emit additional
+pseudo-markup that can be used to understand and debug the
+markup-phase. Give it a try if you find yourself confused by your own
+markup specification.
+
+
+<sect2>Ignoring Markup-Tags
+<p>
+Sometimes it is necessary to hide some of the parts of the index. If
+you have a text-formatter that allows comments or macros that possibly
+expand to nothing, just define appropriate markup that makes things
+invisible to the formatter. For example, with LaTeX you can define a
+macro like this
+
+<tscreen><verb>
+\newcommand{\ignore}[1]{}
+</verb></tscreen>
+
+If you additionally define markup like this
+
+<tscreen><verb>
+(markup-index :open "\\ignore{" :close "}"
+</verb></tscreen>
+
+you can throw away the complete index, if you like, which would be a
+real pity!
+
+
+<sect>References and Acknowledgments
+<p>
+
+The following books and papers were referenced in this document.
+
+<enum>
+<item> D. E. Knuth, <em/The TeXbook/, Addison-Wesley, 1984
+
+<item> Pehong Chen and Michael A. Harrison, <em/Automating Index
+Preparation/, TR-87/347, University of California Berkeley, 1987
+<label id="makeindex">
+
+<item> Joachim Schrod, <em/An International Version of MakeIndex/,
+Cahiers GUTenberg, 10, p81-90, 1991
+
+<item> Roger Kehr, <sf/xindy/, <em/Ein Flexibles Indexierungssystem/,
+Studienarbeit FB Informatik, TH-Darmstadt, November 1995.
+</enum>
+
+I'd like to thank the following persons who mainly contributed to the
+development of the <sf/xindy/-system---Joachim Schrod who was a very
+inspiring senior partner despite the fact that he was sometimes very
+busy, Klaus Guntermann who was always very sensitive for future
+problems that might have arosen in many situations and finally Gabor
+Herr who helped me with many problems I had in mastering Lisp, UNIX
+boxes and many design decisions. Additionally I'd like to thank Prof.
+Waldschmidt who financial supported the finishing of the project up to
+its current state.
+
+</article>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:nil
+sgml-shorttag:t
+End:
+-->

@@ -16,13 +16,13 @@
 
 <author>Roger Kehr, Institut für Theoretische Informatik, TH-Darmstadt
 
-<date>Tutorial Edition July 1996 for xindy version 0.9
+<date>Tutorial Edition August 1996 for xindy version 1.0
 
 <abstract>
 <em>This is a tutorial for the <sf/xindy/ indexing system. <sf/xindy/
 is a general purpose index processor that can be configured for a
-variety of document preparation system. We will demonstrate step by
-step the incremental specification of a complete indexstyle. The
+variety of document preparation systems. We will demonstrate step by
+step the incremental specification of a complete index style. The
 examples are based on indexes that are delivered with the system so
 one can get acquainted with it practically.
 </em>
@@ -37,18 +37,18 @@ one can get acquainted with it practically.
 
 <sect>About <sf/xindy/
 <p>
-<sf/xindy/ means fle<bf/X/ible <bf/IND/exing s<bf/Y/stem. It is an
+<sf/xindy/ means fle<bf/x/ible <bf/ind/exing s<bf/y/stem. It is an
 indexing system that can be used to generate book-like indexes for
-arbitrary document-preparation systems. This term includes systems
-such as TeX and LaTeX, the roff-family or SGML-based systems (e.g.
+arbitrary document preparation systems. This term includes systems
+such as &TeX; and &LaTeX;, the roff-family or SGML-based systems (e.g.
 HTML) that process some kind of text and generate indexing
 information. It is not fixed to any specific system, but can be
 configured for a wide variety of purposes.
 
 Autors sometimes wish to include an index into their document, but
-very often their document-preparation systems aren't able to produce
+very often their document preparation systems aren't able to produce
 indexes on their own, or the capabilities of the built-in indexers are
-very limited or ugly-looking. More often they use separate specialized
+very limited or ugly looking. More often they use separate specialized
 tools for this purpose, sometimes called <em/index processors/.
 
 In comparison to other index processors <sf/xindy/ has several
@@ -64,8 +64,8 @@ Portuguese or Spanish contain accentuated letters such as &Agrave;,
 &Aacute;, &ntilde;. Other languages from northern Europe have letters
 like &Auml;, &Oslash;, &aelig; or &szlig; which often can't be
 processed by many index processors not talking about sorting them
-correctly into an index. The <sf/xindy/-system can be configured to
-process these alphabets by defining <em/sort-/ and <em/merge-rules/
+correctly into an index. The <sf/xindy/ system can be configured to
+process these alphabets by defining <em/sort/ and <em/merge rules/
 that allow expressing of language specific rules. One example of such
 a rule would be
 
@@ -78,11 +78,11 @@ contained the letters <tt/ae/ instead. This is one form of how the
 umlaut-a is sorted into german indices. With an appropriate set of
 rules on can express the complete rules of a specific language.
 
-<tag/User-definable Location Types/ Locations are the entities an
+<tag/User Definable Location Types/ Locations are the entities an
 indexentry points to. Often used locations are <em/page numbers/,
-<em/section-numbers/, etc. <sf/xindy/ allows to define new kinds of
-types to be composed of smaller entities like arabic numbers, roman
-numbers, letters, etc. which can be used to describe new index types.
+<em/section numbers/, etc. <sf/xindy/ allows to define new kinds of
+types to be composed of basic entities like arabic numbers, roman
+numerals, letters, etc. which can be used to describe new index types.
 Examples of these entities can be books that have a page numbering
 scheme that starts from 1 for each new chapter resulting in page
 numbers of the form <em/1-13, 2-15, 2-20/, etc. This type of locations
@@ -98,7 +98,7 @@ into the complete environment. Many text processing systems use the
 concept of <em/environments/ that can be used to describe the markup
 of the text entities. Our approach is based on this concept which has
 proved to be expressive enough for most applications. As an example
-one can view systems such as TeX, SGML and its instance HTML, GNU
+one can view systems such as &TeX;, SGML and its instance HTML, GNU
 Info, RTF and the Nroff-familiy of document formatters. The markup of
 an index can be defined for all of these systems in a very comfortable
 though extremly powerful way.
@@ -112,10 +112,10 @@ though extremly powerful way.
 This section incrementally introduces the most important parts of the
 system. After reading and practicing this chapter you should be able
 to specify about 80% of the commonly used indices. The examples are
-demonstrated with a TeX-markup such that one can easily typeset the
-results <sf/xindy/ produces. You need LaTeX2e and the ISO-Latin
-enhancements that come with the <tt/inputenc/-package to run the
-following examples. Also the <sf/xindy/-system must already be
+demonstrated with a &TeX; markup such that one can easily typeset the
+results <sf/xindy/ produces. You need &LaTeX;2e and the ISO-Latin
+enhancements that come with the <tt/inputenc/ package to run the
+following examples. Also the <sf/xindy/ system must already be
 installed.
 
 
@@ -140,7 +140,8 @@ file <tt/style1.xdy/ with the following content:
 (define-attributes (("definition" "usage")))
 </verb></tscreen>
 
-Now run <sf/xindy/ by typing
+Now run <sf/xindy/ by typing (the switch `<tt/-l/' contains the
+lowercase letter `L')
 
 <tscreen><verb>
 eg$ xindy -l ex1.xlg style1.xdy ex1.raw
@@ -162,46 +163,48 @@ Finalizing indexstyle... (done)
 Reading raw-index "ex1.raw"...
 Finished reading raw-index.
 
-Processing index... [10%] [20%] [30%] [40%] [50%] [60%] [70%] [80%]
+Processing index... [10%] [20%] [30%] [40%] [50%] [60%] [70%] [80%] [90%] [100%]
 Finished processing index.
 
-Writing markup... [10%] [20%] [30%] [40%] [50%] [60%] [70%] [80%]
+Writing markup... [10%] [20%] [30%] [40%] [50%] [60%] [70%] [80%] [90%] [100%]
 Markup written into file "ex1.ind".
 </verb></tscreen>
 
 <sf/xindy/ has now successfully compiled the index <tt/ex1.raw/ using
-your indexstyle <tt/style1.xdy/. The result is now stored in file
+your index style <tt/style1.xdy/. The result is now stored in file
 <tt/ex1.ind/. You can view this file but currently it only contains an
 unreadable mix of data.
 
-But now let's come back to our indexstyle. What is the meaning of the
-two commands we specified? The first command informed <sf/xindy/ that
-we like to process page numbers. We do this by defining a new
-<em/location-class/ named <tt/page-numbers/. The page numbers consist
+But now let's come back to our index style. The syntax of the command
+is in a Lisp-like form with lots of braces, looking a little bit
+weird, but you'll get soon used to it. What is the meaning of the two
+commands we specified? The first command informed <sf/xindy/ that we
+like to process page numbers. We do this by defining a new
+<em/location class/ named <tt/page-numbers/. The page numbers consist
 of <tt/arabic-numbers/ as we might expect but this is not necessarily
-true---imagine your page numbers consisted of Roman numbers instead.
-When reading the <em/raw-index/ contained in file <tt/ex1.raw/
-<sf/xindy/ checks all locations if they match all known
-location-classes. Since in our example the only known location-class
-is the class of page numbers which are written using arabic digits,
-all locations will be checked if they are correct page numbers.
+true---imagine your page numbers consisted of roman numerals instead.
+When reading the <em/raw index/ contained in file <tt/ex1.raw/
+<sf/xindy/ checks all locations if they match all known location
+classes. Since in our example the only known location class is the
+class of page numbers which are written using arabic digits, all
+locations will be checked if they are correct page numbers.
 
 The second command tells <sf/xindy/ that we use two types of
-attributes for location-references. Most often the locations in an
+attributes for location references. Most often the locations in an
 index denote different meanings. For example, in mathematical texts
 one will distinguish the <em/definition/ of a term from its
-<em/usage/. Sometimes these are typeset using different font-shapes
-such as <em/italic/ or <bf/boldface/. Each location has an associated
-attribute which, if it is unspecified, defaults to the attribute
-<tt/default/. With this command you have made these attributes known
-to the system, which later on makes it possible to assign different
-markup for these attributes.
+<em/usage/. Sometimes these are typeset using different font shapes
+such as <em/italic/ or font series such as <bf/boldface/. Each
+location has an associated attribute which, if it is unspecified,
+defaults to the attribute <tt/default/. With this command you have
+made these attributes known to the system, which later on makes it
+possible to assign different markup to these attributes.
 
 
 <sect1>Adding some Markup
 <p>
 Until now you haven't seen something exciting, so its time to specify
-some markup. Add the following lines to our indexstyle:
+some markup. Add the following lines to our index style:
 
 <tscreen><verb>
 (markup-index :open  "\n\\begin{theindex}\n"
@@ -215,7 +218,7 @@ some markup. Add the following lines to our indexstyle:
 (markup-locref-list :sep ", ")
 </verb></tscreen>
 
-Now run <sf/xindy/ again and afterwards LaTeX
+Now run <sf/xindy/ again and afterwards &LaTeX;
 
 <tscreen><verb>
 eg$ xindy -l ex1.xlg style1.xdy ex1.raw
@@ -241,12 +244,12 @@ following is an excerpt of this file.
 
 First of all you'll see that the file starts with the string
 <vb>\begin{theindex}</vb> and ends with <vb>\end{theindex}</vb>.
-Additionally some locations are correctly enclosed into a TeX-macro
+Additionally some locations are correctly enclosed into a &TeX; macro
 that typesets them in shape boldface, whereas others aren't. The
-boldface ones are all those locations from the raw-index that have the
+boldface ones are all those locations from the raw index that have the
 attribute <tt/definition/.
 
-The <tt/:open/ and <tt/:close/ keyword-arguments each take a string as
+The <tt/:open/ and <tt/:close/ keyword arguments each take a string as
 argument. The first one is written to the file when <em/opening/ an
 enviroment, whereas the latter one <em/closes/ an environment. What we
 have specified is the markup for the whole index (which is actually
@@ -256,12 +259,20 @@ have cleanly separated the structured markup from the visual one,
 allowing an easy redefinition if we decide, for example, to markup the
 <tt/definition/-locations in italics instead of boldface.
 
+Some words on <em/keyword arguments/ and <em/switches/. Keyword
+arguments such as <tt/:open/ or <tt/:close/ always take exactly one
+argument which must be positioned right after the keyword separated by
+a whitespace (a blank or a tab-stop). Switches don't take any
+arguments. For example, <tt/:tree/ in the command <tt/markup-index/ is
+a switch since it does not take an argument. We will use this
+terminology throughout the rest of this document.
+
 The third command caused <sf/xindy/ to insert a horzontal space
-between the kewyord and the locations (the TeX-command
+between the keyword and the locations (the &TeX; command
 <vb>\quad{}</vb> simply inserts a specific horizontal space). The last
-command caused <sf/xindy/ to separate all location-references from
+command caused <sf/xindy/ to separate all location references from
 each other with a comma followed by a blank, independently of any
-location-class.
+location class.
 
 As you already have observed the backslashes serve as a <em/quoting
 character/.
@@ -279,10 +290,10 @@ This assigns different markup for the different hierarchy layers of
 the indexentries. Our index is hierarchically organized. It contains
 items which themselves contain more sub-items which also might contain
 sub-sub-items. Each layer is started by a different markup which is
-correctly assigned with the <tt/:depth/ keyword-argument. The layers
+correctly assigned with the <tt/:depth/ keyword argument. The layers
 are numbered by their <em/depth/ starting from zero.
 
-Now run <sf/xindy/ and TeX again and enjoy your first index. It's
+Now run <sf/xindy/ and &TeX; again and enjoy your first index. It's
 easy, isn't it. The output <tt/ex1.ind/ looks like the following:
 
 <tscreen><verb>
@@ -311,27 +322,28 @@ further investigation. The index contains some Portuguese words that
 are printed correctly but should appear at other positions inside the
 index. For instance, the word <em/sábado/ should appear before the
 word <em/saber/ since <em/á/ must be sorted as if it were simply an
-<em/a/. The reason is simple---the accentuated letters have codes
-beyond position 128 in the ISO-Latin alphabet. Sorting based on these
-codes yields this incorrect order.
+<em/a/. The reason why these words are not sorted correctly is
+simple---the accentuated letters have codes beyond position 128 in the
+ISO-Latin alphabet. Sorting based on these codes yields this incorrect
+order.
 
 What to do? We can define for each of the words containing these
-special characters an explicit <em/print-key/. The print-key describes
+special characters an explicit <em/print key/. The print key describes
 the printed representation of the keyword whereas the <em/key/ or
-<em/main-key/ is used for sorting and merging. A very tedious task
+<em/main key/ is used for sorting and merging. A very tedious task
 which is not a very clever solution since in a non-english language
 many many words contain these special cases. We follow the way
 <sf/xindy/ offers---<em/keyword-mappings/.
 
-<sect1>Keyword mappings
+<sect1>Keyword Mappings
 <p>
-What good are keyword-mappings for? A good question. I'll try to give
+What good are keyword mappings for? A good question. I'll try to give
 some answers.
 
 <itemize>
 
-<item> <em/Merging of differently written words/. Some text-formatting
-systems allow different writings for the same word. For example, TeX
+<item> <em/Merging of differently written words/. Some text formatting
+systems allow different writings for the same word. For example, &TeX;
 can be used with ISO-Latin characters as well as with its own
 character sequences. If a document is composed from smaller ones
 possibly written by different authors using different forms of writing
@@ -339,7 +351,7 @@ the indexentries, the same terms may happen to be written differently
 and consequently we need a mechanism to identify them as equal.
 
 <item> <em/Specifying the sort order/. As outlined in the previous
-section it is really difficult and error-prone to specify the sort-key
+section it is really difficult and error-prone to specify the sort key
 for each keyword explicitly. Sometimes the sort order is even
 different for the type of the document, as it happens in German, where
 two different types of sortings exist, one for everyday indexes and
@@ -351,21 +363,21 @@ arbitrary language-specific letters inside of an index.
 A detailed development of the here only sketched ideas can be found in
 the paper <em/An International Version of MakeIndex/ by Joachim
 Schrod. It describes the ideas that led to modifications on one of the
-ancestors of the <sf/xindy/-system---<tt/makeindex/.
+ancestors of the <sf/xindy/ system---<tt/makeindex/.
 
-The keyword-mappings are as follows. The <em/merge-key/ is generated
-from the <em/main-key/ with the so called <em/merge-mapping/. The
-merge-mapping can be specified with the command <tt/merge-rule/. The
-<em/sort-key/ is derived from the merge-key using the
-<em/sort-mapping/ specified with the <tt/sort-rule/ command. The
+The keyword mappings are as follows. The <em/merge key/ is generated
+from the <em/main key/ with the so called <em/merge mapping/. The
+merge mapping can be specified with the command <tt/merge-rule/. The
+<em/sort key/ is derived from the merge key using the
+<em/sort mapping/ specified with the <tt/sort-rule/ command. The
 following scheme show this mapping process:
 
-<quote>
-<em/key/ + merge-mapping <f>&rarr;</f> <em/merge-key/ + sort-mapping
-<f>&rarr;</f> <em/sort-key/
-</quote>
+<figure>
+<img HTML="mappings.gif" TEX="mappings.latex"
+     PLAIN="key -> merge key -> sort key">
+</figure>
 
-We will use this command now to define a suitable sort-mapping that
+We will use this command now to define a suitable sort mapping that
 fits our needs.
 
 <tscreen><verb>
@@ -383,7 +395,7 @@ that one can see how these mappings are performed. In this example we
 do not need any <tt/merge-rule/ but we will see applications in
 further examples.
 
-Running <sf/xindy/ and TeXing the result now places the indexentries
+Running <sf/xindy/ and &TeX;ing the result now places the indexentries
 at the right positions.
 
 The result is now quite satisfying if the indexentries weren't clumped
@@ -396,7 +408,7 @@ this---the <em/letter groups/.
 <p>
 To group indexentries we must define what indexentries form a group.
 The clustering is done by matching the keywords' prefixes (taken from
-the em/sort-key/) with a user-defined table of prefixes and define
+the <em/sort key/) with a user-defined table of prefixes and define
 appropriate markup that separates the groups from each other. Here it
 goes.
 
@@ -410,7 +422,7 @@ goes.
 
 This defines the given list of letter groups. When forming the letter
 groups, each letter group is checked if it matches a prefix of the
-indexentries' sort-key. The longest match assigns the indexentry to
+indexentries' sort key. The longest match assigns the indexentry to
 this letter group. If no match was possible the indexentry is put into
 group <tt/default/.
 
@@ -423,15 +435,15 @@ chapter we'll continue to make you an expert in indexing.
 <p>
 In the following sections you'll learn more about the features of
 <sf/xindy/. We'll show you how you can define your own
-location-classes, specify the letter-groups in more detail and bring
-you close to more specfic markup-features. After reading this chapter
+location classes, specify the letter groups in more detail and bring
+you close to more specfic markup features. After reading this chapter
 you should be able to master about 95% of the commonly used indices.
 
 
-<sect1>Location-classes
+<sect1>Location Classes
 <p>
 We continue using a more complex index. Copy the current style to a
-new file (now <tt/style2.xdy/) and run <sf/xindy/ on the raw-index
+new file (now <tt/style2.xdy/) and run <sf/xindy/ on the raw index
 <tt/ex2.raw/ by typing
 
 <tscreen><verb>
@@ -456,44 +468,44 @@ location-reference "ii" did not match any location-class! (ignored)
  ...
 </verb></tscreen>
 
-The index contains new, and therefore unknown, location-classes. The
+The index contains new, and therefore unknown, location classes. The
 first one has an appendix-like style, whereas the second one seems to
-be lowercase Roman numbers. <sf/xindy/ reported, that it doesn't know
+be lowercase roman numerals. <sf/xindy/ reported, that it doesn't know
 these locations and therefore knows nothing about their internal
 structure. We make them known to the system by adding the following
-commands to the style-file.
+commands to the style file.
 
 <tscreen><verb>
-(define-location-class "roman-pages" ("roman-numbers-lowercase"))
+(define-location-class "roman-pages" ("roman-numerals-lowercase"))
 (define-location-class "appendices" ("ALPHA" :sep "-" "arabic-numbers"))
 (define-location-class-order ("roman-pages" "appendices"))
 </verb></tscreen>
 
-The first command tells <sf/xindy/ that there exist some page-numbers
+The first command tells <sf/xindy/ that there exist some page numbers
 that are written with roman lowercase letters. The second one defines
-the structure of the appendix-locations. They consist of three
+the structure of the appendix locations. They consist of three
 elements, a capital letter, a separator---which is a hyphen in our
 case---and finally an arabic number. To be able to correctly
 distinguish separator strings from the names of the known
 <em/basetypes/, the argument <tt/:sep/ indicates, that the following
 is a separator. The last command simply says that the locations which
-are Roman numbers shall appear before the appendix-locations. So far
+are roman numerals shall appear before the appendix locations. So far
 we know three different basetypes. The built-in basetypes of
 <sf/xindy/ are:
 
 <descrip>
-<tag/<tt/arabic-numbers// contains all positive numbers beginning with
-zero: 0, 1, 2, ....
+<tag/<tt/arabic-numbers// contains all non-negative numbers beginning
+with zero: 0, 1, 2, ....
 
-<tag/<tt/roman-numbers-uppercase/, <tt/roman-numbers-lowercase// the
-roman numbers I, II, III, (IIII/IV), V, ... It contains the old and
-new Roman number system. Two versions for uppercase and lowercase
+<tag/<tt/roman-numerals-uppercase/, <tt/roman-numerals-lowercase// the
+roman numerals I, II, III, (IIII/IV), V, ... It contains the old and
+new roman numeral system. Two versions for uppercase and lowercase
 letters are supported.
 
-<tag/<tt/ALPHA/, <tt/alpha// The English alphabet (uppercase and
+<tag/<tt/ALPHA/, <tt/alpha// The US-ASCII alphabet (uppercase and
 lowercase letters).
 
-<tag/<tt/digits// the digits 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9 in that
+<tag/<tt/digits// the digits 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9 in this
 order.
 </descrip>
 
@@ -506,7 +518,7 @@ own alphabets. For example, you can define a new alphabet by writing
 </verb></tscreen>
 
 This is a valid alphabet that consists of 5 <em/letters/. You can now
-define a location-class
+define a location class
 
 <tscreen><verb>
 (define-location-class "my-personal-class"
@@ -534,18 +546,18 @@ self-defined alphabet which could look like the following definitions:
 This description would match locations like <em/Genesis 1,3/,
 <em/Exodus 7,8/, etc.
 
-Now run LaTeX on <tt/ex2.tex/ and view the results. It looks a little
-bit strange since <sf/xindy/ has automatically build ranges of
+Now run &LaTeX; on <tt/ex2.tex/ and view the results. It looks a
+little bit strange since <sf/xindy/ has automatically built ranges of
 successive locations. The first locations of the indexentry <em/roman/
 actually denote the range <em/ii/ until <em/iv/. <em/Ranges/ consist
-of location-references. To typeset them correctly you can specify
+of location references. To typeset them correctly you can specify
 
 <tscreen><verb>
 (markup-range :sep "--")
 </verb></tscreen>
 
-This indicates that location-reference forming a range shall be
-separated by a hyphen. Running <sf/xindy/ and LaTeX again gives a
+This indicates that location reference forming a range shall be
+separated by a hyphen. Running <sf/xindy/ and &LaTeX; again gives a
 better idea of how it should look like. Here is a part of the
 generated output.
 
@@ -556,11 +568,11 @@ generated output.
   ...
 </verb></tscreen>
 
-<sect1>Hierarchical Location-classes
+<sect1>Hierarchical Location Classes
 <p>
 Somehow a lot of space is wasted when looking at the first indexentry.
-Modify the definition of the location-class for appendices as follows
-an add the other commands as well.
+Modify the definition of the location class for appendices as follows
+and add the other commands as well.
 
 <tscreen><verb>
 (define-location-class "appendices"
@@ -580,9 +592,9 @@ looks similar to the following:
   ...
 </verb></tscreen>
 
-You can see that the location-references of this class have been
+You can see that the location references of this class have been
 transformed into a hierarchical structure caused by the
-<tt/:hierdepth/-argument. Additionally we have specified markup for
+<tt/:hierdepth/ argument. Additionally we have specified markup for
 the layers of this class separately for the depths 0 and 1. The
 locations at depth 0 are separated by a `;' whereas the ones at depth
 1 are separated by a `,'.
@@ -590,15 +602,15 @@ locations at depth 0 are separated by a `;' whereas the ones at depth
 Maybe you get an impression why we named <sf/xindy/ a <em/flexible/
 system.
 
-<sect1>More about Letter-groups
+<sect1>More about Letter Groups
 <p>
 More problems arise when using languages with different letter
 schemes. Hungarian is an example. In Hungarian indices the words
 beginning with the letters <em/Cs, Ly, Ny/ and more are printed in a
 separate block. The words beginning with <em/Ly/, for example, appear
 behind the words beginning with an <em/L/. <sf/xindy/ allows to define
-this kind of letter-groups as well. Add the following lines to the
-style-file.
+this kind of letter groups as well. Add the following lines to the
+style file.
 
 <tscreen><verb>
 (define-letter-group "ly" :after "l" :before "m")
@@ -628,7 +640,7 @@ The result looks like the following:
  {\bf N}
  \item nagy\quad{}1
  \item nagyon\quad{}9
- \item negy\quad{}4
+ \item nègy\quad{}4
 
  \indexspace
 
@@ -654,11 +666,11 @@ guided by examples.
 
 <sect2>Advanced Keyword Mappings
 <p>
-Sometimes it is necessary to specify keyword-mappings that tell the
+Sometimes it is necessary to specify keyword mappings that tell the
 system to put something <em/behind/ something else. For instance, we'd
 like to map the character <em/ö/ behind the letter <em/o/. No problem
 if you use the special characters <vb>\b</vb> and <vb>\e</vb> which
-are called the <em/beginning-/ and <em/ending/-characters. The first
+are called the <em/beginning/ and <em/ending/ characters. The first
 letter lexicographically precedes all other letters whereas the latter
 one comes after all others. Our mapping problem can now be specified
 as follows.
@@ -667,9 +679,10 @@ as follows.
 (sort-rule "ö" "o\\e")
 </verb></tscreen>
 
-Now the <em/ö/ is directly positioned after the <em/o/. See the manual
-for a detailed description of this feature. Also be informed that the
-keyword-mappings can be specified with regular expressions. Rules of
+Remember to quote the backslash character again! Now the <em/ö/ is
+directly positioned after the <em/o/. See the manual for a detailed
+description of this feature. Also be informed that the
+keyword mappings can be specified with regular expressions. Rules of
 the form
 
 <tscreen><verb>
@@ -681,24 +694,24 @@ Regular expression substitutions are possible as well. Refer to the
 manual for an exact description.
 
 
-<sect2>Tracing the Markup-Tags
+<sect2>Tracing the Markup Tags
 <p>
-A very important feature is the ability to trace all markup-tags
-<sf/xindy/ emits in the markup-phase. Simply use the command-line
+A very important feature is the ability to trace all markup tags
+<sf/xindy/ emits in the markup phase. Simply use the command line
 switch <tt/-t/ or insert the command
 
 <tscreen><verb>
 (markup-trace :on)
 </verb></tscreen>
 
-into the indexstyle. This informs <sf/xindy/ to emit additional
-pseudo-markup that can be used to understand and debug the
-markup-phase. An example output might look like the following:
+into the index style. This informs <sf/xindy/ to emit additional
+pseudo markup that can be used to understand and debug the
+markup phase. An example output might look like the following:
 
 <tscreen><verb>
 <INDEX:OPEN>
   <LETTER-GROUP-LIST:OPEN>
-    <LETTER-GROUP:OPEN [0]>
+    <LETTER-GROUP:OPEN ["a"]>
       <INDEXENTRY-LIST:OPEN [0]>
         <INDEXENTRY:OPEN [0]>
           <KEYWORD-LIST:OPEN [0]>
@@ -707,7 +720,7 @@ markup-phase. An example output might look like the following:
 </verb></tscreen>
 
 The symbolic tags directly lead one to the command that is responsible
-for the definition of that markup-tag. For example, the tag
+for the definition of that markup tag. For example, the tag
 <vb><LETTER-GROUP-LIST:OPEN></vb> indicates that the command
 <vb>markup-letter-group-list</vb> is responsible for replacing this
 symbolic tag by a real one.
@@ -716,12 +729,12 @@ Give it a try if you find yourself confused by your own markup
 specification.
 
 
-<sect2>Ignoring Markup-Tags
+<sect2>Ignoring Markup Tags
 <p>
 Sometimes it is necessary to hide some of the parts of the index. If
-you have a text-formatter that allows comments or macros that possibly
+you have a text formatter that allows comments or macros that possibly
 expand to nothing, just define appropriate markup that makes things
-invisible to the formatter. For example, with LaTeX you can define a
+invisible to the formatter. For example, with &LaTeX; you can define a
 macro like this
 
 <tscreen><verb>
@@ -738,13 +751,15 @@ you can throw away the complete index if you like, which would be a
 real pity!
 
 
+@begin-comment
+
 <sect>References <!-- and Acknowledgments -->
 <p>
 
 The following books and papers were referenced in this document.
 
 <enum>
-<item> D. E. Knuth, <em/The TeXbook/, Addison-Wesley, 1984
+<item> D. E. Knuth, <em/The &TeX;book/, Addison-Wesley, 1984
 
 <item> Pehong Chen and Michael A. Harrison, <em/Automating Index
 Preparation/, TR-87/347, University of California Berkeley, 1987
@@ -757,7 +772,6 @@ Cahiers GUTenberg, 10, p81-90, 1991
 Studienarbeit FB Informatik, TH-Darmstadt, November 1995.
 </enum>
 
-<!--
 
 I'd like to thank the following persons who mainly contributed to the
 development of the <sf/xindy/ system Joachim Schrod who was a very
@@ -769,7 +783,7 @@ boxes and many design decisions. Additionally I'd like to thank Prof.
 Waldschmidt who financial supported the finishing of the project up to
 its current state.
 
--->
+@end-comment
 
 </article>
 
