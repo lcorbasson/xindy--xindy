@@ -13,7 +13,7 @@
 #include "mkind.h"
 #undef debug
 #include "debug.h"
-#include <rx/rxposix.h>
+#include "regex.h"
 
 #define BEGIN	1		/* representation of '\b' */
 #define END	255		/* representation of '\e' */
@@ -96,6 +96,20 @@ typedef struct {
 extern GROUP_LIST GroupList;	/* list of character groups */
 extern GROUP_LIST HeadingList;	/* list of group headings */
 
+/* These variables are used in ordrulei.lisp. The generated code, in
+   ordrulei.c uses sizeof() on them, thus the buffer size must be
+   defined. */
+#define BUFLEN ((size_t)1024)
+extern char  ordrules_string_buffer[BUFLEN];
+extern int   ordrules_string_buffer_used_bytes;
+extern int   ordrules_msg_logging;
+extern char* ordrules_msg_buffer;
+extern int   ordrules_msg_buffer_ptr;
+extern int   ordrules_msg_buffer_len;
+extern int   ordrules_msg_buffer_avail;
+extern int   ordrules_sort_rule_tables;
+
+
 #define add_group_rule(letter, group) \
 		add_group( &GroupList, group, letter )
 
@@ -122,8 +136,13 @@ char* gen_mergekey  PROTO((char *key));
 
 #endif /* _ORDRULES_H */
 
-/*
+
+/*======================================================================
+ *
  * $Log$
+ * Revision 1.7  2005/05/02 21:39:53  jschrod
+ *     xindy run time engine 3.0; as used for CLISP 2.33.2.
+ *
  * Revision 1.6  1999/07/30 08:37:38  kehr
  * Intermediate checkin.
  *

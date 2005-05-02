@@ -1,5 +1,5 @@
-/*
- *  $Header$
+/* $Id$
+ *------------------------------------------------------------
  *
  *  AU: Makros zur Unterstuetzung von Debug-Ausgaben
  *      with friendly permission by U. Graef
@@ -15,21 +15,6 @@
  *          #include "debug.h"
  *
  *  PO: HPUX, Linux, AIX
- *
- *  HI: $Log$
- *  HI: Revision 1.2  1996/07/18 15:56:38  kehr
- *  HI: Checkin after all changes that resulted from the define-letter-group
- *  HI: modification were finished. Additionally I found an ugly bug in the
- *  HI: ordrules.c file that was discovered when running the system under
- *  HI: Solaris (which seems to have signed chars..Whee!). This is fixed now
- *  HI: and the Imakefiles and that stuff was improved, too.
- *  HI:
- *  HI: Revision 1.1  1996/03/27  20:29:03  kehr
- *  HI: It works. Today I had my first success in getting the FFI running with
- *  HI: the ordrules-library. The interface is defined in `ordrulei.lsp' and
- *  HI: allows direct access to the functions in `ordrules.c'.
- *  HI:
- *
  */
 
 
@@ -158,3 +143,24 @@ void    debug_printmem_asc( char* desc, char* str, char* lenname, int len );
 #define dispmsg(p)
 
 #endif  /* debug */
+
+
+/*======================================================================
+ *
+ * $Log$
+ * Revision 1.3  2005/05/02 21:39:53  jschrod
+ *     xindy run time engine 3.0; as used for CLISP 2.33.2.
+ *
+ * Revision 1.2  1996/07/18 15:56:38  kehr
+ * Checkin after all changes that resulted from the define-letter-group
+ * modification were finished. Additionally I found an ugly bug in the
+ * ordrules.c file that was discovered when running the system under
+ * Solaris (which seems to have signed chars..Whee!). This is fixed now
+ * and the Imakefiles and that stuff was improved, too.
+ *
+ * Revision 1.1  1996/03/27  20:29:03  kehr
+ * It works. Today I had my first success in getting the FFI running with
+ * the ordrules-library. The interface is defined in `ordrulei.lsp' and
+ * allows direct access to the functions in `ordrules.c'.
+ *
+ */

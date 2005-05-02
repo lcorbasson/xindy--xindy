@@ -1,16 +1,19 @@
 ;; $Id$
-;;
-;; Module for the ordrules-library
-;;
+;; ------------------------------------------------------------
 
-(in-package "ORDRULES")
+;;;
+;;; Interface definition of the ordrules module
+;;;
 
-(export '(initialize
-	  add-keyword-sort-rule add-keyword-merge-rule
-	  gen-keyword-sortkey   gen-keyword-mergekey))
+(defpackage :ordrules
+  (:use :cl :ffi)
+  (:export :initialize
+	   :add-keyword-sort-rule :add-keyword-merge-rule
+	   :gen-keyword-sortkey :gen-keyword-mergekey))
 
-(use-package "FFI")
+(in-package :ordrules)
 
+(c-lines "#include \"ordrules.h\"~%")
 
 ; Common OS definitions:
 (def-c-type size_t uint)
@@ -45,12 +48,14 @@
     (:type int)
     (:alloc :NONE))
 
-(def-c-call-out initialize
+(def-call-out initialize
+    (:language :stdc)
     (:name "initialize")
     (:arguments (num-sort-tables int))
     (:return-type int))
 
-(def-c-call-out add-keyword-sort-rule
+(def-call-out add-keyword-sort-rule
+    (:language :stdc)
     (:name "add_sort_rule")
     (:arguments (run int)
 		(left c-string)
@@ -59,7 +64,8 @@
 		(ruletype int))
     (:return-type int))
 
-(def-c-call-out add-keyword-merge-rule
+(def-call-out add-keyword-merge-rule
+    (:language :stdc)
     (:name "add_merge_rule")
     (:arguments (left c-string)
 		(right c-string)
@@ -67,13 +73,15 @@
 		(ruletype int))
     (:return-type int))
 
-(def-c-call-out gen-keyword-sortkey
+(def-call-out gen-keyword-sortkey
+    (:language :stdc)
     (:name "gen_sortkey")
     (:arguments (key c-string)
 		(run int))
     (:return-type c-string :malloc-free))
 
-(def-c-call-out gen-keyword-mergekey
+(def-call-out gen-keyword-mergekey
+    (:language :stdc)
     (:name "gen_mergekey")
     (:arguments (key c-string))
     (:return-type c-string :malloc-free))
@@ -81,6 +89,9 @@
 #|
 
   $Log$
+  Revision 1.5  2005/05/02 21:39:53  jschrod
+      xindy run time engine 3.0; as used for CLISP 2.33.2.
+
   Revision 1.4  1997/10/20 11:23:12  kehr
   New version of sorting rules. Sorting of more complex indexes (i.e.
   French) is now possible.

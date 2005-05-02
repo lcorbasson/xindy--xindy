@@ -1,21 +1,21 @@
-/*
-  $Id$
+/* $Id$
+ *------------------------------------------------------------
 
   This piece of code was inspired from the regsub implementation of
   Henry Spencer. I modified it to make it compatible with the GNU Rx
   library.
 
   I added a more flexible interface that also allows dynamic
-  allocation of the string buffe and a function that computes the
+  allocation of the string buffer and a function that computes the
   length of the resulting string.
 
-  */
+*/
 
 #ifndef RXSUB_H
 #define RXSUB_H
 
 #include "mkind.h"
-#include <rx/rxposix.h>
+#include "regex.h"
 
 /* The error codes used by the rxsub-library */
 
@@ -86,13 +86,17 @@ PROTO( (char *substpat,
 
 #endif /* RXSUB_H */
 
-/*
+
+/*======================================================================
+
   $Log$
+  Revision 1.3  2005/05/02 21:39:53  jschrod
+      xindy run time engine 3.0; as used for CLISP 2.33.2.
+
   Revision 1.2  1999/07/30 08:37:09  kehr
   Intermediate checkin.
 
   Revision 1.1  1996/03/26  17:31:04  kehr
   First check-in of the rx-support for clisp.
 
-
-  */
+*/

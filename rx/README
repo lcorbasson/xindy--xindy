@@ -1,58 +1,30 @@
-Wie habe ich das Rx-Package gemacht?
+# $Id$
+#------------------------------------------------------------
 
-1. Rx auspacken, übersetzen und testen
+This directory holds the code for the run time engine of xindy.
+In particular
+ -- the ordrules module
+ -- xindy rte version number
 
-2. Aus dem clisp-1995-12-08 habe ich mir aus dem Unterverzeichnis
-   src/regexp die Dateien "regexp.lsp" und "regexi.c" geholt. Diese
-   Dateien beschreiben den FFI-Kram für die regexp-Bibliothek und ein
-   extra Lisp-Interface. Ich habe die Angaben mit der Dokumentation
-   zum Rx verglichen und festgestellt, daß ich im Prinzip alles so
-   lassen kann wie es ist.
+These are CLISP extensions that must be dumped to create the memory
+image base.mem that is used to compile xindy sources. Do not expect to
+use this source as is -- it must be merged into a CLISP tree first.
 
-   In "regexp.lsp" habe ich nur den Package-Namen auf RX verändert,
-   hätte das aber auch so lassen können und es als "rx.lsp" abgelegt.
-   In "regexi.c" habe ich die #include-Zeile mit "regexp.h" durch
+This code has been used with CLISP 2.33.2.
 
-	#include "rxposix.h"
-	#include "rxgnucomp.h"
+The code is not necessarily clean. E.g. it is not clear if all
+variables in the ordrules interface are really used in the xindy code,
+or if we could spare their export. Also, the reliance on an available
+regex.h is fine with the platforms where xindy runs up to now; but may
+not be true in the future.
 
-   ersetzt. Danach habe ich mit
+Some stuff is unused but kept anyhow as it might be used (again) in
+the future:
 
-	clisp -c rx.lsp
-
-   die Datei "rx.c" erzeugt. Dann habe ich aus dem
-   clisp-1995-06-23/linkkit die Datei "clisp.h" hinzugeholt, die für
-   das Compilieren von rx.c benötigt wird. Mit
-
-	gcc -O -g -c rx.c
-	gcc -O -g -I./rx -c regexi.c
-
-   die entsprechenden Objekt-Dateien erzeugt. Diese bilden zusammen
-   mit der librx.a das C-Modul.
-
-3. Ab jetzt sind wir in "clisp-1995-06-23/"
-
-   - in full/
-     1. Die drei Moduldateien per link hinzugenommen (rx.o,
-        rx_regexi.o und librx.a).
-     2. Die Datei "makevars" entsprechend angepaßt.
-     3. Die Datei "modules.h" modifiziert (regexp -> rx)
-
-   - in clisp-1995-06-23/
-     1. clisp-link link full
-	Damit habe ich ein neues "lisp.run" erzeugt.
-
-   - in full/
-     1. ./lisp.run -M ../base/lispinit.mem
-	Dies war nötig, da das neue lisp.run lispinit.mem nicht lesen
-	wollte.
-     2. (load "../wildcard/wildcard.lsp")
-        (sys::%saveinitmem)
-	Damit einen Dump f"ur die Wildcard erzeugt.
-
-   - in clisp-iti/
-     1. Die Datei "dump-clisp+rx.lsp" aus der regexp-Datei erzeugt.
-     2. ./lisp.run -M ./lispinit.mem
-        (load 'dump-clisp+rx.lsp)
-
-Das wars....
+ -- config.h.in
+    Should actually be created and used for the C code. This file has
+    been copied from CLISP's regexp module, but never put into use.
+ -- xp*
+    CL pretty printer. It is in CLISP now, and we don't need an
+    external implementation any more. But maybe an other Lisp needs
+    it.

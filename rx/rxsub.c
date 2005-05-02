@@ -1,5 +1,5 @@
-/*
-  $Id$
+/* $Id$
+ *------------------------------------------------------------
 
   This piece of code was inspired from the regsub implementation of
   Henry Spencer. I modified it to make it compatible with the GNU Rx
@@ -8,6 +8,8 @@
  */
 
 #include "rxsub.h"
+
+#include <string.h>
 
 /*
   nrxsub - perform substitutions after a regexp match
@@ -161,3 +163,11 @@ rxsub_len (char *substpat,
   }
   return ++totlen;
 }
+
+/*======================================================================
+
+  $Log$
+  Revision 1.4  2005/05/02 21:39:53  jschrod
+      xindy run time engine 3.0; as used for CLISP 2.33.2.
+
+*/

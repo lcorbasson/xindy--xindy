@@ -9,9 +9,11 @@
 #include "ordrules.h"
 #include "rxsub.h"
 
+#include <string.h>
+
 /* switch on debugging by excluding the undef directive. */
 #define debug
-/* #undef  debug /* */
+#undef  debug /* */
 #include "debug.h"
 
 #ifdef debug
@@ -34,8 +36,6 @@ GROUP_LIST HeadingList;	/* list of group headings */
 static RULE_TYPE get_ruletype PROTO(( char *lside, char *rside ));
 static int       is_regexp PROTO(( char *s ));
 static int       is_CHR_RULE PROTO(( char *s, char *r ));
-
-#define BUFLEN ((size_t)102400)
 
 char  ordrules_string_buffer [BUFLEN];
 int   ordrules_string_buffer_used_bytes = 0;
@@ -653,8 +653,13 @@ int group;
 }
 #endif
 
-/*
+
+/*======================================================================
+ *
  * $Log$
+ * Revision 1.8  2005/05/02 21:39:53  jschrod
+ *     xindy run time engine 3.0; as used for CLISP 2.33.2.
+ *
  * Revision 1.7  1999/07/30 08:34:32  kehr
  * Checked in some debug stuff that was integrated for better testing.
  *
