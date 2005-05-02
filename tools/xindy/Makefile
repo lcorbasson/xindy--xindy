@@ -2,14 +2,15 @@
 #----------------------------------------------------------------------
 
 #
-# Makefile for generating the shell wrapper
+# Makefile for generating the old, depreciated shell wrapper
 #
 
-xindy.v2 : xindy.in
-	cp xindy.in xindy.v2
+all:: xindy.v2
+
+xindy.v2: xindy.in
+	sed 's:@XINDY_PERL@:/usr/bin/perl:' xindy.in >xindy.v2
 	-chmod a+x xindy.v2
 
-test : force
-	$(MAKE) xindy.v2
 
-force:
+install::
+	cp xindy.v2 /opt/xindy*/bin
