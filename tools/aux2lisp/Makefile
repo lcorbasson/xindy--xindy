@@ -1,7 +1,8 @@
-#
 # $Id$
+#------------------------------------------------------------
 #
-# This is the Makefile for the utilities delivered with `xindy'.
+# This is the Makefile for utilities that transform LaTeX idx
+# files into xindy raw index format.
 #
 
 # Adjust the following lines if necessary
@@ -17,7 +18,7 @@ CFLAGS = -O2
 
 # here we go
 
-all: tex2xindy
+all:: tex2xindy
 
 tex2xindy.c: tex2xindy.l
 	$(LEX) tex2xindy.l > tex2xindy.c
@@ -25,8 +26,9 @@ tex2xindy.c: tex2xindy.l
 tex2xindy: tex2xindy.c
 	$(CC) $(CFLAGS) tex2xindy.c -o tex2xindy $(LEXLIB)
 
-clean: force
+clean::
 	$(RM) tex2xindy tex2xindy.c
 
-force:
+install:: all
+	cp tex2xindy makeindex4 /opt/xindy*/bin
 
