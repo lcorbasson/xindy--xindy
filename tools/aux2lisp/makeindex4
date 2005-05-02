@@ -190,13 +190,18 @@ EOSTY
 
 close(STY);
 
-$CmdLine = "xindy -o $OutputFile -l $LogFile $TmpStyle $RawIndex";
+$CmdLine = "xindy.v2 -o $OutputFile -l $LogFile $TmpStyle $RawIndex";
 print "\nRunning xindy...\n";
 print "+ $CmdLine\n";
 exec($CmdLine);
 
+
+# ============================================================
 #
 # $Log$
+# Revision 1.9  2005/05/02 20:19:34  jschrod
+#     Old xindy command is called xindy.v2.
+#
 # Revision 1.8  2004/10/05 21:13:21  jschrod
 #     Notes that its usage is depreciated. Doesn't reference the Quick
 # Guide any more.
