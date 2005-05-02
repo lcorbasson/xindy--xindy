@@ -2,16 +2,16 @@
 
 (mapc #'(lambda (x)
 	  (pushnew x *features*))
-      '(STEP1 STEP2 #|STEP3 STEP44 STEP55|#))
+      '(:STEP1 :STEP2 :STEP3 :STEP4 :STEP5))
 
-#+STEP1
+#+:STEP1
 (progn
   (define-location-class "page-numbers" ("arabic-numbers"))
   (define-attributes (("definition" "usage")))
   )
 
 
-#+STEP2
+#+:STEP2
 (progn
   (markup-index :open  "~n\begin{theindex}~n"
 		:close "~n~n\end{theindex}~n"
@@ -24,7 +24,7 @@
   (markup-locclass-list :open "\quad{}")
   )
 
-#+STEP3
+#+:STEP3
 (progn
   (markup-indexentry :open "~n \item "            :depth 0)
   (markup-indexentry :open "~n    \subitem "      :depth 1)
@@ -33,7 +33,7 @@
   (markup-range :class "page-numbers" :sep "--")
   )
 
-#+STEP4
+#+:STEP4
 (progn
   (sort-rule "à" "a")
   (sort-rule "á" "a")
@@ -45,7 +45,7 @@
   (sort-rule "\\texttt{\(.*\)}" "\1" :again :bregexp)
   )
 
-#+STEP5
+#+:STEP5
 (progn
   (define-letter-groups
       ("a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m"

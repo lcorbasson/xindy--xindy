@@ -31,7 +31,8 @@
 
 <date>Tutorial, Edition March 1997 for xindy version 1.1
 
-<abstract> This is a tutorial for the &xindy; indexing system
+<abstract> This is a tutorial on writing style files for the
+&xindy; indexing system
 &lsqb;5&rsqb;. &xindy; is a general purpose index processor that
 can be configured for a variety of document preparation systems. We
 will demonstrate step by step the incremental specification of a
@@ -128,23 +129,33 @@ though extremly powerful way.
 <p>
 This section incrementally introduces the most important aspects of
 the system. After reading this chapter you should be able to specify
+style files for
 about 80% of the commonly used indexes. The examples are demonstrated
 with a &TeX; markup so one can easily typeset the results &xindy;
 produces. You need &LaTeX; and the ISO-Latin enhancements that come
 with the <tt/inputenc/ package to run the following examples. Also the
 &xindy; system must already be installed.
 
+But this tutorial doesn't reflect real life any more. The concepts are
+introduced below to explain them, but actual usage is probably
+different. In particular, you should not expect to specify sort rules
+by hand; usually one uses the language modules for that. Same way,
+xindy standard modules provide lots of markup functionality that you
+need for your documents, and can be used as a starting point.
+Nevertheless, let's continue with the explanation of &xindy;'s
+style file language.
+
 
 <sect1>Running <sf/xindy/
 <p>
 Create a new directory somewhere and copy some files from the
-distribution directory <tt>Doc/tutorial/</tt> by typing
+distribution directory <tt>doc/style-tutorial/</tt> by typing
 
 <tscreen><verb>
 eg$ mkdir tutorial
 eg$ cd tutorial
-eg$ cp <distrib-dir>/Doc/tutorial/*.raw .
-eg$ cp <distrib-dir>/Doc/tutorial/*.tex .
+eg$ cp <distrib-dir>/doc/style-tutorial/*.raw .
+eg$ cp <distrib-dir>/doc/style-tutorial/*.tex .
 </verb></tscreen>
 
 with <tt/distrib-dir/ replaced by the actual location. Now create a
@@ -160,14 +171,12 @@ file <tt/style1.xdy/ with the following content:
 Now run &xindy; by typing
 
 <tscreen><verb>
-eg$ xindy -t ex1.xlg -M style1 ex1.raw
+eg$ xindy -t ex1.xlg -M style1 -I xindy ex1.raw
 </verb></tscreen>
 
 You should see something like
 
 <tscreen><verb>
-This is `xindy' version 1.1 January 1997 (some-arch).
-
 Opening logfile "ex1.xlg" (done)
 Reading indexstyle...
 Loading module "style1.xdy"...
@@ -413,6 +422,19 @@ further examples.
 
 Running &xindy; and &TeX;ing the result now places the indexentries
 at the right positions.
+
+In reality, such sort rules tend to be much more complex, due to
+the idiosynchrasies of sorting natural languages. Sort rules for
+many languages are available as part of the &xindy; distribution, as
+so-called language modules. We specify the language with the option
+<tt/-L/, e.g., in our example we could have used
+
+<tscreen><verb>
+eg$ xindy -t ex1.xlg -M style1 -L portuguese -I xindy ex1.raw
+</verb></tscreen>
+
+If we use one of the available language modules, sort rules in
+user-written &xindy; styles are ignored.
 
 The result is now quite satisfying if the index entries weren't
 clumped together that much. We usually want the different index
