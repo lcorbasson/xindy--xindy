@@ -409,8 +409,9 @@ main(int argc, char* argv[])
 
 /*
   $Log$
-  Revision 1.1  1998/09/08 12:04:09  kehr
-  Initial checkin of makeglos package from Thomas Henlich.
+  Revision 1.1  2005/05/02 22:06:19  jschrod
+      Initial revision. They were formerly stored in distrib/contrib/,
+  but I wanted the contrib directory to be on top level.
 
   Revision 1.6  1997/02/13 14:42:50  kehr
   Minor changes.
