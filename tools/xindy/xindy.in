@@ -1,6 +1,6 @@
 #!@XINDY_PERL@
-#
 # $Id$
+#------------------------------------------------------------
 #
 # This is the old perl-frontend to the xindy indexing system.
 #
@@ -193,7 +193,7 @@ if ( ! $try ) {
     &check_mem;
 }
 
-$xindy_run = "$runfile -B $XINDY_LIBDIR -q -M $memfile";
+$xindy_run = "$runfile -B $XINDY_LIBDIR -q -M $memfile -E iso-8859-1";
 print "xindy_run = $xindy_run\n" if $debug;
 
 # Run xindy interactive if this was specified via -i.
@@ -242,32 +242,38 @@ if ( $level ) {
 }
 
 # This is the complete LISP-SEXP needed to start the system.
-$xindy_cmd = "-x
-(progn
+$xindy_cmd = "-x '(progn
    $SEARCHPATH
    (xindy:startup :idxstyle \"$Idxsty\"
 	          :rawindex \"$Rawidx\"
 		  :output   \"$output\"
 		  $logfile $version $tracing $logging)
-   (exit))";
+   (exit))'";
 
 
 # Run program and do final cleanup
 
 if ( $try ) {
-    print  $xindy_run . "$xindy_cmd";
+    print  "$xindy_run $xindy_cmd";
 } else {
     if ( $SigHandlerSet ) {
-        system "$xindy_run '$xindy_cmd'";
+        system "$xindy_run $xindy_cmd";
 	unlink $tmpfile;
     } else {
-        exec "$xindy_run '$xindy_cmd'";
+        exec "$xindy_run $xindy_cmd";
     }
 }
 
 
+#----------------------------------------------------------------------
 #
 # $Log$
+# Revision 1.14  2005/05/02 19:16:27  jschrod
+#     Support new RTE 2.2, built with CLISP 2.33.2, that needs -E option
+# to specify the default charset.
+#     xindy also has proper version output in Lisp now, no need for
+# workarounds in script any more.
+#
 # Revision 1.13  2004/05/24 19:52:02  jschrod
 #     Pass -B option to CLISP.
 # Change might be from Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>,

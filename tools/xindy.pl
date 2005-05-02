@@ -638,7 +638,8 @@ _EOT_
 sub call_xindy ( $$ ) {
     my ($mem_file, $xindy_exp) = @_;
 
-    my @command = ("$lib_dir/xindy.run", '-q', '-B', $lib_dir, '-M', $mem_file);
+    my @command = ("$lib_dir/xindy.run", '-q',
+		   '-B', $lib_dir, '-M', $mem_file, '-E', 'iso-8859-1');
     if ( $interactive ) {
 	print "Proposed xindy expression:\n\n$xindy_exp\n"  unless $quiet;
     } else {
@@ -665,14 +666,7 @@ sub output_version ( ;$ ) {		# optional arg: internal-version flag
     my $internal = shift;
     output_xindy_release()  unless $internal;
     print "$cmd script version: $VERSION\n";
-    my $exit_code = call_xindy($mem_file, <<'_EOT_');
-      (progn
-	(format t "xindy kernel version: ~A~%~A version: ~A~%architecture: ~A~%"
-		xindy:*xindy-version*
-		(lisp-implementation-type) (lisp-implementation-version)
-		(machine-version))
-	(exit))
-_EOT_
+    my $exit_code = call_xindy($mem_file, '(xindy:startup :show-version t)');
     exit ($exit_code);
 }
 
@@ -705,6 +699,12 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.6  2005/05/02 19:16:26  jschrod
+#     Support new RTE 2.2, built with CLISP 2.33.2, that needs -E option
+# to specify the default charset.
+#     xindy also has proper version output in Lisp now, no need for
+# workarounds in script any more.
+#
 # Revision 1.5  2004/11/01 22:48:51  jschrod
 #     Locate xindy script.
 #     Terminate on option error.
