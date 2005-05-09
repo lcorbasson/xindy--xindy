@@ -1,13 +1,13 @@
 $Id$
 ------------------------------------------------------------
 
-This directory contains documentation to `xindy'.
+This directory contains documentation of `xindy'.
 
 Manual pages for the commands are in ../man/.
 PDF versions of the manual pages have been added for your convenience.
 
-The subdirectory ./tutorial/ contains the examples that are used in
-the tutorial.
+The subdirectory ./style-tutorial/ contains the examples that are used
+in the xindy style tutorial.
 
-FAQ and tutorial are out of date. (Updates are welcome, of course.)
-You find more documentation at the xindy Web Site www.xindy.org.
+FAQ and style tutorial are out of date. (Updates are welcome, of course.)
+You find more documentation at the xindy Web Site, at http://www.xindy.org/.
