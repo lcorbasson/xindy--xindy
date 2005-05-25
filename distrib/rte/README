@@ -1,0 +1,98 @@
+$Id$
+------------------------------------------------------------
+
+xindy (`fleXible INDexing sYstem') is a flexible index processor that
+creates tagged index for publication system. xindy merges, sorts, and
+outputs markup for raw index entries. It is highly configurable. It
+supports many languages.
+
+This is the source distribution of the xindy run time environment.
+It consists of CLISP (see http://clisp.cons.org/) and the
+xindy-specific CLISP module ordrules.
+
+Release notes are available in the file NEWS, in this distribution.
+
+This distribution is available from SourceForge, see
+http://www.xindy.org/ for more information. That Web Site also
+contains the most up-to-date information about xindy.
+
+
+PURPOSE OF THIS DISTRIBUTION
+----------------------------
+This distribution will enable the creation of the xindy run time
+environment. You will not have a functional xindy afterwards. For
+that, you will also need the xindy kernel source, and the xindy
+modules distribution.
+
+The xindy kernel source distribution is named xindy-kernel-<version>.
+The xindy modules distribution is named xindy-modules-<version>.
+Both are also available from SourceForge.
+
+If you just want to run xindy, your best bet is to download a full
+xindy distribution that features all xindy styles (a.k.a. modules) and
+a precompiled kernel for your architecture. These distributions are
+named xindy-<version>-<platform>.
+
+
+INSTALLATION
+------------
+Unpack the distribution archive, a directory xindy-rte-<version> will
+be created. Usual steps follow:
+
+    $ cd xindy-rte-<version>
+    $ ./configure
+    $ make
+    $ make install
+
+The run time environment will be available in the subdirectories
+binaries/. Copy it to the respective platform directory of the xindy
+kernel source distribution and continue there.
+
+Further make targets:
+
+    all:	Create xindy run time engine anew, without CLISP check
+    check:	Run CLISP check if compilation succeeded
+    clean:	Discard everything that was created by make
+    distclean:	Create state of distribution
+
+
+KNOWN ISSUES
+------------
+Known problems and wanted enhancements of xindy are documented in our
+SourceForge tracker system, accessible on the Web at
+https://sourceforge.net/tracker/?group_id=10646
+
+
+FEEDBACK / MAILING LIST
+-----------------------
+Everybody is encouraged to port xindy to new platforms. For any kind
+of suggestions, helpful comments, questions, bug reports and such,
+please mail to the xindy mailing list
+
+	xindy-discuss@lists.sourceforge.net
+
+This is a low-volume mailing list; with a few emails per month.
+You can subscribe to the list by visiting
+
+	http://lists.sourceforge.net/lists/listinfo/xindy-discuss
+
+Mailing list archives are public and can be read at
+
+	http://sourceforge.net/mailarchive/forum.php?forum=xindy-discuss
+
+
+LEGALESE
+--------
+This package is freely distributable software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+This software is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License in
+the file LICENSE along with this package; if not, write to the Free
+Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.

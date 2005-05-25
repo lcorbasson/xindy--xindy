@@ -1,5 +1,5 @@
-$Id$
-------------------------------------------------------------
+# $Id$
+#------------------------------------------------------------
 
 xindy is largely written in Common Lisp. We have chosen Common Lisp
 for several reasons. Common Lisp is a very powerful rapid prototyping
@@ -16,29 +16,13 @@ from DOS/Windows (NT), OS/2 to many UNIX flavors. CLISP has a
 relatively small memory footprint (2-4 MB) and is reasonably fast
 compared to other Lisp systems.
 
-For efficiency reasons we have added the GNU Rx regular expression
-library and it has been extended with around 500 lines of C-code. The
-additional parts are only necessary if one uses the keyword-mapping
-features of xindy, which is one of the central parts of the system.
-But it should be usable without these features, too.
+For efficiency reasons we assume access to the GNU regex library.
+And we use our own CLISP plug-in, called ordrules. Together with
+CLISP, this makes up the xindy run time engine (aka xindy RTE).
 
-It has also been tested on Allegro Common Lisp though it still lacks
-the keywork mapping support.
-
-Currently we offer several binary distributions to free the users from
-porting the Lisp system on their own. A full source version will be
-available soon.
+Currently we offer several binary distributions of that xindy RTE to
+free users from the need of porting the Lisp system on their own. We
+also distribute the whole RTE in source form, including CLISP.
 
 CLISP can be found at
-	ftp://ma2s2.mathematik.uni-karlsruhe.de/pub/lisp/clisp/
-
-GNU Rx can be found at
-	ftp://prep.ai.mit.edu/pub/gnu/
-
-
-Enjoy, Roger.
-
-=====================================================================
-Roger Kehr	           email: kehr@iti.informatik.th-darmstadt.de
-Computer Science Department
-Technical University of Darmstadt, Germany
+	http://clisp.cons.org/

@@ -1,0 +1,45 @@
+# $Id$
+#----------------------------------------------------------------------
+
+#
+# Makefile for xindy run time environment
+#
+
+
+default:: setup all check
+
+setup::
+	cd @clispdir@/src ; $(MAKE) config.lisp
+
+all::
+	cd @clispdir@/src ; $(MAKE)
+
+# FIXME: With CLISP 2.33.2, "make check" sometimes terminates with an
+# error because in the midst of lambda.txt, make tells
+#   make[2]: *** wait: No child processes.  Stop.
+#   make[2]: *** Waiting for unfinished jobs....
+# Calling "make check" anew, everything is alright. Usually, it's also
+# alright when we call "make all" twice at the start. Anyhow, as a
+# workaround, we choose to try "make check" twice and see checking as
+# failure only if both fail. With future CLISP versions, one should
+# check if that problem still persists. (In case it matters: SUSE 9.2,
+# Linux 2.6.8-24.11-smp, make 3.80, gcc 3.3.4, glibc 2.3.3.)
+check::
+	cd @clispdir@/src ; $(MAKE) check || $(MAKE) check
+
+install::
+	cp @clispdir@/src/full/lisp.run binaries/xindy.run
+	cp @clispdir@/src/full/lispinit.mem binaries/base.mem
+
+clean::
+	cd @clispdir@/src ; $(MAKE) clean
+	/bin/rm -f binaries/*
+
+distclean:: clean
+	cd @clispdir@/src ; $(MAKE) distclean
+	rmdir binaries
+	/bin/rm -f @clispdir@/modules/ordrules
+	/bin/rm -f Makefile
+
+Makefile: Makefile.in
+	sed -e "s/@clispdir\@/@clispdir@/" Makefile.in >Makefile

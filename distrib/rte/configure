@@ -1,0 +1,52 @@
+#!/bin/sh
+# $Id$
+#------------------------------------------------------------
+
+#
+# Configure xindy run time environment
+#
+
+
+# Check that we're called without argument.
+
+if [ $# -gt 0 ]
+   then	echo 'usage: ./configure' >&2
+	echo '       No configuration options currently.' >&2
+	exit 1
+fi
+
+
+# Terminate on error. -x is for debugging.
+
+#set -x
+set -e
+
+
+# Don't output directory names on cd.
+
+unset CDPATH
+
+
+# Create install target directory if necessary.
+
+mkdir -p binaries
+
+
+# CLISP configuration, bind in ordrules module.
+
+clisp=`ls -d clisp* | tail -1`
+cd $clisp
+cd modules
+test -d ordrules  ||  ln -s ../../ordrules .
+cd ..
+
+clisp_modules='--with-export-syscalls --with-module=regexp --with-module=ordrules'
+./configure $clisp_modules
+cd src
+./makemake --with-dynamic-ffi $clisp_modules >Makefile
+
+
+# xindy rte configuration.
+
+cd ../..
+sed -e "s/@clispdir@/$clisp/" Makefile.in >Makefile
