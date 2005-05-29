@@ -29,6 +29,10 @@ tex2xindy: tex2xindy.c
 clean::
 	$(RM) tex2xindy tex2xindy.c
 
+
+# makeindex4 is depreciated and not part of the source distribution.
+# Make sure that the install targets also works in its absence.
+
 install:: all
-	cp tex2xindy makeindex4 /opt/xindy*/bin
+	cp tex2xindy `ls makeindex4 2>/dev/null` /opt/xindy*/bin
 
