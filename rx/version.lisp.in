@@ -1,0 +1,13 @@
+;; $Id$ -*- Lisp -*-
+;;------------------------------------------------------------
+
+;;;
+;;; xindy run time engine version number
+;;;
+
+(defpackage :xindy-version
+    (:export "*XINDY-RTE-VERSION*" "*XINDY-PLATFORM*"))
+(in-package :xindy-version)
+
+(defparameter *xindy-rte-version* "2.2")
+(defparameter *xindy-platform* "@host_cpu@-@host_os@")

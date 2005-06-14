@@ -46,10 +46,11 @@ clisp-module-distrib : clisp-module force
 
 clean : force
 	rm -f core *.o *.a
-	rm -f *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr
+	rm -f *.fas *.lib
 
 distclean : clean
-	rm -f *.dvi
+	rm -f config.log config.status
+	rm -f version.lisp Makefile
 
 force :
 
