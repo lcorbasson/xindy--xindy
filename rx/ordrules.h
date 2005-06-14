@@ -96,7 +96,7 @@ typedef struct {
 extern GROUP_LIST GroupList;	/* list of character groups */
 extern GROUP_LIST HeadingList;	/* list of group headings */
 
-/* These variables are used in ordrulei.lisp. The generated code, in
+/* These variables are used in ordrulei.lsp. The generated code, in
    ordrulei.c uses sizeof() on them, thus the buffer size must be
    defined. */
 #define BUFLEN ((size_t)1024)
@@ -140,6 +140,9 @@ char* gen_mergekey  PROTO((char *key));
 /*======================================================================
  *
  * $Log$
+ * Revision 1.8  2005/06/14 11:22:04  jschrod
+ *     ordrulei.lisp is now ordrulei.lsp in distribution, as it is in CVS.
+ *
  * Revision 1.7  2005/05/02 21:39:53  jschrod
  *     xindy run time engine 3.0; as used for CLISP 2.33.2.
  *
