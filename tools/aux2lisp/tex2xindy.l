@@ -1,21 +1,10 @@
 %{
-  /*
-
-   $Id$
-   1.8 Fixed minor quoting bugs (for increased makeindex compatibility).
-        1999-07-28 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
-       Fixed crossref to subitem.
-        1999-09-23 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
-
-   1.7 Fixed a bug concerning writing to and closing non-existing file (stat)
-       Fixed a bug concerning quoting the " character.
-       Enhancement for processing glossary files.
-        1999-06-14 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
+  /* $Id$
 
    This is the source of `tex2xindy'.
 
-   It tries to parse an TeX-auxiliary-file `.aux' or index-file
-   `.idx' into a raw-index-form readable by xindy.
+   It transforms a LaTeX auxiliary file `.aux' or index file
+   `.idx' into a xindy raw index file.
 
    This program was written since it was not easily possible to
    extract the parser from the old makeindex system. Therefore it does
@@ -28,12 +17,12 @@
    distribution for further details.
 
    It can also be used as a template for writing other frontends for
-   xindy. Please send us your preprocessors. We are likely to include
+   xindy. Please send us your preprocessors. We want to include
    them into the distribution. */
 
 #include <stdio.h>
 
-#define QUOTE_ECHO qc(*yytext)
+#define QUOTE_ECHO qs(yytext)
 FILE* attrfd = NULL;
 
 static int lineno    = 1;
@@ -42,7 +31,11 @@ static int xref_mode = 0;
 static int glos_mode = 0;
 static int errors    = 0;
 
-#define err( msg ) {fprintf(stderr, "line %d: %s\n", lineno, msg); errors++;}
+#define multiple_err \
+    { \
+        fprintf(stderr, "line %d: multiple %s's\n", lineno, yytext); \
+	errors++; \
+    }
 
 #define NO_RANGE     0
 #define OPEN_RANGE   1
@@ -54,8 +47,10 @@ int range = NO_RANGE;
 
 void qc( char ch ) {
   switch (ch) {
-    case '\\' : putchar( '\\' ); break;
-    case '"'  : putchar( '\\' ); break;
+    case '\\' :
+    case '"'  :
+	putchar( '\\' );
+	break;
   }
   putchar(ch);
 }
@@ -87,18 +82,22 @@ ARGCLOSE \}
 
 %%
 
-^{KEYWORD}[ \t]*{ARGOPEN} { printf("(indexentry :tkey ((\"");
-                            xref_mode = 0;
-                            glos_mode = 0;
-                            BEGIN(key); }
+<INITIAL>^{KEYWORD}[ \t]*{ARGOPEN} {
+			  printf("(indexentry :tkey ((\"");
+			  xref_mode = 0;
+			  glos_mode = 0;
+			  BEGIN(key);
+			}
 
-^{KEYWORDG}[ \t]*{ARGOPEN} { printf("(indexentry :tkey ((\"");
-                            xref_mode = 0;
-                            glos_mode = 1;
-                            BEGIN(key); }
+<INITIAL>^{KEYWORDG}[ \t]*{ARGOPEN} {
+			  printf("(indexentry :tkey ((\"");
+			  xref_mode = 0;
+			  glos_mode = 1;
+			  BEGIN(key);
+			}
 
-{ESCAPE}{QUOTE}        { qs(yytext); }
-{QUOTE}                { qc(yytext[0]); }
+{ESCAPE}{QUOTE}        { QUOTE_ECHO; }
+{QUOTE}                { QUOTE_ECHO; }
 <key,print>{ENCAP}     { printf("\")) :attr \"");
                          range = NO_RANGE; BEGIN(encap); }
 <key,print>{IS}        { if (glos_mode == 1)
@@ -121,11 +120,9 @@ ARGCLOSE \}
                        }
 
 <key>{ACTUAL}          { printf("\" \""); BEGIN(print); }
-<print>{ACTUAL}        { err( "multiple @'s" ); }
+<print>{ACTUAL}        { multiple_err; }
 
-<key,print>.           { QUOTE_ECHO; }
-
-<encap>{ENCAP}         { err( "multiple |'s" ); }
+<encap>{ENCAP}         { multiple_err; }
 <encap>{ROPEN}         { range = OPEN_RANGE; }
 <encap>{RCLOSE}        { range = CLOSE_RANGE; }
 <encap>{ARGOPEN}       { /* close :attr "... */
@@ -148,11 +145,10 @@ ARGCLOSE \}
 			   BEGIN(skip2location);
 			 }
                        }
-<encap>.              { QUOTE_ECHO;
-                        if (attrfd) {
-			  fwrite(yytext, sizeof(char), 1, attrfd);
-			}
-	              }
+<encap>[.\n]           { QUOTE_ECHO;
+                         if (attrfd)  fwrite(yytext, sizeof(char), 1, attrfd);
+			 if (*yytext == '\n')  lineno++;
+	               }
 
 
 
@@ -176,7 +172,6 @@ ARGCLOSE \}
 		           BEGIN(skip2location);
 		         }
                        }
-<xref,is>.            { QUOTE_ECHO; }
 
 <skip2location>[ \t]*{ARGOPEN} {
                         if (xref_mode)
@@ -186,12 +181,11 @@ ARGCLOSE \}
 			    BEGIN(location);
 			  }
                        }
-
 <location>{ARGCLOSE}  { printf("\")\n"); BEGIN(0); }
-<location>.           {QUOTE_ECHO;}
-
 <skiplocation>{ARGCLOSE} { printf(")\n"); BEGIN(0); }
-<skiplocation>.       { ; }
+
+<key,print,xref,is,location>\n	      { QUOTE_ECHO; lineno++; }
+<key,print,xref,is,location>.	      { QUOTE_ECHO; }
 
 \n                    { lineno++; }
 .                     { ; }
@@ -217,6 +211,13 @@ main(int argc, char* argv[])
 
 /*
   $Log$
+  Revision 1.15  2005/06/14 16:22:08  jschrod
+      Fold in changes from Thomas Henlich, as of 2000-02-14:
+  Paranoia fix: recognize KEYWORD only in INITIAL start condition.
+  Recognize \n and count lines (multiline entries do exist!).
+  Merged "." rules.
+  Fixed error messages (multiple ...).
+
   Revision 1.14  2004/10/05 21:10:48  jschrod
       Handles quote character correctly (bug ticket 1006128).
   Test case: german-sty.
@@ -231,6 +232,16 @@ main(int argc, char* argv[])
 
   Revision 1.11  1999/10/13 08:05:10  kehr
   Merged bugfix from Thomas Henlich with my own modifications.
+
+   1.8 Fixed minor quoting bugs (for increased makeindex compatibility).
+        1999-07-28 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
+       Fixed crossref to subitem.
+        1999-09-23 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
+
+   1.7 Fixed a bug concerning writing to and closing non-existing file (stat)
+       Fixed a bug concerning quoting the " character.
+       Enhancement for processing glossary files.
+        1999-06-14 Thomas Henlich <henlich@mmers1.mw.tu-dresden.de>
 
   Revision 1.10  1999/09/23 06:53:32  kehr
   Fixed wrong raw index generation for cross-ref keywords.
@@ -266,6 +277,3 @@ main(int argc, char* argv[])
   Revision 1.1  1996/06/24  08:53:57  kehr
   Initial checkin of the Makefile, README and tex2xindy.
 */
-
-
-
