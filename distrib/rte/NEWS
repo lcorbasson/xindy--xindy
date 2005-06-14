@@ -8,7 +8,6 @@ XINDY RUN TIME ENVIRONMENT RELEASE NOTES
 
 Version   Date	      Remarks
 
-2.2 rc1	  2005-05-25  First release candidate for `LaTeX Companion Release'.
+2.2	  2005-06-14  Release 2.2, `LaTeX Companion Release'.
 		      ordrules module ported to current CLISP.
 		      Created "configure ; make ; make install" installation.
-		      Tested on Linux 2.4 and 2.6, with glibc 2.2 and 2.3.
