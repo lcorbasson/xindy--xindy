@@ -1,0 +1,102 @@
+$Id$
+------------------------------------------------------------
+
+xindy (`fleXible INDexing sYstem') is a flexible index processor that
+creates tagged index for publication system. xindy merges, sorts, and
+outputs markup for raw index entries. It is highly configurable. It
+supports many languages.
+
+This is the source distribution of the xindy kernel.
+It consists of Lisp sources and needs the xindy run time environment
+to get compiled.
+
+Release notes are available in the file NEWS, in this distribution.
+
+This distribution is available from SourceForge, see
+http://www.xindy.org/ for more information. That Web Site also
+contains the most up-to-date information about xindy.
+
+
+PURPOSE OF THIS DISTRIBUTION
+----------------------------
+This distribution will enable the creation of the xindy kernel. You
+will not have a functional xindy afterwards. For that, you will also
+need the xindy modules distribution.
+
+The xindy run time environment is named xindy-rte-<version>.
+The xindy kernel source distribution is named xindy-kernel-<version>.
+The xindy modules distribution is named xindy-modules-<version>.
+Both are also available from SourceForge.
+
+If you just want to run xindy, your best bet is to download a full
+xindy distribution that features all xindy styles (a.k.a. modules) and
+a precompiled kernel for your architecture. These distributions are
+named xindy-<version>-<platform>.
+
+
+INSTALLATION
+------------
+Get the run time environment first and build it.
+
+Unpack the kernel distribution archive, a directory
+xindy-kernel-<version> will be created. Copy the binary files from the
+rte tree to the kernel tree:
+
+    $ cp xindy-rte-<version>/binaries/* xindy-kernel-<version>/binaries
+    $ cd xindy-kernel-<version>/binaries
+    $ make
+
+Compiled xindy consists of two files, xindy.run and xindy.mem.
+
+Create tex2xindy:
+
+    $ cd ../tex2xindy
+    $ make
+
+Copy the binaries into a xindy /opt directory; use one of the
+distributions as example.
+
+We know that we have to improve installation, that's why this
+distribution is tagged as a pre-release.
+
+
+KNOWN ISSUES
+------------
+Known problems and wanted enhancements of xindy are documented in our
+SourceForge tracker system, accessible on the Web at
+https://sourceforge.net/tracker/?group_id=10646
+
+
+FEEDBACK / MAILING LIST
+-----------------------
+Everybody is encouraged to port xindy to new platforms. For any kind
+of suggestions, helpful comments, questions, bug reports and such,
+please mail to the xindy mailing list
+
+	xindy-discuss@lists.sourceforge.net
+
+This is a low-volume mailing list; with a few emails per month.
+You can subscribe to the list by visiting
+
+	http://lists.sourceforge.net/lists/listinfo/xindy-discuss
+
+Mailing list archives are public and can be read at
+
+	http://sourceforge.net/mailarchive/forum.php?forum=xindy-discuss
+
+
+LEGALESE
+--------
+This package is freely distributable software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+This software is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License in
+the file LICENSE along with this package; if not, write to the Free
+Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.

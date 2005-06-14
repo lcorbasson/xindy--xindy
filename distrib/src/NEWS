@@ -1,0 +1,14 @@
+# $Id$
+#------------------------------------------------------------
+
+
+XINDY KERNEL RELEASE NOTES
+==========================
+
+
+Version   Date	      Remarks
+
+2.2-rc2-pre4
+	  2005-06-14  4th Pre-Release 2.2, `LaTeX Companion Release'.
+		      Get rid of platform directories.
+		      Use version.lsp to capture kernel version number.
