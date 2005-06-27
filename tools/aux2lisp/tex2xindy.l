@@ -82,14 +82,14 @@ ARGCLOSE \}
 
 %%
 
-<INITIAL>^{KEYWORD}[ \t]*{ARGOPEN} {
+<INITIAL>{KEYWORD}[ \t]*{ARGOPEN} {
 			  printf("(indexentry :tkey ((\"");
 			  xref_mode = 0;
 			  glos_mode = 0;
 			  BEGIN(key);
 			}
 
-<INITIAL>^{KEYWORDG}[ \t]*{ARGOPEN} {
+<INITIAL>{KEYWORDG}[ \t]*{ARGOPEN} {
 			  printf("(indexentry :tkey ((\"");
 			  xref_mode = 0;
 			  glos_mode = 1;
@@ -145,7 +145,8 @@ ARGCLOSE \}
 			   BEGIN(skip2location);
 			 }
                        }
-<encap>[.\n]           { QUOTE_ECHO;
+<encap>.|\n            {
+			 QUOTE_ECHO;
                          if (attrfd)  fwrite(yytext, sizeof(char), 1, attrfd);
 			 if (*yytext == '\n')  lineno++;
 	               }
@@ -182,13 +183,20 @@ ARGCLOSE \}
 			  }
                        }
 <location>{ARGCLOSE}  { printf("\")\n"); BEGIN(0); }
+
 <skiplocation>{ARGCLOSE} { printf(")\n"); BEGIN(0); }
+<skiplocation>.		 { ; }
 
 <key,print,xref,is,location>\n	      { QUOTE_ECHO; lineno++; }
 <key,print,xref,is,location>.	      { QUOTE_ECHO; }
 
 \n                    { lineno++; }
-.                     { ; }
+[ \t]		      { ; }
+.                     {
+			fprintf(stderr,
+				"Encountered unexpected char '%c' on line %d\n",
+				yytext[0], lineno);
+		      }
 
 %%
 
@@ -209,8 +217,15 @@ main(int argc, char* argv[])
   }
 }
 
-/*
+
+/* ============================================================
+
   $Log$
+  Revision 1.16  2005/06/27 20:49:06  jschrod
+      Keywords may be inmidst a line, as Jörg Sommer showed.
+      "." rule merging did not work for attributes, and for skiplocation.
+      Output error message if we come across chars outside our FSA.
+
   Revision 1.15  2005/06/14 16:22:08  jschrod
       Fold in changes from Thomas Henlich, as of 2000-02-14:
   Paranoia fix: recognize KEYWORD only in INITIAL start condition.
