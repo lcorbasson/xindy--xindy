@@ -1,6 +1,9 @@
-.\" Copyright (c) 1996,1997 Roger Kehr
+.\" $Id$
+.\" ------------------------------------------------------------
+.\" Copyright (c) 1996,1997 Roger Kehr.
+.\" Copyright (c) 2006 Joachim Schrod.
 .\" See section COPYING for conditions for redistribution
-.TH tex2xindy 1L "January 1997" "Roger Kehr" ""
+.TH tex2xindy 1 "February 2006" "xindy" ""
 .de BP
 .sp
 .ti \-.2i
@@ -24,26 +27,24 @@ a file with the extension \fB.idx\fP. \fBtex2xindy\fP reads in
 this format and converts it to a format suitable for the use with
 \fBxindy\fP.
 
-If the optional argument `file' is specified, tex2xindy puts some
-information into this file which is further processed by the
-makeindex4(1L) program. For more information have a look at the
-"Compatibility Guide" which explains this format. It is part of the
-xindy distribution.
+If the optional argument \fIfile\fP is specified, tex2xindy writes all
+index key attributes into this file.
 
 .SH "SEE ALSO"
-xindy(1L),
-makeindex(1L),
-makeindex4(1L)
+texindy(1),
+xindy(1),
+makeindex(1)
 
 For detailed information about the formats of the \fBmakeindex\fP and
 \fBxindy\fP systems refer to the documentation that come with both
 products.
 
 .SH "AUTHOR"
-Roger Kehr, Institut fuer Theoretische Informatik, TH-Darmstadt
+Roger Kehr, Institut fuer Theoretische Informatik, TU Darmstadt
 
 .SH "COPYING"
 Copyright (c) 1996,1997 Roger Kehr.
+Copyright (c) 2006 Joachim Schrod.
 .PP
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
