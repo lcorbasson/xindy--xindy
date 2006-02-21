@@ -96,9 +96,9 @@ ARGCLOSE \}
 			  BEGIN(key);
 			}
 
-{ESCAPE}{QUOTE}        { QUOTE_ECHO; }
-{QUOTE}\n              { QUOTE_ECHO; lineno++; }
-{QUOTE}.               { QUOTE_ECHO; }
+{ESCAPE}{QUOTE}        { qc(yytext[1]); }
+{QUOTE}\n              { qc(yytext[1]); lineno++; }
+{QUOTE}.               { qc(yytext[1]); }
 <key,print>{ENCAP}     { printf("\")) :attr \"");
                          range = NO_RANGE; BEGIN(encap); }
 <key,print>{IS}        { if (glos_mode == 1)
@@ -222,6 +222,9 @@ main(int argc, char* argv[])
 /* ============================================================
 
   $Log$
+  Revision 1.18  2006/02/21 12:12:05  jschrod
+      Don't output escape or quote characters.
+
   Revision 1.17  2006/02/21 02:05:00  jschrod
       Quote really quotes the next char, now.
 
