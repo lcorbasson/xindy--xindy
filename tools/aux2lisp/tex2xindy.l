@@ -97,7 +97,8 @@ ARGCLOSE \}
 			}
 
 {ESCAPE}{QUOTE}        { QUOTE_ECHO; }
-{QUOTE}                { QUOTE_ECHO; }
+{QUOTE}\n              { QUOTE_ECHO; lineno++; }
+{QUOTE}.               { QUOTE_ECHO; }
 <key,print>{ENCAP}     { printf("\")) :attr \"");
                          range = NO_RANGE; BEGIN(encap); }
 <key,print>{IS}        { if (glos_mode == 1)
@@ -221,6 +222,9 @@ main(int argc, char* argv[])
 /* ============================================================
 
   $Log$
+  Revision 1.17  2006/02/21 02:05:00  jschrod
+      Quote really quotes the next char, now.
+
   Revision 1.16  2005/06/27 20:49:06  jschrod
       Keywords may be inmidst a line, as Jörg Sommer showed.
       "." rule merging did not work for attributes, and for skiplocation.
