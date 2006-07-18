@@ -1,28 +1,95 @@
 %{
   /* $Id$
+     ============================================================
+     (history at end)
 
-   This is the source of `tex2xindy'.
+=head1 NAME
 
-   It transforms a LaTeX auxiliary file `.aux' or index file
-   `.idx' into a xindy raw index file.
+tex2xindy - a preprocessor of the xindy index processor
 
-   This program was written since it was not easily possible to
-   extract the parser from the old makeindex system. Therefore it does
-   not find all errors in the input as the makeindex version.
-   Additionally it uses only the default input specifiers of
-   makeindex. If other input specifiers (cf. manual page of makeindex)
-   are needed, the input specifiers below (starting from the pattern
-   KEYWORD, see below) must be changed and the program must be
-   recompiled. See the Migration Manual that comes with this
-   distribution for further details.
+=head1 SYNOPSIS
 
-   It can also be used as a template for writing other frontends for
-   xindy. Please send us your preprocessors. We want to include
-   them into the distribution. */
+ tex2xindy [-o] [attr_file]
+
+=head1 DESCRIPTION
+
+B<tex2xindy> transforms a LaTeX index file C<.idx> (or an C<.aux>
+file) into a B<xindy> raw index file.
+
+It is a filter that reads from F<stdin> a file in the input format of
+LaTeX's raw index file, i.e., with C<\indexentry> tags. It outputs on
+F<stdout> a B<xindy> raw index file, i.e., with C<indexentry> clauses.
+
+If the option B<-o> is not specified, B<tex2xindy> handles ^^-notation
+of TeX and outputs the octet that is represented: C<^^ab> in the input
+gets output as the octet 0xab. If C<^^^^abcd> or C<^^^^^^^^abcdefab>
+are detected, they are output as is.
+
+If the option B<-o> is specified, B<tex2xindy> operates in I<Omega
+mode> and handles its ^^-notation: Then C<^^ab>, C<^^^^abcd>, and
+C<^^^^^^^^abcdefab> represent Unicode characters with code points
+0xab, 0xabcd, and 0xabcdefab respectively. They are output in UTF-8
+encoding.
+
+If the optional argument F<attr_file> is specified, B<tex2xindy>
+writes all index key attributes into this file.
+
+
+=head1 DEFICITS
+
+This program was written since it was not easily possible to extract
+the parser from the old makeindex system. Therefore it does not find
+all errors in the input as the makeindex(1) version.
+
+Additionally it uses only the default input specifiers of
+makeindex(1). If other input specifiers (cf. manual page of
+makeindex(1)) are needed, the input specifiers (starting from the
+pattern C<KEYWORD>, see below) must be changed and the program must be
+recompiled.
+
+In fact, input markup handling (and thus B<tex2xindy>) should be
+incorporated into the B<xindy> kernel, to be able to specify
+configuration in xindy style files.
+
+=head1 SEE ALSO
+
+texindy(1),
+xindy(1),
+makeindex(1)
+
+=head1 AUTHOR
+
+Roger Kehr, Institut fuer Theoretische Informatik, TU Darmstadt
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 1996,1997 Roger Kehr.
+Copyright (c) 2006 Joachim Schrod.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+=cut
+
+*/
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define QUOTE_ECHO qs(yytext)
+
 FILE* attrfd = NULL;
 
 static int lineno    = 1;
@@ -30,6 +97,7 @@ static int braces    = 0;
 static int xref_mode = 0;
 static int glos_mode = 0;
 static int errors    = 0;
+static int omega_mode = 0;
 
 #define multiple_err \
     { \
@@ -63,6 +131,54 @@ void qs( char* str ) {
   }
 }
 
+/*
+   Output an Omega character, ^^-notation in yytext, in UTF-8 encoding.
+   The parameter gets passed the amount of hex digits in the ^^-notation.
+   In front of the hex digits are the same amount of ^ chars.
+*/
+void omega_output_utf8 ( int width )
+{
+    unsigned long int c = strtoul (yytext+width, NULL, 16);
+    if (c < 0x80) {
+	putchar (c);
+    }
+    else if (c < 0x800) {
+	putchar (0xC0 | c>>6);
+	putchar (0x80 | c & 0x3F);
+    }
+    else if (c < 0x10000) {
+	putchar (0xE0 | c>>12);
+	putchar (0x80 | c>>6 & 0x3F);
+	putchar (0x80 | c & 0x3F);
+    }
+    else if (c < 0x200000) {
+	putchar (0xF0 | c>>18);
+	putchar (0x80 | c>>12 & 0x3F);
+	putchar (0x80 | c>>6 & 0x3F);
+	putchar (0x80 | c & 0x3F);
+    }
+    else if (c < 0x4000000) {
+	putchar (0xF8 | c>>24);
+	putchar (0x80 | c>>18 & 0x3F);
+	putchar (0x80 | c>>12 & 0x3F);
+	putchar (0x80 | c>>6 & 0x3F);
+	putchar (0x80 | c & 0x3F);
+    }
+    else if (c < 0x80000000) {
+	putchar (0xFC | c>>30);
+	putchar (0x80 | c>>24 & 0x3F);
+	putchar (0x80 | c>>18 & 0x3F);
+	putchar (0x80 | c>>12 & 0x3F);
+	putchar (0x80 | c>>6 & 0x3F);
+	putchar (0x80 | c & 0x3F);
+    }
+    else { /* out of range, output U+FFFD REPLACEMENT CHARACTER */
+	fputs("\xef\xbf\xbd",stdout);
+	fprintf (stderr, "line %d: character %#lx not in UTF-8 range\n",
+		 lineno, c);
+    }
+}
+
 %}
 
 KEYWORD  \\indexentry
@@ -77,6 +193,10 @@ ROPEN    \(
 RCLOSE   \)
 ARGOPEN  \{
 ARGCLOSE \}
+
+HATHAT8BIT	\^{2}[0-9a-fA-F]{2}
+HATHAT16BIT	\^{4}[0-9a-fA-F]{4}
+HATHAT32BIT	\^{8}[0-9a-fA-F]{8}
 
 %s key print skip2location location encap xref is skiplocation
 
@@ -188,6 +308,28 @@ ARGCLOSE \}
 <skiplocation>{ARGCLOSE} { printf(")\n"); BEGIN(0); }
 <skiplocation>.		 { ; }
 
+<key,print,xref,is,location>{HATHAT8BIT} {
+			if ( omega_mode ) {
+			    omega_output_utf8(2);
+			} else {
+			    unput( strtol(yytext+2, NULL, 16) );
+			}
+		      }
+<key,print,xref,is,location>{HATHAT16BIT} {
+			if ( omega_mode ) {
+			    omega_output_utf8(4);
+			} else {
+			    ECHO;
+			}
+		      }
+<key,print,xref,is,location>{HATHAT32BIT} {
+			if ( omega_mode ) {
+			    omega_output_utf8(8);
+			} else {
+			    ECHO;
+			}
+		      }
+
 <key,print,xref,is,location>\n	      { QUOTE_ECHO; lineno++; }
 <key,print,xref,is,location>.	      { QUOTE_ECHO; }
 
@@ -201,27 +343,60 @@ ARGCLOSE \}
 
 %%
 
+void usage ()
+{
+    fputs("This is tex2xindy, $Revision$.\n", stderr);
+    fputs("usage: tex2xindy [-o] [attr_file]\n", stderr);
+    exit (1);
+}
 
+int
 main(int argc, char* argv[])
 {
-  if ( argc > 1 ) {
-    fprintf(stderr, "This is `tex2xindy' $Revision$.\n");
-    fprintf(stderr, "Writing attribute names to file \"%s\".\n\n", argv[1]);
-    attrfd = fopen(argv[1], "w");
-  }
-  yylex();
-  if (attrfd) fclose(attrfd);
-  if (errors > 0) {
-      exit( 1 );
-  } else {
-      exit( 0 );
-  }
+    int option;
+    extern char *optarg;
+    extern int optind, optopt;
+
+    while ( (option=getopt(argc, argv, ":o")) != -1 ) {
+	switch (option) {
+	  case 'o':
+	      omega_mode = 1;
+	      break;
+	  case '?':
+	  default:
+	      fprintf(stderr, "Unrecognized option: -%c\n", optopt);
+	      usage();
+	      /* NOTREACHED */
+	}
+    }
+
+    /* More than one argument left? */
+    if ( optind < argc - 1 )  usage();
+
+    /* attr_file specified? */
+    if ( optind == argc - 1 ) {
+	fprintf(stderr, "Writing attribute names to file \"%s\".\n",
+		argv[optind]);
+	if ( (attrfd = fopen(argv[optind], "w")) == NULL ) {
+	    perror (argv[optind]);
+	    exit (1);
+	}
+    }
+
+    yylex();
+    if (attrfd) fclose(attrfd);
+    return (errors > 0);		/* 1 or 0 */
 }
 
 
 /* ============================================================
 
   $Log$
+  Revision 1.19  2006/07/18 21:26:34  jschrod
+      Add man page as POD to tex2xindy source.
+      Add support for ^^-notation, both in TeX and in new Omega mode.
+      Add usage message and proper option parsing.
+
   Revision 1.18  2006/02/21 12:12:05  jschrod
       Don't output escape or quote characters.
 
