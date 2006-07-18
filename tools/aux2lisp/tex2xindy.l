@@ -143,34 +143,34 @@ void omega_output_utf8 ( int width )
 	putchar (c);
     }
     else if (c < 0x800) {
-	putchar (0xC0 | c>>6);
-	putchar (0x80 | c & 0x3F);
+	putchar (0xC0 | (c>>6));
+	putchar (0x80 | (c & 0x3F));
     }
     else if (c < 0x10000) {
-	putchar (0xE0 | c>>12);
-	putchar (0x80 | c>>6 & 0x3F);
-	putchar (0x80 | c & 0x3F);
+	putchar (0xE0 | (c>>12));
+	putchar (0x80 | (c>>6 & 0x3F));
+	putchar (0x80 | (c & 0x3F));
     }
     else if (c < 0x200000) {
-	putchar (0xF0 | c>>18);
-	putchar (0x80 | c>>12 & 0x3F);
-	putchar (0x80 | c>>6 & 0x3F);
-	putchar (0x80 | c & 0x3F);
+	putchar (0xF0 | (c>>18));
+	putchar (0x80 | (c>>12 & 0x3F));
+	putchar (0x80 | (c>>6 & 0x3F));
+	putchar (0x80 | (c & 0x3F));
     }
     else if (c < 0x4000000) {
-	putchar (0xF8 | c>>24);
-	putchar (0x80 | c>>18 & 0x3F);
-	putchar (0x80 | c>>12 & 0x3F);
-	putchar (0x80 | c>>6 & 0x3F);
-	putchar (0x80 | c & 0x3F);
+	putchar (0xF8 | (c>>24));
+	putchar (0x80 | (c>>18 & 0x3F));
+	putchar (0x80 | (c>>12 & 0x3F));
+	putchar (0x80 | (c>>6 & 0x3F));
+	putchar (0x80 | (c & 0x3F));
     }
     else if (c < 0x80000000) {
-	putchar (0xFC | c>>30);
-	putchar (0x80 | c>>24 & 0x3F);
-	putchar (0x80 | c>>18 & 0x3F);
-	putchar (0x80 | c>>12 & 0x3F);
-	putchar (0x80 | c>>6 & 0x3F);
-	putchar (0x80 | c & 0x3F);
+	putchar (0xFC | (c>>30));
+	putchar (0x80 | (c>>24 & 0x3F));
+	putchar (0x80 | (c>>18 & 0x3F));
+	putchar (0x80 | (c>>12 & 0x3F));
+	putchar (0x80 | (c>>6 & 0x3F));
+	putchar (0x80 | (c & 0x3F));
     }
     else { /* out of range, output U+FFFD REPLACEMENT CHARACTER */
 	fputs("\xef\xbf\xbd",stdout);
@@ -219,25 +219,32 @@ HATHAT32BIT	\^{8}[0-9a-fA-F]{8}
 {ESCAPE}{QUOTE}        { qc(yytext[1]); }
 {QUOTE}\n              { qc(yytext[1]); lineno++; }
 {QUOTE}.               { qc(yytext[1]); }
-<key,print>{ENCAP}     { printf("\")) :attr \"");
-                         range = NO_RANGE; BEGIN(encap); }
-<key,print>{IS}        { if (glos_mode == 1)
-                           {
+<key,print>{ENCAP}     {
+			 printf("\")) :attr \"");
+                         range = NO_RANGE;
+			 BEGIN(encap);
+		       }
+<key,print>{IS}        {
+			 if ( glos_mode ) {
                              printf("\")) :attr \"is\" :xref (\"");
                              range = NO_RANGE;
 			     if (attrfd) fprintf(attrfd, "\txref\n");
-		           BEGIN(is);
-			   }
-                         else
-			   QUOTE_ECHO; }
+			     BEGIN(is);
+			 } else {
+			     ECHO;
+			 }
+		       }
 <key>{LEVEL}           { printf("\") (\""); }
 <print>{LEVEL}         { printf("\") (\""); BEGIN(key); }
-<key,print>{ARGOPEN}   { QUOTE_ECHO; braces++; }
-<key,print>{ARGCLOSE}  { if ( braces > 0 )
-                           {QUOTE_ECHO; braces--;}
-                         else
-			   {printf("\"))");
-		         BEGIN(skip2location);}
+<key,print>{ARGOPEN}   { ECHO; braces++; }
+<key,print>{ARGCLOSE}  {
+			 if ( braces > 0 ) {
+			     ECHO;
+			     braces--;
+			 } else {
+			     printf("\"))");
+			     BEGIN(skip2location);
+			 }
                        }
 
 <key>{ACTUAL}          { printf("\" \""); BEGIN(print); }
@@ -252,18 +259,22 @@ HATHAT32BIT	\^{8}[0-9a-fA-F]{8}
 		         braces++;
 		         BEGIN(xref);
                        }
-<encap>{ARGCLOSE}      { if ( braces > 0 )
-                           {QUOTE_ECHO; braces--;}
-                         else {
-			   putchar('"');
-			   if (attrfd) fprintf(attrfd, "\tlocref\n");
-			   switch (range) {
-			     case OPEN_RANGE : printf(" :open-range");
-			       break;
-			     case CLOSE_RANGE: printf(" :close-range");
-			       break;
-			   }
-			   BEGIN(skip2location);
+<encap>{ARGCLOSE}      {
+			 if ( braces > 0 ) {
+			     ECHO;
+			     braces--;
+			 } else {
+			     putchar('"');
+			     if (attrfd) fprintf(attrfd, "\tlocref\n");
+			     switch (range) {
+			       case OPEN_RANGE:
+				   printf(" :open-range");
+				   break;
+			       case CLOSE_RANGE:
+				   printf(" :close-range");
+				   break;
+			     }
+			     BEGIN(skip2location);
 			 }
                        }
 <encap>.|\n            {
@@ -275,33 +286,37 @@ HATHAT32BIT	\^{8}[0-9a-fA-F]{8}
 
 
 <xref>{LEVEL}          { printf("\" \""); }
-<xref,is>{ARGOPEN}     { QUOTE_ECHO; braces++; }
-<xref>{ARGCLOSE}       { if     ( braces >   1 )
-                           {QUOTE_ECHO; braces--;}
-                         else if ( braces == 1 )
-		           { braces--; }
-                         else {
-		           printf("\")");
-			   xref_mode = 1;
-		           BEGIN(skip2location);
+<xref,is>{ARGOPEN}     { ECHO; braces++; }
+<xref>{ARGCLOSE}       {
+			 if ( braces > 1 ) {
+			     ECHO;
+			     braces--;
+			 } else if ( braces == 1 ) {
+			     braces--;
+			 } else {
+			     printf("\")");
+			     xref_mode = 1;
+			     BEGIN(skip2location);
 		         }
                        }
-<is>{ARGCLOSE}         { if     ( braces > 0 )
-                           {QUOTE_ECHO; braces--;}
-                         else {
-		           printf("\")");
-			   xref_mode = 1;
-		           BEGIN(skip2location);
+<is>{ARGCLOSE}         {
+			 if ( braces > 0 ) {
+			     ECHO;
+			     braces--;
+			 } else {
+			     printf("\")");
+			     xref_mode = 1;
+			     BEGIN(skip2location);
 		         }
                        }
 
 <skip2location>[ \t]*{ARGOPEN} {
-                        if (xref_mode)
-			  { BEGIN(skiplocation); }
-			else
-			  { printf(" :locref \"");
-			    BEGIN(location);
-			  }
+                         if (xref_mode) {
+			     BEGIN(skiplocation);
+			 } else {
+			     printf(" :locref \"");
+			     BEGIN(location);
+			 }
                        }
 <location>{ARGCLOSE}  { printf("\")\n"); BEGIN(0); }
 
@@ -330,7 +345,7 @@ HATHAT32BIT	\^{8}[0-9a-fA-F]{8}
 			}
 		      }
 
-<key,print,xref,is,location>\n	      { QUOTE_ECHO; lineno++; }
+<key,print,xref,is,location>\n	      { ECHO; lineno++; }
 <key,print,xref,is,location>.	      { QUOTE_ECHO; }
 
 \n                    { lineno++; }
@@ -392,6 +407,11 @@ main(int argc, char* argv[])
 /* ============================================================
 
   $Log$
+  Revision 1.20  2006/07/18 21:40:45  jschrod
+      Add parenthesis as recommended by gcc -Wall.
+      Use ECHO instead of QUOTE_ECHO where quoting will not be needed.
+      Code cleanup: sanitize braces and indentation.
+
   Revision 1.19  2006/07/18 21:26:34  jschrod
       Add man page as POD to tex2xindy source.
       Add support for ^^-notation, both in TeX and in new Omega mode.
