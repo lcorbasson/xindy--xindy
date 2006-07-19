@@ -26,7 +26,7 @@ xindy - create sorted and tagged index from raw index
  -L / --language
  -C / --codepage
  -M / --module         (multiple times)
- -I / --input-markup   (supported: latex, xindy)
+ -I / --input-markup   (supported: latex, omega, xindy)
 
 
 =head1 DESCRIPTION
@@ -41,8 +41,7 @@ passed, the raw index will be read from standard input.
 
 B<xindy> is completely described in its manual that you will find on
 its Web Site, http://www.xindy.org/. A good introductionary
-description appears in the indexing chapter of the LaTeX Companion
-\(2nd ed.)
+description appears in the indexing chapter of the LaTeX Companion (2nd ed.)
 
 If you want to produce an index for LaTeX documents, the command
 texindy(1) is probably more of interest for you. It is a wrapper for
@@ -103,10 +102,14 @@ If no input encoding is specified via C<--codepage>, a xindy module
 for that language is searched with a latin, a cp, an iso, or ascii
 encoding, in that order.
 
-=item C<--codepage> I<enc> / B <-C> I<enc>
+=item C<--codepage> I<enc> / B<-C> I<enc>
 
 The raw input is in input encoding I<enc>. This information is used to
-select the correct xindy sort module.
+select the correct xindy sort module and also the I<inputenc> target
+encoding for C<latex> input markup.
+
+When C<omega> input markup is used, C<utf8> is always used as
+codepage, this option is then ignored.
 
 =item C<--module> I<module> / B<-M> I<module>
 
@@ -117,10 +120,16 @@ can be changed with the environment variable C<XINDY_SEARCHPATH>.
 =item C<--input-markup> I<input> / B<-I> I<input>
 
 Specifies the input markup of the raw index. Supported values for
-I<input> are C<latex> and C<xindy>.
+I<input> are C<latex>, C<omega>, and C<xindy>.
 
-C<latex> input markup is the one that is emmitted by default from the
+C<latex> input markup is the one that is emitted by default from the
 LaTeX kernel, or by the C<index> macro package of David Jones.
+^^-notation of single byte characters is supported. Usage of LaTeX's
+I<inputenc> package is assumed as well.
+
+C<omega> input markup is like C<latex> input markup, but with Omega's
+^^-notation as encoding for non-ASCII characters. LaTeX I<inputenc>
+encoding is not used then, and C<utf8> is enforced to be the codepage.
 
 C<xindy> input markup is specified in the xindy manual.
 
@@ -207,8 +216,15 @@ subtree searching is done (as in TDS-conformant TeX).
 If this environment variable is not set, the default is used:
 C<.:>I<modules_dir>C<:>I<modules_dir>C</base>. I<modules_dir> is
 determined at run time, relative to the B<xindy> command location:
-Either it's F<../modules>, that's the case for F<opt>-installations. Or
-it's F<../lib/xindy/modules>, that's the case for F<usr>-installations.
+Either it's F<../modules>, that's the case for F<opt>-installations.
+Or it's F<../lib/xindy/modules>, that's the case for
+F<usr>-installations.
+
+=item C<XINDY_LIBDIR>
+
+Library directory where F<xindy.run> and F<xindy.mem> are located.
+
+The modules directory may be a subdirectory, too.
 
 =back
 
@@ -227,7 +243,8 @@ used as internal codepage for LaTeX inputenc re-encoding.
 
 =head1 SEE ALSO
 
-texindy(1)
+texindy(1),
+tex2xindy(1)
 
 
 =head1 AUTHOR
@@ -236,6 +253,8 @@ Joachim Schrod
 
 
 =head1 LEGALESE
+
+Copyright (c) 2004-2006 by Joachim Schrod.
 
 B<xindy> is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -275,9 +294,15 @@ BEGIN {
     # library directory
     if ( $ENV{XINDY_LIBDIR} ) {
 	$lib_dir = $ENV{XINDY_LIBDIR};
+    } elsif ( '@libdir@' ne '@libdir' . '@' ) { # GNU configure at work?
+	if ( -d '@libdir@/xindy' ) {	# /usr style
+	    $lib_dir = '@libdir@/xindy';
+	} else {
+	    $lib_dir = '@libdir@'; # /opt style
+	}
     } elsif ( -f "$cmd_dir/../lib/xindy.run" ) { # /opt style
 	$lib_dir = "$cmd_dir/../lib";
-    } elsif ( -d "$cmd_dir/../lib/xindy" ) { # /usr or /usr/local style
+    } elsif ( -d "$cmd_dir/../lib/xindy" ) { # /usr style
 	$lib_dir = "$cmd_dir/../lib/xindy";
     } else {
 	die "Cannot locate xindy library directory";
@@ -286,7 +311,7 @@ BEGIN {
     # modules directory
     if ( -d "$cmd_dir/../modules" ) {	# /opt style
 	$modules_dir = "$cmd_dir/../modules";
-    } elsif ( -d "$lib_dir/modules" ) {	# /usr or /usr/local style
+    } elsif ( -d "$lib_dir/modules" ) {	# /usr style
 	$modules_dir = "$lib_dir/modules";
     } else {
 	die "Cannot locate xindy modules directory";
@@ -330,7 +355,7 @@ GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
  -L / --language
  -C / --codepage
  -M / --module         (multiple times)
- -I / --input-markup   (supported: latex, xindy)
+ -I / --input-markup   (supported: latex, omega, xindy)
 
 _EOT_
   ;
@@ -374,8 +399,14 @@ END {
 our $raw_index = File::Spec->devnull;
 unless ( $interactive ) {
     $raw_index = create_raw_index();	# processes @ARGV
-    $raw_index = filter_index ("$cmd_dir/tex2xindy", $raw_index)
-      if ( $input_markup eq 'latex' );
+    my $filter_cmd = '';
+    if ( $input_markup eq 'latex' ) {
+	$filter_cmd = "$cmd_dir/tex2xindy";
+    } elsif ( $input_markup eq 'omega' ) {
+	$filter_cmd = "$cmd_dir/tex2xindy -o";
+    }
+    $raw_index = filter_index ($filter_cmd, $raw_index)
+      if $filter_cmd;
 }
 
 
@@ -417,7 +448,6 @@ sub parse_options() {
 
     # Debug option values are easier to test in a hash. Clean up trace
     # level options, too.
-
     %debug = map { $_ => 1 } @debug;
     my @trace_level = grep /^level=/, @debug;
     if ( @trace_level > 1 ) {
@@ -439,9 +469,14 @@ sub parse_options() {
 	usage();
     }
 
+    # Script debugging implies running it verbose and not quiet.
+    if ( $debug{script} ) {
+	$verbose = 1;
+	$quiet = 0;
+    }
+
     # Default for the output file: first argument, with extension replaced
     # by ".ind".
-
     unless ( $outfile  ||  $interactive ) {
 	if ( @ARGV == 0 ) {
 	    print STDERR
@@ -452,25 +487,24 @@ sub parse_options() {
 	$outfile = "$path$name.ind";
     }
 
-
     # FIXME: xindy wants a log file. Really?
-
     $logfile = File::Spec->devnull  unless $logfile;
-
 
     # Modules fixup: If they have no .xdy suffix, they get one.
     @modules = map { /\.xdy$/ ? $_ : "$_.xdy" } @modules;
 
-
-    # FIXME: Must cleanup the *-markup and filter option mess. These are
-    # currently fake options, and must be evolved into real multi-markup
-    # support.
-
+    # Check that the input markup is known.
+    # omega markup implies codepage utf8.
     if ( $input_markup  &&
-	 $input_markup ne 'latex' && $input_markup ne 'xindy' ) {
+	 $input_markup ne 'latex' && $input_markup ne 'omega' &&
+	 $input_markup ne 'xindy' ) {
 	print STDERR "Unsupported input markup $input_markup.\n\n";
 	usage();
     }
+    if ( $input_markup eq 'omega' ) {
+	@codepages = qw(utf8);
+    }
+
 }
 
 
@@ -673,13 +707,22 @@ sub output_version ( ;$ ) {		# optional arg: internal-version flag
 
 sub output_xindy_release () {
     my $version = 'unknown';
-    if ( open(VERSION, "< $cmd_dir/../VERSION") ) {
-	while ( $version = <VERSION> ) {
-	    chomp ($version);
-	    $version =~ s/\#.*// ;
-	    $version =~ s/^\s+// ;
-	    $version =~ s/\s+$// ;
-	    last  if $version;
+    my $version_file;
+    if ( -f "$cmd_dir/../VERSION" ) {
+	$version_file = "$cmd_dir/../VERSION";
+    } elsif ( -f "$lib_dir/VERSION" ) {
+	$version_file = "$lib_dir/VERSION";
+    }
+    if ( $version_file ) {
+	if ( open(VERSION, "<$version_file") ) {
+	    while ( $version = <VERSION> ) {
+		chomp ($version);
+		$version =~ s/\#.*// ;
+		$version =~ s/^\s+// ;
+		$version =~ s/\s+$// ;
+		last  if $version;
+	    }
+	    close (VERSION);
 	}
     }
     print "xindy release: $version\n";
@@ -699,6 +742,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.7  2006/07/19 00:29:56  jschrod
+#     Support for omega input markup.
+#
 # Revision 1.6  2005/05/02 19:16:26  jschrod
 #     Support new RTE 2.2, built with CLISP 2.33.2, that needs -E option
 # to specify the default charset.

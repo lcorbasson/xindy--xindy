@@ -28,6 +28,7 @@ texindy - create sorted and tagged index from raw LaTeX index
  -L / --language
  -C / --codepage
  -M / --module         (multiple times)
+ -I / --input-markup   (supported: latex, omega)
 
 
 =head1 DESCRIPTION
@@ -110,13 +111,33 @@ encoding, in that order.
 =item C<--codepage> I<enc> / B <-C> I<enc>
 
 The raw input is in input encoding I<enc>. This information is used to
-select the correct xindy sort module.
+select the correct xindy sort module and also the I<inputenc> target
+encoding for C<latex> input markup.
+
+When C<omega> input markup is used, C<utf8> is always used as the sort
+codepage and no inputenc module is loaded. Then this option is
+ignored.
 
 =item C<--module> I<module> / B<-M> I<module>
 
 Load the xindy module F<module.xdy>. This option may be specified
 multiple times. The modules are searched in the xindy search path that
 can be changed with the environment variable C<XINDY_SEARCHPATH>.
+
+=item C<--input-markup> I<input> / B<-I> I<input>
+
+Specifies the input markup of the raw index. Supported values for
+I<input> are C<latex> and C<omega>.
+
+C<latex> input markup is the one that is emitted by default from the
+LaTeX kernel, or by the C<index> macro package of David Jones.
+^^-notation of single byte characters is supported. Usage of LaTeX's
+I<inputenc> package is assumed as well.
+
+C<omega> input markup is like C<latex> input markup, but with Omega's
+^^-notation as encoding for non-ASCII characters. LaTeX I<inputenc>
+encoding is not used then, and C<utf8> is enforced to be the codepage
+for sorting.
 
 =back
 
@@ -304,7 +325,7 @@ sub usage ()
     print STDERR <<_EOT_
 
 usage: $cmd [-V?h] [-qv] [-iglr] [-d magic] [-o outfile.ind] [-t log] \\
-            [-L lang] [-C codepage] [-M module] [idx0 idx1 ...]
+            [-L lang] [-C codepage] [-M module] [-I input] [idx0 idx1 ...]
 
 GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
 
@@ -323,6 +344,7 @@ GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
  -L / --language
  -C / --codepage
  -M / --module         (multiple times)
+ -I / --input-markup   (supported: latex, omega)
 
 _EOT_
   ;
@@ -330,9 +352,10 @@ _EOT_
 }
 
 our ($output_version, $quiet, $verbose, $stdin, @debug,
-     $outfile, $logfile, $language, $codepage, @modules);
+     $outfile, $logfile, $language, $codepage, @modules, $input_markup);
 $language = 'general';
 $codepage = 'latin';
+$input_markup = 'latex';
 
 our $xindy;
 if ( -f "$cmd_dir/xindy" && -x _ ) {
@@ -357,10 +380,10 @@ unshift (@ARGV, '-o', $outfile)  if $outfile;
 unshift (@ARGV, '-t', $logfile)  if $logfile;
 unshift (@ARGV, '-L', $language);
 unshift (@ARGV, '-C', $codepage)  if $codepage;
-unshift (@ARGV, map { ('-M', $_) } ("tex/inputenc/$codepage",
-				    $ENV{TEXINDY_AUTO_MODULE} || 'texindy',
+unshift (@ARGV, '-M', "tex/inputenc/$codepage")  if $codepage;
+unshift (@ARGV, map { ('-M', $_) } ($ENV{TEXINDY_AUTO_MODULE} || 'texindy',
 				    @modules));
-unshift (@ARGV, '-I', 'latex');
+unshift (@ARGV, '-I', $input_markup);
 
 print "Calling xindy as: $cmd_dir/xindy @ARGV\n"  if (grep /^script$/, @debug);
 
@@ -388,6 +411,7 @@ sub parse_options() {
 	       'language|L=s'       => \$language,
 	       'codepage|C=s'       => \$codepage,
 	       'module|M=s'         => \@modules,
+	       'input-markup|I=s'   => \$input_markup,
 	      )
       or  usage();
 
@@ -403,6 +427,19 @@ sub parse_options() {
     }
     unshift (@modules, ($letter_ordering ? 'letter-order' : 'word-order'));
     unshift (@modules, 'page-ranges')  unless $no_ranges;
+
+    # Check that the input markup is known. omega markup implies
+    # codepage utf8 for sorting, but no inputenc. We set the codepage
+    # to undef to prevent loading of the inputenc module. Setting it
+    # to utf8 for the sort encoding is done by the xindy script.
+    if ( $input_markup ne 'latex' && $input_markup ne 'omega' ) {
+	print STDERR "Unsupported input markup $input_markup.\n\n";
+	usage();
+    }
+    if ( $input_markup eq 'omega' ) {
+	$codepage = undef;
+    }
+
 }
 
 
@@ -417,13 +454,42 @@ sub output_version () {
 
 sub output_xindy_release () {
     my $version = 'unknown';
-    if ( open(VERSION, "< $cmd_dir/../VERSION") ) {
-	while ( $version = <VERSION> ) {
-	    chomp ($version);
-	    $version =~ s/\#.*// ;
-	    $version =~ s/^\s+// ;
-	    $version =~ s/\s+$// ;
-	    last  if $version;
+    my $version_file;
+    if ( -f "$cmd_dir/../VERSION" ) {
+	$version_file = "$cmd_dir/../VERSION";
+    } else {
+	# Where is the library directory?
+	my $lib_dir;
+	if ( $ENV{XINDY_LIBDIR} ) {
+	    $lib_dir = $ENV{XINDY_LIBDIR};
+	} elsif ( '@libdir@' ne '@libdir' . '@' ) { # GNU configure at work?
+	    if ( -d '@libdir@/xindy' ) { # /usr style
+		$lib_dir = '@libdir@/xindy';
+	    } else {
+		$lib_dir = '@libdir@'; # /opt style
+	    }
+	} elsif ( -f "$cmd_dir/../lib/xindy.run" ) { # /opt style
+	    $lib_dir = "$cmd_dir/../lib";
+	} elsif ( -d "$cmd_dir/../lib/xindy" ) { # /usr style
+	    $lib_dir = "$cmd_dir/../lib/xindy";
+	} else {
+	    die "Cannot locate xindy library directory";
+	}
+	if ( -f "$lib_dir/VERSION" ) {
+	    $version_file = "$lib_dir/VERSION";
+	}
+    }
+
+    if ( $version_file ) {
+	if ( open(VERSION, "<$version_file") ) {
+	    while ( $version = <VERSION> ) {
+		chomp ($version);
+		$version =~ s/\#.*// ;
+		$version =~ s/^\s+// ;
+		$version =~ s/\s+$// ;
+		last  if $version;
+	    }
+	    close (VERSION);
 	}
     }
     print "xindy release: $version\n";
@@ -434,6 +500,9 @@ sub output_xindy_release () {
 #======================================================================
 #
 # $Log$
+# Revision 1.4  2006/07/19 00:29:56  jschrod
+#     Support for omega input markup.
+#
 # Revision 1.3  2004/11/01 22:48:51  jschrod
 #     Locate xindy script.
 #     Terminate on option error.
