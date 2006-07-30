@@ -47,6 +47,10 @@ makeindex(1)) are needed, the input specifiers (starting from the
 pattern C<KEYWORD>, see below) must be changed and the program must be
 recompiled.
 
+The particular missing feature is configuration of the quote and the
+actual characters, maybe also the escape, subitem (level), and encap
+characters. Argument and range delimiters seem to be less of a problem.
+
 In fact, input markup handling (and thus B<tex2xindy>) should be
 incorporated into the B<xindy> kernel, to be able to specify
 configuration in xindy style files.
@@ -216,7 +220,7 @@ HATHAT32BIT	\^{8}[0-9a-fA-F]{8}
 			  BEGIN(key);
 			}
 
-{ESCAPE}{QUOTE}        { qc(yytext[1]); }
+{ESCAPE}{QUOTE}        { QUOTE_ECHO; }
 {QUOTE}\n              { qc(yytext[1]); lineno++; }
 {QUOTE}.               { qc(yytext[1]); }
 <key,print>{ENCAP}     {
@@ -407,6 +411,9 @@ main(int argc, char* argv[])
 /* ============================================================
 
   $Log$
+  Revision 1.21  2006/07/30 09:44:04  jschrod
+      While quote is not output, escape+quote *is* output.
+
   Revision 1.20  2006/07/18 21:40:45  jschrod
       Add parenthesis as recommended by gcc -Wall.
       Use ECHO instead of QUOTE_ECHO where quoting will not be needed.
