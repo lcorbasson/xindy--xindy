@@ -305,7 +305,7 @@ BEGIN {
     } elsif ( -d "$cmd_dir/../lib/xindy" ) { # /usr style
 	$lib_dir = "$cmd_dir/../lib/xindy";
     } else {
-	die "Cannot locate xindy library directory";
+	die "$cmd: Cannot locate xindy library directory";
     }
 
     # modules directory
@@ -314,7 +314,7 @@ BEGIN {
     } elsif ( -d "$lib_dir/modules" ) {	# /usr style
 	$modules_dir = "$lib_dir/modules";
     } else {
-	die "Cannot locate xindy modules directory";
+	die "$cmd: Cannot locate xindy modules directory";
     }
 }
 
@@ -689,7 +689,9 @@ sub call_xindy ( $$ ) {
 	open (STDOUT, '>', File::Spec->devnull);
     }
     system @command;
-    if ( $? & 127 ) {
+    if ( $? == -1 ) {
+	print STDERR "$cmd: Could not execute xindy kernel: $!\n";
+    } elsif ( $? & 127 ) {
 	return 4;
     } else {
 	return $? >> 8;
@@ -742,6 +744,10 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.8  2006/07/30 10:30:42  jschrod
+#     Check if an exec() error happened and output an error message.
+# (Ticket 1230801)
+#
 # Revision 1.7  2006/07/19 00:29:56  jschrod
 #     Support for omega input markup.
 #

@@ -363,7 +363,7 @@ if ( -f "$cmd_dir/xindy" && -x _ ) {
 } elsif ( -f "$cmd_dir/xindy.pl" && -x _ ) {
     $xindy = "$cmd_dir/xindy.pl";
 } else {
-    die "Cannot locate xindy\n";
+    die "$cmd: cannot locate xindy\n";
 }
 
 parse_options();
@@ -388,6 +388,7 @@ unshift (@ARGV, '-I', $input_markup);
 print "Calling xindy as: $cmd_dir/xindy @ARGV\n"  if (grep /^script$/, @debug);
 
 exec $xindy, @ARGV;
+die "$cmd: could not execute xindy: $!\n";
 
 
 # ------------------------------------------------------------
@@ -500,6 +501,10 @@ sub output_xindy_release () {
 #======================================================================
 #
 # $Log$
+# Revision 1.5  2006/07/30 10:30:42  jschrod
+#     Check if an exec() error happened and output an error message.
+# (Ticket 1230801)
+#
 # Revision 1.4  2006/07/19 00:29:56  jschrod
 #     Support for omega input markup.
 #

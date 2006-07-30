@@ -1,2 +1,5 @@
 *.man
 *.pdf
+*.xlg
+*.ps
+tex2xindy
