@@ -342,7 +342,7 @@ experienced user.
                     (ADD *indexstyle*
                          ,(if var
                               `(CHECKED-MAKE-VAR-LOCATION-CLASS NAME LAYERS
-                                ,min-range-length ,hierdepth)
+                                ,hierdepth)
                               `(CHECKED-MAKE-STANDARD-LOCATION-CLASS NAME LAYERS
                                 ,min-range-length ,hierdepth))))
                  ))))))
@@ -1129,6 +1129,10 @@ NIL in cases where no switch keyword was found in EXPR.
 
 
 %% $Log$
+%% Revision 1.31  2006/10/10 10:46:00  jschrod
+%%     Call #'checked-make-var-location-class with the right number of
+%% arguments. (ticket 1574392)
+%%
 %% Revision 1.30  1997/10/20 11:25:09  kehr
 %% *** empty log message ***
 %%
