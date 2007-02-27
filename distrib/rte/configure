@@ -7,11 +7,10 @@
 #
 
 
-# Check that we're called without argument.
+# Check if usage message is wanted.
 
-if [ $# -gt 0 ]
-   then	echo 'usage: ./configure' >&2
-	echo '       No configuration options currently.' >&2
+if [ "$1" = '-?' ]
+   then	echo 'usage: ./configure [CLISP_configure_options]' >&2
 	exit 1
 fi
 
@@ -23,30 +22,56 @@ set -e
 
 
 # Don't output directory names on cd.
+# Determine CLISP directory.
 
 unset CDPATH
+clisp=`ls -d clisp* | tail -n 1`
 
 
-# Create install target directory if necessary.
-
-mkdir -p binaries
+# If we're not in an automake region, do rte configuration
+if [ ! -f Makefile.am ]
+   then	mkdir -p binaries
+	sed -e "s/@clispdir@/$clisp/" Makefile.in >Makefile
+fi
 
 
 # CLISP configuration, bind in ordrules module.
 
-clisp=`ls -d clisp* | tail -1`
 cd $clisp
 cd modules
 test -d ordrules  ||  ln -s ../../ordrules .
 cd ..
 
-clisp_modules='--with-export-syscalls --with-module=regexp --with-module=ordrules'
-./configure $clisp_modules
+clisp_modules='--without-unicode --with-export-syscalls --with-module=regexp --with-module=ordrules'
+
+# Test for MacOS X platform to circumvent faulty 'readline',
+# provided by Maarten Sneep <maarten.sneep@xs4all.nl>.
+# Needed for CLISP 2.33.2.
+if test `uname -s` = 'Darwin'; then
+	clisp_modules="$clisp_modules --without-readline"
+fi
+
+configure_options=''
+for opt in "$@"
+   do	case "$opt" in
+		# CLISP's top-level configure cannot handle
+		# --cache-file=/dev/null in 2.33.2. (And it would be
+		# probably wrong as well; CLISP's configure uses its
+		# configure cache.)
+	    --cache-file*) ;;
+		# --srcdir=. leads to overwrites of configure files with
+		# symlinks that point to itself. NOTE: This must be checked
+		# again for each new CLISP release.
+	    --srcdir*) ;;
+		# FIXME: Appending does not work if options have spaces. But
+		# we don't expect them to have it. Well, maybe except in
+		# Windows; therefore we might need to change this.
+	    *)	configure_options="$configure_options $opt" ;;
+	esac
+   done
+
+./configure $clisp_modules $configure_options
 cd src
-./makemake --with-dynamic-ffi $clisp_modules >Makefile
+./makemake --with-dynamic-ffi $clisp_modules $configure_options >Makefile
 
-
-# xindy rte configuration.
-
-cd ../..
-sed -e "s/@clispdir@/$clisp/" Makefile.in >Makefile
+# end of xindy rte configuration.
