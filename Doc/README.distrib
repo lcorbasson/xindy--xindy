@@ -3,8 +3,9 @@ $Id$
 
 This directory contains documentation of `xindy'.
 
-Manual pages for the commands are in ../man/.
-PDF versions of the manual pages have been added for your convenience.
+Manual pages for the commands are created during installation and are
+placed in appropriate man directories.
+PDF versions of the manual pages have been added here for your convenience.
 
 The subdirectory ./style-tutorial/ contains the examples that are used
 in the xindy style tutorial.
