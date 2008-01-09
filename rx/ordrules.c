@@ -43,8 +43,8 @@ int   ordrules_string_buffer_used_bytes = 0;
        int   ordrules_msg_logging      = 0;
        char* ordrules_msg_buffer       = 0;
        int   ordrules_msg_buffer_ptr   = 0;
-static int   ordrules_msg_buffer_len   = BUFLEN;
-static int   ordrules_msg_buffer_avail = 0;
+static size_t ordrules_msg_buffer_len   = BUFLEN;
+static size_t ordrules_msg_buffer_avail = 0;
 static int   ordrules_sort_rule_tables = 0;
 
 #define DEFAULT_SORT_RULE_TABLES 8
@@ -657,6 +657,9 @@ int group;
 /*======================================================================
  *
  * $Log$
+ * Revision 1.9  2008/01/09 11:33:44  jschrod
+ *     Update to CLISP 2.43.
+ *
  * Revision 1.8  2005/05/02 21:39:53  jschrod
  *     xindy run time engine 3.0; as used for CLISP 2.33.2.
  *

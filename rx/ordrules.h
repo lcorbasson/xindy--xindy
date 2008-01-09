@@ -105,9 +105,6 @@ extern int   ordrules_string_buffer_used_bytes;
 extern int   ordrules_msg_logging;
 extern char* ordrules_msg_buffer;
 extern int   ordrules_msg_buffer_ptr;
-extern int   ordrules_msg_buffer_len;
-extern int   ordrules_msg_buffer_avail;
-extern int   ordrules_sort_rule_tables;
 
 
 #define add_group_rule(letter, group) \
@@ -140,6 +137,9 @@ char* gen_mergekey  PROTO((char *key));
 /*======================================================================
  *
  * $Log$
+ * Revision 1.9  2008/01/09 11:33:44  jschrod
+ *     Update to CLISP 2.43.
+ *
  * Revision 1.8  2005/06/14 11:22:04  jschrod
  *     ordrulei.lisp is now ordrulei.lsp in distribution, as it is in CVS.
  *
