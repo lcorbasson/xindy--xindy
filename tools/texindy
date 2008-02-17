@@ -320,8 +320,10 @@ use Getopt::Long qw(:config bundling);
 
 # Check arguments, store them in proper variables.
 
-sub usage ()
+sub usage ( ;$ )
 {
+    my $exit_code = shift;
+    $exit_code += 0;			# turn undef into 0
     print STDERR <<_EOT_
 
 usage: $cmd [-V?h] [-qv] [-iglr] [-d magic] [-o outfile.ind] [-t log] \\
@@ -348,7 +350,7 @@ GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
 
 _EOT_
   ;
-    exit 1;
+    exit ($exit_code);
 }
 
 our ($output_version, $quiet, $verbose, $stdin, @debug,
@@ -368,7 +370,7 @@ if ( -f "$cmd_dir/xindy" && -x _ ) {
 
 parse_options();
 output_version()  if $output_version;	# will not return
-usage()  if ( ! $stdin && @ARGV == 0 );	# brain damaged, but like makeindex
+usage(1)  if ( ! $stdin && @ARGV == 0 ); # brain damaged, but like makeindex
 
 
 # Reconstruct xindy options, and eventually switch to it.
@@ -414,7 +416,7 @@ sub parse_options() {
 	       'module|M=s'         => \@modules,
 	       'input-markup|I=s'   => \$input_markup,
 	      )
-      or  usage();
+      or  usage(1);
 
     if ( $german ) {
 	unshift (@modules, 'german-sty');
@@ -434,8 +436,8 @@ sub parse_options() {
     # to undef to prevent loading of the inputenc module. Setting it
     # to utf8 for the sort encoding is done by the xindy script.
     if ( $input_markup ne 'latex' && $input_markup ne 'omega' ) {
-	print STDERR "Unsupported input markup $input_markup.\n\n";
-	usage();
+	print STDERR "Unsupported input markup $input_markup.\n";
+	usage(1);
     }
     if ( $input_markup eq 'omega' ) {
 	$codepage = undef;
@@ -501,6 +503,9 @@ sub output_xindy_release () {
 #======================================================================
 #
 # $Log$
+# Revision 1.6  2008/02/17 14:55:32  jschrod
+#     Use exitcode 0 when usage is explicitly demanded with --help et.al.
+#
 # Revision 1.5  2006/07/30 10:30:42  jschrod
 #     Check if an exec() error happened and output an error message.
 # (Ticket 1230801)

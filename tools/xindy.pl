@@ -333,8 +333,10 @@ use File::Spec;
 # second-to-last has the extension ".xdy". Then, call the old driver
 # script with the original arguments...
 
-sub usage ()
+sub usage ( ;$ )
 {
+    my $exit_code = shift;
+    $exit_code += 0;			# turn undef into 0
     print STDERR <<_EOT_
 
 usage: $cmd [-V?h] [-qv] [-d magic] [-o outfile.ind] [-t log] \\
@@ -359,7 +361,7 @@ GNU-STYLE LONG OPTIONS FOR SHORT OPTIONS:
 
 _EOT_
   ;
-    exit 1;
+    exit ($exit_code);
 }
 
 our ($quiet, $verbose, %debug,
@@ -444,7 +446,7 @@ sub parse_options() {
 		'interactive'        => \$interactive,
 		'mem-file=s'         => \$mem_file,
 	      )
-      or  usage();
+      or  usage(1);
 
     # Debug option values are easier to test in a hash. Clean up trace
     # level options, too.
@@ -466,7 +468,7 @@ sub parse_options() {
     if ( %debug_check ) {
 	my @magic = keys(%debug_check);
 	print STDERR "Unsupported argument for --debug: @magic\n";
-	usage();
+	usage(1);
     }
 
     # Script debugging implies running it verbose and not quiet.
@@ -480,8 +482,8 @@ sub parse_options() {
     unless ( $outfile  ||  $interactive ) {
 	if ( @ARGV == 0 ) {
 	    print STDERR
-"You need to specify --out-file if the raw index is read from standard input.\n\n";
-	    usage();
+"You need to specify --out-file if the raw index is read from standard input.\n";
+	    usage(1);
 	}
 	my ($name, $path, $suffix) = fileparse ($ARGV[0], '\.[^\.]+');
 	$outfile = "$path$name.ind";
@@ -498,8 +500,8 @@ sub parse_options() {
     if ( $input_markup  &&
 	 $input_markup ne 'latex' && $input_markup ne 'omega' &&
 	 $input_markup ne 'xindy' ) {
-	print STDERR "Unsupported input markup $input_markup.\n\n";
-	usage();
+	print STDERR "Unsupported input markup $input_markup.\n";
+	usage(1);
     }
     if ( $input_markup eq 'omega' ) {
 	@codepages = qw(utf8);
@@ -744,6 +746,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.9  2008/02/17 14:55:32  jschrod
+#     Use exitcode 0 when usage is explicitly demanded with --help et.al.
+#
 # Revision 1.8  2006/07/30 10:30:42  jschrod
 #     Check if an exec() error happened and output an error message.
 # (Ticket 1230801)
