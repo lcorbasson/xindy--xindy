@@ -605,7 +605,7 @@ sub xindy_expression () {
 	    if ( $2 && -d "$ld/$1" ) { # $2 is not set if the regex didn't match
 		$language = $1;
 		$variant = "$2-"  unless ( $2 eq 'iso' );
-		$variant =~ s/din/din5007/ ;
+		$variant eq 'din'  and  $variant = 'din5007';
 	    }
 	}
 	# Let's guess the codepage. We take any that starts with
@@ -746,6 +746,10 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.10  2009/03/21 18:05:11  jschrod
+#     Variant rename of din to din5007 made explicit. (Proposed by
+# Zdenek Wagner at 16 Mar 09.)
+#
 # Revision 1.9  2008/02/17 14:55:32  jschrod
 #     Use exitcode 0 when usage is explicitly demanded with --help et.al.
 #
