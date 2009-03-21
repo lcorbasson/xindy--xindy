@@ -32,7 +32,7 @@ tex2xindy: tex2xindy.c
 	$(CC) $(CFLAGS) tex2xindy.c -o tex2xindy $(LEXLIB)
 
 tex2xindy.1: tex2xindy.l
-	/usr/bin/pod2man --center '$(PROJECT)' \
+	/usr/bin/pod2man --name '$*' --center '$(PROJECT)' \
 		--date "$(DATE)" \
 		--release "Version $(VERSION)" \
 		$< >$@
