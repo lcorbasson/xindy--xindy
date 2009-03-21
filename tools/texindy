@@ -373,23 +373,24 @@ output_version()  if $output_version;	# will not return
 usage(1)  if ( ! $stdin && @ARGV == 0 ); # brain damaged, but like makeindex
 
 
-# Reconstruct xindy options, and eventually switch to it.
+# Construct xindy options, and eventually switch to it.
 
-unshift (@ARGV, '-q')  if $quiet;
-unshift (@ARGV, '-v')  if $verbose;
-unshift (@ARGV, map { ('-d', $_) } @debug)  if @debug;
-unshift (@ARGV, '-o', $outfile)  if $outfile;
-unshift (@ARGV, '-t', $logfile)  if $logfile;
-unshift (@ARGV, '-L', $language);
-unshift (@ARGV, '-C', $codepage)  if $codepage;
-unshift (@ARGV, '-M', "tex/inputenc/$codepage")  if $codepage;
-unshift (@ARGV, map { ('-M', $_) } ($ENV{TEXINDY_AUTO_MODULE} || 'texindy',
-				    @modules));
-unshift (@ARGV, '-I', $input_markup);
+my @opt;
+push (@opt, '-q')  if $quiet;
+push (@opt, '-v')  if $verbose;
+push (@opt, map { ('-d', $_) } @debug)  if @debug;
+push (@opt, '-o', $outfile)  if $outfile;
+push (@opt, '-t', $logfile)  if $logfile;
+push (@opt, '-L', $language);
+push (@opt, '-C', $codepage)  if $codepage;
+push (@opt, '-M', "tex/inputenc/$codepage")  if $codepage;
+push (@opt, map { ('-M', $_) } ($ENV{TEXINDY_AUTO_MODULE} || 'texindy',
+				@modules));
+push (@opt, '-I', $input_markup);
 
-print "Calling xindy as: $cmd_dir/xindy @ARGV\n"  if (grep /^script$/, @debug);
+print "Calling xindy as: $cmd_dir/xindy @opt @ARGV\n"  if (grep /^script$/, @debug);
 
-exec $xindy, @ARGV;
+exec $xindy, @opt, @ARGV;
 die "$cmd: could not execute xindy: $!\n";
 
 
@@ -503,6 +504,10 @@ sub output_xindy_release () {
 #======================================================================
 #
 # $Log$
+# Revision 1.7  2009/03/21 16:32:06  jschrod
+#     Inputenc merge rules must be loaded before other texindy modules;
+# otherwise inputenc markup would be discarded by tex.xdy.
+#
 # Revision 1.6  2008/02/17 14:55:32  jschrod
 #     Use exitcode 0 when usage is explicitly demanded with --help et.al.
 #
