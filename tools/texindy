@@ -70,7 +70,7 @@ output usage message with options explanation.
 
 Don't output progress messages. Output only error messages.
 
-=item C<--version> / B<-v>
+=item C<--verbose> / B<-v>
 
 Output verbose progress messages.
 
@@ -504,6 +504,9 @@ sub output_xindy_release () {
 #======================================================================
 #
 # $Log$
+# Revision 1.8  2009/03/22 11:08:18  jschrod
+#     man page: --v is --verbose, not --version.
+#
 # Revision 1.7  2009/03/21 16:32:06  jschrod
 #     Inputenc merge rules must be loaded before other texindy modules;
 # otherwise inputenc markup would be discarded by tex.xdy.

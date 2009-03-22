@@ -64,7 +64,7 @@ output usage message with options explanation.
 
 Don't output progress messages. Output only error messages.
 
-=item C<--version> / B<-v>
+=item C<--verbose> / B<-v>
 
 Output verbose progress messages.
 
@@ -746,6 +746,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.11  2009/03/22 11:08:18  jschrod
+#     man page: --v is --verbose, not --version.
+#
 # Revision 1.10  2009/03/21 18:05:11  jschrod
 #     Variant rename of din to din5007 made explicit. (Proposed by
 # Zdenek Wagner at 16 Mar 09.)
