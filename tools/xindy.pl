@@ -605,7 +605,7 @@ sub xindy_expression () {
 	    if ( $2 && -d "$ld/$1" ) { # $2 is not set if the regex didn't match
 		$language = $1;
 		$variant = "$2-"  unless ( $2 eq 'iso' );
-		$variant eq 'din'  and  $variant = 'din5007';
+		$variant eq 'din-'  and  $variant = 'din5007-';
 	    }
 	}
 	# Let's guess the codepage. We take any that starts with
@@ -746,6 +746,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.12  2009/03/26 17:27:28  jschrod
+#  Checking for variant name din needs to take trailing hyphen into account.
+#
 # Revision 1.11  2009/03/22 11:08:18  jschrod
 #     man page: --v is --verbose, not --version.
 #
