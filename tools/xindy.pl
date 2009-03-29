@@ -222,7 +222,7 @@ F<usr>-installations.
 
 =item C<XINDY_LIBDIR>
 
-Library directory where F<xindy.run> and F<xindy.mem> are located.
+Library directory where F<xindy.mem> is located.
 
 The modules directory may be a subdirectory, too.
 
@@ -300,7 +300,7 @@ BEGIN {
 	} else {
 	    $lib_dir = '@libdir@'; # /opt style
 	}
-    } elsif ( -f "$cmd_dir/../lib/xindy.run" ) { # /opt style
+    } elsif ( -f "$cmd_dir/../lib/xindy.mem" ) { # /opt style
 	$lib_dir = "$cmd_dir/../lib";
     } elsif ( -d "$cmd_dir/../lib/xindy" ) { # /usr style
 	$lib_dir = "$cmd_dir/../lib/xindy";
@@ -674,8 +674,7 @@ _EOT_
 sub call_xindy ( $$ ) {
     my ($mem_file, $xindy_exp) = @_;
 
-    my @command = ("$lib_dir/xindy.run", '-q',
-		   '-B', $lib_dir, '-M', $mem_file, '-E', 'iso-8859-1');
+    my @command = ('clisp', '-M', $mem_file, '-E', 'iso-8859-1');
     if ( $interactive ) {
 	print "Proposed xindy expression:\n\n$xindy_exp\n"  unless $quiet;
     } else {
@@ -746,6 +745,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.13  2009/03/29 11:14:04  jschrod
+#     xindy.run does not exist any more, call clisp directly.
+#
 # Revision 1.12  2009/03/26 17:27:28  jschrod
 #  Checking for variant name din needs to take trailing hyphen into account.
 #
