@@ -117,7 +117,7 @@ int range = NO_RANGE;
 
 /* This function quotes a character, if necessary. */
 
-void qc( char ch ) {
+static void qc( char ch ) {
   switch (ch) {
     case '\\' :
     case '"'  :
@@ -129,7 +129,7 @@ void qc( char ch ) {
 
 /* Quote an entire string. */
 
-void qs( char* str ) {
+static void qs( char* str ) {
   while ( *str ) {
     qc( *str++ );
   }
@@ -140,7 +140,7 @@ void qs( char* str ) {
    The parameter gets passed the amount of hex digits in the ^^-notation.
    In front of the hex digits are the same amount of ^ chars.
 */
-void omega_output_utf8 ( int width )
+static void omega_output_utf8 ( int width )
 {
     unsigned long int c = strtoul (yytext+width, NULL, 16);
     if (c < 0x80) {
@@ -362,7 +362,7 @@ HATHAT32BIT	\^{8}[0-9a-fA-F]{8}
 
 %%
 
-void usage ()
+static void usage ()
 {
     fputs("This is tex2xindy, $Revision$.\n", stderr);
     fputs("usage: tex2xindy [-o] [attr_file]\n", stderr);
@@ -420,6 +420,9 @@ int yywrap (void)
 /* ============================================================
 
   $Log$
+  Revision 1.23  2009/12/03 00:42:14  jschrod
+      Define internal functions as static to silence gcc warnings.
+
   Revision 1.22  2009/12/03 00:36:09  jschrod
       Define yywrap(), to be independent from libfl.
 
