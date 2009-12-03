@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $Id$
 #------------------------------------------------------------
 # (history at end)
@@ -745,6 +745,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.14  2009/12/03 00:28:22  jschrod
+#     Search perl via env.
+#
 # Revision 1.13  2009/03/29 11:14:04  jschrod
 #     xindy.run does not exist any more, call clisp directly.
 #

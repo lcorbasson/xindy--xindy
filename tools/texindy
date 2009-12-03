@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $Id$
 #------------------------------------------------------------
 # (history at end)
@@ -504,6 +504,9 @@ sub output_xindy_release () {
 #======================================================================
 #
 # $Log$
+# Revision 1.9  2009/12/03 00:28:22  jschrod
+#     Search perl via env.
+#
 # Revision 1.8  2009/03/22 11:08:18  jschrod
 #     man page: --v is --verbose, not --version.
 #
