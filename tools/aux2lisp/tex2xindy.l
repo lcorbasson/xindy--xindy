@@ -408,9 +408,21 @@ main(int argc, char* argv[])
 }
 
 
+/*
+ *  Define dummy yywrap so we no longer depend on `libfl.a'.
+ */
+int yywrap (void)
+{
+    return 1;
+}
+
+
 /* ============================================================
 
   $Log$
+  Revision 1.22  2009/12/03 00:36:09  jschrod
+      Define yywrap(), to be independent from libfl.
+
   Revision 1.21  2006/07/30 09:44:04  jschrod
       While quote is not output, escape+quote *is* output.
 
