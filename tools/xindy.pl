@@ -229,13 +229,60 @@ The modules directory may be a subdirectory, too.
 =back
 
 
-=head1 KNOWN BUGS
+=head1 COMPATIBILITY TO MAKEINDEX
+
+B<xindy> does not claim to be completely compatible with MakeIndex,
+that would prevent some of its enhancements. That said, we strive to
+deliver as much compatibility as possible. The most important
+incompatibilities are
+
+=over
+
+=item *
+
+For raw index entries in LaTeX syntax, C<\index{aaa|bbb}> is
+interpreted differently. For MakeIndex C<bbb> is markup that is output
+as a LaTeX tag for this page number. For B<xindy>, this is a location
+attribute, an abstract identifier that will be later associated with
+markup that should be output for that attribute.
+
+For straight-forward usage, when C<bbb> is C<textbf> or similar, we
+supply location attribute definitions that mimic MakeIndex's
+behaviour.
+
+For more complex usage, when C<bbb> is not an identifier, no such
+compatibility definitions exist and may also not been created with
+current B<xindy>. In particular, this means that by default the LaTeX
+package C<hyperref> will create raw index files that cannot be
+processed with B<xindy>. This is not a bug, this is the unfortunate
+result of an intented incompatibility. It is currently not possible to
+get both hyperref's index links and use B<xindy>.
+
+A similar situation is reported to exist for the C<memoir> LaTeX
+class.
+
+Programmers who know Common Lisp and Lex and want to work on a remedy
+should please contact the author.
+
+=item *
+
+The MakeIndex compatibility definitions support only the default raw
+index syntax and markup definition. It is not possible to configure
+raw index parsing or use a MakeIndex style file to describe output
+markup.
+
+=back
+
+
+=head1 KNOWN ISSUES
 
 Option B<-q> also prevents output of error messages. Error messages
 should be output on stderr, progress messages on stdout.
 
 There should be a way to output the final index to stdout. This would
 imply B<-q>, of course.
+
+LaTeX raw index parsing should be configurable.
 
 Codepage C<utf8> should be supported for all languages, and should be
 used as internal codepage for LaTeX inputenc re-encoding.
@@ -254,7 +301,7 @@ Joachim Schrod
 
 =head1 LEGALESE
 
-Copyright (c) 2004-2006 by Joachim Schrod.
+Copyright (c) 2004-2010 by Joachim Schrod.
 
 B<xindy> is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -267,7 +314,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 =for Emacs
-#'
+# '
 
 =cut
 
@@ -745,6 +792,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.15  2010/04/20 00:15:23  jschrod
+#     Emphasize incompatibility with hyperref in man page.
+#
 # Revision 1.14  2009/12/03 00:28:22  jschrod
 #     Search perl via env.
 #
