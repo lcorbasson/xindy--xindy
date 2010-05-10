@@ -320,23 +320,81 @@ GNU General Public License for more details.
 
 
 use strict;
+use English qw(-no_match_vars);
 
-BEGIN {
-    use vars qw($Revision $VERSION);
-    q$Revision$ =~ /: (\d+)\.(\d+)/ ;	# q wg. Emacs indent!
-    my ($major, $minor) = ($1, $2);
-    $VERSION = "$major." . ($minor<10 ? '0' : '') . $minor;
-}
+our $VERSION = sprintf "%d.%02d", q$Revision$ =~ /: (\d+)\.(\d+)/ ;
 
 
-# Some common variables.
+# Used modules.
+
+use Cwd;
+use File::Basename;
+use File::Spec;
+use File::Temp qw(tempfile tmpnam);
+use Getopt::Long qw(:config bundling);
+use POSIX qw(uname);
+
+
 # Determine environment. Where is our library directory, and our modules?
 
-use File::Basename;
-our ($cmd_dir, $cmd, $lib_dir, $modules_dir);
-BEGIN {
-    $cmd_dir = dirname($0);
-    $cmd = basename($0);
+our $is_w32 = ( $OSNAME =~ /^MSWin/i ) ;
+our $is_windows = ( $is_w32 || $OSNAME eq 'cygwin' ) ;
+our $clisp = ( $is_windows ? 'clisp.exe' : 'clisp' ) ;
+our $real_cmd = Cwd::realpath($0);
+our $cmd_dir = dirname($real_cmd);
+our $cmd = basename($0);
+
+our ($lib_dir, $modules_dir);
+
+# We have different installation structures for TeX-Live and a
+# standalone installation. In TeX-Live, the user command is a symlink
+# in some bin directory, and the actual script is in the library
+# directory where both memory image and modules live as well.
+# Standalone installations come in /usr or /opt variants, memory
+# images are located in a lib directory, modules are located in a
+# share directory.
+#
+# FIXME: This code assumes that on TeX-Live -- and only there! -- the
+# real command has a .pl extension, this is used for detection that we
+# are on TeX-Live. This is blatantly untrue, in a standalone Windows
+# installation, xindy has also a .pl extension. We have to fix this
+# later, cleanup of this issue would delay inclusion in TL 2010.
+#
+# FIXME: In standalone installations, modules are still placed in lib
+# directory. This is not conformant to FHS.
+
+if ( $real_cmd =~ /\.pl$/ ) { # TeX Live
+
+    $modules_dir = Cwd::realpath("$cmd_dir/../../xindy/modules");
+    die "$cmd: Cannot locate xindy modules directory"  unless -d $modules_dir;
+
+    if ( $is_w32 ) {
+	$cmd_dir = "$cmd_dir/../../../bin/win32";
+    } else {
+	die "$cmd: not a symlink as required for TeX Live"  unless -l $0;
+	# Follow symlinks and determine $cmd_dir such that
+	# $cmd_dir/xindy -> $r0 = XINDY_SCRIPTDIR/xindy.pl
+	#
+	# FIXME: What's this code good for? Cwd::realpath() already
+	# resolves all symbolic links; this just recomputes that
+	# information manually! It's from Peter, check with him.
+	$real_cmd = $0;
+	while (-l $real_cmd) {
+	    $cmd_dir = dirname($real_cmd);
+	    $real_cmd = readlink($real_cmd);
+	    $real_cmd = "$cmd_dir/$real_cmd"  unless $real_cmd =~ m,^[\\/],; # relative link
+	}
+    }
+
+    # library directory
+    $lib_dir = $cmd_dir;
+
+    # clisp runtime
+    my $xindy_run = ( $is_windows ?
+		      "$lib_dir/xindy-lisp.exe" : "$lib_dir/xindy.run" );
+    $clisp = $xindy_run  if -e $xindy_run;
+
+} else { # standalone installation
 
     # library directory
     if ( $ENV{XINDY_LIBDIR} ) {
@@ -363,22 +421,11 @@ BEGIN {
     } else {
 	die "$cmd: Cannot locate xindy modules directory";
     }
-}
 
-
-# Used modules.
-
-use Getopt::Long qw(:config bundling);
-use File::Temp qw(tempfile tmpnam);
-use File::Spec;
+} # determine environment
 
 
 # Check arguments, store them in proper variables.
-#
-# Do also something for backward compatibility: Check if this is an
-# old-style call. If it is, we have two arguments at the end, and the
-# second-to-last has the extension ".xdy". Then, call the old driver
-# script with the original arguments...
 
 sub usage ( ;$ )
 {
@@ -420,18 +467,24 @@ $mem_file = "$lib_dir/xindy.mem";
 my @orig_argv = @ARGV;
 parse_options();
 
-if ( @ARGV == 2 ) {
-    if ( $ARGV[0] =~ /\.xdy$/ ) {
-	exec "$cmd_dir/xindy.v2", @orig_argv;
+
+# Support universal binary on Mac OS X.
+
+if ( $OSNAME eq 'darwin'  &&  ! -e $mem_file ) {
+    my @uname = POSIX::uname();
+    if ( $uname[4] eq 'Power Macintosh' ) {
+	$mem_file = "$lib_dir/xindy-ppc.mem";
+    } else {
+	$mem_file = "$lib_dir/xindy-i386.mem";
     }
 }
+die "$cmd: Cannot locate $mem_file"  unless -e $mem_file;
 
 
 # This script creates temporary files. Whenever a file is created, its
 # name is added to @temp_files. In an END handler, the temporary files
 # are deleted. Signal handlers are set up to get proper program
-# termination on user-induced signals. During program calls with
-# system, SIGINT and
+# termination on user-induced signals.
 
 our @temp_files = ();
 handle_signals();
@@ -447,6 +500,9 @@ END {
 
 our $raw_index = File::Spec->devnull;
 unless ( $interactive ) {
+    for my $f ( @ARGV ) {
+	die "$cmd: input file $f does not exist"  unless -f $f;
+    }
     $raw_index = create_raw_index();	# processes @ARGV
     my $filter_cmd = '';
     if ( $input_markup eq 'latex' ) {
@@ -721,7 +777,7 @@ _EOT_
 sub call_xindy ( $$ ) {
     my ($mem_file, $xindy_exp) = @_;
 
-    my @command = ('clisp', '-M', $mem_file, '-E', 'iso-8859-1');
+    my @command = ($clisp, '-M', $mem_file, '-E', 'iso-8859-1');
     if ( $interactive ) {
 	print "Proposed xindy expression:\n\n$xindy_exp\n"  unless $quiet;
     } else {
@@ -758,7 +814,9 @@ sub output_version ( ;$ ) {		# optional arg: internal-version flag
 sub output_xindy_release () {
     my $version = 'unknown';
     my $version_file;
-    if ( -f "$cmd_dir/../VERSION" ) {
+    if ( -f "$modules_dir/../VERSION" ) {
+	$version_file = "$modules_dir/../VERSION";
+    } elsif ( -f "$cmd_dir/../VERSION" ) {
 	$version_file = "$cmd_dir/../VERSION";
     } elsif ( -f "$lib_dir/VERSION" ) {
 	$version_file = "$lib_dir/VERSION";
@@ -792,6 +850,11 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.16  2010/05/10 23:39:24  jschrod
+#     Incorporate TeX-Live patches from Vladimir Volovich and Peter
+# Breitenlohner: Support for TL installation scheme, support for Mac OS
+# X, support for Windows in TL.
+#
 # Revision 1.15  2010/04/20 00:15:23  jschrod
 #     Emphasize incompatibility with hyperref in man page.
 #

@@ -338,29 +338,75 @@ GNU General Public License for more details.
 
 
 use strict;
+use English qw(-no_match_vars);
 
-BEGIN {
-    use vars qw($Revision $VERSION);
-    q$Revision$ =~ /: (\d+)\.(\d+)/ ;	# q wg. Emacs indent!
-    my ($major, $minor) = ($1, $2);
-    $VERSION = "$major." . ($minor<10 ? '0' : '') . $minor;
-}
-
-
-# Some common variables.
-# Determine environment. Where is our library directory, and our modules?
-
-use File::Basename;
-our ($cmd_dir, $cmd);
-BEGIN {
-    $cmd_dir = dirname($0);
-    $cmd = basename($0);
-}
+our $VERSION = sprintf "%d.%02d", q$Revision$ =~ /: (\d+)\.(\d+)/ ;
 
 
 # Used modules.
 
+use Cwd;
+use File::Basename;
 use Getopt::Long qw(:config bundling);
+
+
+# Determine environment. Where is our library directory, and our modules?
+
+our $is_w32 = ( $OSNAME =~ /^MSWin/i ) ;
+our $real_cmd = Cwd::realpath($0);
+our $cmd_dir = dirname($real_cmd);
+our $cmd = basename($0);
+our $xindy;
+
+# In TeX-Live, user commands are symlinks in some bin directory, and
+# the actual scripts are in the library directory and have a .pl
+# extension. In standalone installations, user command xindy is
+# expected to be in the same directory as our command.
+#
+# FIXME: This code assumes that on TeX-Live -- and only there! -- the
+# real command has a .pl extension, this is used for detection that we
+# are on TeX-Live. This is blatantly untrue, in a standalone Windows
+# installation, xindy has also a .pl extension. We have to fix this
+# later, cleanup of this issue would delay inclusion in TL 2010.
+
+if ( $real_cmd =~ /\.pl$/ ) { # TeX Live
+
+    if ( $is_w32 ) {
+	$xindy = "$cmd_dir/xindy.pl";
+    } else {
+	die "$cmd: not a symlink as required for TeX Live"  unless -l $0;
+	# FIXME: What this good for? Ain't xindy not also
+	# "$cmd_dir/xindy.pl" in a Unix TL installation? Why does
+	# Peter use the directory of the last symlink, where it just
+	# finds the symlink again that is then expanded by xindy.pl?
+	$real_cmd = $0;
+	$cmd_dir = dirname($real_cmd);
+	# Follow symlinks, but remember last one
+	my $lcmd_dir;
+	while ( -l $real_cmd ) {
+	    $lcmd_dir = $cmd_dir;
+	    $real_cmd = readlink($real_cmd);
+	    $real_cmd = "$lcmd_dir/$real_cmd"  unless $real_cmd =~ m,^[\\/],; # relative link
+	    $cmd_dir = dirname($real_cmd);
+	}
+	$xindy = "$lcmd_dir/xindy";
+    }
+    # FIXME: That's a very ugly kludge to achieve that the VERSION
+    # file is found in output_xindy_release(). The real solution is to
+    # copy the code from xindy.pl that determines $modules_dir and
+    # $lib_dir and use that code as well.
+    $cmd_dir = Cwd::realpath("$cmd_dir/../../xindy/modules");
+    die "Cannot locate xindy modules directory"  unless -f "$cmd_dir/../VERSION";
+} else {
+    if ( -f "$cmd_dir/xindy" && -x _ ) {
+	$xindy = "$cmd_dir/xindy";
+    } elsif ( -f "$cmd_dir/xindy.pl" && -x _ ) {
+	$xindy = "$cmd_dir/xindy.pl";
+    } else {
+	die "$cmd: cannot locate xindy\n";
+    }
+}
+die "$cmd: cannot locate xindy\n"  unless -f $xindy && ($is_w32 || -x $xindy);
 
 
 # Check arguments, store them in proper variables.
@@ -404,15 +450,6 @@ $language = 'general';
 $codepage = 'latin';
 $input_markup = 'latex';
 
-our $xindy;
-if ( -f "$cmd_dir/xindy" && -x _ ) {
-    $xindy = "$cmd_dir/xindy";
-} elsif ( -f "$cmd_dir/xindy.pl" && -x _ ) {
-    $xindy = "$cmd_dir/xindy.pl";
-} else {
-    die "$cmd: cannot locate xindy\n";
-}
-
 parse_options();
 output_version()  if $output_version;	# will not return
 usage(1)  if ( ! $stdin && @ARGV == 0 ); # brain damaged, but like makeindex
@@ -433,13 +470,30 @@ push (@opt, map { ('-M', $_) } ($ENV{TEXINDY_AUTO_MODULE} || 'texindy',
 				@modules));
 push (@opt, '-I', $input_markup);
 
-print "Calling xindy as: $cmd_dir/xindy @opt @ARGV\n"  if (grep /^script$/, @debug);
+print "Calling xindy as: $xindy @opt @ARGV\n"  if (grep /^script$/, @debug);
+exec_xindy(@opt, @ARGV);
 
-exec $xindy, @opt, @ARGV;
-die "$cmd: could not execute xindy: $!\n";
+# NOT REACHED
 
 
 # ------------------------------------------------------------
+
+
+sub exec_xindy {
+    if ( $is_w32 ) {
+	system ($EXECUTABLE_NAME, $xindy, @_);
+	if ($? == -1) {
+	    die "$cmd: could not execute xindy: $ERRNO\n";
+	} elsif ($? & 127) {
+	    die "xindy died with signal " . ($? & 127) ."\n";
+	} else {
+	    exit ($? >> 8);
+	}
+    } else {
+	exec ($xindy, @_);
+	die "$cmd: could not execute xindy: $!\n";
+    }
+}
 
 
 sub parse_options() {
@@ -495,9 +549,9 @@ sub parse_options() {
 sub output_version () {
     output_xindy_release();
     print "$cmd script version: $VERSION\n";
-    my @xindy_cmd = ($xindy, '--internal-version');
+    my @xindy_cmd = ('--internal-version');
     push (@xindy_cmd, qw(-d script --foobar))  if grep(/^script$/, @debug);
-    exec @xindy_cmd;
+    exec_xindy(@xindy_cmd);
 }
 
 
@@ -549,6 +603,11 @@ sub output_xindy_release () {
 #======================================================================
 #
 # $Log$
+# Revision 1.11  2010/05/10 23:39:24  jschrod
+#     Incorporate TeX-Live patches from Vladimir Volovich and Peter
+# Breitenlohner: Support for TL installation scheme, support for Mac OS
+# X, support for Windows in TL.
+#
 # Revision 1.10  2010/04/20 00:15:23  jschrod
 #     Emphasize incompatibility with hyperref in man page.
 #
