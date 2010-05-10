@@ -362,7 +362,7 @@ HATHAT32BIT	\^{8}[0-9a-fA-F]{8}
 
 %%
 
-static void usage ()
+static void usage (void)
 {
     fputs("This is tex2xindy, $Revision$.\n", stderr);
     fputs("usage: tex2xindy [-o] [attr_file]\n", stderr);
@@ -420,6 +420,9 @@ int yywrap (void)
 /* ============================================================
 
   $Log$
+  Revision 1.24  2010/05/10 23:02:17  jschrod
+      Use ANSI C function definitions. (Patch from peb.)
+
   Revision 1.23  2009/12/03 00:42:14  jschrod
       Define internal functions as static to silence gcc warnings.
 
