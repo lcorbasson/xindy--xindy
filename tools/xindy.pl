@@ -337,6 +337,7 @@ use POSIX qw(uname);
 
 # Determine environment. Where is our library directory, and our modules?
 
+our $is_TL = ( '@TEXLIVE_BUILD@' eq 'yes' );
 our $is_w32 = ( $OSNAME =~ /^MSWin/i ) ;
 our $is_windows = ( $is_w32 || $OSNAME eq 'cygwin' ) ;
 our $clisp = ( $is_windows ? 'clisp.exe' : 'clisp' ) ;
@@ -363,7 +364,7 @@ our ($lib_dir, $modules_dir);
 # FIXME: In standalone installations, modules are still placed in lib
 # directory. This is not conformant to FHS.
 
-if ( $real_cmd =~ /\.pl$/ ) { # TeX Live
+if ( $is_TL ) { # TeX Live
 
     $modules_dir = Cwd::realpath("$cmd_dir/../../xindy/modules");
     die "$cmd: Cannot locate xindy modules directory"  unless -d $modules_dir;
@@ -431,7 +432,8 @@ sub usage ( ;$ )
 {
     my $exit_code = shift;
     $exit_code += 0;			# turn undef into 0
-    print STDERR <<_EOT_
+    my $out = ( $exit_code ? *STDERR : *STDOUT );
+    print $out <<_EOT_
 
 usage: $cmd [-V?h] [-qv] [-d magic] [-o outfile.ind] [-t log] \\
             [-L lang] [-C codepage] [-M module] [-I input] \\
@@ -515,8 +517,7 @@ unless ( $interactive ) {
 }
 
 
-# Execution: Obey environment variables, create xindy start
-# expression, and eventually call it.
+# Execution: Create xindy start expression and call it.
 
 my $xindy_expression = xindy_expression(); # accesses global option vars
 my $exit_code = call_xindy ($mem_file, $xindy_expression);
@@ -850,6 +851,9 @@ sub quotify ( $ ) {
 #======================================================================
 #
 # $Log$
+# Revision 1.17  2010/08/12 00:16:01  jschrod
+#     Output help message on stdout if there's no error.
+#
 # Revision 1.16  2010/05/10 23:39:24  jschrod
 #     Incorporate TeX-Live patches from Vladimir Volovich and Peter
 # Breitenlohner: Support for TL installation scheme, support for Mac OS
